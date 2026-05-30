@@ -211,7 +211,7 @@ class LixyOrchestrator:
                 self.session_history = data.get("history", [])
                 sleep_data = data.get("dolphin_sleep")
                 if sleep_data and self.swarm:
-                    sleep_state = self.swarm.dolphin.dolphin.sleep_state
+                    sleep_state = self.swarm.dolphin.primary.dolphin.sleep_state
                     # Restaurar awake_state
                     awake = torch.tensor(sleep_data["awake_state"])
                     sleep_state.awake_state = awake.to(self.cfg.device)
@@ -229,7 +229,7 @@ class LixyOrchestrator:
     def _save_session(self):
         """Guarda historial y estado del Delfín para la próxima sesión."""
         session_path = Path(self.cfg.session_file)
-        sleep_state = self.swarm.dolphin.dolphin.sleep_state
+        sleep_state = self.swarm.dolphin.primary.dolphin.sleep_state
         sleep_norm = sleep_state.get_state().norm().item()
         # Guardar tanto awake_state como context_buffer
         context_buf = [c.cpu().tolist() for c in list(sleep_state.context_buffer)]
@@ -332,7 +332,7 @@ class LixyOrchestrator:
 
     def status(self) -> dict:
         """Retorna estado actual del orquestador."""
-        sleep_norm = self.swarm.dolphin.dolphin.sleep_state.get_state().norm().item()
+        sleep_norm = self.swarm.dolphin.primary.dolphin.sleep_state.get_state().norm().item()
         net_status = self.net.status() if self.net else {"mode": "local", "peers": 0}
         rs = self._runtime_session
 
@@ -405,8 +405,8 @@ def interactive_cli(lixy: LixyOrchestrator):
             continue
         elif user_input == "/reset":
             lixy.session_history = []
-            lixy.swarm.dolphin.dolphin.sleep_state.awake_state = torch.zeros(
-                lixy.swarm.dolphin.dolphin.sleep_state.cfg.sleep_dim,
+            lixy.swarm.dolphin.primary.dolphin.sleep_state.awake_state = torch.zeros(
+                lixy.swarm.dolphin.primary.dolphin.sleep_state.cfg.sleep_dim,
                 device=lixy.cfg.device
             )
             lixy._runtime_session.reset_feromon()   # reset feromon context too
@@ -418,7 +418,7 @@ def interactive_cli(lixy: LixyOrchestrator):
         print(response)
 
         # Mostrar stats del sueño y RuntimeSession
-        sleep_norm = lixy.swarm.dolphin.dolphin.sleep_state.get_state().norm().item()
+        sleep_norm = lixy.swarm.dolphin.primary.dolphin.sleep_state.get_state().norm().item()
         rs = lixy._runtime_session
         last_turn = rs.history[-1] if rs.history else None
         infra_str = f" | 🐘 infra={last_turn.infrasound_norm:.3f}" if last_turn else ""

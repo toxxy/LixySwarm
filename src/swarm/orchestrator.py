@@ -28,6 +28,7 @@ import torch.nn.functional as F
 from src.agents.agent_base import AgentBase, AgentConfig
 from src.matriarca.matriarca import Matriarca, MatriarcaConfig
 from src.agents.dolphin_agent import DolphinAgent, DolphinSwarmBridge, DolphinConfig
+from src.swarm.dolphin_pool import DolphinPool
 
 
 # ─── Fitness de Agente 🐜 ─────────────────────────────────────────────────────────
@@ -357,10 +358,10 @@ class LixySwarm(nn.Module):
         n_embd = config.agent_configs[0].n_embd
         infrasound_dim = config.matriarca_config.infrasound_dim
 
-        # 🐬 Delfín (reemplaza EcholocationHead — ahora es agente real)
+        # 🐬 DolphinPool — escala con la red (delfines dinámicos)
         device_str = "cuda" if torch.cuda.is_available() else "cpu"
-        self.dolphin = DolphinSwarmBridge(config.dolphin_config, device=device_str)
-        print(f"  🐬 Delfín conectado: {sum(p.numel() for p in self.dolphin.parameters())/1e6:.1f}M params, sueño activo")
+        self.dolphin = DolphinPool(config.dolphin_config, device=device_str)
+        print(f"  🐬 DolphinPool: {self.dolphin.n_dolphins} delfín(es) activos | {sum(p.numel() for p in self.dolphin.parameters())/1e6:.1f}M params")
 
         # 🐜 Agentes
         self.agents = nn.ModuleList([
@@ -421,6 +422,27 @@ class LixySwarm(nn.Module):
         # 🐜 Tracker de especialización
         self.specialization = SpecializationTracker(config.n_agents)
         self._last_fitnesses: Optional[List[AgentFitness]] = None
+
+        # 🐜 Ciclo de vida dinámico de hormigas
+        from src.swarm.ant_lifecycle import AntLifecycleManager
+        self.ant_lifecycle = AntLifecycleManager(self, self.matriarca)
+
+    def tick_lifecycle(self, step: int, swarm_diversity: float, n_nodes: int = 1) -> list:
+        """Delega el tick del ciclo de vida al AntLifecycleManager."""
+        return self.ant_lifecycle.tick(step, swarm_diversity, n_nodes)
+
+    def scale_dolphins(self, n_nodes: int) -> list:
+        """Escala el pool de delfines según nodos conectados."""
+        events = self.dolphin.scale_to_network(n_nodes)
+        if events:
+            import logging
+            log = logging.getLogger("lixy.swarm")
+            for e in events:
+                if e["type"] == "spawn":
+                    log.info(f"🐬 Delfín {e['dolphin_idx']} nacido (red={n_nodes} nodos)")
+                elif e["type"] == "retire":
+                    log.info(f"🐬 Delfín {e['dolphin_idx']} retirado (red={n_nodes} nodos)")
+        return events
 
     def _get_infrasound(self, feromon: torch.Tensor) -> Optional[torch.Tensor]:
         """Consulta a la Matriarca y obtiene infrasónidos."""
@@ -644,6 +666,6 @@ if __name__ == "__main__":
     print(f"feromon: {feromon.shape}")
     if swarm.matriarca:
         print(f"🐘 Memorias en Matriarca: {swarm.matriarca.memory_count}")
-    sleep_norm = swarm.dolphin.dolphin.sleep_state.get_state().norm().item()
+    sleep_norm = swarm.dolphin.primary.dolphin.sleep_state.get_state().norm().item()
     print(f"🐬 Sueño del Delfín (norm): {sleep_norm:.4f}")
     print("\n✅ Delfín integrado al enjambre correctamente")
