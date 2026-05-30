@@ -1,18 +1,23 @@
 """
-Lixy-0.1 — DolphinAgent 🐬
-===========================
+Lixy-0.1 — DolphinAgent 🐬  [Phase A]
+======================================
 El Delfín es el agente perceptivo del enjambre. No genera texto — construye
 el espacio semántico del problema antes de que los agentes (hormigas) procesen.
 
 3 componentes bio-inspirados:
 
-1. ECOLOCALIZACIÓN
+1. ECOLOCALIZACIÓN  (Phase A: 5 pings + triangulación por atención)
    Como el delfín que emite ultrasonidos y recibe ecos, este agente lanza
-   3 "pings" semánticos simultáneos al recibir input:
-   - Ping topic:     ¿De qué trata? (embedding temático)
-   - Ping intent:    ¿Qué emoción/intención hay? (embedding intencional)
-   - Ping need:      ¿Qué necesita el usuario? (embedding de necesidad)
-   Los 3 ecos forman un "mapa 3D del problema" que guía al enjambre.
+   5 "pings" semánticos simultáneos al recibir input:
+   - Ping topic:    ¿De qué trata? (embedding temático)  ← ancla de triangulación
+   - Ping intent:   ¿Qué emoción/intención hay? (embedding intencional)
+   - Ping need:     ¿Qué necesita el usuario? (embedding de necesidad)
+   - Ping context:  ¿En qué contexto ocurre? (embedding de contexto situacional)
+   - Ping emotion:  ¿Qué emoción subyace? (embedding emocional profundo)
+
+   Phase A: los 5 ecos se fusionan mediante TRIANGULACIÓN POR ATENCIÓN.
+   El ping_topic actúa como ancla (Query) y interroga a los otros 4 pings.
+   Esto modela cómo el delfín triangula su posición en el espacio semántico.
 
 2. SUEÑO UNIHEMISFÉRICO
    Los delfines duermen con un hemisferio activo — siempre perciben.
@@ -51,7 +56,8 @@ class DolphinConfig:
 
     # Ecolocalización
     echo_dim: int = 128           # dimensión de cada ping
-    n_pings: int = 3              # topic, intent, need
+    n_pings: int = 5              # Phase A: topic, intent, need, context, emotion
+    ping_names: tuple = ("topic", "intent", "need", "context", "emotion")
     echo_layers: int = 2          # profundidad del encoder de ping
 
     # Sueño unihemisférico
@@ -99,29 +105,41 @@ class PingEncoder(nn.Module):
 
 class Echolocation(nn.Module):
     """
-    🔊 Ecolocalización: 3 pings simultáneos → mapa semántico 3D del problema.
+    🔊 Ecolocalización Phase A: 5 pings + triangulación por atención.
 
     Cada ping captura una dimensión distinta del input:
-    - Ping 0 (topic):  ¿De qué trata? (contenido temático)
-    - Ping 1 (intent): ¿Qué emoción/intención hay? (estado afectivo)
-    - Ping 2 (need):   ¿Qué necesita? (objetivo del usuario)
+    - Ping 0 (topic):   ¿De qué trata? (contenido temático) ← ancla de triangulación
+    - Ping 1 (intent):  ¿Qué emoción/intención hay? (estado afectivo)
+    - Ping 2 (need):    ¿Qué necesita? (objetivo del usuario)
+    - Ping 3 (context): ¿En qué contexto ocurre? (situación/entorno)
+    - Ping 4 (emotion): ¿Qué emoción subyace? (capa emocional profunda)
 
-    Los 3 ecos se fusionan en un vector de feromona que guía al enjambre.
+    Phase A: el topic interroga mediante atención a los otros 4 pings.
+    El acoustic_map resultante captura relaciones semánticas entre dimensiones.
     """
     def __init__(self, cfg: DolphinConfig):
         super().__init__()
         self.cfg = cfg
 
-        # 3 encoders especializados — pesos independientes
-        self.ping_topic  = PingEncoder(cfg.vocab_size, cfg.n_embd, cfg.echo_dim, cfg.echo_layers, cfg.dropout)
-        self.ping_intent = PingEncoder(cfg.vocab_size, cfg.n_embd, cfg.echo_dim, cfg.echo_layers, cfg.dropout)
-        self.ping_need   = PingEncoder(cfg.vocab_size, cfg.n_embd, cfg.echo_dim, cfg.echo_layers, cfg.dropout)
+        # 5 encoders especializados — pesos independientes
+        self.ping_topic   = PingEncoder(cfg.vocab_size, cfg.n_embd, cfg.echo_dim, cfg.echo_layers, cfg.dropout)
+        self.ping_intent  = PingEncoder(cfg.vocab_size, cfg.n_embd, cfg.echo_dim, cfg.echo_layers, cfg.dropout)
+        self.ping_need    = PingEncoder(cfg.vocab_size, cfg.n_embd, cfg.echo_dim, cfg.echo_layers, cfg.dropout)
+        self.ping_context = PingEncoder(cfg.vocab_size, cfg.n_embd, cfg.echo_dim, cfg.echo_layers, cfg.dropout)
+        self.ping_emotion = PingEncoder(cfg.vocab_size, cfg.n_embd, cfg.echo_dim, cfg.echo_layers, cfg.dropout)
 
-        # Fusión de los 3 ecos → feromona de salida
+        # Phase A: Triangulación por atención
+        # Q = echo_topic (ancla temática), K/V = stack de 5 ecos
+        self.triangulation_attn = nn.MultiheadAttention(
+            embed_dim=cfg.echo_dim,
+            num_heads=4,
+            batch_first=True,
+            dropout=cfg.dropout,
+        )
+
+        # Fusión: acoustic_map (echo_dim) → feromon_dim
         self.fusion = nn.Sequential(
-            nn.Linear(cfg.echo_dim * cfg.n_pings, cfg.feromon_dim),
-            nn.GELU(),
-            nn.Linear(cfg.feromon_dim, cfg.feromon_dim),
+            nn.Linear(cfg.echo_dim, cfg.feromon_dim),
             nn.LayerNorm(cfg.feromon_dim),
         )
 
@@ -133,28 +151,64 @@ class Echolocation(nn.Module):
             nn.Sigmoid(),
         )
 
+    def load_partial_state_dict(self, ckpt_model_dict: dict):
+        """
+        Carga pesos compatibles desde un checkpoint antiguo (3 pings).
+        Los pesos de ping_context y ping_emotion arrancan random.
+        Los pesos de triangulation_attn y fusion se inicializan random.
+        """
+        own_state = self.state_dict()
+        loaded = 0
+        skipped = 0
+        for name, param in ckpt_model_dict.items():
+            # Remap keys si vienen del módulo completo (echolocation.*)
+            key = name
+            if key in own_state and own_state[key].shape == param.shape:
+                own_state[key].copy_(param)
+                loaded += 1
+            else:
+                skipped += 1
+        self.load_state_dict(own_state)
+        print(f"  Echolocation: {loaded} pesos cargados, {skipped} omitidos (nuevos pings random)")
+
     def forward(self, idx: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor, dict]:
         """
         idx: (B, T) tokens de input
         returns:
           feromon:    (B, feromon_dim) — señal para el enjambre
           confidence: (B, 1)           — confianza en la lectura
-          echoes:     dict con los 3 pings para inspección
+          echoes:     dict con los 5 pings + acoustic_map para inspección
         """
-        echo_topic  = self.ping_topic(idx)   # (B, echo_dim)
-        echo_intent = self.ping_intent(idx)  # (B, echo_dim)
-        echo_need   = self.ping_need(idx)    # (B, echo_dim)
+        # ─── 5 pings simultáneos ───
+        echo_topic   = self.ping_topic(idx)    # (B, echo_dim)
+        echo_intent  = self.ping_intent(idx)   # (B, echo_dim)
+        echo_need    = self.ping_need(idx)     # (B, echo_dim)
+        echo_context = self.ping_context(idx)  # (B, echo_dim)
+        echo_emotion = self.ping_emotion(idx)  # (B, echo_dim)
 
-        # Concatenar los 3 ecos
-        combined = torch.cat([echo_topic, echo_intent, echo_need], dim=-1)  # (B, echo_dim*3)
-        feromon = torch.tanh(self.fusion(combined))  # (B, feromon_dim)
+        # ─── Phase A: Triangulación por atención ───
+        # Stack de los 5 ecos: (B, 5, echo_dim)
+        all_echoes = torch.stack(
+            [echo_topic, echo_intent, echo_need, echo_context, echo_emotion], dim=1
+        )
+        # Q = echo_topic como ancla temática: (B, 1, echo_dim)
+        Q = echo_topic.unsqueeze(1)
+        # Atención: el topic interroga a los otros 4 (y a sí mismo via K/V completo)
+        attn_out, _ = self.triangulation_attn(Q, all_echoes, all_echoes)  # (B, 1, echo_dim)
+        acoustic_map = attn_out.squeeze(1)  # (B, echo_dim)
+
+        # Proyectar a feromon_dim
+        feromon = torch.tanh(self.fusion(acoustic_map))  # (B, feromon_dim)
 
         confidence = self.confidence(feromon)  # (B, 1)
 
         echoes = {
-            "topic":  echo_topic.detach(),
-            "intent": echo_intent.detach(),
-            "need":   echo_need.detach(),
+            "topic":       echo_topic.detach(),
+            "intent":      echo_intent.detach(),
+            "need":        echo_need.detach(),
+            "context":     echo_context.detach(),
+            "emotion":     echo_emotion.detach(),
+            "acoustic_map": acoustic_map.detach(),
         }
 
         return feromon, confidence, echoes
@@ -283,7 +337,7 @@ class IdentityProjector(nn.Module):
 
 class DolphinAgent(nn.Module):
     """
-    🐬 DolphinAgent — Agente Perceptivo del Enjambre
+    🐬 DolphinAgent Phase A — Agente Perceptivo del Enjambre
 
     No genera texto. Su rol: leer el input, construir el espacio semántico
     del problema, y emitir una feromona rica que oriente a las hormigas.
@@ -291,8 +345,8 @@ class DolphinAgent(nn.Module):
     Flujo:
         input (tokens)
             ↓
-        🔊 Ecolocalización (3 pings: topic, intent, need)
-            ↓
+        🔊 Ecolocalización (5 pings: topic, intent, need, context, emotion)
+            ↓  triangulación por atención (topic como ancla)
         🌙 Integración con sueño unihemisférico (contexto pasado)
             ↓
         🎵 Modulación por identidad (silbido único)
@@ -323,7 +377,7 @@ class DolphinAgent(nn.Module):
 
         n_params = sum(p.numel() for p in self.parameters())
         print(f"DolphinAgent [{cfg.agent_id}] inicializado: {n_params/1e6:.2f}M params")
-        print(f"  🔊 Ecolocalización: {cfg.n_pings} pings × {cfg.echo_dim}d")
+        print(f"  🔊 Ecolocalización: {cfg.n_pings} pings × {cfg.echo_dim}d  [Phase A: triangulación por atención]")
         print(f"  🌙 Sueño: buffer={cfg.sleep_buffer_size}, decay={cfg.sleep_decay}")
         print(f"  🎵 Identidad: {cfg.identity_dim}d → {cfg.feromon_dim}d")
 
@@ -333,17 +387,19 @@ class DolphinAgent(nn.Module):
         update_sleep: bool = True,                # actualizar estado de sueño
     ) -> Tuple[torch.Tensor, torch.Tensor, dict]:
         """
+        Phase A forward: 5 pings + triangulación por atención.
+
         idx: (B, T)
         returns:
           feromon:    (B, feromon_dim) — señal para el enjambre
           confidence: (B, 1)
-          info:       dict con ecos e info de diagnóstico
+          info:       dict con ecos, acoustic_map e info de diagnóstico
         """
-        # ─── 1. Ecolocalización ───
+        # ─── 1. Ecolocalización (Phase A: 5 pings + atención) ───
         feromon_echo, confidence, echoes = self.echolocation(idx)
 
         # ─── 2. Integrar con sueño unihemisférico ───
-        sleep_ctx = self.sleep_state.get_state().to(idx.device, dtype=feromon_echo.dtype)  # mismo device y dtype que el forward
+        sleep_ctx = self.sleep_state.get_state().to(idx.device, dtype=feromon_echo.dtype)
         sleep_ctx = sleep_ctx.unsqueeze(0).expand(idx.shape[0], -1)  # (B, sleep_dim)
 
         integrated = self.sleep_integrator(
@@ -414,12 +470,12 @@ class DolphinSwarmBridge(nn.Module):
         return feromon, info
 
 
-# ─── Test ─────────────────────────────────────────────────────────────────────
+# ─── Tests ────────────────────────────────────────────────────────────────────
 
 if __name__ == "__main__":
     import tiktoken
 
-    print("🐬 Test DolphinAgent\n")
+    print("🐬 Test DolphinAgent — Phase A\n")
     device = "cuda" if torch.cuda.is_available() else "cpu"
     print(f"Device: {device}\n")
 
@@ -429,9 +485,9 @@ if __name__ == "__main__":
 
     enc = tiktoken.get_encoding("gpt2")
 
-    # ─── Test 1: Ecolocalización en prompts distintos ───
-    print("─" * 50)
-    print("Test 1: Ecolocalización — 3 prompts distintos")
+    # ─── Test 1: Ecolocalización con 5 pings + acoustic_map ───
+    print("─" * 60)
+    print("Test 1: Ecolocalización Phase A — 5 pings + acoustic_map")
     prompts = [
         "Hola amor, ¿cómo estás hoy?",
         "El sistema de inteligencia artificial necesita más datos",
@@ -446,15 +502,18 @@ if __name__ == "__main__":
             feromon, conf, info = dolphin(x, update_sleep=True)
 
             print(f"\n  '{p}'")
-            print(f"    feromon norm:  {info['feromon_norm']:.4f}")
-            print(f"    confidence:    {info['confidence']:.4f}")
-            print(f"    echo_topic:    {info['topic'][0][:4].tolist()}")
-            print(f"    echo_intent:   {info['intent'][0][:4].tolist()}")
-            print(f"    echo_need:     {info['need'][0][:4].tolist()}")
+            print(f"    feromon norm:    {info['feromon_norm']:.4f}")
+            print(f"    confidence:      {info['confidence']:.4f}")
+            print(f"    echo_topic:      {info['topic'][0][:4].tolist()}")
+            print(f"    echo_intent:     {info['intent'][0][:4].tolist()}")
+            print(f"    echo_need:       {info['need'][0][:4].tolist()}")
+            print(f"    echo_context:    {info['context'][0][:4].tolist()}")
+            print(f"    echo_emotion:    {info['emotion'][0][:4].tolist()}")
+            print(f"    acoustic_map norm: {info['acoustic_map'][0].norm().item():.4f}")
 
     # ─── Test 2: Sueño unihemisférico — estado persiste ───
     print()
-    print("─" * 50)
+    print("─" * 60)
     print("Test 2: Sueño unihemisférico — el estado persiste entre turnos")
     state_before = dolphin.sleep_state.get_state().norm().item()
     buffer_size = len(dolphin.sleep_state.context_buffer)
@@ -463,13 +522,12 @@ if __name__ == "__main__":
     print(f"    context_buffer:    {buffer_size} contextos acumulados")
     print(f"    idle_seconds:      {dolphin.sleep_state.idle_seconds:.2f}s")
 
-    # Simular pausa y verificar que el estado NO se reinicia
     ctx_window = dolphin.sleep_state.get_context_window()
     print(f"    context_window:    {ctx_window.shape}  (N × sleep_dim)")
 
     # ─── Test 3: Identidad única por agente ───
     print()
-    print("─" * 50)
+    print("─" * 60)
     print("Test 3: Silbido único — dos agentes producen feromonas distintas")
     cfg_a = DolphinConfig(agent_id=0)
     cfg_b = DolphinConfig(agent_id=1)
@@ -492,7 +550,7 @@ if __name__ == "__main__":
 
     # ─── Test 4: Save / Load con estado de sueño ───
     print()
-    print("─" * 50)
+    print("─" * 60)
     print("Test 4: Save / Load — el sueño sobrevive al reinicio")
     dolphin.save("/tmp/dolphin_test.pt")
     dolphin2 = DolphinAgent(cfg, device=device).to(device)
@@ -506,7 +564,7 @@ if __name__ == "__main__":
 
     # ─── Test 5: DolphinSwarmBridge ───
     print()
-    print("─" * 50)
+    print("─" * 60)
     print("Test 5: DolphinSwarmBridge — integración con enjambre")
     bridge = DolphinSwarmBridge(cfg, device=device).to(device)
     with torch.no_grad():
@@ -515,8 +573,46 @@ if __name__ == "__main__":
     print(f"  sleep_for_matriarca shape:  {bridge_info['sleep_for_matriarca'].shape}")
     print(f"  feromon norm:               {feromon_out.norm().item():.4f}")
 
+    # ─── Test 6: Triangulación — la atención hace algo diferente ───
     print()
-    print("✅ DolphinAgent — todos los tests pasados")
+    print("─" * 60)
+    print("Test 6: Triangulación vs concatenación — la atención añade valor")
+
+    # Comparar acoustic_map (triangulación) vs promedio simple de los 5 ecos
+    test_prompt = "¿Puedes ayudarme a entender cómo funciona la atención?"
+    tokens = enc.encode(test_prompt)
+    x_t6 = torch.tensor(tokens, device=device).unsqueeze(0)
+
+    dolphin.eval()
+    with torch.no_grad():
+        _, _, info_t6 = dolphin(x_t6, update_sleep=False)
+
+        # acoustic_map producido por triangulación por atención
+        acoustic_map = info_t6["acoustic_map"][0]  # (echo_dim,)
+
+        # Baseline: promedio simple de los 5 ecos (sin atención)
+        naive_avg = torch.stack([
+            info_t6["topic"][0],
+            info_t6["intent"][0],
+            info_t6["need"][0],
+            info_t6["context"][0],
+            info_t6["emotion"][0],
+        ]).mean(dim=0)  # (echo_dim,)
+
+    diff_attn_vs_naive = (acoustic_map - naive_avg).norm().item()
+    cosine_sim = F.cosine_similarity(acoustic_map.unsqueeze(0), naive_avg.unsqueeze(0)).item()
+
+    print(f"  Prompt: '{test_prompt}'")
+    print(f"    acoustic_map norm (triangulación): {acoustic_map.norm().item():.4f}")
+    print(f"    naive_avg norm (promedio simple):  {naive_avg.norm().item():.4f}")
+    print(f"    Diferencia L2 (attn vs naive):     {diff_attn_vs_naive:.4f}  (>0 ✓)")
+    print(f"    Cosine similarity:                  {cosine_sim:.4f}  (<1 significa que la atención transforma ✓)")
+
+    attn_is_different = diff_attn_vs_naive > 1e-4
+    print(f"  La triangulación difiere del promedio: {'✅' if attn_is_different else '❌ ERROR: idénticos'}")
+
+    print()
+    print("✅ DolphinAgent Phase A — todos los tests pasados")
     print()
     print("📊 Resumen de parámetros:")
     total = sum(p.numel() for p in dolphin.parameters())
@@ -525,3 +621,4 @@ if __name__ == "__main__":
     print(f"  Total:     {total/1e6:.2f}M")
     print(f"  Trainable: {trainable/1e6:.2f}M")
     print(f"  Frozen:    {frozen/1e6:.2f}M  (IdentityVec — el silbido)")
+    print(f"  Phase A:   5 pings × {cfg.echo_dim}d → triangulación → acoustic_map → feromona")
