@@ -290,3 +290,46 @@ class LSPNode:
 ---
 
 *Diseño: Emmanuel Cardenaz | Documentación: Cody | 2026*
+
+---
+
+## Fase Futura: Contribución Configurable por Nodo
+
+> Después de LSP v1 estable. Diseñado por Emmanuel Cardenaz.
+
+### Principio
+Nadie queda fuera por tener equipo humilde — todos participan según sus posibilidades.
+
+### Modos de contribución (configurables por el usuario)
+| Modo | Descripción | Recursos |
+|---|---|---|
+| **Máximo** | Training completo + gossip + relay | GPU + CPU full |
+| **Moderado** | Inferencia + gossip, sin training | CPU 30-50% |
+| **Mínimo (relay)** | Solo reenvía feromonas de otros | CPU <10% |
+
+### La Matriarca como coordinadora
+- Aprende qué nodos son buenos para qué tareas (vía historial de fitness)
+- Distribuye trabajo según capacidad declarada del nodo
+- Un nodo que siempre da buenas feromonas en código → recibe más queries de código
+- Un nodo humilde con CPU solo → recibe pings para relay, no training
+
+### Wire format LSP (extensión)
+El campo  del HANDSHAKE se extiende:
+```json
+{
+  capabilities: [feromon, relay],
+  contribution_mode: minimal,
+  resources: {
+    has_gpu: false,
+    cpu_cores: 2,
+    ram_gb: 7.8,
+    max_contrib_pct: 20
+  }
+}
+```
+
+### Por qué importa
+- VPS sin GPU → modo relay → ya participa hoy
+- Laptop con GPU → modo moderado → contribuye inferencia
+- Servidor con RTX 5090 → modo máximo → training + todo
+- La red es heterogénea por diseño, como una colonia de hormigas real

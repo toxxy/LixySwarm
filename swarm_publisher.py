@@ -154,6 +154,14 @@ def collect_status() -> dict:
         "ping_names": ["topic", "intent", "need", "context", "emotion"],
     }
 
+    # ─── LSP ────────────────────────────────────────────────────────────────────
+    status["lsp"] = {
+        "protocol": "LSP v1",
+        "wire_format": "LYSW",
+        "identity": "Ed25519",
+        "status": "active",
+    }
+
     return status
 
 
