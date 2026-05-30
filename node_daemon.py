@@ -71,7 +71,7 @@ def run():
     while True:
         time.sleep(60)
         tick += 1
-        n_peers = len(net.peers.all_peers())
+        n_peers = len(net.peers.alive_peers())
         q_size  = len(getattr(net, "_feromon_queue", []))
         log.info(f"💓 tick={tick} peers={n_peers} feromon_queue={q_size}")
 
