@@ -354,8 +354,20 @@ def train(cfg: SwarmTrainConfig, swarm_checkpoint: str = None):
         print(f"  → Continuando desde {swarm_checkpoint}")
         ckpt = torch.load(swarm_checkpoint, map_location=device, weights_only=False)
         # strict=False: claves del Delfín (v3) no están en checkpoints v2
-        # Los pesos del Delfín se inicializan random y se entrenan desde cero
-        missing, unexpected = swarm.load_state_dict(ckpt["model"], strict=False)
+        # Phase A: fusion layer cambió de forma (384→128 input) — filtrar size mismatches
+        current_state = swarm.state_dict()
+        filtered_model = {}
+        skipped_shape = []
+        for k, v in ckpt["model"].items():
+            if k in current_state and current_state[k].shape == v.shape:
+                filtered_model[k] = v
+            elif k in current_state:
+                skipped_shape.append(k)  # size mismatch — skip, keeps random init
+        missing, unexpected = swarm.load_state_dict(filtered_model, strict=False)
+        if skipped_shape:
+            print(f"    ⚠ Shape mismatch (Phase A reinit): {len(skipped_shape)} keys")
+            for sk in skipped_shape[:5]:
+                print(f"      {sk}: ckpt={ckpt['model'][sk].shape} vs model={current_state[sk].shape}")
         dolphin_keys_missing = [k for k in missing if k.startswith("dolphin.")]
         other_missing = [k for k in missing if not k.startswith("dolphin.")]
         print(f"  ✓ Swarm cargado (strict=False)")
