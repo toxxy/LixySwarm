@@ -27,40 +27,56 @@ PEER_HOST    = None       # IP del nodo local de Emmanuel — None = solo escuch
 FEROMON_PORT = 7337       # UDP
 GOSSIP_PORT  = 7338       # TCP
 
-def run():
-    from src.network.node import NodeIdentity
-    from src.network.swarm_network import SwarmNetwork
+IDENTITY_PATH = "/opt/lixyswarm/.lixyswarm/identity.key"
 
-    log.info("🐜 LixySwarm VPS Node arrancando...")
+def run():
+    from src.network.lsp import LSPNode, LSPIdentity
+
+    log.info("🐜 LixySwarm VPS Node arrancando (LSP v1)...")
     log.info(f"   Feromon UDP: 0.0.0.0:{FEROMON_PORT}")
     log.info(f"   Gossip  TCP: 0.0.0.0:{GOSSIP_PORT}")
 
-    identity = NodeIdentity.generate_anonymous(host="0.0.0.0")
-    log.info(f"   Node ID: {identity.node_id}")
+    # Cargar o generar identidad Ed25519 persistente
+    identity = LSPIdentity.load(IDENTITY_PATH)
+    if identity is None:
+        log.info("🔑 Generando nueva identidad Ed25519...")
+        identity = LSPIdentity.generate()
+        identity.save(IDENTITY_PATH)
+        log.info(f"   Identidad guardada en {IDENTITY_PATH}")
+    log.info(f"   Node ID: {identity.node_id_hex[:32]}...")
 
-    identity.feromon_port = FEROMON_PORT
-    identity.gossip_port  = GOSSIP_PORT
+    node = LSPNode(identity, feromon_port=FEROMON_PORT, gossip_port=GOSSIP_PORT)
 
-    net = SwarmNetwork(identity=identity, mode="lan")
-    net.start()
-    log.info("✅ SwarmNetwork activo")
+    @node.on_feromon_received
+    def on_feromon(feromon, from_node_id):
+        try:
+            norm = sum(x*x for x in (feromon if not hasattr(feromon, 'norm') else [])) ** 0.5
+            if hasattr(feromon, 'norm'):
+                norm = feromon.norm().item()
+            log.info(f"🐜 Feromona recibida de {from_node_id[:16]}... norm={norm:.3f}")
+        except Exception as e:
+            log.info(f"🐜 Feromona recibida de {from_node_id[:16]}...")
+
+    @node.on_peer_connected
+    def on_peer(node_id, host, port):
+        log.info(f"🔗 Peer conectado: {node_id[:16]}...@{host}:{port}")
+
+    node.start()
+    log.info("✅ LSPNode activo")
 
     # Conectar al nodo de Emmanuel si IP configurada
     if PEER_HOST:
         try:
-            from src.network.node import Peer
-            peer = Peer(node_id="emmanuel-local", host=PEER_HOST,
-                        feromon_port=FEROMON_PORT, gossip_port=GOSSIP_PORT)
-            net.peers.add(peer)
-            log.info(f"✅ Peer configurado: {PEER_HOST}:{FEROMON_PORT}")
+            node.connect_peer(PEER_HOST, GOSSIP_PORT)
+            log.info(f"✅ Handshake enviado a {PEER_HOST}:{GOSSIP_PORT}")
         except Exception as e:
-            log.warning(f"⚠ No se pudo añadir peer: {e}")
+            log.warning(f"⚠ No se pudo conectar al peer: {e}")
     else:
         log.info("ℹ️  PEER_HOST=None — esperando conexiones entrantes (modo relay)")
 
     def handle_signal(sig, frame):
         log.info("🛑 Señal recibida — cerrando limpiamente")
-        net.stop()
+        node.stop()
         sys.exit(0)
 
     signal.signal(signal.SIGTERM, handle_signal)
@@ -71,9 +87,8 @@ def run():
     while True:
         time.sleep(60)
         tick += 1
-        n_peers = len(net.peers.alive_peers())
-        q_size  = len(getattr(net, "_feromon_queue", []))
-        log.info(f"💓 tick={tick} peers={n_peers} feromon_queue={q_size}")
+        n_peers = len(node.peers())
+        log.info(f"💓 tick={tick} peers={n_peers}")
 
 if __name__ == "__main__":
     run()
