@@ -1,0 +1,18 @@
+# Lixy-0.1: Requirements
+
+torch>=2.8.0
+numpy>=1.26.0
+transformers>=4.40.0
+datasets>=2.19.0
+tiktoken>=0.7.0
+einops>=0.8.0
+tqdm>=4.66.0
+
+# Data
+huggingface_hub>=0.22.0
+
+# Monitoring
+wandb>=0.17.0
+
+# Dev
+pytest>=8.0.0

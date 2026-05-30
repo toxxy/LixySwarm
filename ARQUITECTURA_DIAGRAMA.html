@@ -1,0 +1,200 @@
+<!doctype html>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Lixy-0.1 — Arquitectura Bio-Inspirada</title>
+<style>
+  :root {
+    color-scheme: light dark;
+    --bg: #f8fafc; --fg: #172033; --muted: #5b6475; --line: #64748b;
+    --neutral: #e2e8f0; --input: #bfdbfe; --process: #c7d2fe;
+    --storage: #99f6e4; --external: #fde68a;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0f172a; --fg: #e5e7eb; --muted: #a3adbd; --line: #94a3b8;
+      --neutral: #334155; --input: #1d4ed8; --process: #4338ca;
+      --storage: #0f766e; --external: #92400e;
+    }
+  }
+  body { margin:0; background:var(--bg); color:var(--fg); font:14px/1.4 ui-sans-serif,system-ui,sans-serif; }
+  main { max-width:980px; margin:32px auto; padding:0 20px; }
+  svg  { width:100%; height:auto; display:block; }
+  .title   { font-size:19px; font-weight:700; fill:var(--fg); }
+  .label   { font-size:13px; font-weight:600; fill:var(--fg); }
+  .small   { font-size:11px; fill:var(--muted); }
+  .tiny    { font-size:10px; fill:var(--muted); }
+  .node    { stroke:var(--line); stroke-width:1.2; }
+  .neutral { fill:var(--neutral); }
+  .input   { fill:var(--input); }
+  .process { fill:var(--process); }
+  .storage { fill:var(--storage); }
+  .external{ fill:var(--external); }
+  .edge    { stroke:var(--line); stroke-width:1.5; fill:none; }
+  .feromon { stroke:#f97316; stroke-width:1.4; fill:none; stroke-dasharray:5 3; }
+  .infra   { stroke:#d97706; stroke-width:2.2; fill:none; }
+  .zone    { fill:none; stroke:var(--line); stroke-width:1; stroke-dasharray:6 5; opacity:.65; }
+  .zlabel  { font-size:12px; font-weight:600; fill:var(--muted); }
+</style>
+<main>
+<svg viewBox="0 0 900 650" xmlns="http://www.w3.org/2000/svg">
+<defs>
+  <marker id="a"  markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0,8 3,0 6" fill="#64748b"/></marker>
+  <marker id="af" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0,8 3,0 6" fill="#f97316"/></marker>
+  <marker id="ai" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0,8 3,0 6" fill="#d97706"/></marker>
+</defs>
+
+<!-- ══ CONNECTORS (drawn before nodes) ══ -->
+
+<!-- Input → fanout point inside Delfín zone -->
+<line x1="450" y1="84" x2="450" y2="112" class="edge" marker-end="url(#a)"/>
+
+<!-- Fanout (450,112) → 3 pings -->
+<path d="M450,112 C450,128 135,120 135,138" class="edge" marker-end="url(#a)"/>
+<path d="M450,112 C450,128 350,122 350,138" class="edge" marker-end="url(#a)"/>
+<path d="M450,112 C450,128 565,120 565,138" class="edge" marker-end="url(#a)"/>
+
+<!-- 3 pings converge → Embed 3D -->
+<path d="M135,184 C135,200 350,195 350,208" class="edge"/>
+<line x1="350" y1="184" x2="350" y2="208" class="edge"/>
+<path d="M565,184 C565,200 350,195 350,208" class="edge"/>
+
+<!-- Embed → Hormiga zone (routes to center) -->
+<path d="M350,246 C350,268 450,260 450,285" class="edge" marker-end="url(#a)"/>
+
+<!-- Row1 Feromonas (bidirectional) -->
+<line x1="186" y1="330" x2="220" y2="330" class="feromon" marker-end="url(#af)"/>
+<line x1="220" y1="322" x2="186" y2="322" class="feromon" marker-end="url(#af)"/>
+<line x1="332" y1="330" x2="366" y2="330" class="feromon" marker-end="url(#af)"/>
+<line x1="366" y1="322" x2="332" y2="322" class="feromon" marker-end="url(#af)"/>
+<line x1="478" y1="330" x2="514" y2="330" class="feromon" marker-end="url(#af)"/>
+<line x1="514" y1="322" x2="478" y2="322" class="feromon" marker-end="url(#af)"/>
+
+<!-- Row2 Feromonas (bidirectional) -->
+<line x1="230" y1="430" x2="280" y2="430" class="feromon" marker-end="url(#af)"/>
+<line x1="280" y1="422" x2="230" y2="422" class="feromon" marker-end="url(#af)"/>
+<line x1="420" y1="430" x2="470" y2="430" class="feromon" marker-end="url(#af)"/>
+<line x1="470" y1="422" x2="420" y2="422" class="feromon" marker-end="url(#af)"/>
+
+<!-- Cross feromonas Row1 → Row2 -->
+<path d="M130,360 C130,385 160,385 160,408" class="feromon" marker-end="url(#af)"/>
+<path d="M422,360 C422,385 350,385 350,408" class="feromon" marker-end="url(#af)"/>
+<path d="M570,360 C570,385 540,385 540,408" class="feromon" marker-end="url(#af)"/>
+
+<!-- Generación → Output -->
+<path d="M540,456 L540,476 L450,476 L450,515" class="edge" marker-end="url(#a)"/>
+
+<!-- Infrasónidos: Matriarca → Hormiga zone (right edge x=658) -->
+<line x1="688" y1="338" x2="658" y2="338" class="infra" marker-end="url(#ai)"/>
+<line x1="688" y1="426" x2="658" y2="426" class="infra" marker-end="url(#ai)"/>
+
+<!-- ══ NODES ══ -->
+
+<!-- Title -->
+<text x="450" y="25" text-anchor="middle" class="title">Lixy-0.1 — Arquitectura Bio-Inspirada 🐜🐘🐬</text>
+
+<!-- INPUT -->
+<rect x="295" y="42" width="310" height="42" rx="7" class="node input"/>
+<text x="450" y="59" text-anchor="middle" class="label">💬 Input — Mensaje de Emmanuel</text>
+<text x="450" y="76" text-anchor="middle" class="small">Texto en lenguaje natural</text>
+
+<!-- ── DELFÍN ZONE ── -->
+<rect x="40" y="108" width="618" height="165" rx="6" class="zone"/>
+<text x="58" y="126" class="zlabel">🐬  DELFÍN — Ecolocalización  (3 pings simultáneos)</text>
+
+<rect x="60"  y="138" width="150" height="46" rx="5" class="node process"/>
+<text x="135" y="157" text-anchor="middle" class="label">Ping · Tema</text>
+<text x="135" y="174" text-anchor="middle" class="small">¿De qué trata?</text>
+
+<rect x="275" y="138" width="150" height="46" rx="5" class="node process"/>
+<text x="350" y="157" text-anchor="middle" class="label">Ping · Emoción</text>
+<text x="350" y="174" text-anchor="middle" class="small">¿Qué siente?</text>
+
+<rect x="490" y="138" width="150" height="46" rx="5" class="node process"/>
+<text x="565" y="157" text-anchor="middle" class="label">Ping · Intención</text>
+<text x="565" y="174" text-anchor="middle" class="small">¿Qué necesita?</text>
+
+<!-- Embed 3D -->
+<rect x="225" y="208" width="250" height="38" rx="5" class="node neutral"/>
+<text x="350" y="224" text-anchor="middle" class="label">Embedding 3D del Problema</text>
+<text x="350" y="240" text-anchor="middle" class="small">Representación espacial del input</text>
+
+<!-- ── HORMIGA ZONE ── -->
+<!-- Zone: x=40 y=285 w=618 h=230 -->
+<rect x="40" y="285" width="618" height="228" rx="6" class="zone"/>
+<text x="58" y="303" class="zlabel">🐜  HORMIGA — Enjambre  (7 agentes · FeromonGate · IdentityVec)</text>
+
+<!-- Row 1 — 4 agents  x: 74,220,366,514   cx: 130,276,422,570   w:112 h:48 -->
+<rect x="74"  y="312" width="112" height="48" rx="5" class="node process"/>
+<text x="130" y="332" text-anchor="middle" class="label">Léxico</text>
+<text x="130" y="350" text-anchor="middle" class="small">Tokens · Vocab</text>
+
+<rect x="220" y="312" width="112" height="48" rx="5" class="node process"/>
+<text x="276" y="332" text-anchor="middle" class="label">Sintáctico</text>
+<text x="276" y="350" text-anchor="middle" class="small">Estructura</text>
+
+<rect x="366" y="312" width="112" height="48" rx="5" class="node process"/>
+<text x="422" y="332" text-anchor="middle" class="label">Semántico</text>
+<text x="422" y="350" text-anchor="middle" class="small">Significado</text>
+
+<rect x="514" y="312" width="112" height="48" rx="5" class="node process"/>
+<text x="570" y="332" text-anchor="middle" class="label">Contextual</text>
+<text x="570" y="350" text-anchor="middle" class="small">Coherencia</text>
+
+<!-- Row 2 — 3 agents  x: 90,280,470   cx: 160,350,540   w:140 h:48 -->
+<rect x="90"  y="408" width="140" height="48" rx="5" class="node process"/>
+<text x="160" y="427" text-anchor="middle" class="label">Razonamiento</text>
+<text x="160" y="446" text-anchor="middle" class="small">Lógica · Deducción</text>
+
+<rect x="280" y="408" width="140" height="48" rx="5" class="node process"/>
+<text x="350" y="427" text-anchor="middle" class="label">Memoria</text>
+<text x="350" y="446" text-anchor="middle" class="small">Recuperación</text>
+
+<rect x="470" y="408" width="140" height="48" rx="5" class="node process"/>
+<text x="540" y="427" text-anchor="middle" class="label">Generación ✦</text>
+<text x="540" y="446" text-anchor="middle" class="small">Síntesis final</text>
+
+<!-- Feromon legend inside Hormiga zone -->
+<line x1="58" y1="498" x2="86" y2="498" class="feromon"/>
+<text x="92" y="502" class="tiny">Feromonas digitales — vectores float32[256] de relevancia compartidos entre agentes</text>
+
+<!-- ── MATRIARCA ── -->
+<rect x="688" y="285" width="168" height="228" rx="8" class="node external"/>
+<text x="772" y="312" text-anchor="middle" class="label">🐘 Matriarca</text>
+<text x="772" y="330" text-anchor="middle" class="small">Memoria Long-Term</text>
+<text x="772" y="351" text-anchor="middle" class="tiny">~10M params · solo lectura</text>
+<text x="772" y="367" text-anchor="middle" class="tiny">Patrones históricos</text>
+<text x="772" y="383" text-anchor="middle" class="tiny">Sabiduría acumulada</text>
+<line x1="706" y1="394" x2="838" y2="394" stroke="#d97706" stroke-width="0.8" stroke-dasharray="3 2"/>
+<text x="772" y="410" text-anchor="middle" class="small" style="fill:#d97706">↙ Infrasónidos</text>
+<text x="772" y="426" text-anchor="middle" class="tiny">Vectores de orientación</text>
+<text x="772" y="441" text-anchor="middle" class="tiny">global → enjambre</text>
+<line x1="706" y1="454" x2="838" y2="454" stroke="#64748b" stroke-width="0.8" stroke-dasharray="3 2"/>
+<text x="772" y="469" text-anchor="middle" class="tiny">Transferencia entre</text>
+<text x="772" y="484" text-anchor="middle" class="tiny">generaciones (destilación)</text>
+<text x="772" y="500" text-anchor="middle" class="tiny" style="fill:#94a3b8">⚙ En desarrollo...</text>
+
+<!-- OUTPUT -->
+<rect x="295" y="515" width="310" height="44" rx="7" class="node storage"/>
+<text x="450" y="534" text-anchor="middle" class="label">💬 Output — Respuesta Generada</text>
+<text x="450" y="551" text-anchor="middle" class="small">Síntesis emergente del enjambre</text>
+
+<!-- ── LEGEND ── -->
+<text x="40" y="592" class="zlabel">Leyenda:</text>
+<rect x="104" y="580" width="16" height="14" rx="2" class="node input"/>
+<text x="125" y="592" class="tiny">Input / Output</text>
+<rect x="210" y="580" width="16" height="14" rx="2" class="node process"/>
+<text x="231" y="592" class="tiny">Agentes / Procesamiento</text>
+<rect x="370" y="580" width="16" height="14" rx="2" class="node external"/>
+<text x="391" y="592" class="tiny">Matriarca (Long-Term)</text>
+<rect x="510" y="580" width="16" height="14" rx="2" class="node neutral"/>
+<text x="531" y="592" class="tiny">Merge / Estado</text>
+<line x1="620" y1="587" x2="648" y2="587" class="infra"/>
+<text x="653" y="592" class="tiny">Infrasónidos</text>
+<line x1="730" y1="587" x2="758" y2="587" class="feromon"/>
+<text x="763" y="592" class="tiny">Feromonas</text>
+
+<!-- Status bar -->
+<text x="450" y="620" text-anchor="middle" class="tiny">Estado actual: AgentBase 125.7M params ✓ · FeromonGate ✓ · IdentityVec ✓ · Pre-training en progreso...</text>
+
+</svg>
+</main>

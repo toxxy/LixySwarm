@@ -1,0 +1,65 @@
+# Checkpoints y modelos — demasiado grandes para git
+checkpoints/
+*.pt
+*.pth
+*.bin
+*.safetensors
+
+# Datos de entrenamiento
+data/
+*.jsonl
+*.parquet
+*.arrow
+*.npy
+*.npz
+
+# Logs de entrenamiento
+*.log
+*.out
+nohup_run*.out
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# Entornos virtuales
+venv/
+env/
+.env
+.venv
+
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Experimentos locales (resultados temporales)
+experiments/*.json
+experiments/*.pt
+
+# Archivos de sesión runtime
+lixy_session.json
+lixy_session_*.json
+*.session.json
+
+# Credenciales / tokens (nunca subir)
+.env.local
+secrets.txt
+tokens.txt
+references/nanoGPT
