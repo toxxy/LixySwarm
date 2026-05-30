@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>LixySwarm — Explorer</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #0d0d0d;
+      color: #e0e0e0;
+      min-height: 100vh;
+    }
+    header {
+      background: #111;
+      border-bottom: 1px solid #1e1e1e;
+      padding: 14px 24px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    header .logo { font-size: 1.4rem; font-weight: 700; color: #4CAF50; }
+    header .subtitle { font-size: 0.8rem; color: #666; }
+    header .updated {
+      margin-left: auto;
+      font-size: 0.75rem;
+      color: #444;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 16px;
+      padding: 24px;
+    }
+    .card {
+      background: #111;
+      border: 1px solid #1e1e1e;
+      border-radius: 12px;
+      padding: 20px;
+    }
+    .card .card-title {
+      font-size: 0.75rem;
+      color: #555;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 10px;
+    }
+    .card .value {
+      font-size: 2rem;
+      font-weight: 700;
+      color: #4CAF50;
+    }
+    .card .unit {
+      font-size: 0.8rem;
+      color: #555;
+      margin-left: 4px;
+    }
+    .card .sub {
+      font-size: 0.8rem;
+      color: #444;
+      margin-top: 6px;
+    }
+    .section-title {
+      font-size: 0.85rem;
+      color: #555;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      padding: 0 24px;
+      margin-top: 8px;
+      margin-bottom: 12px;
+    }
+    .agents-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 16px;
+      padding: 0 24px 24px;
+    }
+    .agent-card {
+      background: #111;
+      border: 1px solid #1e1e1e;
+      border-radius: 12px;
+      padding: 18px;
+    }
+    .agent-card .agent-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+    .agent-card .agent-icon { font-size: 1.4rem; }
+    .agent-card .agent-name { font-weight: 700; font-size: 1rem; }
+    .agent-card .agent-role {
+      font-size: 0.75rem;
+      padding: 2px 10px;
+      border-radius: 20px;
+      margin-left: auto;
+    }
+    .role-explorador { background: #1a3a1a; color: #4CAF50; border: 1px solid #2a5a2a; }
+    .role-refinador { background: #1a1a2a; color: #7986CB; border: 1px solid #2a2a4a; }
+    .agent-bar { margin-bottom: 10px; }
+    .agent-bar .bar-label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.75rem;
+      color: #555;
+      margin-bottom: 4px;
+    }
+    .bar-track {
+      background: #1a1a1a;
+      border-radius: 4px;
+      height: 6px;
+      overflow: hidden;
+    }
+    .bar-fill {
+      height: 100%;
+      border-radius: 4px;
+      background: #4CAF50;
+      transition: width 1s ease;
+    }
+    .bar-fill.diversity { background: #7986CB; }
+    .bar-fill.confidence { background: #FFB74D; }
+    .matriarca-card {
+      margin: 0 24px 24px;
+      background: #111;
+      border: 1px solid #2a4a2a;
+      border-radius: 12px;
+      padding: 20px;
+      display: flex;
+      gap: 32px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .matriarca-card .m-icon { font-size: 3rem; }
+    .matriarca-card .m-info { flex: 1; }
+    .matriarca-card .m-title { font-size: 0.75rem; color: #4CAF50; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; }
+    .matriarca-card .m-value { font-size: 1.8rem; font-weight: 700; color: #fff; }
+    .matriarca-card .m-sub { font-size: 0.8rem; color: #555; margin-top: 4px; }
+    .readonly-badge {
+      display: inline-block;
+      background: #1a1a1a;
+      border: 1px solid #2a2a2a;
+      color: #555;
+      font-size: 0.7rem;
+      padding: 3px 10px;
+      border-radius: 20px;
+      margin-left: auto;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div>
+      <div class="logo">🌐 SwarmExplorer</div>
+      <div class="subtitle">Monitor de red en tiempo real</div>
+    </div>
+    <span class="readonly-badge">👁️ Solo lectura</span>
+    <div class="updated" id="updated">Actualizando...</div>
+  </header>
+
+  <!-- Métricas principales -->
+  <div class="grid">
+    <div class="card">
+      <div class="card-title">Nodos conectados</div>
+      <div class="value" id="nodes">1<span class="unit">/ ?</span></div>
+      <div class="sub">Red en crecimiento</div>
+    </div>
+    <div class="card">
+      <div class="card-title">Hormigas activas</div>
+      <div class="value" id="ants">3<span class="unit">agentes</span></div>
+      <div class="sub">1 explorador · 2 refinadores</div>
+    </div>
+    <div class="card">
+      <div class="card-title">Velocidad de red</div>
+      <div class="value" id="speed">12,800<span class="unit">tok/s</span></div>
+      <div class="sub">Throughput agregado</div>
+    </div>
+    <div class="card">
+      <div class="card-title">Diversidad genética</div>
+      <div class="value" id="diversity">0.74</div>
+      <div class="sub">Enjambre saludable ✅</div>
+    </div>
+    <div class="card">
+      <div class="card-title">Val Loss (mejor)</div>
+      <div class="value" id="loss">3.5687</div>
+      <div class="sub">Run 11 · −21.7% total</div>
+    </div>
+    <div class="card">
+      <div class="card-title">Runs completados</div>
+      <div class="value" id="runs">11</div>
+      <div class="sub">Aprendizaje continuo</div>
+    </div>
+  </div>
+
+  <!-- Matriarca -->
+  <div class="section-title">🐘 Matriarca</div>
+  <div class="matriarca-card">
+    <div class="m-icon">🐘</div>
+    <div class="m-info">
+      <div class="m-title">Memorias acumuladas</div>
+      <div class="m-value" id="memories">3,657</div>
+      <div class="m-sub">Inteligencia permanente · nunca se pierde</div>
+    </div>
+    <div class="m-info">
+      <div class="m-title">Generaciones</div>
+      <div class="m-value">11</div>
+      <div class="m-sub">Cada ciclo más sabia</div>
+    </div>
+  </div>
+
+  <!-- Agentes -->
+  <div class="section-title">🐜 Especialización del Enjambre</div>
+  <div class="agents-grid" id="agents-grid">
+    <!-- generado por JS -->
+  </div>
+
+  <script>
+    const agents = [
+      { id: 0, role: 'refinador', fitness: 0.490, diversity: 0.605, confidence: 0.327 },
+      { id: 1, role: 'explorador', fitness: 0.643, diversity: 0.962, confidence: 0.360 },
+      { id: 2, role: 'refinador', fitness: 0.492, diversity: 0.646, confidence: 0.313 },
+    ];
+
+    function renderAgents() {
+      const grid = document.getElementById('agents-grid');
+      grid.innerHTML = agents.map(a => `
+        <div class="agent-card">
+          <div class="agent-header">
+            <div class="agent-icon">🐜</div>
+            <div class="agent-name">Agente ${a.id}</div>
+            <div class="agent-role role-${a.role}">${a.role}</div>
+          </div>
+          <div class="agent-bar">
+            <div class="bar-label"><span>Fitness</span><span>${a.fitness.toFixed(3)}</span></div>
+            <div class="bar-track"><div class="bar-fill" style="width:${a.fitness*100}%"></div></div>
+          </div>
+          <div class="agent-bar">
+            <div class="bar-label"><span>Diversidad</span><span>${a.diversity.toFixed(3)}</span></div>
+            <div class="bar-track"><div class="bar-fill diversity" style="width:${a.diversity*100}%"></div></div>
+          </div>
+          <div class="agent-bar">
+            <div class="bar-label"><span>Confianza</span><span>${a.confidence.toFixed(3)}</span></div>
+            <div class="bar-track"><div class="bar-fill confidence" style="width:${a.confidence*100}%"></div></div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function updateTime() {
+      document.getElementById('updated').textContent =
+        'Actualizado: ' + new Date().toLocaleTimeString('es', {hour:'2-digit',minute:'2-digit',second:'2-digit'});
+    }
+
+    renderAgents();
+    updateTime();
+    setInterval(updateTime, 5000);
+  </script>
+</body>
+</html>
