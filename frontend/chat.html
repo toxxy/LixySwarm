@@ -146,36 +146,81 @@
     <button onclick="sendMsg()">Enviar</button>
   </div>
 
-  <script>
-    const chat = document.getElementById('chat');
-    const input = document.getElementById('msg-input');
+    <script>
+    const API   = "http://31.97.9.54:8080/api";
+    const chat  = document.getElementById("chat");
+    const input = document.getElementById("msg-input");
+    const btn   = document.querySelector(".input-area button");
 
-    function sendMsg() {
+    async function sendMsg() {
       const text = input.value.trim();
       if (!text) return;
 
-      // Limpiar estado vacío
-      const empty = chat.querySelector('.empty-state');
+      const empty = chat.querySelector(".empty-state");
       if (empty) empty.remove();
 
-      // Mensaje del usuario
-      addMessage(text, 'user');
-      input.value = '';
+      addMessage(text, "user");
+      input.value = "";
+      input.disabled = true;
+      btn.disabled   = true;
+      btn.textContent = "...";
 
-      // Simular respuesta del enjambre (placeholder hasta tener backend)
-      setTimeout(() => {
-        addMessage('Backend del enjambre próximamente... 🐜', 'swarm', 'Agente 1 · explorador');
-      }, 800);
+      // Indicador de escritura
+      const typing = addMessage("🐜🐘🐬 pensando...", "swarm", "enjambre");
+
+      try {
+        const res  = await fetch(API + "/chat", {
+          method: "POST",
+          headers: {"Content-Type": "application/json"},
+          body: JSON.stringify({message: text})
+        });
+        const data = await res.json();
+
+        chat.removeChild(typing);
+
+        if (data.ok) {
+          const d = data.data;
+          addMessage(d.response, "swarm", d.agent_used || "enjambre");
+        } else if (data.status === "loading") {
+          addMessage("El modelo está cargando, intenta de nuevo en unos segundos... 🐜", "swarm", "sistema");
+        } else {
+          addMessage("Error del enjambre: " + (data.detail || "desconocido"), "swarm", "error");
+        }
+      } catch(e) {
+        chat.removeChild(typing);
+        addMessage("No se pudo conectar al enjambre 🔌", "swarm", "error");
+      }
+
+      input.disabled  = false;
+      btn.disabled    = false;
+      btn.textContent = "Enviar";
+      input.focus();
     }
 
-    function addMessage(text, type, agent = '') {
-      const div = document.createElement('div');
-      div.className = `message ${type}`;
-      if (agent) div.innerHTML = `<div class="swarm-tag">🐜 ${agent}</div>`;
-      div.innerHTML += `${text}<div class="meta">${new Date().toLocaleTimeString('es', {hour:'2-digit',minute:'2-digit'})}</div>`;
+    function addMessage(text, type, agent) {
+      const div = document.createElement("div");
+      div.className = "message " + type;
+      let html = "";
+      if (agent) html += "<div class=\"swarm-tag\">🐜 " + agent + "</div>";
+      html += text + "<div class=\"meta\">" + new Date().toLocaleTimeString("es", {hour:"2-digit",minute:"2-digit"}) + "</div>";
+      div.innerHTML = html;
       chat.appendChild(div);
       chat.scrollTop = chat.scrollHeight;
+      return div;
     }
+
+    // Verificar estado de la API al cargar
+    fetch(API + "/health").then(r => r.json()).then(d => {
+      if (d.status === "ok") {
+        const dot = document.querySelector(".status");
+        if (dot) dot.innerHTML = "<div class=\"dot\"></div>Conectado";
+      }
+    }).catch(() => {
+      const dot = document.querySelector(".status");
+      if (dot) { dot.innerHTML = "⚠️ Sin conexión"; dot.style.color = "#f44336"; }
+    });
+
+    input.focus();
   </script>
 </body>
 </html>

@@ -214,46 +214,60 @@
     <!-- generado por JS -->
   </div>
 
-  <script>
-    const agents = [
-      { id: 0, role: 'refinador', fitness: 0.490, diversity: 0.605, confidence: 0.327 },
-      { id: 1, role: 'explorador', fitness: 0.643, diversity: 0.962, confidence: 0.360 },
-      { id: 2, role: 'refinador', fitness: 0.492, diversity: 0.646, confidence: 0.313 },
-    ];
+    <script>
+    const API = "http://31.97.9.54:8080/api";
 
-    function renderAgents() {
-      const grid = document.getElementById('agents-grid');
-      grid.innerHTML = agents.map(a => `
-        <div class="agent-card">
-          <div class="agent-header">
-            <div class="agent-icon">🐜</div>
-            <div class="agent-name">Agente ${a.id}</div>
-            <div class="agent-role role-${a.role}">${a.role}</div>
-          </div>
-          <div class="agent-bar">
-            <div class="bar-label"><span>Fitness</span><span>${a.fitness.toFixed(3)}</span></div>
-            <div class="bar-track"><div class="bar-fill" style="width:${a.fitness*100}%"></div></div>
-          </div>
-          <div class="agent-bar">
-            <div class="bar-label"><span>Diversidad</span><span>${a.diversity.toFixed(3)}</span></div>
-            <div class="bar-track"><div class="bar-fill diversity" style="width:${a.diversity*100}%"></div></div>
-          </div>
-          <div class="agent-bar">
-            <div class="bar-label"><span>Confianza</span><span>${a.confidence.toFixed(3)}</span></div>
-            <div class="bar-track"><div class="bar-fill confidence" style="width:${a.confidence*100}%"></div></div>
-          </div>
-        </div>
-      `).join('');
+    async function loadStatus() {
+      try {
+        const res  = await fetch(API + "/swarm/status");
+        const json = await res.json();
+        if (!json.ok) return;
+        const d = json.data;
+        const net = d.network  || {};
+        const met = d.metrics  || {};
+        const mat = d.matriarca|| {};
+
+        set("nodes",     (net.connected_count ?? 1) + " nodo" + ((net.connected_count ?? 1) !== 1 ? "s" : ""));
+        set("ants",      (d.agent_count || 3) + " agentes");
+        set("speed",     met.toks_per_sec != null ? met.toks_per_sec.toLocaleString() + " tok/s" : "—");
+        set("diversity", d.swarm_diversity != null ? d.swarm_diversity.toFixed(3) : "—");
+        set("loss",      met.val_loss != null ? met.val_loss.toFixed(4) : "—");
+        set("runs",      met.step     != null ? "step " + met.step.toLocaleString() : "—");
+        set("memories",  mat.memory_count != null ? mat.memory_count.toLocaleString() : "—");
+
+        if (d.agents && d.agents.length) renderAgents(d.agents);
+
+        const ts = d.last_update ? new Date(d.last_update) : new Date();
+        set("updated", "Actualizado: " + ts.toLocaleTimeString("es", {hour:"2-digit",minute:"2-digit",second:"2-digit"}));
+      } catch(e) { console.warn("API:", e); }
     }
 
-    function updateTime() {
-      document.getElementById('updated').textContent =
-        'Actualizado: ' + new Date().toLocaleTimeString('es', {hour:'2-digit',minute:'2-digit',second:'2-digit'});
+    function set(id, val) { const el = document.getElementById(id); if (el) el.textContent = val; }
+
+    function renderAgents(agents) {
+      const grid = document.getElementById("agents-grid");
+      if (!grid) return;
+      grid.innerHTML = agents.map(a =>
+        "<div class=\"agent-card\">" +
+        "<div class=\"agent-header\"><div class=\"agent-icon\">🐜</div>" +
+        "<div class=\"agent-name\">Agente " + a.id + "</div>" +
+        "<div class=\"agent-role role-" + a.role + "\">" + a.role + "</div></div>" +
+        bar("Fitness",    a.fitness,    "") +
+        bar("Diversidad", a.diversity,  "diversity") +
+        bar("Confianza",  a.confidence, "confidence") +
+        "</div>"
+      ).join("");
     }
 
-    renderAgents();
-    updateTime();
-    setInterval(updateTime, 5000);
+    function bar(label, val, cls) {
+      const v = (val || 0).toFixed(3);
+      const pct = (val || 0) * 100;
+      return "<div class=\"agent-bar\"><div class=\"bar-label\"><span>" + label + "</span><span>" + v + "</span></div>" +
+             "<div class=\"bar-track\"><div class=\"bar-fill " + cls + "\" style=\"width:" + pct + "%\"></div></div></div>";
+    }
+
+    loadStatus();
+    setInterval(loadStatus, 15000);
   </script>
 </body>
 </html>
