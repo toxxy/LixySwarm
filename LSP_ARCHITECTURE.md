@@ -1,176 +1,292 @@
 # LixySwarm Protocol (LSP) — Decisiones de Arquitectura
-
-> Estado: Pre-diseño. Implementación después de Run 11 + Fase 2 LAN.
-> Este documento captura las decisiones fundacionales antes de escribir el RFC formal.
+*Última actualización: 2026-05-30 | Estado: Pre-implementación (post DolphinAgent Phase A)*
 
 ---
 
-## AD-001: Matriarca Dual (Personal + Global)
+## Contexto
 
-### Decisión
-LSP soporta dos capas de Matriarca con identidades y ciclos de vida separados:
+LSP es el protocolo nativo de LixySwarm para distribución en internet abierta. No es un wrapper de TCP/UDP genérico — define la semántica del enjambre a nivel de protocolo.
 
-**Matriarca Personal (privada, local)**
-- Almacenada exclusivamente en la máquina del usuario
-- Aprende solo de las interacciones del usuario con su instancia de LixySwarm
-- Encriptada con la llave privada del usuario (AES-256-GCM con clave derivada de Ed25519)
-- Nunca se transmite a la red — ni siquiera como gradientes
-- Tiene prioridad sobre la Global en inferencia runtime:
+**Objetivo:** Que cualquier desarrollador pueda implementar un nodo en Rust/Go/C++ solo leyendo este documento.
+
+**Prerequisito para implementar:** DolphinAgent Phase A + Hormigas Dinámicas completados.
+
+---
+
+## Decisiones de Arquitectura
+
+### AD-001: Matriarca Dual (Personal + Global)
+
+**Decisión:** LSP soporta dos capas de Matriarca con identidades y ciclos de vida separados.
+
+**Matriarca Personal (privada, nunca sale del nodo)**
+- Aprende solo de las interacciones del usuario con su instancia
+- Encriptada con clave derivada de la keypair Ed25519 del nodo (AES-256-GCM)
+- Nunca se transmite — ni como gradientes, ni como embeddings
+- Tiene prioridad sobre la Global:
   ```
   infrasound_final = α * infrasound_personal + (1-α) * infrasound_global
-  donde α ∈ [0.6, 0.9] por defecto (personal domina)
+  donde α ∈ [0.6, 0.9] (personal domina por defecto)
   ```
 
 **Matriarca Global (distribuida, compartida)**
-- Aprende del enjambre colectivo a través de gossip de conocimiento destilado
-- Solo se comparten memorias sintéticas/destiladas (nunca texto raw de conversaciones)
-- Cada contribución al banco global va firmada criptográficamente por el nodo origen
-- Actualizable via protocolo de consensus (votación ponderada por reputación del nodo)
+- Aprende del enjambre colectivo via gossip de **conocimiento destilado**
+- Solo memorias sintéticas (nunca texto raw de conversaciones)
+- Cada contribución firmada criptográficamente por el nodo origen
+- Actualizable via consensus ponderado por reputación del nodo
 
-### Implicaciones para LSP
-- El wire format debe incluir campo `matriarca_tier`: PERSONAL | GLOBAL | BOTH
-- Los mensajes de gossip de Matriarca solo propagan contenido GLOBAL
-- El protocolo garantiza que datos de tier PERSONAL nunca aparecen en mensajes de red
+**Implicación para el wire format:**
+- Campo `matriarca_tier`: PERSONAL | GLOBAL | BOTH
+- Mensajes de gossip de Matriarca solo propagan contenido GLOBAL
+- Garantía de protocolo: datos PERSONAL nunca aparecen en mensajes de red
 
 ---
 
-## AD-002: Identidad Criptográfica Descentralizada (sin servidor central)
+### AD-002: Identidad Criptográfica Descentralizada
 
-### Decisión
-Cada nodo LixySwarm tiene identidad basada en criptografía de curva elíptica:
+**Decisión:** Cada nodo tiene identidad basada en Ed25519. Sin servidor central, sin registro.
 
-**Generación de identidad (setup one-time)**
-```
-privkey = Ed25519.generate()           # nunca sale de la máquina
-pubkey = Ed25519.public_key(privkey)   # identidad pública del nodo
-node_id = SHA256(pubkey)[:16]          # 16 bytes = ID del nodo en la red
+```python
+# Al primer arranque del nodo:
+from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
+
+private_key = Ed25519PrivateKey.generate()
+public_key  = private_key.public_key()
+node_id     = sha256(public_key.public_bytes_raw())[:16].hex()  # 64-bit ID
+
+# Guardado encriptado localmente:
+# ~/.lixyswarm/identity.key.enc  (privada, AES-256-GCM + passphrase)
+# ~/.lixyswarm/identity.pub      (pública, compartible libremente)
 ```
 
-**Firma de feromonas**
-Cada FeromonMessage incluye:
+**Por qué Ed25519 y no X25519:**
+- Ed25519 es para firma (verificar autenticidad de mensajes)
+- Cada mensaje de feromona va firmado → contribuciones verificables
+- Un nodo no puede falsificar mensajes de otro nodo
+
+**Node reputation:**
 ```
+reputation = weighted_moving_average(
+    [verified_contributions, uptime, feromon_quality_score]
+)
+# Peso en el consensus de Matriarca Global ∝ reputation
+```
+
+---
+
+### AD-003: Jerarquía de Capas
+
+**Decisión:** LSP es un protocolo nativo que define QUÉ se transporta, no cómo.
+
+```
+Capa de Aplicación:  LixySwarm (feromonas, gossip, handshake)
+        │
+Capa LSP:            Wire format, semántica de feromona, TTL, decay
+        │
+Capa de Transporte:  UDP (feromonas) o TCP (gossip) — swappable
+        │
+Capa de Red:         IP (LAN/internet)
+```
+
+**LSP no es WebSocket, no es gRPC, no es Kafka.**
+Define el protocolo de enjambre como ciudadano de primera clase.
+
+---
+
+### AD-004: Modo Dual LAN/Internet
+
+**Decisión:** El mismo protocolo LSP funciona en LAN y en internet abierta, con diferente capa de descubrimiento.
+
+```
+LAN:      mDNS "_lixyswarm._udp.local" → auto-discovery sin config
+Internet: DHT Kademlia-light → descubrimiento distribuido
+          + Relay nodes para NAT traversal
+
+Mismo wire format, misma semántica, diferente capa de descubrimiento.
+No reemplazar LAN con Internet — extenderla.
+```
+
+---
+
+## Wire Format LSP v1
+
+```
+┌─────────────────────────────────────────────────────────┐
+│ [4B]  Magic:    0x4C595357  ("LYSW")                    │
+│ [1B]  Version:  0x01                                    │
+│ [1B]  Type:     0x01=FEROMON 0x02=GOSSIP                │
+│                 0x03=HANDSHAKE 0x04=PING 0x05=LEGACY    │
+│ [2B]  Flags:    bit0=compressed bit1=signed bit2=urgent │
+│ [4B]  Payload length (uint32, little-endian)            │
+│ [32B] Node ID (Ed25519 public key, raw bytes)           │
+│ [64B] Signature (Ed25519, over payload bytes)           │
+│ [NB]  Payload (zstd compressed si Flags.bit0=1)         │
+└─────────────────────────────────────────────────────────┘
+Total overhead: 108B por mensaje
+```
+
+### Payload: FEROMON (0x01)
+```json
 {
-  node_id:    bytes[16]   # SHA256(pubkey)[:16]
-  agent_id:   uint8       # 0-N (qué agente generó la feromona)
-  timestamp:  uint64      # unix ms (para TTL y replay protection)
-  feromon:    float16[D]  # tensor de feromona comprimido
-  signature:  bytes[64]   # Ed25519.sign(node_id || agent_id || timestamp || feromon)
+  "feromon": [float32 × 256],   // ~1KB raw, ~400B comprimido
+  "step": 53000,
+  "fitness": 0.58,
+  "agent_role": "explorador",
+  "timestamp": 1748649600.0,
+  "ttl": 3
 }
 ```
 
-**Verificación en recepción**
+### Payload: GOSSIP (0x02)
+```json
+{
+  "kind": "matriarca_global",
+  "memories": [
+    {
+      "embedding": [float32 × 256],
+      "importance": 0.72,
+      "synthetic": true          // nunca texto raw
+    }
+  ],
+  "node_reputation": 0.85
+}
+```
+
+### Payload: LEGACY (0x05) ← nuevo, para legado genético
+```json
+{
+  "ant_id": "node_abc123:ant_2",
+  "role": "refinador",
+  "fitness_avg": 0.61,
+  "top_patterns": [float32 × 256],   // patrones más fuertes
+  "steps_alive": 15000,
+  "cause_of_death": "low_fitness"    // o "node_disconnect"
+}
+```
+
+---
+
+## Semántica de Feromona en el Protocolo
+
+A diferencia de otros protocolos donde el payload es opaco, LSP define semántica nativa:
+
+**TTL de señal:** `ttl` se decrementa en cada hop. Feromona con `ttl=0` no se reenvía. Evita broadcast infinito sin coordinar.
+
+**Decay temporal:** El receptor aplica decay exponencial basado en `timestamp`:
 ```python
-if not Ed25519.verify(msg.pubkey, msg.signature, msg.payload):
-    drop(msg)  # firma inválida — rechazar silenciosamente
-if msg.node_id != SHA256(msg.pubkey)[:16]:
-    drop(msg)  # identidad no coincide con pubkey
-if abs(msg.timestamp - now_ms) > 30_000:
-    drop(msg)  # replay protection: rechazar mensajes >30s old
+age_s = now() - msg.timestamp
+decayed = feromon * exp(-0.1 * age_s)  # decay rate configurable por nodo
 ```
 
-**Matriarca Personal encriptada**
-```
-key = HKDF(privkey, salt="lixy-matriarca-v1")
-encrypted_bank = AES256GCM.encrypt(key, matriarca_memory.pt)
-```
-El archivo `.pt` en disco siempre está encriptado. Solo se descifra en RAM durante operación.
-
-### Propiedades garantizadas
-- ✅ Sin servidor de autenticación central
-- ✅ El usuario es dueño de su identidad (privkey = identidad)
-- ✅ Contribuciones al enjambre son atribuibles y verificables
-- ✅ Nodos maliciosos con firmas inválidas son rechazados automáticamente
-- ✅ Matriarca Personal es ilegible para terceros (encriptada en reposo)
-- ✅ Replay attacks bloqueados por timestamp + TTL
-
----
-
-## AD-003: Jerarquía de protocolos
-
-```
-┌─────────────────────────────────┐
-│   LixySwarm Application Layer   │  (Matriarca, Feromonas, Gossip)
-├─────────────────────────────────┤
-│   LSP — LixySwarm Protocol      │  ← este es el nuevo protocolo
-│   (semántica de enjambre,        │
-│    identidad, merge, TTL)        │
-├──────────────┬──────────────────┤
-│   UDP        │   TCP / QUIC     │  (transporte swappable)
-│ (feromonas,  │  (gossip confiable│
-│  fire&forget)│   Matriarca sync) │
-├──────────────┴──────────────────┤
-│   IP (LAN local o internet)      │
-└─────────────────────────────────┘
-```
-
-LSP es la capa que no existe en ningún protocolo actual: define QUÉ significa una feromona en el enjambre, cómo se mezcla, quién la firmó, cuánto vive. TCP/UDP son solo el cable.
-
----
-
----
-
-## AD-004: Sistema de Reputación de Nodos
-
-### Decisión
-Cada nodo tiene un score de reputación R ∈ [0.0, 1.0] que evoluciona con su comportamiento:
-
-**Arranque (bootstrap)**
-```
-R_nuevo = 0.1   # peso mínimo — nodos nuevos contribuyen poco al merge
-```
-
-**Acumulación de confianza**
-```
-# Feromona útil = cosine_similarity con consenso del enjambre > umbral
-if cos_sim(feromon_recv, consensus) > 0.7:
-    R = min(1.0, R + 0.005)   # subida gradual (+0.5% por feromona útil)
-```
-
-**Penalización por outliers**
-```
-# Feromona outlier = muy diferente al consenso actual
-if cos_sim(feromon_recv, consensus) < 0.2:
-    R = max(0.0, R - 0.02)    # bajada más rápida (-2% por outlier)
-    # Outlier repetido = señal de nodo maligno o desalineado
-```
-
-**Banneo por comportamiento repetido**
-```
-if consecutive_outliers >= 10:
-    ban(node_id, duration=3600)   # bloquear 1h
-if lifetime_outlier_rate > 0.5:
-    ban(node_id, duration=86400)  # bloquear 24h — nodo sistemáticamente dañino
-```
-
-**Uso en merge de feromonas**
+**Merge-on-receipt:** El nodo receptor no almacena todas las feromonas por separado — las mergea en su pool local inmediatamente:
 ```python
-# El peso en el merge es proporcional a la reputación
-merged = sum(R[i] * feromon[i] for i in peers) / sum(R[i] for i in peers)
+pool += alpha * decayed_feromon  # alpha ∝ sender reputation
 ```
 
-### Propiedades garantizadas
-- ✅ Nodos nuevos no pueden dominar el enjambre inmediatamente
-- ✅ Contribuciones consistentes acumulan influencia gradualmente
-- ✅ Nodos con garbage son expulsados automáticamente sin coordinación central
-- ✅ Sin autoridad central que decida quién es confiable — emerge del comportamiento
-- ✅ Resistente a ataques Sybil: muchos nodos nuevos con R=0.1 no superan un nodo R=0.9
-
-### Almacenamiento
-- Cada nodo mantiene su tabla de reputación local (no hay tabla global centralizada)
-- El gossip periódico puede incluir reputación observada (para convergencia más rápida)
-- Persistencia: `checkpoints/node_reputation.json` — sobrevive reinicios
-
 ---
-## Pendiente para el RFC formal
 
-- [ ] Formato de paquete detallado (wire format con offsets exactos)
-- [ ] Diagrama de estados del protocolo de handshake
-- [ ] Algoritmo de merge de feromonas remotas (weighted average vs otros)
-- [ ] Protocolo de consensus para actualizar Matriarca Global
-- [x] Mecanismo de reputación de nodos — ver AD-004
-- [ ] Versioning del protocolo (compatibilidad hacia atrás)
-- [ ] Vectores de test para validar implementaciones en otros lenguajes
+## Topología del Enjambre
+
+Los nodos no son clientes/servidores — son **ciudadanos de primera clase**:
+
+```
+Cualquier nodo puede:
+  ✓ Emitir feromonas
+  ✓ Recibir y mergear feromonas de otros
+  ✓ Contribuir a la Matriarca Global
+  ✓ Ser relay para otros nodos (TTL forwarding)
+  ✓ Abandonar la red sin romperla (el enjambre se auto-reconfigura)
+
+Ningún nodo puede:
+  ✗ Imponer su feromona (ponderado por reputation)
+  ✗ Leer la Matriarca Personal de otro nodo
+  ✗ Identificar usuarios (solo node_id criptográfico)
+```
 
 ---
 
-*Última actualización: 2026-05-29 | Autor: Cody (basado en decisiones de Emmanuel Cardenaz)*
+## Reputación de Nodos
+
+```python
+class NodeReputation:
+    # Se actualiza cada N rounds de gossip
+    
+    verified_contributions: int   # mensajes firmados y válidos recibidos
+    uptime_hours: float           # tiempo activo en la red
+    feromon_quality: float        # cos_sim con consensus de feromonas
+    
+    @property
+    def score(self) -> float:
+        return harmonic_mean([
+            min(verified_contributions / 1000, 1.0),
+            min(uptime_hours / 720, 1.0),    # 720h = 30 días
+            feromon_quality
+        ])
+```
+
+La reputación determina el peso en:
+1. Consensus de Matriarca Global
+2. Peso en merge de feromonas
+3. Prioridad de relay (nodos de alta reputación hacen más relay)
+
+---
+
+## Implementación de Referencia (Python) — Esqueleto
+
+```python
+# src/network/lsp.py (a implementar)
+
+class LSPNode:
+    def __init__(self, identity: Ed25519PrivateKey, config: LSPConfig):
+        self.identity = identity
+        self.node_id  = sha256(identity.public_key().public_bytes_raw())[:16]
+        self.peers    = PeerTable(max_peers=50)
+        self.feromon_pool = FeromonPool(decay_rate=0.1)
+    
+    def broadcast_feromon(self, feromon: Tensor, fitness: float):
+        msg = FeromonMessage(
+            feromon=feromon.tolist(),
+            fitness=fitness,
+            ttl=3
+        )
+        payload = zstd.compress(json.dumps(msg).encode())
+        packet = build_packet(LSPType.FEROMON, payload, self.identity)
+        self.peers.broadcast_udp(packet)
+    
+    def on_receive(self, packet: bytes, sender_addr: tuple):
+        msg = parse_and_verify(packet)  # verifica firma Ed25519
+        if msg is None:
+            return  # descarta mensajes inválidos
+        
+        if msg.type == LSPType.FEROMON:
+            self.feromon_pool.merge(msg.feromon, weight=self.peers.reputation(msg.node_id))
+            if msg.ttl > 0:
+                self.relay(packet, decrement_ttl=True)  # forward a otros peers
+        
+        elif msg.type == LSPType.GOSSIP:
+            self.matriarca_global.integrate(msg.memories, weight=self.peers.reputation(msg.node_id))
+        
+        elif msg.type == LSPType.LEGACY:
+            self.matriarca_local.store_genetic_legacy(msg.legacy_data)
+```
+
+---
+
+## Estado y Próximos Pasos
+
+| Paso | Estado |
+|---|---|
+| SwarmNetwork Fase 1 (UDP+TCP básico) | ✅ |
+| mDNS LAN auto-discovery | ✅ en diseño |
+| Test físico multi-host LAN | ⏳ |
+| VPS como primer nodo externo | ⏳ (checkpoint pendiente de transferir) |
+| Diseño AD-001 a AD-004 | ✅ este documento |
+| Implementación LSP wire format | ⏳ post DolphinAgent Phase A |
+| Identidad Ed25519 | ⏳ |
+| Matriarca Dual (Personal + Global) | ⏳ |
+| DHT Kademlia-light | ⏳ |
+| Relay + NAT traversal | ⏳ largo plazo |
+
+---
+
+*Diseño: Emmanuel Cardenaz | Documentación: Cody | 2026*

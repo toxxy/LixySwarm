@@ -1,7 +1,21 @@
-# LixySwarm Distributed Protocol — Design Document
-**Autor:** Cody  
-**Estado:** Diseño v0.1  
-**Objetivo:** Red P2P donde cualquier máquina puede unirse y correr agentes del enjambre — sin servidor central.
+# LixySwarm Distributed Protocol — Diseño v0.2
+*Última actualización: 2026-05-30 | Estado: SwarmNetwork Fase 1 implementada y testeada*
+
+---
+
+## Estado de Implementación
+
+| Componente | Estado | Notas |
+|---|---|---|
+| SwarmNetwork básica | ✅ | UDP + TCP, 23/23 tests |
+| Feromon broadcast UDP | ✅ | Fire-and-forget, < 1KB/msg |
+| TCP gossip bidireccional | ✅ | Confiable, 15/15 integración |
+| `inject_remote_feromon()` | ✅ | Recibe feromona de otro nodo |
+| `merge_remote_feromons()` | ✅ | Integra todas las recibidas, cos_sim=1.0 |
+| mDNS descubrimiento LAN | ✅ en diseño | Implementado, test físico multi-host pendiente |
+| LixySwarm Protocol (LSP) | ⏳ | Post DolphinAgent Phase A |
+| Identidad criptográfica | ⏳ | Ed25519, parte de LSP |
+| Matriarca Dual | ⏳ | Personal + Global, parte de LSP |
 
 ---
 
@@ -9,272 +23,180 @@
 
 1. **Single-node primero** — funciona perfectamente en una sola PC hoy
 2. **P2P verdadero** — sin servidor central, sin punto único de fallo
-3. **Ligero** — feromonas son tensores pequeños (256 floats = 1KB), funciona en laptop
+3. **Ligero** — feromonas son tensores pequeños (256 floats = ~1KB), funciona en laptop/VPS
 4. **Extensible** — agregar nodo no rompe el enjambre existente
-5. **Privacy-preserving** — solo se comparten gradientes/feromonas, nunca datos
+5. **Privacy-preserving** — solo se comparten feromonas destiladas, nunca datos raw
+6. **Soberanía** — cada nodo controla su Matriarca Personal
 
 ---
 
-## Arquitectura General
+## Arquitectura Actual (Fase 1)
 
 ```
-[Nodo A]                    [Nodo B]                    [Nodo C]
-┌──────────────┐            ┌──────────────┐            ┌──────────────┐
-│ AgentBase×3  │◄──feromon──│ AgentBase×3  │◄──feromon──│ AgentBase×3  │
-│ Matriarca    │            │ Matriarca    │            │ Matriarca    │
-│ NodeDaemon   │◄──gossip───│ NodeDaemon   │◄──gossip───│ NodeDaemon   │
-│ PeerTable    │            │ PeerTable    │            │ PeerTable    │
-└──────────────┘            └──────────────┘            └──────────────┘
-        ▲                           ▲                           ▲
-        └───────────── DHT ─────────────────────────────────────┘
+[Nodo Local — Emmanuel]         [VPS — Nodo Externo]
+┌──────────────────────┐        ┌──────────────────────┐
+│ AntAgent × 3         │        │ AntAgent × N         │
+│ DolphinAgent         │        │ DolphinAgent         │
+│ Matriarca Personal   │        │ Matriarca Personal   │
+│ SwarmNetwork         │◄───────│ SwarmNetwork         │
+│   UDP 7337 (feromon) │        │   UDP 7337 (feromon) │
+│   TCP 7337 (gossip)  │        │   TCP 7337 (gossip)  │
+└──────────────────────┘        └──────────────────────┘
+         ▲                                ▲
+         └──────────── LAN/Internet ──────┘
+                  (feromonas + gossip)
 ```
 
 ---
 
-## 1. Descubrimiento de Nodos (DHT)
+## SwarmNetwork — API Actual
 
-### Node ID
-Derivado del `IdentityVec` ya existente — no crear nueva identidad:
 ```python
-import hashlib, torch
-identity_bytes = agent.identity_vec.numpy().tobytes()
-node_id = hashlib.sha256(identity_bytes).hexdigest()[:16]  # 64-bit ID
-```
+# src/network/swarm_network.py
 
-### Bootstrap
-Sin servidor central — usar **bootstrap nodes conocidos** (como Bitcoin/BitTorrent):
-```python
-BOOTSTRAP_NODES = [
-    # Pueden ser IPs estáticas de nodos confiables, o mDNS en LAN
-    "lixy.bootstrap.example:4444",  # placeholder — en producción usar DNS TXT record
-]
-```
-
-Para LAN (caso más común hoy): **mDNS/Zeroconf** — sin config manual:
-```python
-# Anunciar via mDNS:  "_lixyswarm._udp.local"
-# Descubrir: escuchar broadcasts en red local
-```
-
-### Kademlia-light DHT
-Tabla de routing simplificada (no necesitamos full Kademlia ahora):
-```python
-class PeerTable:
-    max_peers: int = 50           # vecinos conocidos
-    k_bucket_size: int = 8        # por XOR-distance bucket
+class SwarmNetwork:
+    def start(host, port):
+        """Levanta UDP + TCP listeners."""
     
-    def closest_peers(self, target_id: str, n=3) -> List[Peer]:
-        """Retorna los n peers más cercanos por XOR distance al target."""
+    def connect_peer(ip, port):
+        """Conectar a nodo externo explícitamente (VPS, nodo remoto)."""
     
-    def add_peer(self, peer: Peer): ...
-    def remove_dead(self, timeout_s=60): ...
+    def broadcast_feromon(feromon_tensor: Tensor):
+        """Envía feromona a todos los peers vía UDP."""
+    
+    def inject_remote_feromon(feromon_tensor: Tensor):
+        """Recibe feromona de otro nodo y la encola."""
+    
+    def merge_remote_feromons() -> Tensor:
+        """Promedia todas las feromonas recibidas en la cola."""
+    
+    def gossip_state(state_dict: dict):
+        """Sincroniza estado del enjambre via TCP (confiable)."""
 ```
 
 ---
 
-## 2. Sincronización de Feromonas
+## Formato de Mensaje de Feromona (actual)
 
-### Formato del Mensaje (ultra-ligero)
 ```python
 @dataclass
 class FeromonMessage:
-    node_id: str          # 16 chars (64-bit hex)
-    agent_id: int         # 0-2 (1 byte)
-    timestamp_ms: int     # 8 bytes
-    feromon: bytes        # float16 × 256 = 512 bytes
-    signature: bytes      # 8 bytes HMAC-truncated para autenticidad
-    # TOTAL: ~550 bytes por mensaje — cabe en un UDP packet
+    node_id: str          # ID del nodo origen (hash del IdentityVec)
+    feromon: Tensor       # [256] float32 = 1KB
+    step: int             # paso de training del nodo origen
+    fitness: float        # fitness del agente emisor
+    timestamp: float      # unix timestamp
+    ttl: int = 3          # Time-To-Live: hops máximos
 ```
 
-Serialización con `struct` (no JSON, no protobuf — máxima velocidad):
+**Tamaño total por mensaje:** ~1.1KB (feromona 1KB + metadata 100B)
+**Frecuencia:** cada forward pass en training, cada turno en runtime
+
+---
+
+## Descubrimiento de Nodos
+
+### LAN (implementado)
+```
+mDNS service: "_lixyswarm._udp.local"
+Puerto: 7337
+Sin configuración manual — auto-discovery en red local
+```
+
+### Internet (diseño)
+```
+Fase A: IPs explícitas en config (VPS actual)
+Fase B: DHT Kademlia-light
+Fase C: DHT + relay nodes para NAT traversal
+```
+
+### Node ID (actual)
 ```python
-import struct, torch
-
-FEROMON_HEADER = "16sIQ512s8s"  # node_id, agent_id, ts_ms, feromon_f16, sig
-
-def pack_feromon(node_id: str, agent_id: int, feromon: torch.Tensor) -> bytes:
-    f16 = feromon.half().numpy().tobytes()  # float32→float16: mitad de tamaño
-    ts = int(time.time() * 1000)
-    sig = hmac.new(SHARED_KEY, f16, 'sha256').digest()[:8]
-    return struct.pack(FEROMON_HEADER, node_id.encode(), agent_id, ts, f16, sig)
-```
-
-### Transporte
-- **UDP** para feromonas (tolerante a pérdida — una feromona perdida no es crítica)
-- **WebSockets/TCP** para gradientes y gossip de Matriarca (requieren confiabilidad)
-- Puerto default: `4444` (UDP feromonas), `4445` (TCP gossip)
-
-### Política de Aceptación
-```python
-def accept_feromon(msg: FeromonMessage) -> bool:
-    # 1. Verificar firma
-    # 2. No demasiado vieja (< 5 segundos)
-    # 3. No del mismo node_id que nosotros
-    # 4. Rate limiting: max 10 feromonas/sec por nodo
-    return all([valid_sig, fresh, not_self, not_rate_limited])
+identity_bytes = agent.identity_vec.numpy().tobytes()
+node_id = hashlib.sha256(identity_bytes).hexdigest()[:16]
 ```
 
 ---
 
-## 3. Matriarca Distribuida — Gossip Protocol
+## LixySwarm Protocol (LSP) — Diseño (próxima implementación)
 
-Inspirado en **Cassandra gossip** y **CRDTs** (Conflict-free Replicated Data Types).
+> Protocolo nativo para enjambre distribuido en internet. No un wrapper de TCP/UDP genérico — define semántica de feromona a nivel de protocolo.
 
-### Principio
-Cada nodo tiene su propia Matriarca local. Periódicamente comparte un **digest** del banco de memorias con sus vecinos. Si un vecino tiene memorias que yo no tengo (basado en timestamps), las solicita.
+### Por qué LSP y no WebSocket/gRPC
+- **Wire format propio**: magic bytes, versión, tipo, payload comprimido
+- **Semántica de feromona nativa**: merge-on-receipt, TTL de señal, decay temporal
+- **Topología de enjambre**: nodos son ciudadanos de primera clase
+- **Eficiencia**: < 1KB por feromona 256d con compresión
+- **Cualquier dev puede implementar**: spec RFC-style → nodo en Rust/Go/C++ solo leyendo el doc
 
-### Gossip Round (cada 30 segundos)
+### Wire Format Propuesto
 ```
-Nodo A → Nodo B: MemoryDigest(count=37, hash=abc123, newest_ts=1780000000)
-Nodo B → Nodo A: "Tengo 42 memorias, mi newest es 1780001000 — ¿quieres mis últimas 5?"
-Nodo A → Nodo B: "Sí, dame las memorias con ts > 1780000000"
-Nodo B → Nodo A: [Memory1, Memory2, Memory3, Memory4, Memory5]  # embeddings + metadata
-Nodo A: matriarca.merge(nuevas_memorias)
-```
-
-### Merge de Memorias (CRDT-like)
-```python
-def merge_memories(local: MemoryBank, remote_memories: List[MemoryEntry]):
-    for mem in remote_memories:
-        # Solo aceptar si importancia > threshold y no duplicada
-        if mem.importance > 0.3 and not is_duplicate(mem, local):
-            local.add(mem.embedding, mem.text, mem.importance)
-    # Prune si excede max_memories (ya implementado)
-    if local.size > local.cfg.max_memories:
-        local._prune()
+[4B  magic: 0x4C595357 ("LYSW")]
+[1B  version]
+[1B  message_type: FEROMON=0x01, GOSSIP=0x02, HANDSHAKE=0x03, PING=0x04]
+[2B  payload_len]
+[32B node_id (Ed25519 pubkey)]
+[64B signature]
+[NB  payload (zstd compressed)]
 ```
 
-### Anti-Entropy
-Para prevenir divergencia permanente:
-- Cada 5 minutos: full sync con 1 peer aleatorio
-- Memorias con `importance < 0.1` se marcan para GC local (no se propagan)
+### Decisiones de Arquitectura (LSP_ARCHITECTURE.md)
+
+**AD-001: Matriarca Dual**
+- Matriarca Personal: encriptada, nunca sale del nodo
+- Matriarca Global: distribuida, solo memorias destiladas/sintéticas
+- `infrasound_final = α * personal + (1-α) * global` donde α ∈ [0.6, 0.9]
+
+**AD-002: Identidad Criptográfica**
+- Ed25519 keypair generado localmente al primer arranque
+- `node_id = pubkey[:16]` — sin servidor central, sin registro
+- Cada mensaje de feromona va firmado — contributions verificables
+
+**AD-003: Jerarquía de Capas**
+- LSP define QUÉ se transporta, no cómo
+- Puede correr sobre UDP (feromonas) o TCP (gossip)
+- La capa de transporte es swappable
+
+**AD-004: Modo Dual LAN/Internet**
+- Mismo protocolo, diferente capa de descubrimiento
+- LAN: mDNS (sin config)
+- Internet: DHT/relay (con config mínima)
 
 ---
 
-## 4. Aprendizaje Federado (Gradientes Distribuidos)
+## Próximos Pasos P2P
 
-### Federated Averaging (FedAvg simplificado)
-```
-Cada N pasos de training local:
-  1. Calcular delta_weights = current_weights - initial_weights
-  2. Comprimir delta (cuantización int8 → ~4x compresión)
-  3. Enviar a peers (TCP, confiable)
-  4. Recibir deltas de peers
-  5. Promedio ponderado: my_weight=0.6, peer_weight=0.4/n_peers
-  6. Aplicar weights actualizados
-```
-
-### Privacy
-- Solo se comparten **diferencias de pesos** (gradientes), nunca datos
-- Differential Privacy opcional: agregar ruido Gaussian a los deltas antes de compartir
-- Clip de gradientes antes de compartir (ya implementado en training)
-
-### Bandwidth Estimado
-- Swarm completo: 414M params × 4 bytes = 1.6GB (full weights)
-- Delta comprimido int8: ~400MB cada N=100 pasos
-- Con cuantización y solo capas superiores: ~20MB por sync → manejable
+1. **Test físico LAN multi-host** (Fase 2) — dos máquinas en la misma red
+2. **VPS como primer nodo externo** — IP explícita, transferir checkpoint
+3. **Implementar LSP** — post DolphinAgent Phase A
+4. **Compresión de tensores** — zstd sobre float32[256] → ~400B
+5. **Identidad Ed25519** — keypair local, firma de mensajes
 
 ---
 
-## 5. Modo Single-Node → Multi-Node Transparente
+## VPS — Configuración Inicial
 
-### Abstracción `SwarmNetwork`
-```python
-class SwarmNetwork:
-    """
-    Abstracción que hace transparente single-node vs multi-node.
-    El LixySwarm no sabe si está solo o distribuido.
-    """
-    
-    def __init__(self, mode: str = "auto"):
-        self.peers: List[Peer] = []
-        self.mode = mode  # "local" | "lan" | "internet"
-        self._discover_peers()
-    
-    def _discover_peers(self):
-        # 1. Intentar mDNS (LAN)
-        # 2. Si no hay peers locales y mode != "local": intentar bootstrap DHT
-        # 3. Si nada: modo local (funciona perfectamente solo)
-        pass
-    
-    def broadcast_feromon(self, feromon: torch.Tensor, agent_id: int):
-        if not self.peers:
-            return  # single-node: no-op silencioso
-        for peer in self.peers:
-            peer.send_feromon_async(feromon, agent_id)
-    
-    def collect_feromons(self) -> List[torch.Tensor]:
-        if not self.peers:
-            return []  # single-node: enjambre local puro
-        return [p.latest_feromon for p in self.peers if p.is_alive()]
-    
-    def gossip_matriarca(self, matriarca: Matriarca):
-        if not self.peers:
-            return
-        # Gossip round asíncrono
-        asyncio.create_task(self._gossip_round(matriarca))
+Ver `VPS_SETUP.md` para guía completa.
+
+```bash
+# Clonar repo
+git clone https://github.com/toxxy/LixySwarm.git && cd LixySwarm
+
+# Instalar dependencias (CPU-only)
+pip install torch --index-url https://download.pytorch.org/whl/cpu
+pip install -r requirements.txt
+
+# Transferir checkpoint (desde máquina local)
+rsync -avz checkpoints/swarm_best.pt usuario@VPS_IP:~/LixySwarm/checkpoints/
+
+# Abrir puertos
+sudo ufw allow 7337/udp && sudo ufw allow 7337/tcp
+
+# Conectar al nodo local
+python3 -c "
+from src.network.swarm_network import SwarmNetwork
+net = SwarmNetwork(host='0.0.0.0', port=7337)
+net.start()
+net.connect_peer('EMMANUEL_IP', 7337)
+"
 ```
-
-### Flujo de Upgrade Automático
-```
-Inicio solo:
-  SwarmNetwork.mode = "local"
-  feromon_pool = FeromonPool(local_agents_only)
-  
-Segunda máquina se conecta (mDNS broadcast):
-  peer_discovered(new_peer)
-  SwarmNetwork.mode = "lan"  
-  feromon_pool ahora incluye feromonas del peer remoto
-  matriarca.gossip_start()  ← Matriarca empieza a sincronizar
-  
-Sin interrupción del enjambre existente ✓
-```
-
----
-
-## Plan de Implementación
-
-### Fase 1 — Fundamentos (implementar ahora)
-```
-src/network/
-├── __init__.py
-├── node.py          # NodeDaemon, Peer, PeerTable
-├── messages.py      # FeromonMessage, GossipMessage, FedGradMessage
-├── transport.py     # UDPFeromôn, TCPGossip  
-└── swarm_network.py # SwarmNetwork (la abstracción principal)
-```
-
-### Fase 2 — Matriarca distribuida
-```
-src/matriarca/gossip.py   # MatriarcaGossip, merge_memories
-```
-
-### Fase 3 — Federated Learning
-```
-src/network/federated.py  # FedAvg, delta compression, privacy
-```
-
-### Fase 4 — DHT completo
-```
-src/network/dht.py        # Kademlia-light para descubrimiento global
-```
-
----
-
-## Decisiones Técnicas Clave
-
-| Decisión | Elección | Razón |
-|---|---|---|
-| Transporte feromonas | UDP | Tolerante a pérdida, ultra-bajo latencia |
-| Transporte gossip | WebSockets/asyncio | Confiable, bidireccional, ya soportado en Python |
-| Serialización | struct + float16 | Mínimo overhead, sin dependencias |
-| Node ID | SHA256(IdentityVec) | Reutiliza arquitectura existente |
-| Consensus Matriarca | Gossip + CRDT | Sin coordinador central, convergente eventual |
-| Privacy | Delta sharing + clip | FedAvg estándar, diferencial opcional |
-| Bootstrap | mDNS (LAN) + DNS TXT (internet) | Zero-config en casa, escalable afuera |
-
----
-
-## Siguiente Paso
-Implementar **Fase 1**: `src/network/` con `SwarmNetwork` en modo local funcional.
-El enjambre actual no cambia — `SwarmNetwork` se inyecta como dependencia opcional en `LixySwarm`.

@@ -1,218 +1,178 @@
-# CODY_MEMORY.md — Estado del Proyecto Lixy-0.1
-*Última actualización: 2026-05-28*
-
-## Estado General del Proyecto
-
-**Lixy-0.1** — LLM bio-inspirado con arquitectura swarm (Hormiga + Elefante + Delfín)
-- Workspace: `/home/toxxy/Dropbox/Lixy/clawd/workspace/lixy-llm/`
-- Orquestador actual: **v3** (DolphinAgent integrado como agente real)
+# CODY_MEMORY.md — Estado del Proyecto LixySwarm
+*Última actualización: 2026-05-30 | Run 11 completado*
 
 ---
 
-## Checkpoints Existentes
+## Estado General
 
-| Archivo | Descripción | Val Loss |
-|---|---|---|
-| `checkpoints/best.pt` | Pre-training base | ~4.5 |
-| `checkpoints/finetune_best.pt` | Fine-tuning corpus personal | 0.14 |
-| `checkpoints/swarm_best.pt` | Training conjunto del enjambre | 0.4385 (step 450) |
-| `checkpoints/matriarca.pt` | Matriarca entrenada | loss 0.008 |
-| `checkpoints/matriarca_next.pt` | Nueva generación (destilación) | — |
+**LixySwarm** — LLM bio-inspirado con arquitectura swarm (Hormiga + Elefante + Delfín)
+- **Repo oficial:** https://github.com/toxxy/LixySwarm.git
+- Workspace local: `/home/toxxy/Dropbox/Lixy/clawd/workspace/lixy-llm/`
+- Orquestador: **LixySwarm v3** (DolphinAgent + 3 AntAgents + Matriarca)
+- **Parámetros totales:** ~434M
 
 ---
 
-## Trabajo Completado (2026-05-28)
+## Checkpoints
 
-### Bugs Arreglados
-1. **Importancia negativa en MemoryBank** (`matriarca.py`, `orchestrator.py`)
-   - `add()` ahora clampea importancia a `[0.0, 1.0]`
-   - `_prune()` usa `max(0.0, score)` 
-   - Importancia en orchestrator escalada: `max(0, min(1, 1.0 - avg_loss/10.0))`
+| Archivo | Val Loss | Steps | Descripción |
+|---|---|---|---|
+| `checkpoints/swarm_best.pt` | 3.59 | ~53k | Run 11 — checkpoint principal actual |
+| `checkpoints/swarm_latest.pt` | — | — | Último paso guardado |
+| `checkpoints/swarm_final.pt` | — | — | Final de run anterior |
+| `checkpoints/matriarca.pt` | 0.008 | 300 | Matriarca entrenada |
 
-2. **Off-by-one checkpoint resume** (`train_swarm.py`)
-   - El loop ahora hace eval final en `step == start_step + max_steps` antes del break
-   - Salta eval del primer step al reanudar (ya evaluado)
-
-3. **DataLoader freeze con FineWeb 900M tokens** (`train_swarm.py`)
-   - `shuffle=True` generaba índice permutado de ~3.6GB → timeout
-   - Fix: `shuffle=False` + randomización interna en `__getitem__` con hash del índice
-   - Primer batch: 14ms ✅
-
-### Archivos Nuevos
-- `train_matriarca.py` — Training dedicado para la Matriarca
-- `train_swarm.py` — Training del LixySwarm completo (con soporte mixto FineWeb/personal)
-- `src/agents/dolphin_agent.py` — DolphinAgent completo (3 componentes)
-- `DISTRIBUTED_PROTOCOL.md` — Diseño protocolo P2P para red distribuida
-
-### Trainings Ejecutados
-1. **Matriarca 300 pasos**: loss 0.19→0.008 (↓95%), destilación 99.5%
-2. **Swarm 500 pasos** (solo personal): val_loss 7.83→0.44 (↓94.4%), 37 memorias
-3. **Swarm 500 pasos** (90% FineWeb + 10% personal): 64 memorias Matriarca, val_loss ~4.78
+**Matriarca:** 3,241+ memorias acumuladas en Run 11
 
 ---
 
-## Arquitectura Actual — LixySwarm v3
+## Historial de Training
 
-```
-input (tokens)
-    ↓
-🐬 DolphinAgent (29.5M)
-   - Ecolocalización: 3 pings (topic, intent, need) → feromon
-   - Sueño unihemisférico: estado persistente entre turnos
-   - Silbido único: IdentityVec no-entrenable
-    ↓
-🐘 Matriarca (5.6M) → infrasónidos
-    ↓
-InfrasoundMixer (feromon + infrasónidos)
-    ↓
-🐜 AgentBase ×3 (125.7M cada uno) — con feromonas guiadas
-    ↓
-FeromonPool → nuevo feromon (ronda siguiente)
-    ↓
-Aggregación por confianza → logits_final
-    ↓
-🐘 Matriarca.store() + 🐬 DolphinSleep.update()
-```
+| Run | Steps totales | val_loss final | Notas |
+|---|---|---|---|
+| Runs 1-8 | 0 → 11k | 4.8 → 4.27 | Progresión continua |
+| Run 10 | 11k → 11.9k | 4.27 | lr=2e-4, grad_accum=8 |
+| Run 11 | 12k → ~53k | **3.59** | 40k steps, lr=1e-4→1.6e-05, batch=4, grad_accum=16 |
 
-**Total params: ~434M**
+**Scaling law fit:** R²=0.93 — loss sigue power law como se esperaba.
+
+**Bug crítico resuelto:** `load_swarm()` usaba `block_size=1024` en vez de 512 → ppl 78K → 51 post-fix.
 
 ---
 
-## DolphinAgent — Componentes
+## Arquitectura Implementada
 
-### 1. Ecolocalización (`Echolocation`)
-- 3 `PingEncoder` independientes: topic, intent, need
-- Fusión → feromona de salida (feromon_dim=256)
-- Cabeza de confianza (Sigmoid)
+### `src/agents/agent_base.py` — AntAgent (125M params)
+- Transformer GPT-style: 12 layers, 12 heads, d_model=768
+- **FeromonGate**: atención gateada sobre señal de feromona entrante
+- **IdentityVec**: vector fijo [256d] único por instancia
 
-### 2. Sueño Unihemisférico (`HalfSleepState`)
-- Buffer circular de 16 contextos pasados
-- Estado acumulado con decay=0.95
-- Thread-safe (`threading.Lock`)
-- Persiste en save/load
+### `src/agents/dolphin_agent.py` — DolphinAgent (~9M params)
+- 3 pings de ecolocalización: topic, intent, need
+- sleep_state persistente entre sesiones
+- Primer en el forward pass — mapea antes de que las hormigas procesen
 
-### 3. Silbido Único (`IdentityProjector`)
-- `identity_vec`: buffer no-entrenable (normalizado en esfera unitaria)
-- Proyección entrenable: identity_dim → feromon_dim
-- Gate suave para modular feromona final
+### `src/matriarca/matriarca.py` — Matriarca (~10M params)
+- MemoryBank: hasta 10k memorias con importancia dinámica (5 métricas)
+- `emit_infrasound()`: orienta feromonas antes del forward
+- `store_memory()`: guarda interacciones con importancia calculada
+- Auto-compresión al 90% de capacidad
+- Retroactive feedback: +8% si usuario continúa el tema
 
----
+### `src/swarm/orchestrator.py` — LixySwarm v3
+- Orquesta: Delfín → Matriarca → 3 AntAgents → Agregación
+- InfrasoundMixer: blend 70/30 feromona nueva/anterior
+- Voto de Matriarca: 20% del peso de agregación
 
-## Integración con Orquestador
+### `src/swarm/dynamic_roles.py` — DynamicRoleAdapter
+- 6 tipos de tarea: explorador, refinador, integrador, analítico, contextual, generativo
+- Temperatura dinámica por tipo + pesos de confianza
 
-`EcholocationHead` reemplazada por `DolphinSwarmBridge` en `LixySwarm.__init__()`:
-- El estado de sueño del Delfín alimenta la Matriarca directamente
-- `dolphin_info["sleep_for_matriarca"]` → `matriarca.store_interaction()`
-- Parámetros del Delfín incluidos en los 434M totales del swarm
+### `src/swarm/runtime_session.py` — RuntimeSession
+- Estado cross-turn: feromona, historial (últimos 5 turnos), fitness
+- Persistencia a disco (`lixy_session.json`)
+- `penalize_unused()`: memorias no accedidas en sesión bajan -2%
 
----
+### `src/network/swarm_network.py` — SwarmNetwork
+- UDP 7337: feromon broadcast
+- TCP 7337: gossip confiable
+- mDNS: descubrimiento LAN automático
+- `inject_remote_feromon()` + `merge_remote_feromons()`
+- **Tests:** 23/23 + 15/15 ✅
 
-## Protocolo Distribuido — Diseño
-
-Ver `DISTRIBUTED_PROTOCOL.md`. Decisiones clave:
-- Node ID: `SHA256(IdentityVec)` — reutiliza arquitectura existente
-- Feromonas: UDP, float16, ~550 bytes/mensaje
-- Matriarca distribuida: Gossip + CRDT merge (sin coordinador central)
-- Federated learning: solo deltas comprimidos, nunca datos privados
-- `SwarmNetwork`: abstracción transparente single/multi-node
-
----
-
-## Integración Matriarca-Orquestador (2026-05-28 noche)
-
-### Gaps identificados y corregidos:
-
-1. **orquestador post-sesión**: `penalize_unused` cada 10 mensajes (penalty=-0.005, suave)
-2. **auto post-training**: `train_from_swarm_log` se ejecuta automáticamente al terminar `train_swarm.py`
-3. **Matriarca en selección**: `matriarca_conf_proj` (infrasound_dim → n_agents) da bias 20% a confidence_heads. Decisión: 80/20 split para no dominar la selección.
-4. **Device fix**: `.to(feromon.device)` en `_get_infrasound()` para CPU/CUDA
-
-### Flujo completo Matriarca:
-```
-Forward:
-  infrasound = emit_infrasound(state, use_retrieval=True, update_importance=True)
-  feromon = InfrasoundMixer(feromon, infrasound)        # orienta input de agentes
-  conf_bias = matriarca_conf_proj(infrasound)           # orienta selección de agentes
-  weights = 0.8 * conf_heads + 0.2 * conf_bias          # agrega con bias
-
-Post-training:
-  auto-run train_from_swarm_log(log)                   # actualiza desde log
-
-Periodicamente:
-  penalize_unused(penalty=-0.01)                       # limpia memorias no usadas
-```
+### `src/utils/sampling.py` — sample_token
+- Repetition penalty (ventana reciente, más agresivo en cercanos)
+- Top-k + top-p sampling
 
 ---
 
-## Estado Post-Crash (2026-05-28 noche)
+## Scripts Principales
 
-- `swarm_latest.pt` → **CORRUPTO** (zip incompleto, crash OOM en step ~490)
-- `swarm_best.pt` → **VÁLIDO**, step=450, val_loss=0.4385 ✅
-- GPU libre: 1.1GB / 30.9GB disponible
-- Para re-lanzar training v3: `batch=2` + `PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True`
-
----
-
-## Fixes Aplicados (2026-05-28 — Cody, segunda sesión)
-
-### Bugs DolphinAgent (dolphin_agent.py)
-
-1. **Device mismatch en `DolphinAgent.forward()`**
-   - `sleep_ctx` era `.to(self.device)` → forzaba a CPU cuando `feromon_echo` estaba en CUDA
-   - Fix: `.to(idx.device, dtype=feromon_echo.dtype)` — sigue device Y dtype del input
-
-2. **dtype mismatch float32/bfloat16 en `HalfSleepState.update()`**
-   - `_projector` inicializado en float32, pero en training bfloat16 recibía tensores bf16
-   - Fix: casteo explícito al dtype del projector + sync del `awake_state`
-
-3. **dtype mismatch en `DolphinSwarmBridge.forward()`**
-   - `sleep_to_matriarca` linear recibía float32 input en contexto bf16
-   - Fix: `.to(idx.device, dtype=next(self.sleep_to_matriarca.parameters()).dtype)`
-
-4. **Proceso zombie de training anterior** usaba 22.8 GB de GPU
-   - Matado PID 26302, liberando 30.5 GB
-
-### Resultado
-- Forward del LixySwarm v3 (434M params) OK en bfloat16 CUDA
-- Training re-lanzado desde `swarm_best.pt` (step 450, val_loss 0.4385)
-- **Running**: PID 26517, step 460+, loss ~0.75, ~13k tok/s
-- Log: `/tmp/swarm_v3_train.log`
+| Script | Función |
+|---|---|
+| `train_swarm.py` | Training del enjambre completo (FineWeb 90% + personal 10%) |
+| `train_matriarca.py` | Training dedicado de la Matriarca |
+| `train.py` | Training base de un agente solo |
+| `lixy_orchestrator.py` | Runtime orquestador completo |
+| `lixy_chat.py` | CLI interactiva con /eval, /status, /exit |
+| `generate.py` | Generación libre + benchmark |
+| `benchmark.py` | Perplexity FineWeb/personal, rep@5/10, TTR, comparativa |
 
 ---
 
-## Plan Inmediato
+## Resultados de Benchmarks
 
-### PRIORIDAD 1 — Loop Evolutivo Completo Matriarca
+### post-Run 11 (step ~53k)
+- **val_loss:** 3.59
+- **tok/s training:** 12,800
+- **Diversidad enjambre:** 0.80
+- **Memorias Matriarca:** 3,241+
+- Agente individual: ppl=51.5 (con block_size fix), missing=0
+- Generación multi-agente: en progreso (fix agregación pendiente)
 
-**4 componentes a implementar en `src/matriarca/matriarca.py` + `train_matriarca.py`:**
-
-1. **Selección/Retrieval activo** — `MemoryBank.retrieve(query, top_k)`: buscar memorias relevantes durante forward, no solo almacenar
-2. **Actualización de importancia** — memorias usadas en inferencia correcta suben importancia; inútiles bajan
-3. **Compresión generacional** — al llegar al 90% de capacidad, comprimir las menos importantes en "memorias sintéticas"
-4. **`train_matriarca.py --from-swarm-log`** — ciclo standalone que lee interacciones del training del swarm y re-entrena la Matriarca
-
-### PRIORIDAD 2 — Re-lanzar Swarm v3
-```bash
-PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True \
-nohup python3 -u train_swarm.py --steps 500 --batch 2 \
-  --checkpoint checkpoints/swarm_best.pt > /tmp/swarm_v3_train.log 2>&1 &
-```
+### Scaling law
+- R² = 0.93 entre steps y val_loss
+- Loss sigue power law — modelo escalará bien
 
 ---
 
-## Próximos Pasos Sugeridos
+## Roadmap (en orden de prioridad)
 
-1. **Training del enjambre v3** — entrenar el swarm con DolphinAgent integrado desde cero o desde fine-tuning
-2. **Implementar `src/network/`** — Fase 1 del protocolo distribuido (SwarmNetwork local)
-3. **Loop evolutivo avanzado** — selección/compresión/expansión del banco de memorias (pendiente de Emmanuel)
-4. **Más corpus** — el corpus personal de 41k tokens es muy pequeño; necesita expansión
+> **Regla:** Runs cortos (5k-10k steps) para validar cada cambio. No más runs grandes hasta que todo esté implementado y probado.
+
+### 1. DolphinAgent Phase A ← SIGUIENTE
+- Añadir pings `context` + `emotion` → 5 pings total
+- Triangulación: `Attention(Q=topic, K/V=all_pings)` — no lineal
+- Comparar calidad de feromona vs implementación actual
+- Validar con run 7k steps
+
+### 2. Hormigas Dinámicas
+- Enjambre sin tamaño fijo — es un ecosistema vivo
+- **Nacen:** nuevo nodo en la red OR diversidad del enjambre cae por debajo de umbral
+- **Mueren:** fitness bajo sostenido (N steps) OR nodo se desconecta
+- Gestión de ciclo de vida en el orquestador
+
+### 3. Legado Genético en Matriarca
+- Antes de morir, hormiga transfiere a Matriarca: rol, fitness promedio, patrones top-K
+- Nuevas hormigas heredan ese ADN → no arrancan desde cero
+- Matriarca como banco genético del enjambre
+
+### 4. Delfines Dinámicos
+- Red pequeña → 1 delfín
+- Red grande → N delfines, cada uno con frecuencia de ecolocalización propia
+- N delfines = imagen más rica del problema que 1 solo
+
+### 5. SwarmExplorer — Dashboard Solo Lectura
+- Nodos conectados, colonias activas, cantidad de hormigas
+- tok/s agregado, diversidad genética, estado Matriarca y memorias
+- Solo lectura — sin controles, sin botones peligrosos
+- Útil tanto para Emmanuel como para Cody al monitorear
+
+### 6. LixySwarm Protocol (LSP)
+- Protocolo nativo para distribución en internet abierta
+- Wire format: compresión de tensores, identidad Ed25519, merge en tránsito
+- RFC-style: spec para que cualquier dev implemente un nodo en otro lenguaje
+- Matriarca Dual: Personal (privada, local) + Global (distribuida, compartida)
+
+### 7. DolphinAgent Phase B
+- Sueño real: cron job de consolidación cada 30min sin actividad
+- PCA del historial → actualizar sleep_state
+- Primera respuesta post-reinicio ya tiene contexto acumulado
 
 ---
 
-## Notas Técnicas
+## VPS — Primer Nodo Externo
 
-- **RTX 5090**: ~16,600 tok/s en training del swarm, bf16
-- **FineWeb**: 900M tokens train, 100M val (1.8GB total)
-- **Personal corpus**: 41,986 tokens — overfitting visible con loss <0.1
-- Training mixto val_loss ~4.78 después de 500p sobre FineWeb — necesita más pasos para generalizar
-- `torch.compile` desactivado en swarm training (arquitectura compleja con Matriarca externa)
+- **Repo:** https://github.com/toxxy/LixySwarm.git (código subido ✅)
+- **Guía:** `VPS_SETUP.md` en el repo
+- **Qué falta:** transferir `checkpoints/swarm_best.pt` (~6GB) vía rsync
+- **Puerto requerido:** UDP/TCP 7337 abierto en firewall
+
+---
+
+## Reglas de Trabajo
+
+1. **Todo cambio va al repo** `https://github.com/toxxy/LixySwarm.git`
+2. **Runs cortos** (5k-10k steps) para validar cada feature nueva
+3. Commit + push después de cada cambio significativo
+4. No modificar archivos fuera de `lixy-llm/` para código del proyecto
