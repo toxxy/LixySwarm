@@ -462,7 +462,9 @@ def train(cfg: SwarmTrainConfig, swarm_checkpoint: str = None):
     )
 
     # ─── Training loop ───
-    print(f"\n🚀 Iniciando training conjunto (desde step {start_step})...")
+    # target_step es ABSOLUTO — independiente de cuántas veces se reanude
+    target_step = start_step + cfg.max_steps
+    print(f"\n🚀 Iniciando training conjunto (desde step {start_step}, target step {target_step})...")
     print("=" * 65)
 
     swarm.train()
@@ -471,9 +473,9 @@ def train(cfg: SwarmTrainConfig, swarm_checkpoint: str = None):
     loss_history = []
     matriarca_update_count = 0
 
-    for step in range(start_step, start_step + cfg.max_steps + 1):
+    for step in range(start_step, target_step + 1):
         # ─── Break al llegar al límite ───
-        if step == start_step + cfg.max_steps:
+        if step == target_step:
             # Eval final antes de salir
             val_loss = estimate_loss(swarm, val_loader, cfg, ctx)
             elapsed = time.time() - t0
@@ -615,14 +617,14 @@ def train(cfg: SwarmTrainConfig, swarm_checkpoint: str = None):
                 )
 
     # ─── Guardar final ───
-    _save_checkpoint(swarm, optimizer, start_step + cfg.max_steps, best_val_loss, cfg, agent_cfg, swarm_cfg, "swarm_final.pt")
-    swarm.specialization.save(start_step + cfg.max_steps)
+    _save_checkpoint(swarm, optimizer, target_step, best_val_loss, cfg, agent_cfg, swarm_cfg, "swarm_final.pt")
+    swarm.specialization.save(target_step)
 
     elapsed = time.time() - t0
     mat_mems = swarm.matriarca.memory_count if swarm.matriarca else 0
 
     # Reporte final de especialización
-    print(swarm.specialization.report(start_step + cfg.max_steps))
+    print(swarm.specialization.report(target_step))
 
     # ─── Loop evolutivo post-training: actualizar Matriarca desde el log ───
     # El log actual se pasa via argumento o se detecta por el path de este proceso
