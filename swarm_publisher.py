@@ -17,7 +17,7 @@ from datetime import datetime, timezone
 
 BASE = Path(__file__).parent
 CHECKPOINT_DIR = BASE / "checkpoints"
-ANT_SPEC_FILE  = BASE / "ant_specialization.json"
+ANT_SPEC_FILE  = BASE / "checkpoints" / "ant_specialization.json"
 SWARM_LOG_PATTERN = "/tmp/swarm_*.log"
 
 VPS_HOST = "root@31.97.9.54"
@@ -49,18 +49,25 @@ def collect_status() -> dict:
     # ─── Agentes ───────────────────────────────────────────────────────────────
     spec = _read_json(ANT_SPEC_FILE)
     if spec and isinstance(spec, dict):
-        for k, v in spec.items():
-            if isinstance(v, dict) and "role" in v:
+        current = spec.get('current', {})
+        label_history = spec.get('label_history', spec.get('labels', {}))
+        for k, v in current.items():
+            if isinstance(v, dict):
+                lbl = label_history.get(k, 'refinador')
+                # label_history puede ser dict {id: str} o dict {id: list}
+                role = lbl[-1] if isinstance(lbl, list) else str(lbl)
                 status["agents"].append({
                     "id": k,
-                    "role": v.get("role", "?"),
+                    "role": role,
                     "fitness": round(v.get("fitness", 0), 3),
-                    "diversity": round(v.get("diversity", 0), 3),
+                    "diversity": round(v.get("feromon_divergence", 0), 3),
                     "confidence": round(v.get("confidence", 0), 3),
                     "lr_factor": round(v.get("lr_factor", 1.0), 3),
                 })
-        status["swarm_diversity"] = round(spec.get("swarm_diversity", 0), 3)
-        status["swarm_step"] = spec.get("step", None)
+        status["swarm_diversity"] = round(
+            sum(a["diversity"] for a in status["agents"]) / len(status["agents"]), 3
+        ) if status["agents"] else None
+        status["swarm_step"] = max((v.get("step", 0) for v in current.values()), default=None)
 
     # ─── Matriarca ─────────────────────────────────────────────────────────────
     mat_mem_file = CHECKPOINT_DIR / "matriarca_memory.json"
