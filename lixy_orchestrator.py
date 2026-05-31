@@ -315,6 +315,27 @@ class LixyOrchestrator:
             })
             self._save_session()
 
+        # ─── Tick del ciclo de vida (cada 10 turns para no frenar inferencia) ───
+        if hasattr(self.swarm, 'ant_lifecycle') and self.swarm.ant_lifecycle:
+            self._gen_count = getattr(self, '_gen_count', 0) + 1
+            if self._gen_count % 10 == 0:
+                n_nodes = (self.net.peer_count + 1) if (self.net and self.net.is_distributed) else 1
+                # Diversidad actual del enjambre
+                spec = self.swarm.specialization
+                if spec and spec.current:
+                    divs = [v.get('feromon_divergence', 0.6) for v in spec.current.values()]
+                    swarm_div = sum(divs) / max(len(divs), 1)
+                else:
+                    swarm_div = 0.6
+                events = self.swarm.tick_lifecycle(
+                    step=self._gen_count,
+                    swarm_diversity=swarm_div,
+                    n_nodes=n_nodes,
+                )
+                if events and self.cfg.verbose:
+                    for ev in events:
+                        print(f"  🐜 lifecycle [{ev.get('type')}]: {ev}")
+
         return response
 
     def close(self):

@@ -235,6 +235,52 @@ def test_5_legacy_stored_in_matriarca():
 
 # ─── Main ─────────────────────────────────────────────────────────────────────
 
+
+def test_6_tick_lifecycle_integrado():
+    """Test 6: tick_lifecycle integra hormigas + delfines en LixySwarm."""
+    import sys; sys.path.insert(0, ".")
+    import torch
+    from src.swarm.orchestrator import LixySwarm, SwarmConfig, AgentConfig
+    from src.matriarca.matriarca import MatriarcaConfig
+    print("\n[Test 6] tick_lifecycle integrado en LixySwarm")
+    agent_cfgs = [AgentConfig(agent_id=i, n_agents=3) for i in range(3)]
+    cfg = SwarmConfig(n_agents=3, agent_configs=agent_cfgs,
+        matriarca_config=MatriarcaConfig(memory_path="/tmp/test6_mat.json", checkpoint_path="/tmp/test6_mat.pt"))
+    swarm = LixySwarm(cfg, load_matriarca=False).cuda()
+    # tick basico
+    events = swarm.tick_lifecycle(step=500, swarm_diversity=0.3, n_nodes=1)
+    assert isinstance(events, list), "debe retornar lista"
+    # n_nodes=5 -> mas delfines
+    swarm.tick_lifecycle(step=501, swarm_diversity=0.7, n_nodes=5)
+    assert swarm.dolphin.n_dolphins >= 2, f"con 5 nodos debe haber >=2 delfines"
+    # n_nodes=1 -> reduce delfines
+    swarm.tick_lifecycle(step=502, swarm_diversity=0.7, n_nodes=1)
+    assert swarm.dolphin.n_dolphins == 1, f"con 1 nodo debe haber 1 delfin"
+    print(f"  Delfines finales: {swarm.dolphin.n_dolphins}")
+    print("  \u2713 tick_lifecycle integra hormigas + delfines")
+
+
+def test_7_training_loop_tick():
+    """Test 7: simula el bloque de train_swarm.py con tick_lifecycle."""
+    import sys; sys.path.insert(0, ".")
+    import torch
+    from src.swarm.orchestrator import LixySwarm, SwarmConfig, AgentConfig
+    from src.matriarca.matriarca import MatriarcaConfig
+    print("\n[Test 7] Simulacion training loop con tick_lifecycle")
+    agent_cfgs = [AgentConfig(agent_id=i, n_agents=3) for i in range(3)]
+    cfg = SwarmConfig(n_agents=3, agent_configs=agent_cfgs,
+        matriarca_config=MatriarcaConfig(memory_path="/tmp/test7_mat.json", checkpoint_path="/tmp/test7_mat.pt"))
+    swarm = LixySwarm(cfg, load_matriarca=False).cuda()
+    all_events = []
+    for step in range(100, 301, 100):
+        avg_div = 0.5
+        if hasattr(swarm, "ant_lifecycle") and swarm.ant_lifecycle:
+            evs = swarm.tick_lifecycle(step=step, swarm_diversity=avg_div, n_nodes=1)
+            all_events.extend(evs)
+    print(f"  Ticks: 3 | Eventos: {len(all_events)} | Hormigas: {len(swarm.agents)} | Delfines: {swarm.dolphin.n_dolphins}")
+    assert isinstance(all_events, list)
+    print("  \u2713 Training loop tick funciona sin errores")
+
 if __name__ == "__main__":
     tests = [
         test_1_low_fitness_ant_dies_and_stores_legacy,
@@ -242,6 +288,8 @@ if __name__ == "__main__":
         test_3_swarm_never_below_min_ants,
         test_4_low_diversity_triggers_spawn,
         test_5_legacy_stored_in_matriarca,
+        test_6_tick_lifecycle_integrado,
+        test_7_training_loop_tick,
     ]
 
     passed = 0
@@ -260,4 +308,4 @@ if __name__ == "__main__":
     print(f"\n{'='*50}")
     print(f"Tests: {passed}/{len(tests)} passed", "✅" if failed == 0 else "❌")
     if failed > 0:
-        sys.exit(1)
+        import sys; sys.exit(1)

@@ -428,8 +428,17 @@ class LixySwarm(nn.Module):
         self.ant_lifecycle = AntLifecycleManager(self, self.matriarca)
 
     def tick_lifecycle(self, step: int, swarm_diversity: float, n_nodes: int = 1) -> list:
-        """Delega el tick del ciclo de vida al AntLifecycleManager."""
-        return self.ant_lifecycle.tick(step, swarm_diversity, n_nodes)
+        """
+        Tick del ecosistema del enjambre:
+        1. AntLifecycleManager: hormigas nacen/mueren según fitness y diversidad
+        2. DolphinPool: escala dámicos delfines según nodos conectados
+        Retorna lista de todos los eventos.
+        """
+        events = self.ant_lifecycle.tick(step, swarm_diversity, n_nodes)
+        # Escalar delfines en sync con la red
+        dolphin_events = self.scale_dolphins(n_nodes)
+        events.extend(dolphin_events)
+        return events
 
     def scale_dolphins(self, n_nodes: int) -> list:
         """Escala el pool de delfines según nodos conectados."""

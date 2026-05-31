@@ -628,6 +628,26 @@ def train(cfg: SwarmTrainConfig, swarm_checkpoint: str = None):
                     penalty=-0.01,
                 )
 
+            # ─── Tick del ciclo de vida del enjambre ──────────────────────────
+            # Hormigas nacen/mueren + delfines escalan según fitness y diversidad
+            if hasattr(swarm, 'ant_lifecycle') and swarm.ant_lifecycle:
+                current_div = avg_div if 'avg_div' in dir() else 0.6
+                lifecycle_events = swarm.tick_lifecycle(
+                    step=step,
+                    swarm_diversity=current_div,
+                    n_nodes=1,  # single-node local; se actualiza cuando LSP activo
+                )
+                if lifecycle_events:
+                    for ev in lifecycle_events:
+                        etype = ev.get('type', '?')
+                        if etype == 'death':
+                            print(f"  💜 Hormiga {ev.get('ant_id','?')} murió [{ev.get('reason','?')}] fitness={ev.get('fitness',0):.3f} | legado → Matriarca")
+                        elif etype == 'birth':
+                            inherited = '❤️ heredado' if ev.get('inherited') else '🌱 nuevo'
+                            print(f"  💚 Hormiga {ev.get('ant_id','?')} nació [{inherited}] padre={ev.get('parent_id','?')}")
+                        elif etype in ('spawn', 'retire'):
+                            print(f"  🐬 Delfín {ev.get('dolphin_idx','?')} {etype}d (pool={swarm.dolphin.n_dolphins})")
+
     # ─── Guardar final ───
     _save_checkpoint(swarm, optimizer, target_step, best_val_loss, cfg, agent_cfg, swarm_cfg, "swarm_final.pt")
     swarm.specialization.save(target_step)
