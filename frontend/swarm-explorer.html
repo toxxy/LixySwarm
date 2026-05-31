@@ -192,6 +192,12 @@
     </div>
   </div>
 
+
+  <!-- Red P2P LSP -->
+  <div class="section-title">🌐 Red P2P — LixySwarm Protocol</div>
+  <div id="network-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;padding:0 24px 24px">
+  </div>
+
   <!-- Matriarca -->
   <div class="section-title">🐘 Matriarca</div>
   <div class="matriarca-card">
@@ -236,6 +242,7 @@
         set("memories",  mat.memory_count != null ? mat.memory_count.toLocaleString() : "—");
 
         if (d.agents && d.agents.length) renderAgents(d.agents);
+        if (d.network) renderNetwork(d.network.nodes, d.network.protocol);
 
         const ts = d.last_update ? new Date(d.last_update) : new Date();
         set("updated", "Actualizado: " + ts.toLocaleTimeString("es", {hour:"2-digit",minute:"2-digit",second:"2-digit"}));
@@ -264,6 +271,24 @@
       const pct = (val || 0) * 100;
       return "<div class=\"agent-bar\"><div class=\"bar-label\"><span>" + label + "</span><span>" + v + "</span></div>" +
              "<div class=\"bar-track\"><div class=\"bar-fill " + cls + "\" style=\"width:" + pct + "%\"></div></div></div>";
+    }
+
+    function renderNetwork(nodes, protocol) {
+      const grid = document.getElementById("network-grid");
+      if (!grid || !nodes || !nodes.length) return;
+      grid.innerHTML = nodes.map(n => {
+        const isVps = n.role === "vps-relay";
+        const icon = isVps ? "🌐" : "💻";
+        const label = isVps ? "VPS Relay" : "Nodo Local (GPU)";
+        const id = (n.node_id || "?").slice(0,8) + "...";
+        const step = n.step ? ` · step ${n.step.toLocaleString()}` : "";
+        return `<div class="card" style="border-color:#1a3a2a">
+          <div class="card-title">${icon} ${label}</div>
+          <div class="value" style="font-size:1.1rem;color:#4CAF50">${id}</div>
+          <div class="sub">${n.host}:${n.port}${step}</div>
+          <div class="sub" style="color:#4CAF50">${protocol || "LSP v1"} ✅</div>
+        </div>`;
+      }).join("");
     }
 
     loadStatus();
