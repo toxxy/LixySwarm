@@ -417,7 +417,26 @@ def evolutionary_loop(matriarca: Matriarca, cfg: MatriarcaTrainConfig, distill: 
             )
             print(f"  ✓ Memoria de síntesis agregada ({n} → {matriarca.memory_count} memorias)")
 
-    # ─── 2. Checkpoint con timestamp ───
+    # ─── 1b. Procesar legados genéticos de hormigas muertas ──────────────────────────
+    # Legados genéticos en metadata (añadidos por AntLifecycleManager via _kill_ant)
+    legacy_indices = [i for i, m in enumerate(matriarca.bank.metadata) if "[LEGACY" in m.get("text", "")]
+    if legacy_indices and matriarca.bank.embeddings is not None:
+        print(f"  🧲 Procesando {len(legacy_indices)} legados genéticos...")
+        for i in legacy_indices:
+            if matriarca.bank.metadata[i]["importance"] > 0.4:
+                matriarca.bank.metadata[i]["importance"] = min(1.0, matriarca.bank.metadata[i]["importance"] * 1.2)
+        with torch.no_grad():
+            legacy_embeds = matriarca.bank.embeddings[legacy_indices].to(device)
+            if legacy_embeds.shape[0] > 0:
+                legacy_centroid = legacy_embeds.mean(0)
+                matriarca.bank.add(
+                    legacy_centroid,
+                    text=f"[síntesis_genética] centroide de {len(legacy_indices)} legados de hormigas",
+                    importance=0.8,
+                )
+                print(f"  ✓ Síntesis genética añadida ({len(legacy_indices)} legados)")
+
+    # ─── 2.# ─── 2. Checkpoint con timestamp ───
     timestamp = time.strftime("%Y%m%d_%H%M%S")
     versioned_ckpt = checkpoint_dir / f"matriarca_v{timestamp}.pt"
     matriarca.save()
@@ -431,6 +450,8 @@ def evolutionary_loop(matriarca: Matriarca, cfg: MatriarcaTrainConfig, distill: 
         "memory_count": matriarca.memory_count,
         "training_steps": cfg.max_steps,
         "memories_sample": matriarca.bank.metadata[-5:],  # últimas 5 memorias
+        "legacy_count": len([m for m in matriarca.bank.metadata if "[LEGACY" in m.get("text","")]),
+        "legacy_avg_importance": round(sum(m["importance"] for m in matriarca.bank.metadata if "[LEGACY" in m.get("text","")) / max(len([m for m in matriarca.bank.metadata if "[LEGACY" in m.get("text","")]), 1), 3),
     }
     report_path = checkpoint_dir / f"evolution_report_{timestamp}.json"
     with open(report_path, "w") as f:

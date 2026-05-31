@@ -147,11 +147,14 @@ def collect_status() -> dict:
             except Exception:
                 pass
 
-    # ─── Delfín ────────────────────────────────────────────────────────────────
+    # ─── Delfín (pool dinámico) ─────────────────────────────────────────────
+    # Obtener n_dolphins real del pool si está disponible
     status["dolphin"] = {
         "phase": "A",
         "active_pings": 5,
         "ping_names": ["topic", "intent", "need", "context", "emotion"],
+        "n_dolphins": 1,  # se actualiza si hay runtime activo
+        "dolphin_pool": True,
     }
 
     # ─── LSP ────────────────────────────────────────────────────────────────────
