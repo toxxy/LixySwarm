@@ -7,8 +7,9 @@ Características:
 - Hormigas con bajo fitness durante mucho tiempo → mueren
 - Antes de morir → transfieren legado genético a Matriarca
 - Nuevas hormigas heredan patrones del mejor legado disponible
-- El enjambre nunca baja de MIN_ANTS ni sube de MAX_ANTS
-- Diversidad baja → spawn de nueva hormiga
+- Sin límites artificiales: el enjambre crece hasta donde lo permiten los recursos
+- Diversidad baja → spawn si hay recursos disponibles
+- Sin RAM/CPU libre → no se spawnea (sin forzar)
 """
 
 from __future__ import annotations
@@ -35,9 +36,11 @@ class AntLifecycleManager:
     # Umbrales
     LOW_FITNESS_THRESHOLD = 0.3      # fitness mínimo para sobrevivir
     LOW_FITNESS_STEPS = 500          # steps con fitness bajo antes de morir
-    MIN_ANTS = 2                     # nunca menos de 2 hormigas
-    MAX_ANTS = 8                     # máximo de hormigas
     DIVERSITY_THRESHOLD = 0.4        # diversidad mínima del enjambre
+
+    # Umbrales de recursos (sin límites artificiales)
+    MIN_FREE_RAM_MB = 512            # RAM libre mínima para spawnear (MB)
+    MIN_FREE_CPU_PCT = 10.0          # CPU idle mínima para spawnear (%)
 
     # Prefijo para identificar memorias de legado en la Matriarca
     LEGACY_PREFIX = "[LEGACY]"
@@ -55,6 +58,10 @@ class AntLifecycleManager:
         """
         Llamar cada N steps durante training o runtime.
         Evalúa si deben nacer o morir hormigas.
+
+        Sin límites artificiales: el enjambre crece hasta donde lo permiten los recursos.
+        La última hormiga nunca muere si no hay recursos para reemplazarla —
+        si queda solo una, sobrevive (no tiene sentido un enjambre vacío).
 
         Args:
             step: step global de entrenamiento
@@ -75,28 +82,43 @@ class AntLifecycleManager:
             else:
                 self._low_fitness_counters[aid] = 0
 
-        # 2. Matar hormigas débiles (si hay más del mínimo)
-        if len(self.swarm.agents) > self.MIN_ANTS:
-            for ant in list(self.swarm.agents):
-                aid = str(ant.config.agent_id)
-                if self._low_fitness_counters.get(aid, 0) >= self.LOW_FITNESS_STEPS:
-                    event = self._kill_ant(ant, reason="low_fitness")
-                    events.append(event)
-                    if len(self.swarm.agents) <= self.MIN_ANTS:
-                        break
+        # 2. Matar hormigas débiles — sin mínimo artificial.
+        #    Única excepción: si solo queda 1, no tiene sentido matar la última.
+        for ant in list(self.swarm.agents):
+            if len(self.swarm.agents) <= 1:
+                break  # enjambre vacío no tiene sentido
+            aid = str(ant.config.agent_id)
+            if self._low_fitness_counters.get(aid, 0) >= self.LOW_FITNESS_STEPS:
+                event = self._kill_ant(ant, reason="low_fitness")
+                events.append(event)
 
-        # 3. Nacer hormigas nuevas si:
-        #    - Diversidad baja Y hay espacio
-        #    - Nuevos nodos conectados
+        # 3. Nacer hormigas nuevas si hay recursos disponibles:
+        #    - Diversidad baja → necesitamos más diversidad
+        #    - Nuevos nodos conectados → más capacidad de cómputo en la red
+        #    El único límite real es hardware: RAM y CPU libres
         should_spawn = (
-            (swarm_diversity < self.DIVERSITY_THRESHOLD and len(self.swarm.agents) < self.MAX_ANTS)
-            or (n_connected_nodes > 1 and len(self.swarm.agents) < min(3 + n_connected_nodes, self.MAX_ANTS))
+            swarm_diversity < self.DIVERSITY_THRESHOLD
+            or n_connected_nodes > len(self.swarm.agents)
         )
-        if should_spawn:
+        if should_spawn and self._has_resources():
             event = self._spawn_ant(step)
             events.append(event)
 
         return events
+
+    def _has_resources(self) -> bool:
+        """
+        Verifica si hay suficiente RAM y CPU libre para spawnear una nueva hormiga.
+        Si psutil no está disponible, asume que hay recursos (comportamiento permisivo).
+        """
+        try:
+            import psutil
+            mem = psutil.virtual_memory()
+            free_mb = mem.available / (1024 * 1024)
+            cpu_idle = 100.0 - psutil.cpu_percent(interval=0.1)
+            return free_mb >= self.MIN_FREE_RAM_MB and cpu_idle >= self.MIN_FREE_CPU_PCT
+        except ImportError:
+            return True  # sin psutil, asumimos que hay recursos
 
     def stats(self) -> dict:
         """Estadísticas del lifecycle manager."""

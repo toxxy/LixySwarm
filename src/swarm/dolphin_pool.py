@@ -1,13 +1,14 @@
 """
 DolphinPool — Delfines Dinámicos 🐬
 =====================================
-El número de delfines escala con el tamaño de la red.
+El número de delfines escala con el tamaño de la red, sin límite artificial.
 
 Red pequeña (1 nodo)  → 1 delfín (comportamiento actual)
 Red mediana (2-4)     → 2 delfines
-Red grande (5+)       → 3 delfines
-Red muy grande (10+)  → 4 delfines (máximo)
+Red grande (5-9)      → 3 delfines
+Red muy grande (10+)  → 1 delfín por cada 3 nodos (escala libre)
 
+El único límite es hardware real. No hay MAX_DOLPHINS.
 Cada delfín tiene su propia frecuencia de ecolocalización (bias aprendido).
 El acoustic_map final = promedio ponderado por confianza de todos los delfines.
 """
@@ -20,7 +21,7 @@ from src.agents.dolphin_agent import DolphinAgent, DolphinConfig, DolphinSwarmBr
 
 
 def _target_pool_size(n_nodes: int) -> int:
-    """Cuántos delfines debe haber según nodos conectados."""
+    """Cuántos delfines debe haber según nodos conectados. Sin techo artificial."""
     if n_nodes <= 1:
         return 1
     elif n_nodes <= 4:
@@ -28,21 +29,20 @@ def _target_pool_size(n_nodes: int) -> int:
     elif n_nodes <= 9:
         return 3
     else:
-        return 4
+        # 1 delfín por cada 3 nodos extra a partir de 10
+        return 3 + (n_nodes - 9 + 2) // 3  # escala suavemente
 
 
 class DolphinPool(nn.Module):
     """
     Pool de delfines que escala dinámicamente con la red.
+    Sin límites artificiales — el único constraint es hardware real.
 
     Uso:
         pool = DolphinPool(base_cfg, device="cuda")
         pool.scale_to_network(n_nodes=3)   # añade delfín si hace falta
         feromon, info = pool.forward(input_ids)
     """
-
-    MAX_DOLPHINS = 4
-    MIN_DOLPHINS = 1
 
     def __init__(self, base_cfg: DolphinConfig, device: str = "cpu"):
         super().__init__()
@@ -79,11 +79,12 @@ class DolphinPool(nn.Module):
     def scale_to_network(self, n_nodes: int) -> List[dict]:
         """
         Ajusta el número de delfines según nodos conectados.
+        Sin límite máximo — crece con la red.
+        El mínimo siempre es 1 (sin enjambre vacío).
         Returns: lista de eventos {"type": "spawn"|"retire", "dolphin_idx": int}
         """
         self._n_nodes = n_nodes
-        target = _target_pool_size(n_nodes)
-        target = max(self.MIN_DOLPHINS, min(self.MAX_DOLPHINS, target))
+        target = max(1, _target_pool_size(n_nodes))  # mínimo 1, sin techo
         events = []
 
         while len(self.dolphins) < target:
