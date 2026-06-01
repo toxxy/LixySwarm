@@ -445,8 +445,14 @@ class DolphinAgent(nn.Module):
 class DolphinSwarmBridge(nn.Module):
     """
     Puente entre DolphinAgent y LixySwarm.
-    Reemplaza el EcholocationHead del orquestador — el Delfín ahora
-    es un agente de primera clase, no solo una cabeza de preprocesamiento.
+
+    El Delfín es el SISTEMA DE ENRUTAMIENTO del enjambre:
+    1. Ecolocaliza el problema (5 pings → acoustic_map)
+    2. Hace ping a las sectas disponibles y obtiene PingResponses
+    3. Decide a qué secta(s) derivar la tarea (EcholocationRouter)
+    4. Integra la respuesta final cuando vuelve de las sectas
+
+    Phase B: AdaptiveSleepController controla modo activo/reposo/agresivo.
     """
 
     def __init__(self, cfg: DolphinConfig, device: str = "cpu"):
@@ -455,6 +461,11 @@ class DolphinSwarmBridge(nn.Module):
 
         # Proyector sleep_dim → feromon_dim para inyectar contexto en Matriarca
         self.sleep_to_matriarca = nn.Linear(cfg.sleep_dim, 512, bias=False)  # 512 = MatriarcaConfig.embd_dim
+
+        # Phase 2: Router de sectas — usa echo_dim (tamaño del acoustic_map)
+        from src.swarm.dolphin_router import EcholocationRouter, AdaptiveSleepController
+        self.router = EcholocationRouter(acoustic_map_dim=cfg.echo_dim)
+        self.sleep_controller = AdaptiveSleepController(buffer_size=64)
 
     def forward(self, idx: torch.Tensor) -> Tuple[torch.Tensor, dict]:
         """
@@ -466,8 +477,40 @@ class DolphinSwarmBridge(nn.Module):
         # Añadir estado de sueño proyectado para la Matriarca
         sleep_ctx = self.dolphin.sleep_state.get_state().to(idx.device, dtype=next(self.sleep_to_matriarca.parameters()).dtype)
         info["sleep_for_matriarca"] = self.sleep_to_matriarca(sleep_ctx)
+        info["sleep_mode"] = self.sleep_controller.mode
+
+        # Guardar acoustic_map en buffer circular del sleep controller
+        if "acoustic_map" in info:
+            self.sleep_controller.store_acoustic_map(info["acoustic_map"])
 
         return feromon, info
+
+    def route(self, sects: list, matriarca=None) -> "RouteDecision":
+        """
+        Enruta la última tarea procesada a la secta más adecuada.
+        Llama esto DESPUÉS de forward() para que haya un acoustic_map fresco.
+
+        Args:
+            sects: lista de SectRecord disponibles
+            matriarca: opcional, para consultar historial
+
+        Returns:
+            RouteDecision con primary_sect + secondary_sects
+        """
+        from src.swarm.dolphin_router import RouteDecision
+
+        # Usar el acoustic_map más reciente del buffer
+        recent = self.sleep_controller.recent_acoustic_maps(n=1)
+        if recent:
+            acoustic_map = recent[-1].to(next(self.router.parameters()).device)
+        else:
+            acoustic_map = torch.zeros(self.dolphin.cfg.feromon_dim)
+
+        return self.router.route(acoustic_map, sects, matriarca=matriarca)
+
+    def update_sleep_mode(self, diversity: float) -> str:
+        """Actualiza el modo de sueño según la diversidad del enjambre."""
+        return self.sleep_controller.update_diversity(diversity)
 
 
 # ─── Tests ────────────────────────────────────────────────────────────────────

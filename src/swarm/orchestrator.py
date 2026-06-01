@@ -446,9 +446,8 @@ class LixySwarm(nn.Module):
 
     def _init_default_sects(self):
         """Crea las sectas iniciales basándose en el enjambre actual."""
-        from src.swarm.sect_manager import KNOWN_SECT_ROLES
-        # Explorador, Refinador, Delfín — las tres sectas base
-        initial_roles = ["explorador", "refinador", "delfín"]
+        # Explorador y Refinador — sectas base (el Delfín es enrutador, no secta)
+        initial_roles = ["explorador", "refinador"]
         for role in initial_roles:
             sect = self.sect_manager.spawn_sect(role, priority=0.7)
             if sect:
@@ -483,7 +482,52 @@ class LixySwarm(nn.Module):
         dolphin_events = self.scale_dolphins(n_nodes)
         events.extend(dolphin_events)
 
+        # Phase B: actualizar modo de sueño del delfín según diversidad
+        for bridge in self.dolphin.dolphins:
+            sleep_mode = bridge.update_sleep_mode(swarm_diversity)
+
         return events
+
+    def route_task(
+        self,
+        idx: torch.Tensor,
+        use_sects: bool = True,
+    ):
+        """
+        Enruta una tarea a través del delfín:
+        1. Delfín ecolocaliza → acoustic_map
+        2. Router decide la secta adecuada
+        3. Retorna RouteDecision + feromon
+
+        Args:
+            idx: tokens de input (B, T)
+            use_sects: si False, solo retorna feromon sin routing
+
+        Returns:
+            (feromon, route_decision, dolphin_info)
+        """
+        # Forward del delfín primario (construye acoustic_map)
+        feromon, dolphin_info = self.dolphin.primary(idx)
+
+        if not use_sects:
+            return feromon, None, dolphin_info
+
+        # Enrutar a secta
+        sects = self.sect_manager.all_sects()
+        route_decision = self.dolphin.primary.route(
+            sects=sects,
+            matriarca=self.matriarca,
+        )
+
+        dolphin_info["route"] = {
+            "primary_sect": route_decision.primary_sect,
+            "secondary_sects": route_decision.secondary_sects,
+            "confidence": route_decision.confidence,
+            "mode": route_decision.mode,
+            "reason": route_decision.reason,
+        }
+
+        return feromon, route_decision, dolphin_info
 
     def scale_dolphins(self, n_nodes: int) -> list:
         """Escala el pool de delfines según nodos conectados."""
