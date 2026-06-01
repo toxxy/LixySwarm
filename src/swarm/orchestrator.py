@@ -423,21 +423,66 @@ class LixySwarm(nn.Module):
         self.specialization = SpecializationTracker(config.n_agents)
         self._last_fitnesses: Optional[List[AgentFitness]] = None
 
-        # 🐜 Ciclo de vida dinámico de hormigas
+        # 🐜 Ciclo de vida dinámico — NUEVA ARQUITECTURA
+        # Hormiga = Nodo físico. Secta = Especialidad.
+        from src.swarm.node_manager import NodeManager, HardwareProfile
+        from src.swarm.sect_manager import SectManager
+        self.node_manager = NodeManager(matriarca=self.matriarca)
+        self.sect_manager = SectManager(
+            node_manager=self.node_manager,
+            matriarca=self.matriarca,
+        )
+
+        # Registrar el nodo local (este proceso) automáticamente
+        local_hw = HardwareProfile.from_local()
+        self.node_manager.node_joined("local", hardware=local_hw, is_local=True)
+
+        # Sectas iniciales: explorador + refinador (una por tipo de agente actual)
+        self._init_default_sects()
+
+        # Compatibilidad: AntLifecycleManager sigue disponible para training
         from src.swarm.ant_lifecycle import AntLifecycleManager
         self.ant_lifecycle = AntLifecycleManager(self, self.matriarca)
+
+    def _init_default_sects(self):
+        """Crea las sectas iniciales basándose en el enjambre actual."""
+        from src.swarm.sect_manager import KNOWN_SECT_ROLES
+        # Explorador, Refinador, Delfín — las tres sectas base
+        initial_roles = ["explorador", "refinador", "delfín"]
+        for role in initial_roles:
+            sect = self.sect_manager.spawn_sect(role, priority=0.7)
+            if sect:
+                # Registrar agentes actuales
+                for ant in self.agents:
+                    self.sect_manager.add_agent_to_sect(sect.sect_id, "local")
 
     def tick_lifecycle(self, step: int, swarm_diversity: float, n_nodes: int = 1) -> list:
         """
         Tick del ecosistema del enjambre:
-        1. AntLifecycleManager: hormigas nacen/mueren según fitness y diversidad
-        2. DolphinPool: escala dámicos delfines según nodos conectados
+        1. NodeManager: prune nodos muertos + registrar contribución
+        2. SectManager: ciclo de vida de sectas (nacen/mueren por fitness y diversidad)
+        3. AntLifecycleManager: compatibilidad training (agentes individuales)
+        4. DolphinPool: escala delfines según nodos conectados
         Retorna lista de todos los eventos.
         """
-        events = self.ant_lifecycle.tick(step, swarm_diversity, n_nodes)
+        events = []
+
+        # Nodos muertos por timeout
+        dead_node_events = self.node_manager.prune_dead_nodes()
+        events.extend(dead_node_events)
+
+        # Ciclo de vida de sectas
+        sect_events = self.sect_manager.tick(step, swarm_diversity)
+        events.extend(sect_events)
+
+        # Compatibilidad: ciclo de vida de agentes individuales (training)
+        ant_events = self.ant_lifecycle.tick(step, swarm_diversity, n_nodes)
+        events.extend(ant_events)
+
         # Escalar delfines en sync con la red
         dolphin_events = self.scale_dolphins(n_nodes)
         events.extend(dolphin_events)
+
         return events
 
     def scale_dolphins(self, n_nodes: int) -> list:
