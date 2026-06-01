@@ -22,14 +22,10 @@
     }
     header .logo { font-size: 1.4rem; font-weight: 700; color: #4CAF50; }
     header .subtitle { font-size: 0.8rem; color: #666; }
-    header .updated {
-      margin-left: auto;
-      font-size: 0.75rem;
-      color: #444;
-    }
+    header .updated { margin-left: auto; font-size: 0.75rem; color: #444; }
     .grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
       gap: 16px;
       padding: 24px;
     }
@@ -39,112 +35,78 @@
       border-radius: 12px;
       padding: 20px;
     }
-    .card .card-title {
-      font-size: 0.75rem;
-      color: #555;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      margin-bottom: 10px;
-    }
-    .card .value {
-      font-size: 2rem;
-      font-weight: 700;
-      color: #4CAF50;
-    }
-    .card .unit {
-      font-size: 0.8rem;
-      color: #555;
-      margin-left: 4px;
-    }
-    .card .sub {
-      font-size: 0.8rem;
-      color: #444;
-      margin-top: 6px;
-    }
+    .card .card-title { font-size: 0.75rem; color: #555; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; }
+    .card .value { font-size: 2rem; font-weight: 700; color: #4CAF50; }
+    .card .unit { font-size: 0.8rem; color: #555; margin-left: 4px; }
+    .card .sub { font-size: 0.8rem; color: #444; margin-top: 6px; }
     .section-title {
-      font-size: 0.85rem;
-      color: #555;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      padding: 0 24px;
-      margin-top: 8px;
-      margin-bottom: 12px;
+      font-size: 0.85rem; color: #555; text-transform: uppercase;
+      letter-spacing: 1px; padding: 0 24px; margin: 16px 0 12px;
     }
-    .agents-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-      gap: 16px;
-      padding: 0 24px 24px;
-    }
-    .agent-card {
-      background: #111;
-      border: 1px solid #1e1e1e;
-      border-radius: 12px;
-      padding: 18px;
-    }
-    .agent-card .agent-header {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      margin-bottom: 14px;
-    }
+    /* Agentes */
+    .agents-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; padding: 0 24px 24px; }
+    .agent-card { background: #111; border: 1px solid #1e1e1e; border-radius: 12px; padding: 18px; }
+    .agent-card .agent-header { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
     .agent-card .agent-icon { font-size: 1.4rem; }
     .agent-card .agent-name { font-weight: 700; font-size: 1rem; }
     .agent-card .agent-role {
-      font-size: 0.75rem;
-      padding: 2px 10px;
-      border-radius: 20px;
-      margin-left: auto;
+      font-size: 0.75rem; padding: 2px 10px; border-radius: 20px; margin-left: auto;
     }
     .role-explorador { background: #1a3a1a; color: #4CAF50; border: 1px solid #2a5a2a; }
-    .role-refinador { background: #1a1a2a; color: #7986CB; border: 1px solid #2a2a4a; }
+    .role-refinador   { background: #1a1a2a; color: #7986CB; border: 1px solid #2a2a4a; }
+    .role-delfin      { background: #1a2a3a; color: #4FC3F7; border: 1px solid #1a4a5a; }
     .agent-bar { margin-bottom: 10px; }
-    .agent-bar .bar-label {
-      display: flex;
-      justify-content: space-between;
-      font-size: 0.75rem;
-      color: #555;
-      margin-bottom: 4px;
-    }
-    .bar-track {
-      background: #1a1a1a;
-      border-radius: 4px;
-      height: 6px;
-      overflow: hidden;
-    }
-    .bar-fill {
-      height: 100%;
-      border-radius: 4px;
-      background: #4CAF50;
-      transition: width 1s ease;
-    }
-    .bar-fill.diversity { background: #7986CB; }
+    .agent-bar .bar-label { display: flex; justify-content: space-between; font-size: 0.75rem; color: #555; margin-bottom: 4px; }
+    .bar-track { background: #1a1a1a; border-radius: 4px; height: 6px; overflow: hidden; }
+    .bar-fill { height: 100%; border-radius: 4px; background: #4CAF50; transition: width 1s ease; }
+    .bar-fill.diversity  { background: #7986CB; }
     .bar-fill.confidence { background: #FFB74D; }
+    /* Matriarca */
     .matriarca-card {
-      margin: 0 24px 24px;
-      background: #111;
-      border: 1px solid #2a4a2a;
-      border-radius: 12px;
-      padding: 20px;
-      display: flex;
-      gap: 32px;
-      align-items: center;
-      flex-wrap: wrap;
+      margin: 0 24px 24px; background: #111; border: 1px solid #2a4a2a;
+      border-radius: 12px; padding: 20px; display: flex; gap: 24px; align-items: center; flex-wrap: wrap;
     }
     .matriarca-card .m-icon { font-size: 3rem; }
-    .matriarca-card .m-info { flex: 1; }
+    .matriarca-card .m-info { flex: 1; min-width: 130px; }
     .matriarca-card .m-title { font-size: 0.75rem; color: #4CAF50; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; }
     .matriarca-card .m-value { font-size: 1.8rem; font-weight: 700; color: #fff; }
     .matriarca-card .m-sub { font-size: 0.8rem; color: #555; margin-top: 4px; }
+    /* Sectas */
+    .sects-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; padding: 0 24px 24px; }
+    .sect-card { background: #111; border: 1px solid #1e1e1e; border-radius: 10px; padding: 16px; }
+    .sect-card .sect-role { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; }
+    .sect-card .sect-fitness { font-size: 1.5rem; font-weight: 700; color: #4CAF50; }
+    .sect-card .sect-meta { font-size: 0.75rem; color: #444; margin-top: 4px; }
+    .sect-alive  { border-color: #2a4a2a; }
+    .sect-legacy { border-color: #2a2a1a; opacity: 0.7; }
+    /* Nodos */
+    .nodes-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; padding: 0 24px 24px; }
+    .node-card { background: #111; border: 1px solid #1e1e1e; border-radius: 10px; padding: 16px; }
+    .node-card .node-header { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+    .node-card .node-name { font-weight: 700; }
+    .node-card .node-mode {
+      margin-left: auto; font-size: 0.7rem; padding: 2px 8px; border-radius: 12px;
+    }
+    .mode-maximum  { background: #1a3a1a; color: #4CAF50; }
+    .mode-moderate { background: #2a2a1a; color: #FFB74D; }
+    .mode-relay    { background: #1a1a2a; color: #7986CB; }
+    /* LSP */
+    .lsp-card {
+      margin: 0 24px 24px; background: #111; border: 1px solid #1a2a3a;
+      border-radius: 12px; padding: 20px; display: flex; gap: 24px; flex-wrap: wrap;
+    }
+    .lsp-card .lsp-info { flex: 1; min-width: 120px; }
+    .lsp-card .lsp-label { font-size: 0.7rem; color: #4FC3F7; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; }
+    .lsp-card .lsp-value { font-size: 1.4rem; font-weight: 700; color: #fff; }
+    .lsp-card .lsp-sub { font-size: 0.75rem; color: #444; }
+    /* Badges */
     .readonly-badge {
-      display: inline-block;
-      background: #1a1a1a;
-      border: 1px solid #2a2a2a;
-      color: #555;
-      font-size: 0.7rem;
-      padding: 3px 10px;
-      border-radius: 20px;
-      margin-left: auto;
+      display: inline-block; background: #1a1a1a; border: 1px solid #2a2a2a;
+      color: #555; font-size: 0.7rem; padding: 3px 10px; border-radius: 20px; margin-left: auto;
+    }
+    .badge-v2 {
+      display: inline-block; background: #0d1f2d; border: 1px solid #1a4a5a;
+      color: #4FC3F7; font-size: 0.65rem; padding: 2px 8px; border-radius: 10px;
     }
   </style>
 </head>
@@ -162,40 +124,34 @@
   <div class="grid">
     <div class="card">
       <div class="card-title">Nodos conectados</div>
-      <div class="value" id="nodes">1<span class="unit">/ ?</span></div>
-      <div class="sub">Red en crecimiento</div>
+      <div class="value" id="nodes">—</div>
+      <div class="sub" id="nodes-sub">Red P2P</div>
     </div>
     <div class="card">
-      <div class="card-title">Hormigas activas</div>
-      <div class="value" id="ants">3<span class="unit">agentes</span></div>
-      <div class="sub">1 explorador · 2 refinadores</div>
+      <div class="card-title">Sectas activas</div>
+      <div class="value" id="sects-count">—</div>
+      <div class="sub" id="sects-sub">Especialidades vivas</div>
     </div>
     <div class="card">
-      <div class="card-title">Velocidad de red</div>
-      <div class="value" id="speed">12,800<span class="unit">tok/s</span></div>
-      <div class="sub">Throughput agregado</div>
+      <div class="card-title">Velocidad</div>
+      <div class="value" id="speed">—</div>
+      <div class="sub">tok/s throughput</div>
     </div>
     <div class="card">
       <div class="card-title">Diversidad genética</div>
-      <div class="value" id="diversity">0.74</div>
-      <div class="sub">Enjambre saludable ✅</div>
+      <div class="value" id="diversity">—</div>
+      <div class="sub">Enjambre saludable</div>
     </div>
     <div class="card">
-      <div class="card-title">Val Loss (mejor)</div>
-      <div class="value" id="loss">3.5687</div>
-      <div class="sub">Run 11 · −21.7% total</div>
+      <div class="card-title">Val Loss</div>
+      <div class="value" id="loss">—</div>
+      <div class="sub" id="loss-sub">Mejor checkpoint</div>
     </div>
     <div class="card">
-      <div class="card-title">Runs completados</div>
-      <div class="value" id="runs">11</div>
-      <div class="sub">Aprendizaje continuo</div>
+      <div class="card-title">Training</div>
+      <div class="value" id="step">—</div>
+      <div class="sub" id="training-sub">Paso actual</div>
     </div>
-  </div>
-
-
-  <!-- Red P2P LSP -->
-  <div class="section-title">🌐 Red P2P — LixySwarm Protocol</div>
-  <div id="network-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;padding:0 24px 24px">
   </div>
 
   <!-- Matriarca -->
@@ -203,24 +159,64 @@
   <div class="matriarca-card">
     <div class="m-icon">🐘</div>
     <div class="m-info">
-      <div class="m-title">Memorias acumuladas</div>
-      <div class="m-value" id="memories">3,657</div>
-      <div class="m-sub">Inteligencia permanente · nunca se pierde</div>
+      <div class="m-title">Memorias</div>
+      <div class="m-value" id="memories">—</div>
+      <div class="m-sub">Banco personal</div>
     </div>
     <div class="m-info">
-      <div class="m-title">Generaciones</div>
-      <div class="m-value">11</div>
-      <div class="m-sub">Cada ciclo más sabia</div>
+      <div class="m-title">Legados de sectas</div>
+      <div class="m-value" id="legacy-count">—</div>
+      <div class="m-sub" id="legacy-roles">ADN genético preservado</div>
+    </div>
+    <div class="m-info">
+      <div class="m-title">Importancia media</div>
+      <div class="m-value" id="mat-importance">—</div>
+      <div class="m-sub">Promedio banco</div>
+    </div>
+    <div class="m-info">
+      <div class="m-title">Activas (&gt;0.2)</div>
+      <div class="m-value" id="mat-active">—</div>
+      <div class="m-sub">% memorias relevantes</div>
     </div>
   </div>
+
+  <!-- Sectas -->
+  <div class="section-title">🏛️ Sectas del Enjambre</div>
+  <div class="sects-grid" id="sects-grid">
+    <div class="sect-card" style="color:#444;font-size:0.85rem;">Cargando sectas...</div>
+  </div>
+
+  <!-- Red P2P LSP v2 -->
+  <div class="section-title">🌐 Red P2P — <span class="badge-v2">LSP v2</span></div>
+  <div class="lsp-card">
+    <div class="lsp-info">
+      <div class="lsp-label">Protocolo</div>
+      <div class="lsp-value">LSP v2</div>
+      <div class="lsp-sub">Wire format binario · 528B/feromon</div>
+    </div>
+    <div class="lsp-info">
+      <div class="lsp-label">Compresión</div>
+      <div class="lsp-value">float16</div>
+      <div class="lsp-sub">256d · 5× vs JSON</div>
+    </div>
+    <div class="lsp-info">
+      <div class="lsp-label">Merge-on-transit</div>
+      <div class="lsp-value">✅</div>
+      <div class="lsp-sub">fitness-weighted · TTL decay</div>
+    </div>
+    <div class="lsp-info">
+      <div class="lsp-label">Feromonas recibidas</div>
+      <div class="lsp-value" id="feromons-rx">—</div>
+      <div class="lsp-sub" id="feromons-sub">UDP 7337</div>
+    </div>
+  </div>
+  <div class="nodes-grid" id="network-grid"></div>
 
   <!-- Agentes -->
   <div class="section-title">🐜 Especialización del Enjambre</div>
-  <div class="agents-grid" id="agents-grid">
-    <!-- generado por JS -->
-  </div>
+  <div class="agents-grid" id="agents-grid"></div>
 
-    <script>
+  <script>
     const API = window.LIXYSWARM_API || "http://localhost:8080/api";
 
     async function loadStatus() {
@@ -229,20 +225,53 @@
         const json = await res.json();
         if (!json.ok) return;
         const d = json.data;
-        const net = d.network  || {};
-        const met = d.metrics  || {};
-        const mat = d.matriarca|| {};
+        const net = d.network   || {};
+        const met = d.metrics   || {};
+        const mat = d.matriarca || {};
 
-        set("nodes",     (net.connected_count ?? 1) + " nodo" + ((net.connected_count ?? 1) !== 1 ? "s" : ""));
-        set("ants",      (d.agent_count || 3) + " agentes");
-        set("speed",     met.toks_per_sec != null ? met.toks_per_sec.toLocaleString() + " tok/s" : "—");
+        // Métricas principales
+        const nNodes = net.connected_count ?? 1;
+        set("nodes", nNodes);
+        set("nodes-sub", nNodes === 1 ? "Solo nodo local" : nNodes + " nodos en red");
+
+        set("speed", met.toks_per_sec != null ? met.toks_per_sec.toLocaleString() : "—");
         set("diversity", d.swarm_diversity != null ? d.swarm_diversity.toFixed(3) : "—");
-        set("loss",      met.val_loss != null ? met.val_loss.toFixed(4) : "—");
-        set("runs",      met.step     != null ? "step " + met.step.toLocaleString() : "—");
-        set("memories",  mat.memory_count != null ? mat.memory_count.toLocaleString() : "—");
+        set("loss", met.val_loss != null ? met.val_loss.toFixed(4) : "—");
+        if (met.step != null) {
+          set("step", "step " + met.step.toLocaleString());
+          set("loss-sub", met.checkpoint || "Mejor checkpoint");
+          set("training-sub", d.training_active ? "🟢 Activo" : "⚪ En pausa");
+        }
 
-        if (d.agents && d.agents.length) renderAgents(d.agents);
+        // Matriarca
+        set("memories",       mat.memory_count     != null ? mat.memory_count.toLocaleString() : "—");
+        set("legacy-count",   mat.legacy_count     != null ? mat.legacy_count : "0");
+        set("mat-importance", mat.avg_importance   != null ? mat.avg_importance.toFixed(3) : "—");
+        set("mat-active",     mat.active_pct       != null ? mat.active_pct + "%" : "—");
+        if (mat.legacy_by_role) {
+          const roles = Object.entries(mat.legacy_by_role).map(([r,n]) => n + " " + r).join(" · ");
+          set("legacy-roles", roles || "ADN genético preservado");
+        }
+
+        // Sectas
+        if (d.sects) renderSects(d.sects);
+        else if (d.agents) inferSectsFromAgents(d.agents);
+
+        // Red
+        if (net.feromons_received != null) {
+          set("feromons-rx", net.feromons_received.toLocaleString());
+        }
+        if (d.sects && d.sects.length) {
+          set("sects-count", d.sects.filter(s => s.alive !== false).length);
+          set("sects-sub", d.sects.map(s => s.role_type).join(" · "));
+        } else if (d.agents) {
+          const roles = [...new Set(d.agents.map(a => a.role))];
+          set("sects-count", roles.length);
+          set("sects-sub", roles.join(" · "));
+        }
+
         if (d.network) renderNetwork(d.network.nodes, d.network.protocol);
+        if (d.agents && d.agents.length) renderAgents(d.agents);
 
         const ts = d.last_update ? new Date(d.last_update) : new Date();
         set("updated", "Actualizado: " + ts.toLocaleTimeString("es", {hour:"2-digit",minute:"2-digit",second:"2-digit"}));
@@ -251,26 +280,59 @@
 
     function set(id, val) { const el = document.getElementById(id); if (el) el.textContent = val; }
 
+    function renderSects(sects) {
+      const grid = document.getElementById("sects-grid");
+      if (!grid || !sects.length) return;
+      grid.innerHTML = sects.map(s => {
+        const alive = s.alive !== false;
+        const icon = s.role_type === "explorador" ? "🟢" : s.role_type === "refinador" ? "🔵" : "⚪";
+        const modeColor = s.contribution_mode === "relay" ? "#7986CB" : s.contribution_mode === "moderate" ? "#FFB74D" : "#4CAF50";
+        return `<div class="sect-card ${alive ? 'sect-alive' : 'sect-legacy'}">
+          <div class="sect-role" style="color:${modeColor}">${icon} ${s.role_type || "?"}</div>
+          <div class="sect-fitness">${s.avg_fitness != null ? s.avg_fitness.toFixed(3) : "—"}</div>
+          <div class="sect-meta">Agentes: ${s.n_agents ?? "?"} · Peak: ${s.n_agents_peak ?? "?"}</div>
+          ${s.contribution_mode ? `<div class="sect-meta" style="color:${modeColor}">${s.contribution_mode}</div>` : ""}
+          ${!alive ? `<div class="sect-meta" style="color:#555">⚰️ Legado preservado</div>` : ""}
+        </div>`;
+      }).join("");
+    }
+
+    function inferSectsFromAgents(agents) {
+      // Si no hay datos de sectas, infiere de los agentes
+      const roleMap = {};
+      for (const a of agents) {
+        if (!roleMap[a.role]) roleMap[a.role] = {role_type: a.role, avg_fitness: 0, n_agents: 0, alive: true};
+        roleMap[a.role].n_agents++;
+        roleMap[a.role].avg_fitness = (roleMap[a.role].avg_fitness * (roleMap[a.role].n_agents-1) + a.fitness) / roleMap[a.role].n_agents;
+      }
+      renderSects(Object.values(roleMap));
+    }
+
     function renderAgents(agents) {
       const grid = document.getElementById("agents-grid");
       if (!grid) return;
-      grid.innerHTML = agents.map(a =>
-        "<div class=\"agent-card\">" +
-        "<div class=\"agent-header\"><div class=\"agent-icon\">🐜</div>" +
-        "<div class=\"agent-name\">Agente " + a.id + "</div>" +
-        "<div class=\"agent-role role-" + a.role + "\">" + a.role + "</div></div>" +
-        bar("Fitness",    a.fitness,    "") +
-        bar("Diversidad", a.diversity,  "diversity") +
-        bar("Confianza",  a.confidence, "confidence") +
-        "</div>"
-      ).join("");
+      grid.innerHTML = agents.map(a => {
+        const roleClass = "role-" + (a.role || "refinador").replace(/[^a-z]/g, "");
+        return `<div class="agent-card">
+          <div class="agent-header">
+            <div class="agent-icon">🐜</div>
+            <div class="agent-name">Agente ${a.id}</div>
+            <div class="agent-role ${roleClass}">${a.role || "?"}</div>
+          </div>
+          ${bar("Fitness",    a.fitness,    "")}
+          ${bar("Diversidad", a.diversity,  "diversity")}
+          ${bar("Confianza",  a.confidence, "confidence")}
+        </div>`;
+      }).join("");
     }
 
     function bar(label, val, cls) {
       const v = (val || 0).toFixed(3);
-      const pct = (val || 0) * 100;
-      return "<div class=\"agent-bar\"><div class=\"bar-label\"><span>" + label + "</span><span>" + v + "</span></div>" +
-             "<div class=\"bar-track\"><div class=\"bar-fill " + cls + "\" style=\"width:" + pct + "%\"></div></div></div>";
+      const pct = Math.min(100, (val || 0) * 100);
+      return `<div class="agent-bar">
+        <div class="bar-label"><span>${label}</span><span>${v}</span></div>
+        <div class="bar-track"><div class="bar-fill ${cls}" style="width:${pct}%"></div></div>
+      </div>`;
     }
 
     function renderNetwork(nodes, protocol) {
@@ -282,11 +344,19 @@
         const label = isVps ? "VPS Relay" : "Nodo Local (GPU)";
         const id = (n.node_id || "?").slice(0,8) + "...";
         const step = n.step ? ` · step ${n.step.toLocaleString()}` : "";
-        return `<div class="card" style="border-color:#1a3a2a">
-          <div class="card-title">${icon} ${label}</div>
-          <div class="value" style="font-size:1.1rem;color:#4CAF50">${id}</div>
-          <div class="sub">${n.host}:${n.port}${step}</div>
-          <div class="sub" style="color:#4CAF50">${protocol || "LSP v1"} ✅</div>
+        const mode = n.contribution_mode || "maximum";
+        const modeCls = `mode-${mode}`;
+        const gpuFrac = n.effective_gpu_fraction != null ? (n.effective_gpu_fraction * 100).toFixed(0) + "% GPU" : "";
+        return `<div class="node-card">
+          <div class="node-header">
+            <span>${icon}</span>
+            <span class="node-name">${label}</span>
+            <span class="node-mode ${modeCls}">${mode}</span>
+          </div>
+          <div style="font-size:1.2rem;color:#4CAF50;font-weight:700">${id}</div>
+          <div style="font-size:0.8rem;color:#444;margin-top:4px">${n.host || "local"}${step}</div>
+          ${gpuFrac ? `<div style="font-size:0.75rem;color:#555;margin-top:4px">${gpuFrac} · ${n.effective_sect_capacity ?? "?"} sectas máx</div>` : ""}
+          <div style="font-size:0.75rem;color:#4FC3F7;margin-top:6px">${protocol || "LSP v2"} <span class="badge-v2">v2</span></div>
         </div>`;
       }).join("");
     }

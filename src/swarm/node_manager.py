@@ -23,10 +23,24 @@ from __future__ import annotations
 
 import time
 from dataclasses import dataclass, field
+from enum import Enum
 from typing import Dict, List, Optional, TYPE_CHECKING
 
 if TYPE_CHECKING:
     from src.swarm.sect_manager import SectManager
+
+
+class ContributionMode(Enum):
+    """
+    Modo de contribución de un nodo al enjambre.
+
+    MAXIMUM  → Todo el hardware disponible: GPU al 100%, sin límites de sectas
+    MODERATE → Mitad del hardware: GPU al 50%, máx la mitad de sectas
+    RELAY    → Solo reenvia feromonas: sin GPU, sin sectas propias
+    """
+    MAXIMUM  = "maximum"
+    MODERATE = "moderate"
+    RELAY    = "relay"
 
 
 @dataclass
@@ -101,6 +115,7 @@ class NodeRecord:
     connected_sects: List[str] = field(default_factory=list)   # sect_id[]
     contribution_score: float = 0.0   # acumulado
     is_local: bool = False             # True = este mismo proceso
+    contribution_mode: ContributionMode = ContributionMode.MAXIMUM   # modo de contribución
 
     @property
     def uptime(self) -> float:
@@ -122,9 +137,32 @@ class NodeRecord:
 
     def can_host_sect(self, sect_id: str) -> bool:
         """¿Puede este nodo hospedar una secta más?"""
+        if self.contribution_mode == ContributionMode.RELAY:
+            return False  # modo relay: nunca hospeda sectas
         if sect_id in self.connected_sects:
             return False  # ya la tiene
-        return len(self.connected_sects) < self.hardware.max_concurrent_sects
+        cap = self._effective_sect_capacity()
+        return len(self.connected_sects) < cap
+
+    def _effective_sect_capacity(self) -> int:
+        """Capacidad real de sectas según el modo de contribución."""
+        base = self.hardware.max_concurrent_sects
+        if self.contribution_mode == ContributionMode.MAXIMUM:
+            return base
+        elif self.contribution_mode == ContributionMode.MODERATE:
+            return max(1, base // 2)
+        else:  # RELAY
+            return 0
+
+    @property
+    def effective_gpu_fraction(self) -> float:
+        """Fracción de GPU disponible según el modo de contribución."""
+        if self.contribution_mode == ContributionMode.MAXIMUM:
+            return 1.0
+        elif self.contribution_mode == ContributionMode.MODERATE:
+            return 0.5
+        else:  # RELAY
+            return 0.0
 
     def attach_sect(self, sect_id: str) -> bool:
         if not self.can_host_sect(sect_id):
@@ -146,6 +184,9 @@ class NodeRecord:
             "fitness": round(self.fitness, 3),
             "connected_sects": list(self.connected_sects),
             "is_local": self.is_local,
+            "contribution_mode": self.contribution_mode.value,
+            "effective_gpu_fraction": self.effective_gpu_fraction,
+            "effective_sect_capacity": self._effective_sect_capacity(),
         }
 
 
@@ -256,6 +297,33 @@ class NodeManager:
 
     def all_nodes(self) -> List[NodeRecord]:
         return list(self._nodes.values())
+
+    def set_contribution_mode(self, node_id: str, mode: ContributionMode) -> bool:
+        """
+        Cambia el modo de contribución de un nodo.
+        Retorna True si el nodo existe y el modo fue aplicado.
+
+        MAXIMUM  → GPU al 100%, todas las sectas disponibles
+        MODERATE → GPU al 50%, mitad de sectas
+        RELAY    → 0% GPU, 0 sectas, solo relay de feromonas
+        """
+        node = self._nodes.get(node_id)
+        if node is None:
+            return False
+        old_mode = node.contribution_mode
+        node.contribution_mode = mode
+        # Si bajamos a RELAY, desconectar sectas que ya no puede hospedar
+        if mode == ContributionMode.RELAY:
+            node.connected_sects.clear()
+        elif mode == ContributionMode.MODERATE:
+            cap = node._effective_sect_capacity()
+            while len(node.connected_sects) > cap:
+                node.connected_sects.pop()
+        import logging
+        logging.getLogger(__name__).info(
+            f"Node {node_id[:8]} contribution_mode: {old_mode.value} → {mode.value}"
+        )
+        return True
 
     def best_node_for_sect(self, sect_id: str) -> Optional[NodeRecord]:
         """Nodo con más capacidad disponible que pueda hospedar la secta."""

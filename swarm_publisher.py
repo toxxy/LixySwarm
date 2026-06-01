@@ -83,6 +83,21 @@ def collect_status() -> dict:
                 "avg_importance": round(sum(importances)/len(importances), 3) if importances else 0,
                 "active_pct": round(sum(1 for i in importances if i > 0.2)/len(importances)*100, 1) if importances else 0,
             }
+            # Legados de sectas si existe el banco
+            legacy_file = CHECKPOINT_DIR / "sect_legacy_bank.json"
+            if legacy_file.exists():
+                try:
+                    legacy_data = json.loads(legacy_file.read_text())
+                    records = legacy_data if isinstance(legacy_data, list) else legacy_data.get("records", [])
+                    status["matriarca"]["legacy_count"] = len(records)
+                    if records:
+                        roles = {}
+                        for r in records:
+                            role = r.get("role_type", "?") if isinstance(r, dict) else "?"
+                            roles[role] = roles.get(role, 0) + 1
+                        status["matriarca"]["legacy_by_role"] = roles
+                except Exception:
+                    pass
         except Exception:
             pass
     # Fallback: último log de training tiene el conteo
