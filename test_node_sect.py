@@ -338,6 +338,65 @@ def test_12_stats():
     print(f"  ✓ Sectas: {sm_stats['total_sects']} births={sm_stats['births']}")
 
 
+def test_13_contribution_mode():
+    """Test: ContributionMode MAXIMUM/MODERATE/RELAY en NodeRecord."""
+    print("\n[Test 13] ContributionMode")
+    from src.swarm.node_manager import NodeManager, ContributionMode, HardwareProfile
+
+    nm = NodeManager()
+    nm.node_joined("n1", HardwareProfile(gpu_vram_gb=24, has_gpu=True, cpu_cores=16, ram_gb=64))
+    n = nm.get_node("n1")
+
+    # Default es MAXIMUM
+    assert n.contribution_mode == ContributionMode.MAXIMUM
+    assert n.effective_gpu_fraction == 1.0
+    assert n.can_host_sect("s1")
+
+    # MODERATE: mitad de GPU, mitad de sectas
+    nm.set_contribution_mode("n1", ContributionMode.MODERATE)
+    assert n.effective_gpu_fraction == 0.5
+    cap_max = HardwareProfile(gpu_vram_gb=24, has_gpu=True, cpu_cores=16, ram_gb=64).max_concurrent_sects
+    assert n._effective_sect_capacity() == max(1, cap_max // 2)
+    assert n.can_host_sect("s1")
+
+    # RELAY: sin GPU, sin sectas
+    nm.set_contribution_mode("n1", ContributionMode.RELAY)
+    assert n.effective_gpu_fraction == 0.0
+    assert n._effective_sect_capacity() == 0
+    assert not n.can_host_sect("s1")
+
+    # to_dict incluye los campos nuevos
+    d = n.to_dict()
+    assert d["contribution_mode"] == "relay"
+    assert d["effective_gpu_fraction"] == 0.0
+    assert d["effective_sect_capacity"] == 0
+
+    # set_contribution_mode retorna False para nodo inexistente
+    assert not nm.set_contribution_mode("no_existe", ContributionMode.MAXIMUM)
+
+    print(f"  ✓ MAXIMUM/MODERATE/RELAY: GPU y sectas responden al modo")
+    print(f"  ✓ to_dict: mode=relay gpu=0.0 sects=0")
+
+
+def test_14_relay_disconnects_sects():
+    """Test: bajar a RELAY desconecta sectas existentes."""
+    print("\n[Test 14] RELAY desconecta sectas")
+    from src.swarm.node_manager import NodeManager, ContributionMode, HardwareProfile
+
+    nm = NodeManager()
+    nm.node_joined("n1", HardwareProfile(gpu_vram_gb=24, has_gpu=True, cpu_cores=16, ram_gb=64))
+    n = nm.get_node("n1")
+
+    # Añadir sectas manualmente
+    n.connected_sects.extend(["s1", "s2", "s3"])
+    assert len(n.connected_sects) == 3
+
+    # Bajar a RELAY limpia sectas
+    nm.set_contribution_mode("n1", ContributionMode.RELAY)
+    assert len(n.connected_sects) == 0, f"RELAY debe limpiar sectas, got {n.connected_sects}"
+    print(f"  ✓ RELAY limpió {3} sectas automáticamente")
+
+
 # ─── Main ──────────────────────────────────────────────────────────────────────
 
 if __name__ == "__main__":
@@ -354,6 +413,8 @@ if __name__ == "__main__":
         test_10_orchestrator_has_node_and_sect_managers,
         test_11_tick_lifecycle_full,
         test_12_stats,
+        test_13_contribution_mode,
+        test_14_relay_disconnects_sects,
     ]
 
     passed = 0
