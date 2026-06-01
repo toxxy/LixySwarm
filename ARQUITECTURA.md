@@ -1,271 +1,443 @@
 # LixySwarm — Arquitectura Bio-Inspirada
-**"Hormiga + Elefante + Delfín"**
-*Última actualización: 2026-05-30 | Estado: Run 11 completado, ~434M params activos*
+**"AntElephantDolphin — A Bio-Inspired P2P Architecture for Distributed Language Intelligence"**
+*Última actualización: 2026-05-30 | Estado: Fase 2 completa — 146/146 tests | ~568M params*
 
 ---
 
-## Visión General
+## Visión en 5 minutos
 
-LixySwarm no es un transformer monolítico — es una **colonia**. La inteligencia emerge de la interacción entre tres capas bio-inspiradas que se coordinan en cada forward pass.
+LixySwarm **no es un transformer monolítico**. Es una **colonia distribuida**: la inteligencia emerge de la interacción entre tres capas bio-inspiradas que se coordinan en cada forward pass, en cada nodo de la red.
 
 ```
+────────────────── RED P2P (LSP v2) ──────────────────
+  Nodo A (GPU)            Nodo B (CPU)       VPS Relay
+  ┌────────────┐          ┌──────────────┐   ┌───────┐
+  │ 🐜 Enjambre│◄─feromon─►│ 🐜 Enjambre  │   │ relay │
+  │ 🐘 Matriarca│         │ 🐘 Matriarca  │   │ gossip│
+  │ 🐬 Delfín  │         │ 🐬 Delfín    │   └───────┘
+  └────────────┘          └──────────────┘
+       │                        │
+       └──────── feromonas ──────┘  (UDP 7337, LSP v2 binario)
+       └──────── gossip   ──────┘  (TCP 7338)
+
+────────────── DENTRO DE CADA NODO ──────────────────
 INPUT
   │
   ▼
-🐬 DolphinAgent ──── construye mapa acústico del problema (antes de generar)
-  │
+🐬 EcholocationRouter ── construye mapa acústico del problema (5 pings × 128d)
+  │  (DolphinPool: 1..N delfines según complejidad)
   ▼
-🐘 Matriarca ──────── emite infrasónidos: orienta al enjambre con memoria acumulada
-  │
+🐘 Matriarca ─────────── emite infrasónidos: orienta con 3000+ memorias acumuladas
+  │  (MatriarcaDual: banco Personal encriptado + banco Global distribuido)
   ▼
-🐜 AntAgent × 3 ───── procesan en paralelo con feromonas cruzadas
-  │
+🐜 Enjambre de Hormigas ─ procesan en paralelo con feromonas cruzadas
+  │  (NodeManager: 1 hormiga = 1 nodo físico; SectManager: especialidades vivas)
   ▼
-Agregación ponderada (fitness + confianza + voto Matriarca)
+Agregación ponderada (fitness × confianza × voto Matriarca × legado genético)
   │
   ▼
 OUTPUT
 ```
 
-**Total de parámetros activos:** ~434M
-- Cada AntAgent: 125M params
-- Matriarca: ~10M params (embeddings + atención sparsa)
-- DolphinAgent: ~9M params (proyecciones + sleep_state)
+**Total params activos:** ~568M
+- Cada AntAgent: 125.7M params × 3 = 377M
+- DolphinPool: 49.1M params
+- Swarm mechanisms (FeromonGate, aggregation): 75.3M
+- Matriarca: 5.6M params
 
 ---
 
-## 🐜 Capa Hormiga — El Enjambre
+## 🐜 Capa 1 — El Enjambre de Hormigas
 
 ### Principio
-Ningún agente es inteligente solo. La inteligencia EMERGE de la interacción.
+Ningún agente es inteligente solo. La inteligencia **emerge** de la interacción.
 
-### Implementación actual (`src/agents/agent_base.py`)
+### NodeManager — Hormiga = Nodo físico (`src/swarm/node_manager.py`)
+
+Cada nodo físico en la red P2P **es** una hormiga. No hay N fijo — el enjambre crece y se contrae con la red.
 
 ```python
-class AgentBase(nn.Module):
-    # Transformer 125M params (12 layers, 12 heads, d_model=768)
-    # + FeromonGate: atención gateada sobre señal de feromona entrante
-    # + IdentityVec: vector fijo [256d] único por instancia (el "silbido")
+@dataclass
+class NodeRecord:
+    node_id: str              # identidad Ed25519 única
+    host: str                 # IP o hostname
+    feromon_port: int         # UDP — feromonas
+    gossip_port: int          # TCP — gossip de estado
+    contribution_mode: ContributionMode  # MAXIMUM / MODERATE / RELAY
+    hardware_profile: dict    # GPU VRAM, CPU cores, RAM
+    effective_gpu_fraction: float
+    effective_sect_capacity: int
+```
+
+**ContributionMode** — cada nodo contribuye según su capacidad:
+| Modo | GPU | Sectas máx | Rol |
+|------|-----|------------|-----|
+| `MAXIMUM` | 100% | sin límite | Training completo |
+| `MODERATE` | 50% | 4 | Training parcial |
+| `RELAY` | 0% | 0 | Solo relay de feromonas |
+
+### SectManager — Especialidades vivas (`src/swarm/sect_manager.py`)
+
+Las sectas son **agrupaciones dinámicas de nodos con la misma especialización**. Nacen, mutan, y mueren según fitness.
+
+```python
+@dataclass
+class SectRecord:
+    sect_id: str
+    role_type: str      # explorador / refinador / integrador / ...
+    n_agents: int
+    avg_fitness: float
+    alive: bool
+    # Cuando muere → transfiere legado genético a la Matriarca
+    legacy_transferred: bool
+```
+
+**Ciclo de vida de una secta:**
+```
+Nacimiento: fitness nueva especialidad detectada
+    ↓
+Crecimiento: más nodos se unen (mismo role_type)
+    ↓
+Madurez: fitness estabilizado, legado generado
+    ↓
+Muerte: fitness bajo por N ciclos → transfiere legado a Matriarca
+```
+
+**Legado genético**: antes de morir, una secta transfiere a la Matriarca su `role_type`, `avg_fitness`, y los patrones de feromona más fuertes. Las nuevas sectas del mismo tipo heredan ese ADN.
+
+### AgentBase — El transformer individual (`src/agents/agent_base.py`)
+
+```
+AgentBase (125.7M params):
+├── GPT-2 style transformer (12L × 12H × 768d)
+├── FeromonGate: ajusta activaciones según feromona entrante
+└── IdentityVec: [256d] único e inmutable — "personalidad" del agente
 ```
 
 **FeromonGate**: antes de cada forward, el agente lee la feromona del enjambre y ajusta sus activaciones. Como una hormiga que "huele" el camino antes de decidir.
 
-**IdentityVec**: embedding de identidad no entrenable. Hace que cada agente tenga perspectiva propia — el mismo input produce representaciones diferentes según la "personalidad" del agente.
+**IdentityVec**: el mismo input produce representaciones diferentes en cada agente — garantiza diversidad sin requerir architecturas distintas.
 
-### Roles dinámicos (`src/swarm/dynamic_roles.py`)
+### DynamicRoleAdapter — Especialización por tarea (`src/swarm/dynamic_roles.py`)
 
-`DynamicRoleAdapter` clasifica cada query en uno de 6 tipos de tarea:
-- `explorador` — preguntas abiertas, creatividad, ideas nuevas
-- `refinador` — pulir respuestas, mejorar calidad
-- `integrador` — combinar perspectivas, síntesis
-- `analítico` — lógica, razonamiento estructurado
-- `contextual` — coherencia conversacional, historial
-- `generativo` — síntesis final de respuesta
+Clasifica cada query en 6 tipos y ajusta temperatura + pesos de confianza dinámicamente:
 
-Cada tipo ajusta temperatura y pesos de confianza dinámicamente.
-
-### Estado Run 11 (último training largo)
-```
-Steps: ~53k | val_loss: 3.59 | Memorias Matriarca: 3241+
-Diversidad enjambre: 0.80 | Fitness promedio: 0.51
-tok/s: 12,800 | lr_final: ~1.6e-05
-```
+| Rol | Temperatura | Cuando se activa |
+|-----|-------------|------------------|
+| `explorador` | alta | preguntas abiertas, creatividad |
+| `refinador` | baja | pulir respuestas, calidad |
+| `integrador` | media | síntesis, combinar perspectivas |
+| `narrativo` | alta | historias, continuación |
+| `tecnico` | muy baja | código, matemáticas |
+| `aprendiendo` | media | contexto nuevo, adaptación |
 
 ---
 
-## 🐘 Capa Elefante — La Matriarca
+## 🐘 Capa 2 — La Matriarca
 
 ### Principio
-Sabiduría transgeneracional. No procesa tokens — orienta a quienes lo hacen.
+La elefanta que recuerda todo. Memoria a largo plazo del enjambre.
 
-### Implementación actual (`src/matriarca/matriarca.py`)
+### MatriarcaDual — Banco Personal + Global (`src/matriarca/matriarca.py`)
+
+```
+MatriarcaDual:
+├── Banco Personal (local, encriptado)
+│   └── Memorias privadas del nodo, nunca salen a la red
+└── Banco Global (distribuido, via LSP)
+    └── Memorias compartidas con otros nodos (consentidas)
+```
+
+**Elephant layer**: memoria esparsa con `block_size=512`, almacena memorias como pares (embedding, texto). Las más relevantes se refuerzan positivamente en cada uso (`update_importance=True` por defecto).
+
+**`emit_infrasound()`**: durante el forward, la Matriarca emite una señal de orientación (`infrasound_vec`) que se inyecta en el camino de las hormigas via feromona. Como el infrasónido real — frecuencia demasiado baja para escuchar, pero orienta el movimiento de la manada.
+
+**Importancia dinámica** — 5 métricas por turno:
+1. Longitud de respuesta (`len`)
+2. Type-Token Ratio de diversidad léxica (`TTR`)
+3. Penalización bigram repetitivo (`bigram-rep`)
+4. Coherencia semántica con el contexto
+5. Continuidad temática entre turnos
+
+**Retroactive feedback**: si el usuario continúa el tema del turno anterior, el turno anterior recibe +15% de importancia. Si el usuario cambia de tema bruscamente, -20%.
+
+**Compresión generacional**: al 90% de capacidad, los recuerdos menos importantes se comprimen (averaging) para liberar espacio sin perder el patrón general.
+
+**Legado genético de sectas**: cuando una secta muere, sus patrones van al banco de legados de la Matriarca (`sect_legacy_bank.json`). Las nuevas sectas del mismo tipo heredan ese banco genético.
+
+### RuntimeSession — Estado cross-turn (`src/swarm/runtime_session.py`)
+
+Persiste el estado del enjambre entre turnos (y entre reinicios):
 
 ```python
-class Matriarca:
-    memory_bank: MemoryBank   # hasta 10k memorias con importancia dinámica
-    
-    def emit_infrasound(self, query_embed) -> Tensor:
-        """Recupera memorias relevantes → vector de orientación [256d]."""
-        # Actualiza importancia de memorias usadas (+3%)
-    
-    def store_memory(self, text, embedding, importance):
-        """Graba interacción. Auto-comprime al 90% de capacidad."""
+{
+  "feromon_state":     [...],   # feromona activa del enjambre
+  "turn_history":      [...],   # pares Q+A con importancia
+  "session_step":      int,     # contador de turnos
+  "matriarca_hits":    {...},   # qué memorias se usaron
+}
 ```
 
-**Importancia dinámica** — 5 métricas por memoria:
-1. Longitud (contenido rico)
-2. TTR — Type-Token Ratio (vocabulario diverso)
-3. Bigram-rep (penaliza repetición)
-4. Coherencia semántica (cos_sim con contexto)
-5. Continuidad temática (mismo tema que turnos anteriores)
-
-**Retroactive feedback**: cuando el usuario continúa un tema, la memoria del turno anterior sube +8% de importancia.
-
-**Ciclo de vida de memoria:**
-```
-Training → store cada 50 steps (hitos val_loss + log del enjambre)
-Runtime  → emit_infrasound orienta forward (update_importance=True)
-Sesión   → penalize_unused: memorias no accedidas bajan -2%
-Compresión → al 90% capacidad: prune por importancia + destilación
-```
-
-### Estado actual
-- **3,241+ memorias** acumuladas en Run 11
-- Matriarca vota 20% del peso de agregación final
-- `InfrasoundMixer`: blend 70% feromona nueva + 30% feromona anterior
+Al cerrar: `penalize_unused()` — memorias que nunca se usaron bajan importancia. Guarda resumen de sesión como nueva memoria (importancia=0.85).
 
 ---
 
-## 🐬 Capa Delfín — Percepción Espacial
+## 🐬 Capa 3 — El Delfín
 
 ### Principio
-No procesar linealmente. Construir el mapa del problema **antes** de generar.
+El delfín explora antes de comprometerse. Ecolocalización = claridad antes de generar.
 
-### Implementación actual (`src/agents/dolphin_agent.py`)
+### EcholocationRouter — Enrutamiento inteligente (`src/swarm/echolocation_router.py`)
 
-**Ecolocalización (3 pings):**
+```
+EcholocationRouter:
+├── DolphinPool (1..N delfines según complejidad de red)
+│   └── DolphinAgent: transformer 49.1M params + 5 pings acústicos
+├── AdaptiveSleepController
+│   └── Ciclos de consolidación en silencio (sin input)
+└── Enrutamiento por similitud acústica
+    └── Elige qué secta procesa cada query
+```
+
+**5 pings de ecolocalización** (Phase A):
+- `topic` — ¿de qué trata?
+- `intent` — ¿qué quiere el usuario?
+- `need` — ¿qué necesita realmente?
+- `context` — ¿cuál es el estado del diálogo?
+- `emotion` — ¿cuál es el tono esperado?
+
+Cada ping es un vector 128d. Los 5 juntos construyen el "mapa acústico" del problema antes de que las hormigas procesen.
+
+**AdaptiveSleepController**: regula los ciclos de sueño unihemisférico del delfín. En silencio (sin input por N tokens), consolida representaciones — análogo a la consolidación de memoria en sueño real.
+
+**Escala con la red**: 1 delfín en red pequeña → más delfines en red grande, cada uno con su frecuencia de identidad única (`whistle_id`). Varios delfines construyen imagen más rica del problema.
+
+---
+
+## 🌐 Capa 4 — Red P2P (LSP v2)
+
+### LixySwarm Protocol — Wire format propio
+
+LSP no es un wrapper de TCP/UDP. Es un **protocolo nativo** para enjambre distribuido:
+
+```
+Paquete LSP v2 (528 bytes fijos):
+┌──────────────────────────────────────────────────────┐
+│ Magic: 0x4C595357 (LYSW)              [4 bytes]      │
+│ Version: 2                            [1 byte]       │
+│ Message type: FEROMON/GOSSIP/PING/ACK [1 byte]       │
+│ TTL: 0-255                            [1 byte]       │
+│ Reserved                              [1 byte]       │
+│ Node ID (Ed25519 public key prefix)   [32 bytes]     │
+│ Sequence number                       [4 bytes]      │
+│ Timestamp (ms)                        [8 bytes]      │
+│ Fitness score (float16)               [2 bytes]      │
+│ Reserved                              [2 bytes]      │
+│ Feromon vector (256d × float16)       [512 bytes]    │
+└──────────────────────────────────────────────────────┘
+Total: 568 bytes → 528B payload, ~5× más compacto que JSON (~2.5KB)
+```
+
+**Semántica nativa de feromona**:
+- **Merge-on-transit**: `FeromonMergeBuffer` combina feromonas en vuelo (fitness-weighted average) antes de entregar al destino
+- **TTL decay**: cada hop reduce TTL; al llegar a 0, la feromona se descarta
+- **Temporal decay**: `strength *= decay_factor^elapsed_seconds`
+
+**Topología**:
+- Descubrimiento LAN: mDNS (`_lixyswarm._udp.local`)
+- Internet: DHT / relay VPS
+- Modo dual: mismo protocolo, diferente capa de descubrimiento
+
+**Identidad criptográfica**: cada nodo tiene un key Ed25519 generado al arranque. No hay servidor central de identidades. Las contribuciones se firman con esta clave.
+
+### SwarmNetwork (`src/network/swarm_network.py`)
+
 ```python
-echo_topic   = ping_topic(x)    # ¿De qué habla esto?
-echo_intent  = ping_intent(x)   # ¿Qué quiere el usuario?
-echo_need    = ping_need(x)     # ¿Qué necesita realmente?
-
-acoustic_map = concat([echo_topic, echo_intent, echo_need])
-feromon_out  = MLP(acoustic_map)   # orienta al enjambre
+SwarmNetwork(
+    protocol="v1"  # default, backward-compatible
+    # protocol="v2" → activa LSP v2 en puerto feromon+10
+)
 ```
 
-**Sueño unihemisférico:**
-- `sleep_state` tensor persiste entre conversaciones
-- Guardado en `lixy_session.json`, restaurado al reiniciar
-- La primera respuesta de una sesión ya tiene contexto — no empieza desde cero
-
-**Por qué es diferente a todos los LLMs actuales:**
-| Arquitectura | Representación inicial |
-|---|---|
-| GPT-4, Claude, Llama | Cero — construye mientras genera |
-| Con RAG | Recupera texto similar |
-| **LixySwarm** | **Mapa acústico del espacio de respuesta** |
-
-### Phase A (próxima implementación)
-- Añadir pings `context` y `emotion` → 5 pings en total
-- Triangulación no-lineal: `Attention(Q=echo_topic, K/V=all_pings)`
-- El mapa acústico captura dimensiones que los pings individuales pierden
+- `broadcast_feromon(feromon, fitness)` → v2 si disponible, fallback a v1
+- `merge_remote_feromons()` → recibe y mergea feromonas de la red
+- Compatible con nodos v1 y v2 simultáneamente
 
 ---
 
-## 🕸️ Red P2P — SwarmNetwork
+## 🔄 Auto-Training Loop
 
-### Implementación actual (`src/network/`)
-
-```
-UDP 7337 — feromon broadcast (fire-and-forget, < 1KB por mensaje)
-TCP 7337 — gossip confiable (sincronización de estado)
-mDNS     — descubrimiento automático en LAN (sin configuración)
-```
-
-**API clave:**
-```python
-net.inject_remote_feromon(feromon_tensor)   # recibe feromona de otro nodo
-net.merge_remote_feromons()                  # integra todas las recibidas
-net.connect_peer(ip, port)                   # conectar a nodo externo
-```
-
-**Tests:** 23/23 (network) + 15/15 (integración) — cos_sim=1.0000, bidireccional ✅
-
-### Estado P2P
-- ✅ LAN loopback funcionando
-- ✅ TCP gossip bidireccional
-- ✅ Feromon merge verificado (cos_sim=1.0)
-- ⏳ mDNS físico multi-host (Fase 2 LAN)
-- ⏳ LixySwarm Protocol (LSP) — protocolo nativo con compresión de tensores
-
----
-
-## RuntimeSession — Estado Cross-Turn
-
-`src/swarm/runtime_session.py`
+### `auto_train.py` — El enjambre aprende solo
 
 ```
-Turno N:
-  1. classify_query() → TaskProfile (técnica/creativa/etc)
-  2. _build_context() → últimos 5 turnos del historial
-  3. Warm-up: Delfín → Matriarca → feromon_guiada
-  4. Generación token a token (rep_penalty + top-p)
-     → refresh feromona cada 32 tokens con Matriarca
-  5. Post-turno:
-     → _retroactive_feedback() al turno anterior
-     → store_interaction() con importancia calculada
-     → _save_history() a disco (persiste entre reinicios)
+Ciclo infinito:
+┌─────────────────────────────────────────────────────┐
+│  1. Cargar estado (training_state.json)              │
+│  2. Detectar mejor checkpoint para resume            │
+│  3. Correr N steps (chunk_steps, default 1000)       │
+│     → train_swarm.py como subprocess                 │
+│  4. Evaluar val_loss del ciclo                       │
+│  5. check_plateau():                                 │
+│     - Mejora → reset plateau_count, update best      │
+│     - Sin mejora N ciclos → LR *= decay_factor (0.7) │
+│     - LR floor: nunca baja de lr_min (5e-6)          │
+│  6. Guardar checkpoint ciclo N                       │
+│  7. Rotar: mantener solo últimos K checkpoints       │
+│  8. Actualizar training_state.json                   │
+│  goto 1                                              │
+└─────────────────────────────────────────────────────┘
+```
+
+**SIGTERM-safe**: al recibir señal, termina el ciclo actual y guarda estado limpio.
+
+**Estado persistido** (`checkpoints/training_state.json`):
+```json
+{
+  "cycles_completed": 5,
+  "total_steps": 5000,
+  "best_val_loss": 3.4376,
+  "lr_current": 1e-4,
+  "plateau_count": 0,
+  "last_checkpoint": "swarm_auto_cycle5.pt",
+  "cycle_history": [[ciclo, steps, val_loss, lr], ...]
+}
 ```
 
 ---
 
-## Roadmap — Próximas Implementaciones
+## 📊 SwarmExplorer
 
-### Inmediato (post-Run 11, runs cortos 5k-10k steps)
+Dashboard de solo lectura en tiempo real (`frontend/swarm-explorer.html`).
 
-**1. DolphinAgent Phase A**
-- 5 pings (+ context, + emotion)
-- Triangulación por atención: `Attention(Q=topic, K/V=all_pings)`
-- El mapa acústico como representación del espacio de respuesta posible
+**Lo que muestra:**
+- Nodos conectados en la red P2P
+- Sectas activas y legados genéticos
+- Velocidad agregada (tok/s)
+- Diversidad genética del enjambre (0-1)
+- Val loss actual + step
+- Matriarca: count memorias, importancia media, % activas, legados por rol
+- Auto-Loop: ciclos completados, steps totales, LR, plateau, trend val_loss últimos 5 ciclos
+- Red LSP v2: protocol, feromonas recibidas
+- Nodos: contribution_mode, GPU fraction, sectas máx
 
-**2. Hormigas Dinámicas** — enjambre sin tamaño fijo
-- Nacen: cuando entra nuevo nodo a la red O cuando diversidad del enjambre cae
-- Mueren: cuando fitness bajo sostenido O nodo se desconecta
-- El enjambre se auto-regula como una colonia real
-
-**3. Legado Genético en Matriarca**
-- Antes de morir, una hormiga transfiere: rol, fitness promedio, patrones más fuertes
-- Nuevas hormigas heredan ese ADN — no arrancan desde cero
-- Matriarca como banco genético del enjambre
-
-**4. Delfines Dinámicos**
-- Red pequeña → 1 delfín
-- Red grande → N delfines, cada uno con frecuencia propia
-- Varios delfines construyen imagen más rica del problema que uno solo
-
-**5. SwarmExplorer** — dashboard solo lectura
-- Nodos conectados, colonias activas, cantidad de hormigas
-- tok/s agregado, diversidad genética, estado Matriarca
-- Solo lectura — sin controles peligrosos
-
-### Medio plazo
-
-**LixySwarm Protocol (LSP)** — protocolo nativo para training distribuido en internet
-- Wire format propio: compresión de tensores de feromona
-- Identidad criptográfica Ed25519 por nodo
-- Merge inteligente en tránsito
-- RFC-style: cualquier dev puede implementar un nodo en Rust/Go/C++
-
-**DolphinAgent Phase B** — sueño real con consolidación en background
-- Cron job: cada 30min sin actividad, consolidar historial
-- PCA del historial → actualizar sleep_state
-- La primera respuesta post-reinicio ya sabe quién es Emmanuel
+**Arquitectura del stack de monitoreo:**
+```
+RTX 5090 machine
+  └── swarm_publisher.py  (cada 15s)
+        → lee checkpoints/, logs, training_state.json
+        → sube swarm_status.json al VPS via scp
+VPS (31.97.9.54)
+  └── nginx sirve /opt/lixyswarm/swarm_status.json
+        → frontend/swarm-explorer.html consulta cada 15s
+```
 
 ---
 
-## Conexión con la Investigación de Emmanuel
+## 🗂️ Estructura del Proyecto
 
-La arquitectura de enjambre es análoga directa a su doctorado en drones:
-
-| Robótica de enjambre | LixySwarm |
-|---|---|
-| Formación de drones | Roles dinámicos de agentes |
-| Evasión de colisiones | Penalización de respuestas redundantes |
-| Shape control (Procrustes) | Mantener "forma" cognitiva del enjambre |
-| U_CA — control de cohesión | FeromonGate como señal de cohesión |
-| Consensus distribuido | Gossip de feromonas + voto de Matriarca |
-
-**Future paper:** *"LixySwarm: Bio-Inspired Emergent Intelligence for Distributed Language Models"*
+```
+lixy-llm/
+├── src/
+│   ├── agents/
+│   │   └── agent_base.py         # AgentBase 125.7M: transformer + FeromonGate + IdentityVec
+│   ├── swarm/
+│   │   ├── orchestrator.py       # LixySwarm v3: 3 ants + Matriarca + DolphinPool
+│   │   ├── node_manager.py       # NodeManager: hormiga=nodo, ContributionMode, hardware
+│   │   ├── sect_manager.py       # SectManager: sectas vivas, legado genético, ciclo de vida
+│   │   ├── echolocation_router.py # EcholocationRouter: DolphinPool + AdaptiveSleep
+│   │   ├── dynamic_roles.py      # DynamicRoleAdapter: 6 tipos, temperatura dinámica
+│   │   └── runtime_session.py    # RuntimeSession: estado cross-turn, warm-start
+│   ├── matriarca/
+│   │   └── matriarca.py          # MatriarcaDual: Personal+Global, emit_infrasound, legado
+│   └── network/
+│       ├── swarm_network.py      # SwarmNetwork: v1/v2, mDNS, broadcast, merge
+│       ├── lsp_node_v2.py        # LSPNodeV2: wire format binario, TTL, Ed25519
+│       ├── feromon_payload.py    # FeromonV2Payload: 528B packing/unpacking
+│       └── feromon_merge_buffer.py # FeromonMergeBuffer: merge-on-transit
+├── train_swarm.py                # Training conjunto (invocado por auto_train)
+├── train_matriarca.py            # Loop evolutivo Matriarca
+├── auto_train.py                 # Loop de auto-entrenamiento infinito
+├── lixy_orchestrator.py          # Orquestador principal (producción)
+├── lixy_chat.py                  # CLI interactiva
+├── swarm_publisher.py            # Publica estado al VPS cada 15s
+├── benchmark.py                  # Suite de benchmarks
+├── frontend/
+│   └── swarm-explorer.html       # Dashboard solo lectura
+├── checkpoints/
+│   ├── swarm_best.pt             # Mejor checkpoint (step 54500, val_loss 3.4376)
+│   ├── swarm_latest.pt           # Último checkpoint
+│   ├── matriarca.pt              # Matriarca: 3131 memorias
+│   ├── training_state.json       # Estado del auto-loop
+│   ├── ant_specialization.json   # Especialización actual de las hormigas
+│   └── runtime_session.json      # Estado cross-turn de la última sesión
+├── test_ant_lifecycle.py         # 11 tests
+├── test_node_sect.py             # 14 tests
+├── test_dolphin_router.py        # 13 tests
+├── test_matriarca_legacy.py      # 15 tests
+├── test_lsp_v2.py                # 12 tests
+├── test_integration.py           # 15 tests
+├── test_network.py               # 34 tests
+└── test_auto_train.py            # 32 tests  [146/146 total ✅]
+```
 
 ---
 
-## Resources
+## 🚀 Arranque en producción
 
-| Resource | Value |
-|---|---|
-| GPU | RTX 5090 (32GB VRAM) |
-| PyTorch | 2.8.0+cu128 |
-| CUDA | 12.8 |
-| Precision | bf16 |
-| tok/s (training) | ~12,800 |
-| Repo | https://github.com/<user>/LixySwarm |
+```bash
+# 1. Training autónomo (RTX 5090)
+python3 auto_train.py
+
+# 2. Monitor en tiempo real (publica al VPS cada 15s)
+python3 swarm_publisher.py --vps-host root@31.97.9.54
+
+# 3. Chat interactivo local
+python3 lixy_chat.py
+
+# 4. Test de red P2P (requiere 2 máquinas en LAN)
+# Máquina A:
+python3 -c "
+from src.network.swarm_network import SwarmNetwork
+net = SwarmNetwork(mode='lan', protocol='v2')
+net.start()
+"
+# Máquina B: idem — se descubren vía mDNS automáticamente
+```
+
+---
+
+## 📈 Estado actual (2026-05-30)
+
+| Métrica | Valor |
+|---------|-------|
+| Val loss (mejor checkpoint) | **3.4376** (step 54500) |
+| Parámetros totales | **568.2M** |
+| Memorias Matriarca | **3131** |
+| Tests | **146/146 ✅** |
+| Tokens vistos (training) | ~400M (FineWeb 90% + personal 10%) |
+
+### Curva de aprendizaje
+
+```
+Run  1-8: val_loss 5.3 → 3.9   (fundamentos del enjambre)
+Run  9-10: val_loss 3.9 → 4.27  (ajuste de hiperparámetros)
+Run  11:  val_loss 4.27 → 3.5687 (step 53920)
+Phase A:  val_loss 3.5687 → 3.4376 (record) ← posición actual
+```
+
+---
+
+## 🧬 Diseño filosófico
+
+Este proyecto nació de una pregunta: ¿puede la inteligencia artificial ser **ecológica** en lugar de monolítica?
+
+- **Hormiga** = especialización modular, sin coordinador central
+- **Elefante** = memoria acumulada que no se olvida, que orienta sin ordenar
+- **Delfín** = exploración antes de comprometerse, escucha activa
+
+El resultado no es un modelo que "sabe más". Es un enjambre que **aprende a aprender** — donde el conocimiento circula como feromona, se consolida como memoria, y se transmite como legado genético entre generaciones.
+
+---
+
+*Documentación mantenida por Cody — AI/ML Engineer de LixySwarm*
+*Repo: https://github.com/toxxy/LixySwarm*

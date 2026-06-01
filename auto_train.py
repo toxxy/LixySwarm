@@ -95,20 +95,25 @@ STATE_FILE = "checkpoints/training_state.json"
 
 def load_state(path: str) -> dict:
     p = Path(path)
-    if p.exists():
-        with open(p) as f:
-            return json.load(f)
-    return {
+    _fresh = lambda: {
         "total_steps": 0,
         "best_val_loss": float("inf"),
         "cycles_completed": 0,
-        "lr_current": None,       # None = usar lr_initial de config
+        "lr_current": None,
         "plateau_count": 0,
         "last_checkpoint": None,
-        "cycle_history": [],      # [(cycle, steps, val_loss, lr)]
+        "cycle_history": [],
         "started_at": time.time(),
         "last_updated": time.time(),
     }
+    if p.exists():
+        try:
+            with open(p) as f:
+                return json.load(f)
+        except (json.JSONDecodeError, OSError) as e:
+            print(f"  ⚠️  Estado corrupto ({e}) — arrancando de cero")
+            return _fresh()
+    return _fresh()
 
 def save_state(state: dict, path: str):
     Path(path).parent.mkdir(parents=True, exist_ok=True)
