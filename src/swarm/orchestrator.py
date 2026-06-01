@@ -416,8 +416,11 @@ class LixySwarm(nn.Module):
         self.matriarca: Optional[Matriarca] = None
         if load_matriarca:
             device = "cuda" if torch.cuda.is_available() else "cpu"
-            self.matriarca = Matriarca(config.matriarca_config, device=device)
-            print(f"  🐘 Matriarca conectada: {self.matriarca.memory_count} memorias")
+            base_mat = Matriarca(config.matriarca_config, device=device)
+            # Envolver con MatriarcaEnriched para habilitar legado genético de sectas
+            from src.matriarca.matriarca_legacy import MatriarcaEnriched
+            self.matriarca = MatriarcaEnriched(base_mat)
+            print(f"  🐘 Matriarca conectada: {self.matriarca.memory_count} memorias | 🧬 legados: {self.matriarca.legacy_count}")
 
         # 🐜 Tracker de especialización
         self.specialization = SpecializationTracker(config.n_agents)

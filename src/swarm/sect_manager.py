@@ -63,16 +63,26 @@ class AgentSlot:
 class SectRecord:
     """Registro de una secta en el enjambre."""
     sect_id: str
-    role_type: str                                      # explorador, refinador, delfín, ...
+    role_type: str                                      # explorador, refinador, ...
     priority: float = 0.5                              # [0, 1] — importancia en el enjambre
     created_at: float = field(default_factory=time.time)
     agents: List[AgentSlot] = field(default_factory=list)
     fitness_history: List[float] = field(default_factory=list)
     required_compute: float = 2.0                      # unidades de compute_score mínimas
 
+    # Linaje genético
+    parent_sect_id: Optional[str] = None
+    children_sect_ids: List[str] = field(default_factory=list)
+    n_agents_peak: int = 0                             # máx agentes que tuvo
+
     # Ciclo de vida
     LOW_FITNESS_THRESHOLD: float = 0.3
     LOW_FITNESS_STEPS_TO_DIE: int = 500
+
+    @property
+    def born_at(self) -> float:
+        """Alias de created_at para compatibilidad con MatriarcaEnriched."""
+        return self.created_at
 
     @property
     def avg_fitness(self) -> float:
@@ -197,7 +207,12 @@ class SectManager:
         }
 
         if self.matriarca is not None:
-            self._store_sect_legacy(sect, reason)
+            # Usar MatriarcaEnriched si disponible (legado genético enriquecido)
+            from src.matriarca.matriarca_legacy import MatriarcaEnriched
+            if isinstance(self.matriarca, MatriarcaEnriched):
+                self.matriarca.store_sect_legacy(sect, reason=reason)
+            else:
+                self._store_sect_legacy(sect, reason)
             event["legacy_stored"] = True
 
         return event
@@ -253,6 +268,10 @@ class SectManager:
         )
         self._sects[sect_id].agents.append(slot)
         self._next_agent_id += 1
+        # Actualizar peak
+        sect = self._sects[sect_id]
+        if sect.n_agents > sect.n_agents_peak:
+            sect.n_agents_peak = sect.n_agents
         return slot
 
     def update_agent_fitness(self, sect_id: str, agent_id: int, fitness: float):
@@ -290,10 +309,10 @@ class SectManager:
     def _most_needed_role(self) -> str:
         """Determina qué rol está más sub-representado."""
         existing_roles = [s.role_type for s in self._sects.values()]
-        for role in ["explorador", "refinador", "delfín"]:
+        for role in ["explorador", "refinador"]:
             if role not in existing_roles:
                 return role
-        # Todos presentes → spawnear explorador por defecto (máxima diversidad)
+        # Todos presentes → spawnear explorador (máxima diversidad)
         return "explorador"
 
     def _store_sect_legacy(self, sect: SectRecord, reason: str):
