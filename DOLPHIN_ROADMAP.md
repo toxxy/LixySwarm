@@ -238,4 +238,4 @@ La multimodalidad **emerge del ecosistema** — no se diseña centralmente. Un n
 
 ---
 
-*Visión: Emmanuel Cardenaz | Implementación: Cody | 2026*
+*Visión: LixySwarm Team | Implementación: Cody | 2026*

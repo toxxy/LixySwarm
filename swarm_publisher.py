@@ -3,7 +3,9 @@ swarm_publisher.py — Publica estado del swarm local al VPS periódicamente.
 Corre en la máquina local (con GPU) y escribe swarm_status.json en el VPS.
 
 Uso:
-    python3 swarm_publisher.py --vps-host 31.97.9.54 --vps-path /opt/lixyswarm/swarm_status.json
+    python3 swarm_publisher.py --vps-host <vps-ip> --vps-path /opt/lixyswarm/swarm_status.json
+
+# Configure your VPS in .env or environment:
     (o simplemente escribe el JSON local y rsync lo sube)
 """
 import json
@@ -20,7 +22,7 @@ CHECKPOINT_DIR = BASE / "checkpoints"
 ANT_SPEC_FILE  = BASE / "checkpoints" / "ant_specialization.json"
 SWARM_LOG_PATTERN = "/tmp/swarm_*.log"
 
-VPS_HOST = "root@31.97.9.54"
+VPS_HOST = os.environ.get("LIXYSWARM_VPS_HOST", "root@localhost")
 VPS_PATH = "/opt/lixyswarm/swarm_status.json"
 PUBLISH_INTERVAL = 15   # segundos entre publicaciones
 

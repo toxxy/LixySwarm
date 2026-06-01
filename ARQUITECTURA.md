@@ -255,17 +255,17 @@ La arquitectura de enjambre es análoga directa a su doctorado en drones:
 | U_CA — control de cohesión | FeromonGate como señal de cohesión |
 | Consensus distribuido | Gossip de feromonas + voto de Matriarca |
 
-**Paper futuro:** *"LixySwarm: Bio-Inspired Emergent Intelligence for Distributed Language Models"* — Emmanuel Cardenaz + Lixy
+**Future paper:** *"LixySwarm: Bio-Inspired Emergent Intelligence for Distributed Language Models"*
 
 ---
 
-## Recursos
+## Resources
 
-| Recurso | Valor |
+| Resource | Value |
 |---|---|
 | GPU | RTX 5090 (32GB VRAM) |
 | PyTorch | 2.8.0+cu128 |
 | CUDA | 12.8 |
-| Precisión | bf16 |
+| Precision | bf16 |
 | tok/s (training) | ~12,800 |
-| Repo | https://github.com/toxxy/LixySwarm |
+| Repo | https://github.com/<user>/LixySwarm |

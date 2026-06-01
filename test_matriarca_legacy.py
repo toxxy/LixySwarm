@@ -375,7 +375,7 @@ def test_15_integration_base():
     result = subprocess.run(
         ["python3", "test_integration.py"],
         capture_output=True, text=True,
-        cwd="/home/toxxy/Dropbox/Lixy/clawd/workspace/lixy-llm"
+        cwd=os.path.dirname(os.path.abspath(__file__))
     )
     output = result.stdout + result.stderr
     assert "15/15" in output, f"Integration tests fallaron:\n{output[-500:]}"

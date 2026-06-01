@@ -267,6 +267,28 @@ class SwarmNetwork:
         self.stats.feromons_received += 1
         log.debug(f"Feromona de {msg.node_id[:8]} agent={msg.agent_id}")
 
+        # Si tenemos MatriarcaDual, actualizar banco global con la feromona remota
+        if self.swarm and self.swarm.matriarca is not None:
+            from src.matriarca.matriarca_legacy import MatriarcaEnriched, MatriarcaDual
+            mat = self.swarm.matriarca
+            # Llegar a MatriarcaDual si está disponible
+            dual = None
+            if isinstance(mat, MatriarcaEnriched) and isinstance(getattr(mat, '_dual', None), MatriarcaDual):
+                dual = mat._dual
+            elif isinstance(mat, MatriarcaDual):
+                dual = mat
+            if dual is not None:
+                import torch
+                emb = msg.feromon if isinstance(msg.feromon, torch.Tensor) else torch.tensor(msg.feromon)
+                emb = emb.float()
+                if emb.shape[0] != dual.global_mat.cfg.embd_dim:
+                    # Proyección simple si las dimensiones no coinciden
+                    emb = emb[:dual.global_mat.cfg.embd_dim].clone()
+                dual.merge_global_update(
+                    emb.unsqueeze(0),
+                    [{"text": f"feromon@{msg.node_id[:8]} step=remote", "importance": 0.4}]
+                )
+
     def _on_peer_found(self, peer: Peer):
         """Callback cuando mDNS descubre un nuevo peer."""
         is_new = self.peers.add(peer)

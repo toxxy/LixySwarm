@@ -147,7 +147,7 @@
   </div>
 
     <script>
-    const API   = "http://31.97.9.54:8080/api";
+    const API   = window.LIXYSWARM_API || "http://localhost:8080/api";
     const chat  = document.getElementById("chat");
     const input = document.getElementById("msg-input");
     const btn   = document.querySelector(".input-area button");

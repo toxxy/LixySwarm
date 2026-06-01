@@ -289,13 +289,13 @@ class LSPNode:
 
 ---
 
-*Diseño: Emmanuel Cardenaz | Documentación: Cody | 2026*
+*Diseño: LixySwarm Team | Documentación: Cody | 2026*
 
 ---
 
 ## Fase Futura: Contribución Configurable por Nodo
 
-> Después de LSP v1 estable. Diseñado por Emmanuel Cardenaz.
+> Después de LSP v1 estable. Diseñado por LixySwarm Team.
 
 ### Principio
 Nadie queda fuera por tener equipo humilde — todos participan según sus posibilidades.

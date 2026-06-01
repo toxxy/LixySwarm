@@ -180,7 +180,7 @@ Ver `VPS_SETUP.md` para guía completa.
 
 ```bash
 # Clonar repo
-git clone https://github.com/toxxy/LixySwarm.git && cd LixySwarm
+git clone https://github.com/<user>/LixySwarm.git && cd LixySwarm
 
 # Instalar dependencias (CPU-only)
 pip install torch --index-url https://download.pytorch.org/whl/cpu

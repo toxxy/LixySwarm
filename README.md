@@ -145,7 +145,7 @@ El Delfín construye el mapa antes de que las hormigas generen. La Matriarca rec
 
 ```bash
 # Clonar e instalar
-git clone https://github.com/toxxy/LixySwarm.git && cd LixySwarm
+git clone https://github.com/<user>/LixySwarm.git && cd LixySwarm
 pip install -r requirements.txt
 
 # Chat interactivo (requiere checkpoint)
@@ -170,38 +170,38 @@ Ver `VPS_SETUP.md` para la guía completa de configuración.
 
 ```bash
 # En el VPS (CPU-only):
-git clone https://github.com/toxxy/LixySwarm.git && cd LixySwarm
+git clone https://github.com/<user>/LixySwarm.git && cd LixySwarm
 pip install torch --index-url https://download.pytorch.org/whl/cpu
 pip install -r requirements.txt
-# + transferir checkpoints/swarm_best.pt (~6GB) vía rsync
+# + transfer checkpoints/swarm_best.pt (~6GB) via rsync
 ```
 
 ---
 
-## Conexión con la Investigación de Emmanuel
+## Bio-Inspired Architecture
 
-| Robótica de enjambre (doctorado) | LixySwarm |
+| Swarm Robotics | LixySwarm |
 |---|---|
-| Formación de drones | Roles dinámicos de agentes |
-| Evasión de colisiones | Penalización de respuestas redundantes |
-| Shape control (Procrustes) | Cohesión cognitiva del enjambre |
-| U_CA — control de cohesión | FeromonGate como señal de cohesión |
-| Consensus distribuido | Gossip de feromonas + voto de Matriarca |
+| Drone formation | Dynamic agent roles |
+| Collision avoidance | Redundant response penalty |
+| Shape control (Procrustes) | Cognitive swarm cohesion |
+| Consensus (U_CA) | FeromonGate cohesion signal |
+| Distributed consensus | Feromone gossip + Matriarca vote |
 
-**Paper futuro:** *"LixySwarm: Bio-Inspired Emergent Intelligence for Distributed Language Models"* — Emmanuel Cardenaz
+**Future paper:** *"LixySwarm: Bio-Inspired Emergent Intelligence for Distributed Language Models"*
 
 ---
 
 ## Hardware
 
-| Recurso | Valor |
+| Resource | Value |
 |---|---|
 | GPU | RTX 5090 (32GB VRAM) |
-| Precisión | bf16 |
+| Precision | bf16 |
 | PyTorch | 2.8.0+cu128 |
 | CUDA | 12.8 |
 | tok/s (training) | ~12,800 |
 
 ---
 
-*Construido por Emmanuel Cardenaz con Cody (AI engineer) | 2026*
+*Built with Cody (AI engineer) | 2026*

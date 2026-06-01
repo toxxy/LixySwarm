@@ -58,6 +58,20 @@ lixy_session.json
 lixy_session_*.json
 *.session.json
 
+# Corpus personal + metadata (privado, contiene datos personales)
+data/corpus/personal_corpus.txt
+data/corpus/corpus_metadata.json
+
+# Documentación interna de Cody (rutas locales, datos privados)
+CODY_MEMORY.md
+
+# Setup de VPS (contiene IPs y rutas internas)
+VPS_SETUP.md
+
+# Artículos personales
+articulo_emmanuel.pdf
+*.pdf
+
 # Credenciales / tokens (nunca subir)
 .env.local
 secrets.txt
