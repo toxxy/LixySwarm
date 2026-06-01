@@ -99,6 +99,17 @@
     .lsp-card .lsp-label { font-size: 0.7rem; color: #4FC3F7; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; }
     .lsp-card .lsp-value { font-size: 1.4rem; font-weight: 700; color: #fff; }
     .lsp-card .lsp-sub { font-size: 0.75rem; color: #444; }
+    /* Auto-loop */
+    .autoloop-card {
+      margin: 0 24px 24px; background: #111; border: 1px solid #1a2a1a;
+      border-radius: 12px; padding: 20px; display: flex; gap: 24px; flex-wrap: wrap; align-items: flex-start;
+    }
+    .autoloop-card .al-info { flex: 1; min-width: 110px; }
+    .autoloop-card .al-label { font-size: 0.7rem; color: #4CAF50; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; }
+    .autoloop-card .al-value { font-size: 1.4rem; font-weight: 700; color: #fff; }
+    .autoloop-card .al-sub { font-size: 0.75rem; color: #444; margin-top: 3px; }
+    .trend-bar { display: flex; align-items: flex-end; gap: 3px; height: 36px; margin-top: 8px; }
+    .trend-bar .bar { flex: 1; background: #2a4a2a; border-radius: 3px 3px 0 0; min-height: 4px; transition: height 0.3s; }
     /* Badges */
     .readonly-badge {
       display: inline-block; background: #1a1a1a; border: 1px solid #2a2a2a;
@@ -186,6 +197,36 @@
     <div class="sect-card" style="color:#444;font-size:0.85rem;">Cargando sectas...</div>
   </div>
 
+  <!-- Auto-training Loop -->
+  <div class="section-title">🔄 Auto-Training Loop</div>
+  <div class="autoloop-card" id="autoloop-card">
+    <div class="al-info">
+      <div class="al-label">Ciclos completados</div>
+      <div class="al-value" id="al-cycles">—</div>
+      <div class="al-sub">Sin intervención manual</div>
+    </div>
+    <div class="al-info">
+      <div class="al-label">Steps totales</div>
+      <div class="al-value" id="al-steps">—</div>
+      <div class="al-sub" id="al-steps-sub">Acumulados todos los ciclos</div>
+    </div>
+    <div class="al-info">
+      <div class="al-label">Mejor val_loss</div>
+      <div class="al-value" id="al-best-loss">—</div>
+      <div class="al-sub">Best checkpoint</div>
+    </div>
+    <div class="al-info">
+      <div class="al-label">LR actual</div>
+      <div class="al-value" id="al-lr">—</div>
+      <div class="al-sub" id="al-plateau-sub">Plateau: 0 ciclos</div>
+    </div>
+    <div class="al-info" style="flex:2;min-width:160px">
+      <div class="al-label">Tendencia val_loss (últimos 5 ciclos)</div>
+      <div class="trend-bar" id="al-trend"></div>
+      <div class="al-sub" id="al-trend-vals"></div>
+    </div>
+  </div>
+
   <!-- Red P2P LSP v2 -->
   <div class="section-title">🌐 Red P2P — <span class="badge-v2">LSP v2</span></div>
   <div class="lsp-card">
@@ -268,6 +309,47 @@
           const roles = [...new Set(d.agents.map(a => a.role))];
           set("sects-count", roles.length);
           set("sects-sub", roles.join(" · "));
+        }
+
+        // Auto-loop
+        const al = d.auto_loop;
+        if (al) {
+          set("al-cycles", al.cycles_completed != null ? al.cycles_completed : "—");
+          set("al-steps",  al.total_steps != null ? al.total_steps.toLocaleString() : "—");
+          set("al-best-loss", al.best_val_loss != null && isFinite(al.best_val_loss) ? al.best_val_loss.toFixed(4) : "—");
+          // LR en notación científica corta
+          if (al.lr_current != null) {
+            const lr = al.lr_current;
+            set("al-lr", lr < 0.001 ? lr.toExponential(1) : lr.toFixed(5));
+          }
+          const plateau = al.plateau_count ?? 0;
+          set("al-plateau-sub", `Plateau: ${plateau} ciclo${plateau === 1 ? "" : "s"}`);
+          // Tendencia
+          const hist = al.recent_history || [];
+          if (hist.length) {
+            const losses = hist.map(h => h[2]).filter(v => v != null && isFinite(v));
+            if (losses.length) {
+              const maxL = Math.max(...losses);
+              const minL = Math.min(...losses);
+              const range = maxL - minL || 0.01;
+              const trend = document.getElementById("al-trend");
+              if (trend) {
+                trend.innerHTML = losses.map(l => {
+                  const h = Math.max(4, Math.round(36 * (maxL - l) / range));
+                  const color = l === Math.min(...losses) ? "#4CAF50" : "#2a4a2a";
+                  return `<div class="bar" style="height:${h}px;background:${color}" title="loss=${l.toFixed(4)}"></div>`;
+                }).join("");
+              }
+              set("al-trend-vals", losses.map(l => l.toFixed(4)).join(" → "));
+            }
+          }
+          document.getElementById("autoloop-card").style.borderColor = "#2a4a2a";
+        } else {
+          set("al-cycles", "No iniciado");
+          set("al-steps", "—");
+          set("al-best-loss", "—");
+          set("al-lr", "—");
+          set("al-plateau-sub", "python3 auto_train.py");
         }
 
         if (d.network) renderNetwork(d.network.nodes, d.network.protocol);

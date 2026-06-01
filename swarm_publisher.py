@@ -8,6 +8,7 @@ Uso:
 # Configure your VPS in .env or environment:
     (o simplemente escribe el JSON local y rsync lo sube)
 """
+import os
 import json
 import time
 import glob
@@ -176,11 +177,32 @@ def collect_status() -> dict:
 
     # ─── LSP ────────────────────────────────────────────────────────────────────
     status["lsp"] = {
-        "protocol": "LSP v1",
+        "protocol": "LSP v2",
         "wire_format": "LYSW",
         "identity": "Ed25519",
         "status": "active",
+        "float16": True,
+        "merge_on_transit": True,
     }
+
+    # ─── Auto-training loop ──────────────────────────────────────────────────────
+    train_state_file = CHECKPOINT_DIR / "training_state.json"
+    auto_state = _read_json(train_state_file)
+    if auto_state:
+        history = auto_state.get("cycle_history", [])
+        status["auto_loop"] = {
+            "cycles_completed":  auto_state.get("cycles_completed", 0),
+            "total_steps":       auto_state.get("total_steps", 0),
+            "best_val_loss":     auto_state.get("best_val_loss"),
+            "lr_current":        auto_state.get("lr_current"),
+            "plateau_count":     auto_state.get("plateau_count", 0),
+            "last_checkpoint":   auto_state.get("last_checkpoint"),
+            # Últimos 5 ciclos para graficar tendencia
+            "recent_history":    history[-5:] if history else [],
+            "last_updated":      auto_state.get("last_updated"),
+        }
+    else:
+        status["auto_loop"] = None
 
     return status
 
