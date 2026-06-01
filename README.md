@@ -6,6 +6,18 @@
 
 ---
 
+## 📄 Paper
+
+**[LixySwarm: AntElephantDolphin — A Bio-Inspired P2P Architecture for Distributed Language Intelligence](paper/LixySwarm_AntElephantDolphin.pdf)**
+
+> *Technical Report — submitted to arXiv pending endorsement*
+
+El paper académico completo que describe la arquitectura bio-inspirada de LixySwarm: hormigas (trabajo distribuido), elefante (memoria transgeneracional), y delfín (ecolocalización). Incluye el protocolo LSP v2, resultados de 11 runs de training, y la visión de un organismo que crece por etapas — de infante a ecosistema planetario.
+
+**17 páginas · June 2026 · Emmanuel Cardenaz**
+
+---
+
 ## Arquitectura
 
 LixySwarm es un modelo de lenguaje de ~434M parámetros construido alrededor de tres capas bio-inspiradas que se coordinan en cada forward pass:
