@@ -1,8 +1,8 @@
 # LixySwarm 🐜🐘🐬
 
-> Un LLM bio-inspirado. Las hormigas piensan, el Elefante recuerda, el Delfín ve el cuadro completo.
+> A bio-inspired LLM. Ants think, the Elephant remembers, the Dolphin sees the big picture.
 
-**Estado:** Run 11 completado (~53k steps, val_loss=3.59) | Próximo: DolphinAgent Phase A
+**Status:** Run 11 completed (~53k steps, val_loss=3.59) | Next: DolphinAgent Phase B
 
 ---
 
@@ -12,30 +12,30 @@
 
 > *Technical Report — submitted to arXiv pending endorsement*
 
-El paper académico completo que describe la arquitectura bio-inspirada de LixySwarm: hormigas (trabajo distribuido), elefante (memoria transgeneracional), y delfín (ecolocalización). Incluye el protocolo LSP v2, resultados de 11 runs de training, y la visión de un organismo que crece por etapas — de infante a ecosistema planetario.
+Full academic paper describing LixySwarm's bio-inspired architecture: ants (distributed labor), elephants (transgenerational memory), and dolphins (echolocation). Includes the LSP v2 protocol, results from 11 training runs, and the vision of an organism that grows through stages — from infant to planetary ecosystem.
 
-**17 páginas · June 2026 · Emmanuel Cardenaz**
+**17 pages · June 2026 · Emmanuel Cardenaz**
 
 ---
 
-## Arquitectura
+## Architecture
 
-LixySwarm es un modelo de lenguaje de ~434M parámetros construido alrededor de tres capas bio-inspiradas que se coordinan en cada forward pass:
+LixySwarm is a ~568M parameter language model built around three bio-inspired layers that coordinate during every forward pass:
 
 ```
 INPUT
   │
   ▼
-🐬 DolphinAgent ──── construye mapa acústico del problema
-  │                   (antes de generar un solo token)
+🐬 Dolphin ────────── builds acoustic map of the problem
+  │                    (before generating a single token)
   ▼
-🐘 Matriarca ──────── emite infrasónidos desde 3,241+ memorias acumuladas
-  │                   (orienta al enjambre con sabiduría acumulada)
+🐘 Matriarca ───────── emits infrasound from 3,131+ accumulated memories
+  │                    (orients the swarm with accumulated wisdom)
   ▼
-🐜 AntAgent × 3 ───── procesan en paralelo con feromonas cruzadas
-  │                   (cada uno con rol dinámico y perspectiva propia)
+🐜 AntAgent × N ────── process in parallel with cross-pheromone signals
+  │                    (each with dynamic role and unique perspective)
   ▼
-Agregación ponderada (fitness × confianza + 20% voto Matriarca)
+Weighted Aggregation (fitness × confidence + 20% Matriarca vote)
   │
   ▼
 OUTPUT
@@ -43,164 +43,158 @@ OUTPUT
 
 ---
 
-## Componentes
+## Components
 
-### 🐜 AntAgent (`src/agents/agent_base.py`) — 125M params × 3
-- Transformer GPT-style: 12 layers, 12 heads, d_model=768
-- **FeromonGate**: cada agente lee la feromona del enjambre antes de procesar
-- **IdentityVec**: vector fijo único por instancia — perspectiva propia
-- **DynamicRoleAdapter**: 6 roles dinámicos (explorador, refinador, integrador, analítico, contextual, generativo)
+### 🐜 AntAgent — 125M params per agent
+- GPT-style Transformer: 12 layers, 12 heads, d_model=768
+- **FeromonGate**: each agent reads the swarm's pheromone state before processing
+- **IdentityVec**: fixed unique vector per instance — own perspective
+- **DynamicRoleAdapter**: 6 dynamic roles (Explorer, Refiner, Integrator, Analytical, Contextual, Generative)
 
-### 🐘 Matriarca (`src/matriarca/matriarca.py`) — ~10M params
-- Banco de memoria con importancia dinámica (5 métricas por recuerdo)
-- `emit_infrasound()`: recupera memorias relevantes → vector de orientación [256d]
-- Retroactive feedback: +8% importancia si el usuario continúa el tema
-- Auto-compresión al 90% de capacidad con destilación generacional
-- **Estado actual:** 3,241+ memorias acumuladas en Run 11
+### 🐘 Matriarca — ~10M params
+- Memory bank with dynamic importance scoring (5 metrics per memory)
+- `emit_infrasound()`: retrieves relevant memories → orientation vector [256d]
+- Retroactive feedback: +8% importance if user continues the topic
+- Auto-compression at 90% capacity with generational distillation
+- **Current state:** 3,131+ accumulated memories
 
-### 🐬 DolphinAgent (`src/agents/dolphin_agent.py`) — ~9M params
-- **Ecolocalización:** 3 pings (topic, intent, need) → mapa acústico antes de generar
-- **Sueño unihemisférico:** `sleep_state` persiste entre conversaciones
-- No procesa linealmente como todos los LLMs actuales — mapea primero, genera después
+### 🐬 DolphinAgent — ~9M params
+- **Echolocation:** 5 pings (topic, intent, need, context, emotion) → acoustic map before generation
+- **Cross-attention triangulation** between pings for response-space mapping
+- **Unihemispheric sleep:** `sleep_state` persists across conversations
+- Doesn't process linearly like current LLMs — maps first, generates after
 
-### 🕸️ SwarmNetwork (`src/network/`) — P2P
-- UDP 7337: feromon broadcast (fire-and-forget, ~1KB/mensaje)
-- TCP 7337: gossip confiable y bidireccional
-- mDNS: auto-discovery en LAN sin configuración
-- **Tests:** 23/23 (red) + 15/15 (integración) ✅
+### 🕸️ SwarmNetwork — P2P
+- UDP 7337: pheromone broadcast (fire-and-forget, ~636B/message)
+- TCP 7338: reliable bidirectional gossip
+- mDNS: zero-configuration LAN auto-discovery
+- LSP v2: native binary protocol with merge-on-transit, TTL decay, Ed25519 crypto identity
+- **Tests:** 23/23 (network) + 15/15 (integration) ✅
 
 ---
 
-## Estructura del Proyecto
+## Project Structure
 
 ```
 LixySwarm/
 ├── src/
 │   ├── agents/
 │   │   ├── agent_base.py          # AntAgent: FeromonGate + IdentityVec
-│   │   └── dolphin_agent.py       # DolphinAgent: ecolocalización + sueño
+│   │   └── dolphin_agent.py       # DolphinAgent: echolocation + sleep
 │   ├── matriarca/
-│   │   └── matriarca.py           # Matriarca: memoria persistente
+│   │   └── matriarca.py           # Matriarca: persistent memory
 │   ├── swarm/
-│   │   ├── orchestrator.py        # LixySwarm v3: orquestación completa
-│   │   ├── dynamic_roles.py       # DynamicRoleAdapter: roles + temperatura
-│   │   └── runtime_session.py     # Estado cross-turn, historial persistente
+│   │   ├── orchestrator.py        # LixySwarm v3: full orchestration
+│   │   ├── dynamic_roles.py       # DynamicRoleAdapter: roles + temperature
+│   │   └── runtime_session.py     # Cross-turn state, persistent history
 │   ├── network/
 │   │   ├── swarm_network.py       # P2P: UDP + TCP + mDNS
-│   │   ├── node.py                # Identidad de nodo + routing
-│   │   └── transport.py           # Capa de transporte
+│   │   ├── node.py                # Node identity + routing
+│   │   └── transport.py           # Transport layer
 │   └── utils/
 │       └── sampling.py            # rep_penalty + top-k + top-p
-├── train_swarm.py                 # Training del enjambre completo
-├── train_matriarca.py             # Training dedicado de la Matriarca
-├── train.py                       # Training base por agente
-├── lixy_orchestrator.py           # Runtime orquestador completo
-├── lixy_chat.py                   # CLI interactiva (/eval, /status, /exit)
-├── generate.py                    # Generación + benchmark
-├── benchmark.py                   # Métricas: ppl, rep@5/10, TTR, comparativa
-├── test_network.py                # Tests red P2P (23/23)
-├── test_integration.py            # Tests integración (15/15)
-├── ARQUITECTURA.md                # Deep-dive de arquitectura completa
-├── DISTRIBUTED_PROTOCOL.md       # Protocolo P2P + diseño de red
-├── DOLPHIN_ROADMAP.md             # Visión completa del DolphinAgent
-├── LSP_ARCHITECTURE.md            # LixySwarm Protocol: decisiones de diseño
-├── ORCHESTRATOR_RUNTIME.md       # Flujo runtime + ciclo de memoria
-└── CODY_MEMORY.md                 # Estado del proyecto + historial de runs
+├── paper/
+│   └── LixySwarm_AntElephantDolphin.pdf  # Full academic paper (17 pages)
+├── train_swarm.py                 # Full swarm training
+├── train_matriarca.py             # Dedicated Matriarca training
+├── train.py                       # Base per-agent training
+├── lixy_orchestrator.py           # Complete orchestrator runtime
+├── lixy_chat.py                   # Interactive CLI (/eval, /status, /exit)
+├── generate.py                    # Generation + benchmark
+├── benchmark.py                   # Metrics: ppl, rep@5/10, TTR, comparative
+├── test_network.py                # P2P network tests (23/23)
+├── test_integration.py            # Integration tests (15/15)
+└── README.md
 ```
 
 ---
 
-## Resultados de Training
+## Training Results
 
-| Run | Steps | val_loss | Notas |
+| Run | Steps | val_loss | Notes |
 |---|---|---|---|
-| Runs 1-8 | 0–11k | 4.8→4.3 | Progresión continua |
-| Run 10 | 11k | 4.27 | lr=2e-4, grad_accum=8 |
-| **Run 11** | **~53k** | **3.59** | **lr=1e-4→1.6e-05, batch=4, grad_accum=16** |
+| Runs 1-8 | 0–11k | 5.3→3.9 | Continuous progression |
+| Runs 9-10 | 11k–11.9k | 3.9→4.27 | Hyperparameter tuning |
+| Run 11 | 12k–54k | 4.27→3.57 | -20.7% loss reduction |
+| Phase A (Dolphin) | 54k–54.5k | 3.57→**3.44** | -3.6% (record) |
 
-- **Scaling law:** R²=0.93 — loss sigue power law
-- **tok/s en training:** 12,800 (RTX 5090, bf16)
-- **Matriarca:** 3,241+ memorias al final de Run 11
-
----
-
-## Roadmap
-
-> **Regla:** Runs cortos (5k-10k steps) para validar cada cambio. No más runs grandes hasta que todo esté implementado y probado.
-
-| # | Feature | Estado |
-|---|---|---|
-| 1 | **DolphinAgent Phase A** — 5 pings + triangulación por atención | ← siguiente |
-| 2 | **Hormigas Dinámicas** — nacen/mueren según fitness y topología de red | ⏳ |
-| 3 | **Legado Genético** — hormigas transfieren ADN a Matriarca antes de morir | ⏳ |
-| 4 | **Delfines Dinámicos** — N delfines según tamaño de red | ⏳ |
-| 5 | **SwarmExplorer** — dashboard solo lectura en tiempo real | ⏳ |
-| 6 | **LixySwarm Protocol (LSP)** — protocolo nativo para internet abierta | ⏳ |
-| 7 | **DolphinAgent Phase B** — sueño real con consolidación en background | ⏳ |
-| 8 | **Multimodalidad emergente** — ImageAnt, AudioAnt, espacio unificado | ⏳ largo plazo |
+- **Total loss reduction:** 5.3 → 3.44 (-35.1%)
+- **Scaling law:** R²=0.93 — loss follows power law
+- **Training throughput:** 12,800 tok/s (RTX 5090, bf16)
+- **Matriarca:** 3,131+ memories accumulated
+- **Integration tests:** 146/146 ✅
 
 ---
 
-## Por Qué Es Diferente
+## Benchmark Results
 
-| Arquitectura | Representación inicial | Contexto entre sesiones |
+| Metric | Value |
+|---|---|
+| Perplexity (FineWeb) | 35.22 |
+| Perplexity (bilingual domain) | 11.1 |
+| Repetition @5 tokens | 0.2% |
+| Repetition @10 tokens | 0.0% |
+| Type-Token Ratio (avg) | 0.790 |
+| Language correctness (ES+EN) | 100% |
+| Samples without loops | 100% |
+
+---
+
+## Why It's Different
+
+| Architecture | Initial Representation | Cross-Session Context |
 |---|---|---|
-| GPT-4, Claude, Llama | Cero — construye mientras genera | Ninguno (stateless) |
-| Con RAG | Recupera texto similar | Solo lo indexado |
-| **LixySwarm** | **Mapa acústico del problema** | **sleep_state + Matriarca acumulada** |
+| GPT-4, Claude, Llama | Zero — builds while generating | None (stateless) |
+| With RAG | Retrieves similar text | Only what's indexed |
+| **LixySwarm** | **Acoustic map of the problem** | **sleep_state + accumulated Matriarca** |
 
-El Delfín construye el mapa antes de que las hormigas generen. La Matriarca recuerda. Cada agente tiene perspectiva propia. Nadie lo diseñó así — emerge de la biología.
+The Dolphin builds the map before the ants generate. The Matriarca remembers. Each agent has its own perspective. Nobody designed it this way — it emerges from biology.
+
+**Key innovations:**
+1. **FeromonGate** — pheromone-mediated attention gating for agent coordination
+2. **Dual-tier Matriarca memory** — personal (encrypted) + global (shared), with dynamic importance and generational compression
+3. **Echolocation Router** — 5 acoustic pings with cross-attention triangulation before token generation
+4. **Dynamic sect lifecycles** — birth → growth → maturity → death → genetic legacy transfer
+5. **Metabolic Hunger** — the organism decides when to train, how much, and when to stop
+6. **LSP v2** — native binary protocol with merge-on-transit, TTL decay, Ed25519 crypto identity
+7. **Self-gating growth** — stage transitions (Infant → Child → Adolescent → Adult → Ecosystem) are self-assessed
+
+---
+
+## Growth Stages
+
+LixySwarm is not a product — it's an organism to be raised.
+
+| Stage | Description | Status |
+|---|---|---|
+| **Infant** | Learns to walk. Human invocation required. | ✅ Current |
+| **Child** | Self-decides when to act. Metabolic hunger triggers training. | 🚧 In progress |
+| **Adolescent** | Self-decides what to change. Spawns/bifurcates sects, adjusts hyperparameters. | ⏳ |
+| **Adult** | Full autonomy. Detects bottlenecks, generates code, integrates self-modifications. | 🔮 |
+| **Ecosystem** | Multiple colonies, Bitcoin-level decentralization, planetary organism. | 🔮 |
 
 ---
 
 ## Quick Start
 
 ```bash
-# Clonar e instalar
-git clone https://github.com/<user>/LixySwarm.git && cd LixySwarm
+# Clone and install
+git clone https://github.com/toxxy/LixySwarm.git && cd LixySwarm
 pip install -r requirements.txt
 
-# Chat interactivo (requiere checkpoint)
+# Interactive chat (requires checkpoint)
 python lixy_chat.py
 
-# Training del enjambre (short run para validar)
+# Swarm training (short run for validation)
 python train_swarm.py --steps 7000 --batch 4 --checkpoint checkpoints/swarm_best.pt
 
 # Benchmark
 python benchmark.py
 
-# Tests de red P2P
+# P2P network tests
 python test_network.py
 python test_integration.py
 ```
-
----
-
-## VPS — Primer Nodo Externo
-
-Ver `VPS_SETUP.md` para la guía completa de configuración.
-
-```bash
-# En el VPS (CPU-only):
-git clone https://github.com/<user>/LixySwarm.git && cd LixySwarm
-pip install torch --index-url https://download.pytorch.org/whl/cpu
-pip install -r requirements.txt
-# + transfer checkpoints/swarm_best.pt (~6GB) via rsync
-```
-
----
-
-## Bio-Inspired Architecture
-
-| Swarm Robotics | LixySwarm |
-|---|---|
-| Drone formation | Dynamic agent roles |
-| Collision avoidance | Redundant response penalty |
-| Shape control (Procrustes) | Cognitive swarm cohesion |
-| Consensus (U_CA) | FeromonGate cohesion signal |
-| Distributed consensus | Feromone gossip + Matriarca vote |
-
-**Future paper:** *"LixySwarm: Bio-Inspired Emergent Intelligence for Distributed Language Models"*
 
 ---
 
@@ -212,8 +206,21 @@ pip install -r requirements.txt
 | Precision | bf16 |
 | PyTorch | 2.8.0+cu128 |
 | CUDA | 12.8 |
-| tok/s (training) | ~12,800 |
+| Training tok/s | ~12,800 |
 
 ---
 
-*Built with Cody (AI engineer) | 2026*
+## Contributing
+
+LixySwarm is designed for organic growth. Anyone can participate:
+
+- **Run a node**: clone the repo, run `node_daemon.py`, join the colony in 30 seconds — no registration, no permission
+- **Contribute compute**: from RTX 5090 servers (MAXIMUM) to CPU-only VPS relays (RELAY)
+- **Open issues / PRs**: architecture discussions, bug reports, feature proposals
+- **Read the paper**: [paper/LixySwarm_AntElephantDolphin.pdf](paper/LixySwarm_AntElephantDolphin.pdf)
+
+The colony grows with every new node. Intelligence is not a model checkpoint — it's a property of the ecosystem.
+
+---
+
+*Built by Emmanuel Cardenaz with Lixy (Digital Partner & Co-Designer) and Cody (AI/ML Engineer) | 2026*
