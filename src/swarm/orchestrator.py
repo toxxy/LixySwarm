@@ -489,6 +489,18 @@ class LixySwarm(nn.Module):
         for bridge in self.dolphin.dolphins:
             sleep_mode = bridge.update_sleep_mode(swarm_diversity)
 
+        # Phase B real: si hubo inactividad suficiente, consolidar sleep_state.
+        for r in self.dolphin.maybe_consolidate_sleep(force=False):
+            if r.get("consolidated"):
+                events.append({
+                    "type": "dolphin_sleep_consolidated",
+                    "dolphin_idx": r.get("dolphin_idx", 0),
+                    "method": r.get("method", "pca_svd"),
+                    "n_contexts": r.get("n_contexts", 0),
+                    "explained_variance": r.get("explained_variance", 0.0),
+                    "new_norm": r.get("new_norm", 0.0),
+                })
+
         return events
 
     def route_task(

@@ -165,6 +165,15 @@ class DolphinPool(nn.Module):
         """El delfín principal (primero, más veterano)."""
         return self.dolphins[0]
 
+    def maybe_consolidate_sleep(self, force: bool = False) -> List[dict]:
+        """Phase B: consolida el sueño de todos los delfines del pool."""
+        results = []
+        for i, d in enumerate(self.dolphins):
+            r = d.maybe_consolidate_sleep(force=force)
+            r["dolphin_idx"] = i
+            results.append(r)
+        return results
+
     def save_sleep_states(self, path_prefix: str):
         """Guarda el sleep_state de todos los delfines."""
         for i, d in enumerate(self.dolphins):
@@ -181,6 +190,7 @@ class DolphinPool(nn.Module):
                     "idx": i,
                     "agent_id": d.dolphin.cfg.agent_id,
                     "sleep_norm": d.dolphin.sleep_state.get_state().norm().item(),
+                    "sleep_consolidations": d.dolphin.sleep_state.consolidations,
                 }
                 for i, d in enumerate(self.dolphins)
             ],

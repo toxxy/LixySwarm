@@ -64,6 +64,10 @@ class DolphinConfig:
     sleep_dim: int = 256          # dimensión del estado dormido
     sleep_buffer_size: int = 16   # contextos pasados en memoria activa
     sleep_decay: float = 0.95     # decaimiento exponencial del estado
+    # Phase B: consolidación real tras inactividad (30min por defecto)
+    sleep_consolidation_idle_s: float = 30 * 60
+    sleep_consolidation_min_contexts: int = 3
+    sleep_consolidation_blend: float = 0.35
 
     # Identidad del agente
     agent_id: int = 0
@@ -246,6 +250,8 @@ class HalfSleepState:
 
         self._lock = threading.Lock()
         self._last_update = time.time()
+        self._last_consolidation = 0.0
+        self._consolidations = 0
 
     def update(self, feromon: torch.Tensor):
         """
@@ -283,13 +289,120 @@ class HalfSleepState:
 
     @property
     def idle_seconds(self) -> float:
-        """Segundos desde la última actualización."""
+        """Segundos desde la última actualización por actividad real."""
         return time.time() - self._last_update
+
+    @property
+    def consolidations(self) -> int:
+        """Número de consolidaciones Phase B realizadas."""
+        return self._consolidations
+
+    @property
+    def last_consolidation(self) -> float:
+        return self._last_consolidation
+
+    def mark_idle_for_test(self, idle_seconds: float):
+        """Helper determinista para tests: simula inactividad sin sleep real."""
+        with self._lock:
+            self._last_update = time.time() - idle_seconds
+            self._last_consolidation = 0.0
+
+    def should_consolidate(
+        self,
+        idle_threshold_s: Optional[float] = None,
+        min_contexts: Optional[int] = None,
+    ) -> bool:
+        """
+        Phase B: ¿ya pasó suficiente inactividad para consolidar?
+
+        Trigger por defecto: 30min sin actividad + al menos 3 contextos.
+        Evita consolidar repetidamente la misma ventana: solo consolida si hubo
+        actividad nueva desde la última consolidación.
+        """
+        idle_threshold_s = idle_threshold_s or self.cfg.sleep_consolidation_idle_s
+        min_contexts = min_contexts or self.cfg.sleep_consolidation_min_contexts
+        with self._lock:
+            return (
+                len(self.context_buffer) >= min_contexts
+                and (time.time() - self._last_update) >= idle_threshold_s
+                and self._last_consolidation < self._last_update
+            )
+
+    def consolidate_pca(
+        self,
+        blend: Optional[float] = None,
+        min_contexts: Optional[int] = None,
+    ) -> dict:
+        """
+        Phase B: consolida el historial de embeddings con PCA/SVD.
+
+        Intuición biológica: durante el sueño, el delfín no copia todo el
+        historial; extrae el eje dominante de experiencia reciente y lo mezcla
+        con el estado dormido. Esto convierte el buffer pasivo en aprendizaje
+        de contexto entre sesiones.
+        """
+        blend = self.cfg.sleep_consolidation_blend if blend is None else blend
+        min_contexts = min_contexts or self.cfg.sleep_consolidation_min_contexts
+        blend = float(max(0.0, min(1.0, blend)))
+
+        with self._lock:
+            n_contexts = len(self.context_buffer)
+            if n_contexts < min_contexts:
+                return {
+                    "consolidated": False,
+                    "reason": "not_enough_contexts",
+                    "n_contexts": n_contexts,
+                }
+
+            window = torch.stack(list(self.context_buffer)).to(self.device).float()  # (N, sleep_dim)
+            mean = window.mean(dim=0)
+            centered = window - mean
+
+            # PCA robusto: SVD del historial centrado. Con N pequeño también funciona.
+            try:
+                _, s, vh = torch.linalg.svd(centered, full_matrices=False)
+                principal = vh[0]
+                explained = float((s[0] ** 2 / (s.pow(2).sum() + 1e-8)).item()) if s.numel() else 0.0
+            except RuntimeError:
+                # Fallback ultra seguro: si SVD falla, consolidar solo la media.
+                principal = torch.zeros_like(mean)
+                explained = 0.0
+
+            # Fijar signo para determinismo: alinear con la media si hay señal.
+            if torch.dot(principal, mean) < 0:
+                principal = -principal
+
+            # Nutriente consolidado: media + eje dominante ponderado por varianza.
+            variance_scale = centered.std(dim=0).mean().clamp(min=0.0, max=1.0)
+            consolidated = torch.tanh(mean + variance_scale * principal)
+
+            self.awake_state = self.awake_state.to(device=self.device, dtype=consolidated.dtype)
+            previous_norm = float(self.awake_state.norm().item())
+            self.awake_state = torch.tanh((1.0 - blend) * self.awake_state + blend * consolidated)
+            new_norm = float(self.awake_state.norm().item())
+
+            self._last_consolidation = time.time()
+            self._consolidations += 1
+
+            return {
+                "consolidated": True,
+                "method": "pca_svd",
+                "n_contexts": n_contexts,
+                "explained_variance": explained,
+                "blend": blend,
+                "previous_norm": previous_norm,
+                "new_norm": new_norm,
+                "idle_seconds": time.time() - self._last_update,
+            }
 
     def state_dict(self) -> dict:
         return {
             "awake_state": self.awake_state.cpu(),
             "context_buffer": [c.cpu() for c in self.context_buffer],
+            "last_update": self._last_update,
+            "last_consolidation": self._last_consolidation,
+            "consolidations": self._consolidations,
+            "projector": self._projector.state_dict(),
         }
 
     def load_state_dict(self, d: dict):
@@ -298,6 +411,11 @@ class HalfSleepState:
             [c.to(self.device) for c in d["context_buffer"]],
             maxlen=self.cfg.sleep_buffer_size,
         )
+        self._last_update = float(d.get("last_update", time.time()))
+        self._last_consolidation = float(d.get("last_consolidation", 0.0))
+        self._consolidations = int(d.get("consolidations", 0))
+        if "projector" in d:
+            self._projector.load_state_dict(d["projector"])
 
 
 # ─── Componente 3: Proyector de Identidad (Silbido) 🎵 ───────────────────────
@@ -378,8 +496,25 @@ class DolphinAgent(nn.Module):
         n_params = sum(p.numel() for p in self.parameters())
         print(f"DolphinAgent [{cfg.agent_id}] inicializado: {n_params/1e6:.2f}M params")
         print(f"  🔊 Ecolocalización: {cfg.n_pings} pings × {cfg.echo_dim}d  [Phase A: triangulación por atención]")
-        print(f"  🌙 Sueño: buffer={cfg.sleep_buffer_size}, decay={cfg.sleep_decay}")
+        print(f"  🌙 Sueño: buffer={cfg.sleep_buffer_size}, decay={cfg.sleep_decay}, idle={cfg.sleep_consolidation_idle_s:.0f}s [Phase B: PCA]")
         print(f"  🎵 Identidad: {cfg.identity_dim}d → {cfg.feromon_dim}d")
+
+    def maybe_consolidate_sleep(self, force: bool = False) -> dict:
+        """
+        Phase B: consolida el sueño si hubo inactividad suficiente.
+
+        Trigger normal: 30min sin actividad. `force=True` se usa para tests,
+        shutdown limpio o cron externo. No bloquea el forward normal salvo la
+        llamada explícita; el cómputo es pequeño (buffer ≤ sleep_buffer_size).
+        """
+        if force or self.sleep_state.should_consolidate():
+            return self.sleep_state.consolidate_pca()
+        return {
+            "consolidated": False,
+            "reason": "not_idle",
+            "idle_seconds": self.sleep_state.idle_seconds,
+            "n_contexts": len(self.sleep_state.context_buffer),
+        }
 
     def forward(
         self,
@@ -417,6 +552,7 @@ class DolphinAgent(nn.Module):
         info = {
             **echoes,
             "sleep_idle_s": self.sleep_state.idle_seconds,
+            "sleep_consolidations": self.sleep_state.consolidations,
             "feromon_norm": feromon_final.norm(dim=-1).mean().item(),
             "confidence": confidence.mean().item(),
         }
@@ -425,6 +561,8 @@ class DolphinAgent(nn.Module):
 
     def save(self, path: str):
         """Guarda modelo + estado de sueño."""
+        # Consolidación oportunista: si estuvo inactivo suficiente, guarda sueño digerido.
+        self.maybe_consolidate_sleep(force=False)
         torch.save({
             "model": self.state_dict(),
             "sleep": self.sleep_state.state_dict(),
@@ -507,6 +645,18 @@ class DolphinSwarmBridge(nn.Module):
             acoustic_map = torch.zeros(self.dolphin.cfg.feromon_dim)
 
         return self.router.route(acoustic_map, sects, matriarca=matriarca)
+
+    def maybe_consolidate_sleep(self, force: bool = False) -> dict:
+        """Phase B: consolida sueño del delfín primario y buffer acústico reciente."""
+        result = self.dolphin.maybe_consolidate_sleep(force=force)
+        if result.get("consolidated"):
+            result["sleep_for_matriarca"] = self.sleep_to_matriarca(
+                self.dolphin.sleep_state.get_state().to(
+                    next(self.sleep_to_matriarca.parameters()).device,
+                    dtype=next(self.sleep_to_matriarca.parameters()).dtype,
+                )
+            ).detach()
+        return result
 
     def update_sleep_mode(self, diversity: float) -> str:
         """Actualiza el modo de sueño según la diversidad del enjambre."""

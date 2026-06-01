@@ -16,6 +16,8 @@ Test 10: DolphinSwarmBridge.forward() incluye sleep_mode + acoustic_map
 Test 11: DolphinSwarmBridge.route() retorna RouteDecision con sects
 Test 12: LixySwarm.route_task() integra todo el flujo
 Test 13: tick_lifecycle actualiza sleep_mode en todos los delfines
+Test 14: Phase B consolida sleep_state con PCA tras inactividad
+Test 15: DolphinSwarmBridge expone sleep_for_matriarca tras consolidar
 """
 
 import sys
@@ -360,6 +362,82 @@ def test_13_tick_updates_sleep_mode():
     print(f"  ✓ Después diversidad baja: sleep_mode={primary_mode}")
 
 
+def test_14_phase_b_pca_consolidation():
+    """Test 14: Phase B consolida sleep_state con PCA tras inactividad."""
+    print("\n[Test 14] Phase B — PCA sobre historial tras inactividad")
+
+    from src.agents.dolphin_agent import DolphinAgent, DolphinConfig
+
+    cfg = DolphinConfig(
+        agent_id=201,
+        sleep_buffer_size=8,
+        sleep_consolidation_idle_s=0.01,
+        sleep_consolidation_min_contexts=3,
+        sleep_consolidation_blend=0.5,
+        dropout=0.0,
+    )
+    dolphin = DolphinAgent(cfg, device="cpu")
+    dolphin.eval()
+
+    # Tres inputs distintos generan historial de contextos.
+    with torch.no_grad():
+        for _ in range(4):
+            x = torch.randint(0, cfg.vocab_size, (1, 12))
+            dolphin(x, update_sleep=True)
+
+    before = dolphin.sleep_state.get_state().clone()
+    dolphin.sleep_state.mark_idle_for_test(60.0)
+    result = dolphin.maybe_consolidate_sleep()
+    after = dolphin.sleep_state.get_state().clone()
+
+    assert result["consolidated"] is True, f"No consolidó: {result}"
+    assert result["method"] == "pca_svd"
+    assert result["n_contexts"] >= 3
+    assert dolphin.sleep_state.consolidations == 1
+    assert not torch.allclose(before, after), "sleep_state debe cambiar tras consolidación"
+    assert 0.0 <= result["explained_variance"] <= 1.0
+
+    # No debe repetir consolidación si no hubo actividad nueva.
+    result2 = dolphin.maybe_consolidate_sleep()
+    assert result2["consolidated"] is False
+
+    print(f"  ✓ consolidado: contexts={result['n_contexts']} explained={result['explained_variance']:.3f}")
+    print(f"  ✓ norm: {result['previous_norm']:.4f} → {result['new_norm']:.4f}")
+
+
+def test_15_bridge_consolidation_exports_matriarca_signal():
+    """Test 15: DolphinSwarmBridge expone señal para Matriarca después de consolidar."""
+    print("\n[Test 15] Phase B — bridge exporta sleep_for_matriarca consolidado")
+
+    from src.agents.dolphin_agent import DolphinSwarmBridge, DolphinConfig
+
+    cfg = DolphinConfig(
+        agent_id=202,
+        sleep_buffer_size=8,
+        sleep_consolidation_idle_s=0.01,
+        sleep_consolidation_min_contexts=3,
+        sleep_consolidation_blend=0.4,
+        dropout=0.0,
+    )
+    bridge = DolphinSwarmBridge(cfg, device="cpu")
+    bridge.eval()
+
+    with torch.no_grad():
+        for _ in range(4):
+            x = torch.randint(0, cfg.vocab_size, (1, 12))
+            bridge(x)
+
+        bridge.dolphin.sleep_state.mark_idle_for_test(60.0)
+        result = bridge.maybe_consolidate_sleep()
+
+    assert result["consolidated"] is True
+    assert "sleep_for_matriarca" in result
+    assert result["sleep_for_matriarca"].shape[-1] == 512
+    assert bridge.dolphin.sleep_state.consolidations == 1
+
+    print(f"  ✓ sleep_for_matriarca shape={tuple(result['sleep_for_matriarca'].shape)}")
+
+
 # ─── Main ──────────────────────────────────────────────────────────────────────
 
 if __name__ == "__main__":
@@ -377,6 +455,8 @@ if __name__ == "__main__":
         test_11_bridge_route_with_sects,
         test_12_route_task_full_flow,
         test_13_tick_updates_sleep_mode,
+        test_14_phase_b_pca_consolidation,
+        test_15_bridge_consolidation_exports_matriarca_signal,
     ]
 
     passed = 0
