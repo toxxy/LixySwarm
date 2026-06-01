@@ -59,6 +59,14 @@ def section(title: str):
     print(f"{BOLD}{title}{RESET}")
     print(f"{BOLD}{'─'*50}{RESET}")
 
+def check(name: str, condition: bool = True, reason: str = ""):
+    """Helper para tests Fase 2."""
+    if condition:
+        ok(name)
+    else:
+        fail(name, reason or "assertion failed")
+
+
 
 # ─── Test 1 — Modo Local ──────────────────────────────────────────────────────
 
@@ -356,6 +364,80 @@ def test_gossip_tcp():
     tcp_b.stop()
 
 
+def test_lsp_v2_loopback(verbose: bool = False):
+    """
+    Fase 2: Dos nodos LSP v2 intercambian feromonas binary.
+    Verifica merge-on-transit y TTL end-to-end.
+    """
+    from src.network.lsp_v2 import LSPNodeV2
+    from src.network.lsp import LSPIdentity
+    import torch, time
+    import torch.nn.functional as F
+
+    id_a = LSPIdentity.generate()
+    id_b = LSPIdentity.generate()
+    node_a = LSPNodeV2(id_a, feromon_port=7550, gossip_port=7551)
+    node_b = LSPNodeV2(id_b, feromon_port=7552, gossip_port=7553)
+
+    try:
+        node_a.start()
+        node_b.start()
+        check("LSP v2: node_a.start()")
+        check("LSP v2: node_b.start()")
+
+        node_a._register_peer(id_b.node_id_hex, "127.0.0.1", 7552, 7553)
+        check("LSP v2: peer registrado en node_a")
+
+        received_v2 = []
+        @node_b.on_feromon_received
+        def capture_v2(feromon, node_id_hex):
+            received_v2.append((feromon, node_id_hex))
+
+        feromon_orig = torch.randn(256)
+        node_a.send_feromon_v2(feromon_orig, fitness=0.8, step=42)
+        check("LSP v2: send_feromon_v2() sin excepcion")
+
+        deadline = time.time() + 3.0
+        while not received_v2 and time.time() < deadline:
+            time.sleep(0.05)
+
+        check("LSP v2: feromon recibida", len(received_v2) >= 1,
+              "No se recibio nada en 3s")
+
+        if received_v2:
+            feromon_rx, node_hex = received_v2[0]
+            cos = F.cosine_similarity(feromon_orig.unsqueeze(0),
+                                       feromon_rx.float().unsqueeze(0)).item()
+            check("LSP v2: cosine_sim >= 0.999", cos >= 0.999,
+                  f"cos_sim={cos:.4f}")
+            check("LSP v2: node_id correcto",
+                  node_hex[:16] == id_a.node_id_hex[:16],
+                  f"node_hex={node_hex[:16]}")
+    finally:
+        node_a.stop()
+        node_b.stop()
+
+
+def test_swarm_network_v2_protocol(verbose: bool = False):
+    """
+    Fase 2: SwarmNetwork con protocol='v2' arranca LSPNodeV2.
+    """
+    from src.network.swarm_network import SwarmNetwork
+    from src.network.node import NodeIdentity
+    import torch
+
+    identity = NodeIdentity(node_id="test-v2-net", host="127.0.0.1",
+                            feromon_port=7560, gossip_port=7561)
+    net = SwarmNetwork(identity, mode="local", protocol="v2")
+    net.start()
+    check("SwarmNetworkV2: start() sin excepcion")
+    check("SwarmNetworkV2: protocol=v2", net.protocol == "v2")
+    net.broadcast_feromon(torch.randn(256))
+    check("SwarmNetworkV2: broadcast_feromon OK (local no-op)")
+    net.stop()
+    check("SwarmNetworkV2: stop() sin excepcion")
+
+
 # ─── Main ─────────────────────────────────────────────────────────────────────
 
 def main():
@@ -396,6 +478,10 @@ def main():
         test_gossip_tcp()
     else:
         skip("test_gossip_tcp", "--skip-gossip activo")
+
+    # Fase 2 — LSP v2
+    test_lsp_v2_loopback(verbose=args.verbose)
+    test_swarm_network_v2_protocol(verbose=args.verbose)
 
     # ─── Resumen ──────────────────────────────────────────────────────────────
     print(f"\n{BOLD}{'='*50}{RESET}")

@@ -93,9 +93,11 @@ class SwarmNetwork:
         mode: str = "auto",
         checkpoint_dir: str = "checkpoints",
         swarm=None,
+        protocol: str = "v1",   # "v1" | "v2" — protocolo de feromonas (v2 es opt-in)
     ):
         self.identity = identity
         self.mode = mode  # "local" | "lan" | "auto"
+        self.protocol = protocol  # "v1" | "v2"
         self.checkpoint_dir = Path(checkpoint_dir)
         self.swarm = swarm  # referencia al LixySwarm (para gossip de Matriarca)
 
@@ -108,6 +110,8 @@ class SwarmNetwork:
         self._mdns: Optional[MDNSDiscovery] = None
         self._gossip_thread: Optional[threading.Thread] = None
         self._running = False
+        # LSP v2 node (opcional, activado si protocol="v2")
+        self._lsp_v2_node = None
 
         # Callbacks registrables
         self._on_peer_connected = None   # callback(peer) cuando llega un peer nuevo
@@ -158,6 +162,27 @@ class SwarmNetwork:
             print(f"   Feromonas: UDP :{self.identity.feromon_port}")
             print(f"   Gossip:    TCP :{self.identity.gossip_port}")
             print(f"   Descubrimiento: mDNS LAN automático")
+            # LSP v2
+            if self.protocol == "v2":
+                try:
+                    from src.network.lsp_v2 import LSPNodeV2
+                    from src.network.lsp import LSPIdentity
+                    lsp_identity = LSPIdentity.generate()
+                    # Puertos v2: offset +10 para no chocar con v1
+                    self._lsp_v2_node = LSPNodeV2(
+                        lsp_identity,
+                        feromon_port=self.identity.feromon_port + 10,
+                        gossip_port=self.identity.gossip_port + 10,
+                    )
+                    self._lsp_v2_node.start()
+                    # Callbacks de feromonas v2 alimentan la misma tabla de peers
+                    @self._lsp_v2_node.on_feromon_received
+                    def _on_v2_feromon(feromon, node_id_hex):
+                        self.stats.feromons_received += 1
+                        self.peers.update_feromon(node_id_hex[:16], feromon)
+                    print(f"   🐬 LSP v2: UDP :{self.identity.feromon_port + 10} (float16, merge-on-transit)")
+                except Exception as e:
+                    log.warning(f"LSP v2 no pudo arrancar: {e}")
 
         except Exception as e:
             if self.mode == "auto":
@@ -177,15 +202,27 @@ class SwarmNetwork:
             self._gossip_tcp.stop()
         if self._mdns:
             self._mdns.stop()
+        if self._lsp_v2_node:
+            self._lsp_v2_node.stop()
         log.info("SwarmNetwork detenida")
 
     # ─── API principal ────────────────────────────────────────────────────────
 
-    def broadcast_feromon(self, feromon: torch.Tensor, agent_id: int = 0):
+    def broadcast_feromon(self, feromon: torch.Tensor, agent_id: int = 0, fitness: float = 0.5):
         """
         Envía feromona a todos los peers conocidos.
+        Usa LSP v2 (binary float16) si está disponible, sino cae a v1.
         En modo local: no-op silencioso.
         """
+        # Preferir LSP v2 si disponible
+        if self._lsp_v2_node is not None:
+            try:
+                self._lsp_v2_node.send_feromon_v2(feromon.detach().cpu(), fitness=fitness, step=0)
+                self.stats.feromons_sent += max(1, len(self.peers.alive_peers()))
+                return
+            except Exception as e:
+                log.debug(f"broadcast_feromon v2 error: {e}, falling back to v1")
+        # Fallback v1
         if not self._feromon_udp:
             return
         peers = self.peers.alive_peers()
