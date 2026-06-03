@@ -30,11 +30,13 @@ GOSSIP_PORT  = 7338       # TCP
 IDENTITY_PATH = "/opt/lixyswarm/.lixyswarm/identity.key"
 
 def run():
-    from src.network.lsp import LSPNode, LSPIdentity
+    from src.network.lsp import LSPIdentity
+    from src.network.lsp_v2 import LSPNodeV2
 
-    log.info("🐜 LixySwarm VPS Node arrancando (LSP v1)...")
+    log.info("🐜 LixySwarm VPS Node arrancando (LSP v2)...")
     log.info(f"   Feromon UDP: 0.0.0.0:{FEROMON_PORT}")
     log.info(f"   Gossip  TCP: 0.0.0.0:{GOSSIP_PORT}")
+    log.info("   Wire: LYSW binary · float16 feromonas · merge-on-transit")
 
     # Cargar o generar identidad Ed25519 persistente
     identity = LSPIdentity.load(IDENTITY_PATH)
@@ -45,7 +47,7 @@ def run():
         log.info(f"   Identidad guardada en {IDENTITY_PATH}")
     log.info(f"   Node ID: {identity.node_id_hex[:32]}...")
 
-    node = LSPNode(identity, feromon_port=FEROMON_PORT, gossip_port=GOSSIP_PORT)
+    node = LSPNodeV2(identity, feromon_port=FEROMON_PORT, gossip_port=GOSSIP_PORT)
 
     @node.on_feromon_received
     def on_feromon(feromon, from_node_id):
@@ -62,7 +64,7 @@ def run():
         log.info(f"🔗 Peer conectado: {node_id[:16]}...@{host}:{port}")
 
     node.start()
-    log.info("✅ LSPNode activo")
+    log.info("✅ LSPNodeV2 activo")
 
     # Conectar al nodo de Emmanuel si IP configurada
     if PEER_HOST:
