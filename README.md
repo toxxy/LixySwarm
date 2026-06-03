@@ -2,7 +2,7 @@
 
 > A bio-inspired LLM. Ants think, the Elephant remembers, the Dolphin sees the big picture.
 
-**Status:** Run 11 completed (~53k steps, val_loss=3.59) | Next: DolphinAgent Phase B
+**Status:** LSP v2 is now the default swarm protocol, Metabolic Hunger is available as an opt-in auto-training signal, and SwarmExplorer exposes the live organism state.
 
 ---
 
@@ -56,6 +56,8 @@ OUTPUT
 - `emit_infrasound()`: retrieves relevant memories → orientation vector [256d]
 - Retroactive feedback: +8% importance if user continues the topic
 - Auto-compression at 90% capacity with generational distillation
+- Direct legacy ingestion for pre-encoded node/sect/ant memories
+- Dual-memory mode defaults to personal-dominant context (70% personal / 30% global)
 - **Current state:** 3,131+ accumulated memories
 
 ### 🐬 DolphinAgent — ~9M params
@@ -65,11 +67,34 @@ OUTPUT
 - Doesn't process linearly like current LLMs — maps first, generates after
 
 ### 🕸️ SwarmNetwork — P2P
-- UDP 7337: pheromone broadcast (fire-and-forget, ~636B/message)
-- TCP 7338: reliable bidirectional gossip
+- SwarmNetwork default ports: UDP 4444 / TCP 4445
+- LSP v2 offset ports: UDP 4454 / TCP 4455
+- Standalone `node_daemon.py`: UDP 7337 / TCP 7338
 - mDNS: zero-configuration LAN auto-discovery
-- LSP v2: native binary protocol with merge-on-transit, TTL decay, Ed25519 crypto identity
-- **Tests:** 23/23 (network) + 15/15 (integration) ✅
+- LSP v2: native binary pheromones, float16 compression, merge-on-transit, TTL decay
+- Persistent Ed25519 identity stored in `checkpoints/lsp_identity.pem`
+- **Current network scope:** automatic on the same LAN; Internet/WAN requires a VPS relay, public host, or port-forwarding
+- **Recent tests:** 23/23 network smoke ✅
+
+---
+
+## Current Implementation Snapshot
+
+Recently implemented in the main branch:
+
+- **LSP v2 default:** `SwarmNetwork.create()` and `SwarmNetwork(...)` prefer protocol `v2`.
+- **Robust tokenizer boot:** GPT-2 tokenizer assets are cached locally from a HuggingFace mirror, avoiding Azure timeout failures.
+- **Metabolic Hunger:** `auto_train.py --metabolic-hunger` can decide between `meal`, `snack`, `watch`, and `satiated`.
+- **Sect bifurcation:** strong mature sects can split into child roles when diversity drops and the Matriarca recommends it.
+- **Explorer updates:** the frontend shows LSP status, network reach, stale/fresh data, auto-loop state, and hunger signals.
+- **API state bridge:** `/swarm/status` now exposes `auto_loop`, `last_hunger`, `lsp`, and Internet readiness metadata.
+
+Still future work from the paper:
+
+- DHT-backed global memory
+- Consensus/reputation layer
+- Full sandboxed self-modification
+- Zero-config WAN peer discovery
 
 ---
 
@@ -88,13 +113,24 @@ LixySwarm/
 │   │   ├── dynamic_roles.py       # DynamicRoleAdapter: roles + temperature
 │   │   └── runtime_session.py     # Cross-turn state, persistent history
 │   ├── network/
-│   │   ├── swarm_network.py       # P2P: UDP + TCP + mDNS
+│   │   ├── swarm_network.py       # P2P: UDP + TCP + mDNS + LSP v2
+│   │   ├── lsp.py                 # LSP v1 wire protocol + Ed25519 identity
+│   │   ├── lsp_v2.py              # Binary float16 pheromones + merge-on-transit
 │   │   ├── node.py                # Node identity + routing
 │   │   └── transport.py           # Transport layer
 │   └── utils/
-│       └── sampling.py            # rep_penalty + top-k + top-p
+│       ├── sampling.py            # rep_penalty + top-k + top-p
+│       └── tokenizer.py           # offline-safe GPT-2 tokenizer cache
+├── api/
+│   ├── main.py                    # FastAPI backend for chat + swarm state
+│   └── swarm_state.py             # Read-only status bridge for frontend
+├── frontend/
+│   ├── chat.html                  # Browser chat UI
+│   └── swarm-explorer.html        # Live swarm dashboard
 ├── paper/
 │   └── LixySwarm_AntElephantDolphin.pdf  # Full academic paper (17 pages)
+├── auto_train.py                  # Continuous auto-training + Metabolic Hunger
+├── swarm_publisher.py             # Publishes local swarm status to VPS/API
 ├── train_swarm.py                 # Full swarm training
 ├── train_matriarca.py             # Dedicated Matriarca training
 ├── train.py                       # Base per-agent training
@@ -161,6 +197,26 @@ The Dolphin builds the map before the ants generate. The Matriarca remembers. Ea
 
 ---
 
+## Network Reality: LAN vs Internet
+
+LixySwarm can already communicate across machines, but the scope matters:
+
+| Scenario | Works now? | Notes |
+|---|---:|---|
+| Same machine | ✅ | Local/no-op mode, useful for development |
+| Same LAN/Wi-Fi | ✅ | mDNS discovery + UDP/TCP pheromone/gossip transport |
+| VPS status publishing | ✅ | `swarm_publisher.py` writes status for the API/frontend |
+| Internet peer-to-peer | ⚠️ Config required | NAT blocks automatic discovery; use VPS relay, public IP, or port-forwarding |
+| Planetary zero-config network | 🔮 | Requires DHT, relay mesh, consensus, reputation |
+
+Practical ports:
+
+- SwarmNetwork v1: UDP `4444`, TCP `4445`
+- SwarmNetwork LSP v2: UDP `4454`, TCP `4455`
+- Standalone LSP node daemon: UDP `7337`, TCP `7338`
+
+---
+
 ## Growth Stages
 
 LixySwarm is not a product — it's an organism to be raised.
@@ -181,6 +237,10 @@ LixySwarm is not a product — it's an organism to be raised.
 # Clone and install
 git clone https://github.com/toxxy/LixySwarm.git && cd LixySwarm
 pip install -r requirements.txt
+pip install -r api/requirements_api.txt
+
+# Optional: warm tokenizer cache before first model load
+python -m src.utils.tokenizer
 
 # Interactive chat (requires checkpoint)
 python lixy_chat.py
@@ -188,11 +248,18 @@ python lixy_chat.py
 # Swarm training (short run for validation)
 python train_swarm.py --steps 7000 --batch 4 --checkpoint checkpoints/swarm_best.pt
 
+# Continuous auto-training with Metabolic Hunger
+python auto_train.py --metabolic-hunger --swarm-diversity 0.35 --mean-confidence 0.55
+
+# API + frontend
+uvicorn api.main:app --host 0.0.0.0 --port 8080
+# then open frontend/chat.html or frontend/swarm-explorer.html
+
 # Benchmark
 python benchmark.py
 
 # P2P network tests
-python test_network.py
+python test_network.py --skip-lan --skip-gossip
 python test_integration.py
 ```
 
