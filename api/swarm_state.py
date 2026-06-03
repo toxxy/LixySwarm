@@ -175,7 +175,16 @@ def get_lsp_state() -> dict:
     published = s.get("lsp", {}) if isinstance(s.get("lsp"), dict) else {}
     public_host = os.environ.get("LIXYSWARM_PUBLIC_HOST")
     relay_host = os.environ.get("LIXYSWARM_VPS_HOST")
-    wan_ready = bool(public_host or relay_host)
+    published_internet = published.get("internet", {}) if isinstance(published.get("internet"), dict) else {}
+    standalone_identity = BASE / ".lixyswarm" / "identity.key"
+    is_vps_relay = standalone_identity.exists()
+    wan_ready = bool(public_host or relay_host or published_internet.get("ready") or is_vps_relay)
+    wan_mode = (
+        "vps-relay"
+        if is_vps_relay
+        else published_internet.get("mode")
+        or ("relay/public-host" if wan_ready else "lan-only")
+    )
 
     return {
         "protocol": published.get("protocol", "LSP v2"),
@@ -196,7 +205,7 @@ def get_lsp_state() -> dict:
         },
         "internet": {
             "ready": wan_ready,
-            "mode": "relay/public-host" if wan_ready else "lan-only",
+            "mode": wan_mode,
             "requires": [] if wan_ready else [
                 "VPS relay o IP pública",
                 "puertos abiertos/reenviados",
