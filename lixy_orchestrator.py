@@ -35,7 +35,6 @@ from dataclasses import dataclass
 
 import torch
 import torch.nn.functional as F
-import tiktoken
 
 SRC_DIR = Path(__file__).parent
 sys.path.insert(0, str(SRC_DIR))
@@ -45,6 +44,7 @@ from src.agents.agent_base import AgentConfig
 from src.matriarca.matriarca import MatriarcaConfig
 from src.swarm.runtime_session import RuntimeSession
 from src.network import SwarmNetwork
+from src.utils.tokenizer import get_gpt2_encoding
 
 CHECKPOINT_DIR = Path("checkpoints")
 
@@ -93,7 +93,7 @@ class LixyOrchestrator:
 
     def __init__(self, cfg: OrchestratorConfig = None):
         self.cfg = cfg or OrchestratorConfig()
-        self.enc = tiktoken.get_encoding("gpt2")
+        self.enc = get_gpt2_encoding()
         self.ctx = (
             torch.amp.autocast(device_type="cuda", dtype=torch.bfloat16)
             if self.cfg.device == "cuda" else nullcontext()

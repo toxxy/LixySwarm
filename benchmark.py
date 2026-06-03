@@ -26,7 +26,6 @@ from datetime import datetime
 import numpy as np
 import torch
 import torch.nn.functional as F
-import tiktoken
 
 SRC_DIR = Path(__file__).parent
 sys.path.insert(0, str(SRC_DIR))
@@ -35,6 +34,7 @@ from src.swarm.orchestrator import LixySwarm, SwarmConfig
 from src.agents.agent_base import AgentConfig
 from src.matriarca.matriarca import MatriarcaConfig
 from src.utils.sampling import sample_token
+from src.utils.tokenizer import get_gpt2_encoding
 
 CHECKPOINT_DIR = Path("checkpoints")
 DATA_DIR = Path("data/pretrain")
@@ -341,7 +341,7 @@ def load_swarm_for_bench(checkpoint_path: str, device: str) -> tuple:
 
 def run_benchmark(args) -> dict:
     device = "cpu" if args.cpu else ("cuda" if torch.cuda.is_available() else "cpu")
-    enc = tiktoken.get_encoding("gpt2")
+    enc = get_gpt2_encoding()
     ctx = torch.amp.autocast(device_type="cuda", dtype=torch.bfloat16) if device == "cuda" else None
     if ctx is None:
         from contextlib import nullcontext

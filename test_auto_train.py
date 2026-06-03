@@ -190,6 +190,51 @@ def test_10_cycle_history_trim():
               f"last={loaded['cycle_history'][-1][0]}")
 
 
+def test_11_metabolic_hunger_cold_start():
+    """compute_metabolic_hunger: arranque fresco pide un snack inicial."""
+    import auto_train
+    cfg = auto_train.AutoTrainConfig(
+        metabolic_hunger=True,
+        chunk_steps=750,
+        swarm_diversity=0.35,
+        mean_confidence=0.2,
+    )
+    state = auto_train.load_state("/tmp/nope.json")
+
+    hunger = auto_train.compute_metabolic_hunger(state, cfg)
+
+    check("cold start → entrena", hunger.should_train)
+    check("cold start → snack", hunger.level == "snack", f"level={hunger.level}")
+    check("snack respeta chunk acotado", hunger.recommended_steps == 750,
+          f"steps={hunger.recommended_steps}")
+    check("señales incluyen diversidad", "diversity" in hunger.signals)
+
+
+def test_12_metabolic_hunger_satiated():
+    """compute_metabolic_hunger: loss mejora + alta diversidad/confianza → pausa."""
+    import auto_train
+    cfg = auto_train.AutoTrainConfig(
+        metabolic_hunger=True,
+        swarm_diversity=0.95,
+        mean_confidence=0.9,
+    )
+    state = auto_train.load_state("/tmp/nope.json")
+    state["total_steps"] = 3000
+    state["best_val_loss"] = 3.4
+    state["plateau_count"] = 0
+    state["cycle_history"] = [
+        [1, 1000, 3.5, 1e-4],
+        [2, 1000, 3.4, 1e-4],
+    ]
+
+    hunger = auto_train.compute_metabolic_hunger(state, cfg)
+
+    check("saciada → no entrena", not hunger.should_train)
+    check("saciada → level satiated", hunger.level == "satiated", f"level={hunger.level}")
+    check("saciada → 0 steps", hunger.recommended_steps == 0,
+          f"steps={hunger.recommended_steps}")
+
+
 # ─── Main ─────────────────────────────────────────────────────────────────────
 
 def main():
@@ -208,6 +253,8 @@ def main():
         test_8_cleanup_old_checkpoints,
         test_9_status_flag,
         test_10_cycle_history_trim,
+        test_11_metabolic_hunger_cold_start,
+        test_12_metabolic_hunger_satiated,
     ]
 
     for t in tests:

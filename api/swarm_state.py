@@ -9,6 +9,7 @@ Sin cargar modelos. Sin torch en el VPS para las métricas del swarm.
 """
 
 import json
+import os
 import re
 import glob
 import time
@@ -19,6 +20,8 @@ from typing import Any
 BASE           = Path(__file__).parent.parent
 STATUS_FILE    = BASE / "swarm_status.json"     # publicado por swarm_publisher.py
 NODE_LOG       = BASE / "node.log"
+TRAINING_STATE = BASE / "checkpoints" / "training_state.json"
+LSP_IDENTITY   = BASE / "checkpoints" / "lsp_identity.pem"
 
 
 def _now() -> str:
@@ -34,6 +37,15 @@ def _read_status() -> dict:
             data["_age_seconds"] = round(age_s, 1)
             data["_stale"] = age_s > 60   # más de 1 min → stale
             return data
+    except Exception:
+        pass
+    return {}
+
+
+def _read_json(path: Path) -> dict:
+    try:
+        if path.exists():
+            return json.loads(path.read_text())
     except Exception:
         pass
     return {}
@@ -104,10 +116,14 @@ def get_network_state() -> dict:
             nodes.append({"node_id": p.get("id","?"), "host": p.get("host","?"), "role": "local", "self": False})
             connected += 1
 
+    lsp = get_lsp_state()
     return {
         "nodes":           nodes,
         "connected_count": connected,
         "vps_node_id":     nodes[0]["node_id"] if nodes else None,
+        "protocol":        lsp["protocol"],
+        "lsp":             lsp,
+        "internet":        lsp["internet"],
     }
 
 
@@ -126,6 +142,65 @@ def get_metrics() -> dict:
     }
 
 
+def get_auto_loop_state() -> dict | None:
+    """Lee el estado del loop de auto-training, publicado o local."""
+    s = _read_status()
+    if isinstance(s.get("auto_loop"), dict):
+        return s["auto_loop"]
+
+    auto_state = _read_json(TRAINING_STATE)
+    if not auto_state:
+        return None
+
+    history = auto_state.get("cycle_history", [])
+    return {
+        "cycles_completed": auto_state.get("cycles_completed", 0),
+        "total_steps": auto_state.get("total_steps", 0),
+        "best_val_loss": auto_state.get("best_val_loss"),
+        "lr_current": auto_state.get("lr_current"),
+        "plateau_count": auto_state.get("plateau_count", 0),
+        "last_checkpoint": auto_state.get("last_checkpoint"),
+        "recent_history": history[-5:] if history else [],
+        "last_hunger": auto_state.get("last_hunger"),
+        "last_updated": auto_state.get("last_updated"),
+    }
+
+
+def get_lsp_state() -> dict:
+    """Describe capacidades de red reales sin prometer WAN automático."""
+    s = _read_status()
+    published = s.get("lsp", {}) if isinstance(s.get("lsp"), dict) else {}
+    public_host = os.environ.get("LIXYSWARM_PUBLIC_HOST")
+    relay_host = os.environ.get("LIXYSWARM_VPS_HOST")
+    wan_ready = bool(public_host or relay_host)
+
+    return {
+        "protocol": published.get("protocol", "LSP v2"),
+        "wire_format": published.get("wire_format", "LYSW"),
+        "identity": published.get("identity", "Ed25519"),
+        "identity_persistent": LSP_IDENTITY.exists(),
+        "status": published.get("status", "available"),
+        "float16": published.get("float16", True),
+        "merge_on_transit": published.get("merge_on_transit", True),
+        "discovery": "mDNS LAN automático",
+        "ports": {
+            "v1_feromon_udp": 4444,
+            "v1_gossip_tcp": 4445,
+            "v2_feromon_udp": 4454,
+            "v2_gossip_tcp": 4455,
+        },
+        "internet": {
+            "ready": wan_ready,
+            "mode": "relay/public-host" if wan_ready else "lan-only",
+            "requires": [] if wan_ready else [
+                "VPS relay o IP pública",
+                "puertos abiertos/reenviados",
+                "configuración explícita de peers",
+            ],
+        },
+    }
+
+
 def get_full_swarm_status() -> dict:
     s = _read_status()
     agents    = get_agents_state()
@@ -133,6 +208,8 @@ def get_full_swarm_status() -> dict:
     dolphin   = get_dolphin_state()
     network   = get_network_state()
     metrics   = get_metrics()
+    auto_loop = get_auto_loop_state()
+    lsp       = get_lsp_state()
     return {
         "agents":          agents,
         "agent_count":     len(agents),
@@ -140,7 +217,9 @@ def get_full_swarm_status() -> dict:
         "matriarca":       matriarca,
         "dolphin":         dolphin,
         "network":         network,
+        "lsp":             lsp,
         "metrics":         metrics,
+        "auto_loop":       auto_loop,
         "data_fresh":      not s.get("_stale", True),
         "last_update":     s.get("timestamp"),
     }

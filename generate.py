@@ -26,7 +26,6 @@ from dataclasses import dataclass
 
 import torch
 import torch.nn.functional as F
-import tiktoken
 
 SRC_DIR = Path(__file__).parent
 sys.path.insert(0, str(SRC_DIR))
@@ -36,6 +35,7 @@ from src.swarm.orchestrator import LixySwarm, SwarmConfig
 from src.swarm.runtime_session import RuntimeSession, interactive_session
 from src.matriarca.matriarca import Matriarca, MatriarcaConfig
 from src.utils.sampling import sample_token, SAMPLING_DEFAULTS
+from src.utils.tokenizer import get_gpt2_encoding
 
 CHECKPOINT_DIR = Path("checkpoints")
 
@@ -305,7 +305,7 @@ def diagnose(device: str = "cuda"):
     print("\n🔬 Diagnóstico End-to-End: Matriarca → Enjambre")
     print("=" * 60)
 
-    enc = tiktoken.get_encoding("gpt2")
+    enc = get_gpt2_encoding()
 
     print("\n📦 Cargando enjambre...")
     swarm = load_swarm(device=device)
@@ -416,7 +416,7 @@ def main():
     device = "cpu" if args.cpu else ("cuda" if torch.cuda.is_available() else "cpu")
     print(f"🖥️  Device: {device}\n")
 
-    enc = tiktoken.get_encoding("gpt2")
+    enc = get_gpt2_encoding()
 
     # ─── Modo diagnóstico ───
     if args.diagnose:

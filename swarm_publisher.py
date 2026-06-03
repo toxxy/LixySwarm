@@ -180,9 +180,14 @@ def collect_status() -> dict:
         "protocol": "LSP v2",
         "wire_format": "LYSW",
         "identity": "Ed25519",
+        "identity_persistent": (CHECKPOINT_DIR / "lsp_identity.pem").exists(),
         "status": "active",
         "float16": True,
         "merge_on_transit": True,
+        "internet": {
+            "ready": bool(os.environ.get("LIXYSWARM_PUBLIC_HOST") or os.environ.get("LIXYSWARM_VPS_HOST")),
+            "mode": "relay/public-host" if (os.environ.get("LIXYSWARM_PUBLIC_HOST") or os.environ.get("LIXYSWARM_VPS_HOST")) else "lan-only",
+        },
     }
 
     # ─── Auto-training loop ──────────────────────────────────────────────────────
@@ -199,6 +204,7 @@ def collect_status() -> dict:
             "last_checkpoint":   auto_state.get("last_checkpoint"),
             # Últimos 5 ciclos para graficar tendencia
             "recent_history":    history[-5:] if history else [],
+            "last_hunger":       auto_state.get("last_hunger"),
             "last_updated":      auto_state.get("last_updated"),
         }
     else:

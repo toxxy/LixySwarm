@@ -48,7 +48,7 @@ import signal
 import logging
 import argparse
 from pathlib import Path
-from dataclasses import dataclass, asdict
+from dataclasses import dataclass, asdict, replace
 from typing import Optional
 
 # ─── Config ───────────────────────────────────────────────────────────────────
@@ -87,6 +87,24 @@ class AutoTrainConfig:
 
     # Keeper checkpoints (últimos N ciclos)
     keep_last_n: int = 3
+
+    # Metabolic Hunger (opt-in)
+    metabolic_hunger: bool = False
+    hunger_light: float = 0.45
+    hunger_heavy: float = 0.75
+    hunger_satiated: float = 0.25
+    confidence_threshold: float = 0.55
+    swarm_diversity: Optional[float] = None
+    mean_confidence: Optional[float] = None
+
+
+@dataclass
+class HungerDecision:
+    score: float
+    level: str
+    should_train: bool
+    recommended_steps: int
+    signals: dict
 
 
 STATE_FILE = "checkpoints/training_state.json"
@@ -151,6 +169,82 @@ def check_plateau(state: dict, new_val_loss: float, cfg: AutoTrainConfig) -> tup
     state["lr_current"] = lr
     return not improved, lr
 
+
+def compute_metabolic_hunger(state: dict, cfg: AutoTrainConfig) -> HungerDecision:
+    """
+    Calcula el hambre metabólica del enjambre.
+
+    H(t) combina plateau, diversidad, confianza y tendencia reciente de loss.
+    No lanza entrenamiento por sí sola; solo decide si un ciclo debe correr y
+    cuántos steps conviene usar.
+    """
+    plateau_patience = max(1, cfg.plateau_patience)
+    plateau_signal = min(1.0, state.get("plateau_count", 0) / plateau_patience)
+
+    diversity = cfg.swarm_diversity
+    diversity_signal = 0.5 if diversity is None else max(0.0, min(1.0, 1.0 - diversity))
+
+    confidence = cfg.mean_confidence
+    if confidence is None:
+        confidence_signal = 0.0
+    else:
+        confidence_signal = max(
+            0.0,
+            min(1.0, (cfg.confidence_threshold - confidence) / max(cfg.confidence_threshold, 1e-6)),
+        )
+
+    history = state.get("cycle_history", [])
+    if len(history) >= 2:
+        prev_loss = float(history[-2][2])
+        last_loss = float(history[-1][2])
+        loss_delta = last_loss - prev_loss
+        loss_signal = max(0.0, min(1.0, loss_delta / max(abs(prev_loss), 1e-6) * 20.0))
+    elif state.get("best_val_loss", float("inf")) == float("inf"):
+        loss_signal = 1.0
+    else:
+        loss_signal = 0.3
+
+    weights = {"plateau": 0.35, "diversity": 0.25, "confidence": 0.20, "loss": 0.20}
+    score = (
+        weights["plateau"] * plateau_signal
+        + weights["diversity"] * diversity_signal
+        + weights["confidence"] * confidence_signal
+        + weights["loss"] * loss_signal
+    )
+    score = max(0.0, min(1.0, score))
+    if not state.get("cycle_history") and state.get("total_steps", 0) == 0:
+        score = max(score, cfg.hunger_light)
+
+    if score >= cfg.hunger_heavy:
+        level = "meal"
+        recommended_steps = max(cfg.chunk_steps, min(10000, cfg.chunk_steps * 5))
+        should_train = True
+    elif score >= cfg.hunger_light:
+        level = "snack"
+        recommended_steps = max(500, min(1000, cfg.chunk_steps))
+        should_train = True
+    elif score <= cfg.hunger_satiated:
+        level = "satiated"
+        recommended_steps = 0
+        should_train = False
+    else:
+        level = "watch"
+        recommended_steps = cfg.chunk_steps
+        should_train = False
+
+    return HungerDecision(
+        score=score,
+        level=level,
+        should_train=should_train,
+        recommended_steps=recommended_steps,
+        signals={
+            "plateau": plateau_signal,
+            "diversity": diversity_signal,
+            "confidence": confidence_signal,
+            "loss": loss_signal,
+        },
+    )
+
 # ─── Red P2P (opcional) ───────────────────────────────────────────────────────
 
 def maybe_start_network(cfg: AutoTrainConfig):
@@ -159,9 +253,9 @@ def maybe_start_network(cfg: AutoTrainConfig):
         return None
     try:
         from src.network.swarm_network import SwarmNetwork
-        net = SwarmNetwork.create(swarm=None, mode="lan", protocol="v1")
+        net = SwarmNetwork.create(swarm=None, mode="lan", protocol="v2")
         net.start()
-        print(f"  🌐 Red P2P activa — modo LAN")
+        print(f"  🌐 Red P2P activa — modo LAN/LSP v2")
         return net
     except Exception as e:
         print(f"  ⚠️  Red P2P no disponible: {e}")
@@ -341,6 +435,12 @@ def main():
     parser.add_argument("--spanish", action="store_true")
     parser.add_argument("--triple", action="store_true")
     parser.add_argument("--network", action="store_true", help="Activar red P2P")
+    parser.add_argument("--metabolic-hunger", action="store_true",
+                        help="Activar decisión de entrenamiento por hambre metabólica")
+    parser.add_argument("--swarm-diversity", type=float, default=None,
+                        help="Diversidad actual [0,1] para hambre metabólica")
+    parser.add_argument("--mean-confidence", type=float, default=None,
+                        help="Confianza media reciente [0,1] para hambre metabólica")
     parser.add_argument("--plateau-patience", type=int, default=3)
     parser.add_argument("--keep-last", type=int, default=3,
                         help="Mantener últimos N checkpoints de ciclo")
@@ -380,6 +480,9 @@ def main():
         plateau_patience=args.plateau_patience,
         keep_last_n=args.keep_last,
         network=args.network,
+        metabolic_hunger=args.metabolic_hunger,
+        swarm_diversity=args.swarm_diversity,
+        mean_confidence=args.mean_confidence,
     )
 
     # ─── Estado ───
@@ -424,8 +527,22 @@ def main():
             print(f"\n✅ {cfg.max_cycles} ciclos completados — auto-training terminado")
             break
 
+        cycle_cfg = cfg
+        if cfg.metabolic_hunger:
+            hunger = compute_metabolic_hunger(state, cfg)
+            state["last_hunger"] = asdict(hunger)
+            print(
+                f"\n🍽️  Hambre metabólica: {hunger.score:.2f} [{hunger.level}] "
+                f"signals={hunger.signals}"
+            )
+            if not hunger.should_train:
+                print("   → Saciado/observando: no se inicia ciclo de training.")
+                save_state(state, args.state_file)
+                break
+            cycle_cfg = replace(cfg, chunk_steps=hunger.recommended_steps)
+
         # Ejecutar ciclo
-        val_loss = run_cycle(cycle_n, state, cfg, net)
+        val_loss = run_cycle(cycle_n, state, cycle_cfg, net)
 
         if val_loss is None:
             print(f"⚠️  Ciclo {cycle_n} sin val_loss válido — reintentando en el siguiente ciclo")
@@ -435,7 +552,7 @@ def main():
             continue
 
         # Actualizar estado
-        state["total_steps"] += cfg.chunk_steps
+        state["total_steps"] += cycle_cfg.chunk_steps
         state["cycles_completed"] = cycle_n
         state["last_checkpoint"] = f"swarm_auto_cycle{cycle_n}.pt"
         state["last_updated"] = time.time()
@@ -445,7 +562,7 @@ def main():
         state["lr_current"] = new_lr
 
         # Historial
-        state["cycle_history"].append([cycle_n, cfg.chunk_steps, val_loss, new_lr])
+        state["cycle_history"].append([cycle_n, cycle_cfg.chunk_steps, val_loss, new_lr])
         # Mantener solo últimos 50 para no crecer infinito
         if len(state["cycle_history"]) > 50:
             state["cycle_history"] = state["cycle_history"][-50:]

@@ -39,6 +39,9 @@
     .card .value { font-size: 2rem; font-weight: 700; color: #4CAF50; }
     .card .unit { font-size: 0.8rem; color: #555; margin-left: 4px; }
     .card .sub { font-size: 0.8rem; color: #444; margin-top: 6px; }
+    .card.accent-blue { border-color: #1a4a5a; }
+    .card.accent-amber { border-color: #5a441a; }
+    .card .value.small { font-size: 1.35rem; }
     .section-title {
       font-size: 0.85rem; color: #555; text-transform: uppercase;
       letter-spacing: 1px; padding: 0 24px; margin: 16px 0 12px;
@@ -108,13 +111,42 @@
     .autoloop-card .al-label { font-size: 0.7rem; color: #4CAF50; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; }
     .autoloop-card .al-value { font-size: 1.4rem; font-weight: 700; color: #fff; }
     .autoloop-card .al-sub { font-size: 0.75rem; color: #444; margin-top: 3px; }
+    .hunger-pill {
+      display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px;
+      border-radius: 999px; border: 1px solid #2a4a2a; background: #0f1a0f;
+      color: #4CAF50; font-size: 0.8rem; font-weight: 700;
+    }
+    .hunger-pill.watch { color:#FFB74D; border-color:#5a441a; background:#1f180d; }
+    .hunger-pill.meal { color:#FF7043; border-color:#5a2a1a; background:#21110d; }
+    .hunger-pill.satiated { color:#7986CB; border-color:#2a2a4a; background:#111126; }
+    .signal-stack { display: grid; gap: 6px; margin-top: 8px; }
+    .signal-row { display: grid; grid-template-columns: 72px 1fr 36px; align-items:center; gap: 8px; font-size: 0.72rem; color:#555; }
+    .signal-track { height: 5px; background:#1a1a1a; border-radius:999px; overflow:hidden; }
+    .signal-fill { height:100%; background:#4CAF50; border-radius:999px; }
     .trend-bar { display: flex; align-items: flex-end; gap: 3px; height: 36px; margin-top: 8px; }
     .trend-bar .bar { flex: 1; background: #2a4a2a; border-radius: 3px 3px 0 0; min-height: 4px; transition: height 0.3s; }
+    /* Capacidades */
+    .capability-card {
+      margin: 0 24px 24px; background: #111; border: 1px solid #2a2a2a;
+      border-radius: 12px; padding: 20px;
+    }
+    .cap-grid { display:grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 12px; }
+    .cap-item { border:1px solid #1e1e1e; border-radius:10px; padding:14px; background:#0e0e0e; }
+    .cap-item.ok { border-color:#2a4a2a; }
+    .cap-item.warn { border-color:#5a441a; }
+    .cap-title { font-size:0.72rem; text-transform:uppercase; letter-spacing:1px; color:#555; margin-bottom:6px; }
+    .cap-value { font-size:1.05rem; font-weight:700; color:#fff; }
+    .cap-sub { font-size:0.75rem; color:#555; margin-top:5px; line-height:1.35; }
     /* Badges */
     .readonly-badge {
       display: inline-block; background: #1a1a1a; border: 1px solid #2a2a2a;
       color: #555; font-size: 0.7rem; padding: 3px 10px; border-radius: 20px; margin-left: auto;
     }
+    .fresh-badge {
+      display: inline-block; background: #0f1a0f; border: 1px solid #2a4a2a;
+      color: #4CAF50; font-size: 0.7rem; padding: 3px 10px; border-radius: 20px;
+    }
+    .fresh-badge.stale { background:#1f180d; border-color:#5a441a; color:#FFB74D; }
     .badge-v2 {
       display: inline-block; background: #0d1f2d; border: 1px solid #1a4a5a;
       color: #4FC3F7; font-size: 0.65rem; padding: 2px 8px; border-radius: 10px;
@@ -128,6 +160,7 @@
       <div class="subtitle">Monitor de red en tiempo real</div>
     </div>
     <span class="readonly-badge">👁️ Solo lectura</span>
+    <span class="fresh-badge" id="freshness">Estado: —</span>
     <div class="updated" id="updated">Actualizando...</div>
   </header>
 
@@ -162,6 +195,16 @@
       <div class="card-title">Training</div>
       <div class="value" id="step">—</div>
       <div class="sub" id="training-sub">Paso actual</div>
+    </div>
+    <div class="card accent-amber">
+      <div class="card-title">Hambre metabólica</div>
+      <div class="value small" id="hunger-card">—</div>
+      <div class="sub" id="hunger-card-sub">Opt-in en auto_train</div>
+    </div>
+    <div class="card accent-blue">
+      <div class="card-title">Alcance de red</div>
+      <div class="value small" id="internet-card">LAN</div>
+      <div class="sub" id="internet-card-sub">Internet requiere relay/IP pública</div>
     </div>
   </div>
 
@@ -220,6 +263,12 @@
       <div class="al-value" id="al-lr">—</div>
       <div class="al-sub" id="al-plateau-sub">Plateau: 0 ciclos</div>
     </div>
+    <div class="al-info" style="flex:1.4;min-width:190px">
+      <div class="al-label">Hambre metabólica</div>
+      <div class="al-value"><span class="hunger-pill" id="al-hunger-level">—</span></div>
+      <div class="al-sub" id="al-hunger-sub">Ejecuta con --metabolic-hunger</div>
+      <div class="signal-stack" id="al-hunger-signals"></div>
+    </div>
     <div class="al-info" style="flex:2;min-width:160px">
       <div class="al-label">Tendencia val_loss (últimos 5 ciclos)</div>
       <div class="trend-bar" id="al-trend"></div>
@@ -232,18 +281,18 @@
   <div class="lsp-card">
     <div class="lsp-info">
       <div class="lsp-label">Protocolo</div>
-      <div class="lsp-value">LSP v2</div>
-      <div class="lsp-sub">Wire format binario · 528B/feromon</div>
+      <div class="lsp-value" id="lsp-protocol">LSP v2</div>
+      <div class="lsp-sub" id="lsp-wire">Wire format binario · 528B/feromon</div>
     </div>
     <div class="lsp-info">
-      <div class="lsp-label">Compresión</div>
-      <div class="lsp-value">float16</div>
-      <div class="lsp-sub">256d · 5× vs JSON</div>
+      <div class="lsp-label">Identidad</div>
+      <div class="lsp-value" id="lsp-identity">Ed25519</div>
+      <div class="lsp-sub" id="lsp-identity-sub">Persistente si existe cache</div>
     </div>
     <div class="lsp-info">
       <div class="lsp-label">Merge-on-transit</div>
-      <div class="lsp-value">✅</div>
-      <div class="lsp-sub">fitness-weighted · TTL decay</div>
+      <div class="lsp-value" id="lsp-merge">✅</div>
+      <div class="lsp-sub" id="lsp-merge-sub">fitness-weighted · TTL decay</div>
     </div>
     <div class="lsp-info">
       <div class="lsp-label">Feromonas recibidas</div>
@@ -252,6 +301,17 @@
     </div>
   </div>
   <div class="nodes-grid" id="network-grid"></div>
+
+  <div class="section-title">🧭 Capacidades reales de conexión</div>
+  <div class="capability-card">
+    <div class="cap-grid" id="capability-grid">
+      <div class="cap-item warn">
+        <div class="cap-title">Internet</div>
+        <div class="cap-value">Evaluando...</div>
+        <div class="cap-sub">El panel mostrará si falta relay/IP pública.</div>
+      </div>
+    </div>
+  </div>
 
   <!-- Agentes -->
   <div class="section-title">🐜 Especialización del Enjambre</div>
@@ -269,6 +329,14 @@
         const net = d.network   || {};
         const met = d.metrics   || {};
         const mat = d.matriarca || {};
+        const lsp = d.lsp || net.lsp || {};
+        const internet = net.internet || lsp.internet || {};
+
+        const freshEl = document.getElementById("freshness");
+        if (freshEl) {
+          freshEl.textContent = d.data_fresh ? "Estado fresco" : "Estado stale";
+          freshEl.className = "fresh-badge" + (d.data_fresh ? "" : " stale");
+        }
 
         // Métricas principales
         const nNodes = net.connected_count ?? 1;
@@ -311,48 +379,11 @@
           set("sects-sub", roles.join(" · "));
         }
 
-        // Auto-loop
-        const al = d.auto_loop;
-        if (al) {
-          set("al-cycles", al.cycles_completed != null ? al.cycles_completed : "—");
-          set("al-steps",  al.total_steps != null ? al.total_steps.toLocaleString() : "—");
-          set("al-best-loss", al.best_val_loss != null && isFinite(al.best_val_loss) ? al.best_val_loss.toFixed(4) : "—");
-          // LR en notación científica corta
-          if (al.lr_current != null) {
-            const lr = al.lr_current;
-            set("al-lr", lr < 0.001 ? lr.toExponential(1) : lr.toFixed(5));
-          }
-          const plateau = al.plateau_count ?? 0;
-          set("al-plateau-sub", `Plateau: ${plateau} ciclo${plateau === 1 ? "" : "s"}`);
-          // Tendencia
-          const hist = al.recent_history || [];
-          if (hist.length) {
-            const losses = hist.map(h => h[2]).filter(v => v != null && isFinite(v));
-            if (losses.length) {
-              const maxL = Math.max(...losses);
-              const minL = Math.min(...losses);
-              const range = maxL - minL || 0.01;
-              const trend = document.getElementById("al-trend");
-              if (trend) {
-                trend.innerHTML = losses.map(l => {
-                  const h = Math.max(4, Math.round(36 * (maxL - l) / range));
-                  const color = l === Math.min(...losses) ? "#4CAF50" : "#2a4a2a";
-                  return `<div class="bar" style="height:${h}px;background:${color}" title="loss=${l.toFixed(4)}"></div>`;
-                }).join("");
-              }
-              set("al-trend-vals", losses.map(l => l.toFixed(4)).join(" → "));
-            }
-          }
-          document.getElementById("autoloop-card").style.borderColor = "#2a4a2a";
-        } else {
-          set("al-cycles", "No iniciado");
-          set("al-steps", "—");
-          set("al-best-loss", "—");
-          set("al-lr", "—");
-          set("al-plateau-sub", "python3 auto_train.py");
-        }
+        renderAutoLoop(d.auto_loop);
+        updateLsp(lsp, net);
+        renderCapabilities(lsp, internet, net);
 
-        if (d.network) renderNetwork(d.network.nodes, d.network.protocol);
+        if (d.network) renderNetwork(d.network.nodes, d.network.protocol || lsp.protocol);
         if (d.agents && d.agents.length) renderAgents(d.agents);
 
         const ts = d.last_update ? new Date(d.last_update) : new Date();
@@ -362,18 +393,154 @@
 
     function set(id, val) { const el = document.getElementById(id); if (el) el.textContent = val; }
 
+    function renderAutoLoop(al) {
+      if (al) {
+        set("al-cycles", al.cycles_completed != null ? al.cycles_completed : "—");
+        set("al-steps",  al.total_steps != null ? al.total_steps.toLocaleString() : "—");
+        set("al-best-loss", al.best_val_loss != null && isFinite(al.best_val_loss) ? al.best_val_loss.toFixed(4) : "—");
+        if (al.lr_current != null) {
+          const lr = al.lr_current;
+          set("al-lr", lr < 0.001 ? lr.toExponential(1) : lr.toFixed(5));
+        }
+        const plateau = al.plateau_count ?? 0;
+        set("al-plateau-sub", `Plateau: ${plateau} ciclo${plateau === 1 ? "" : "s"}`);
+        renderHunger(al.last_hunger);
+        renderLossTrend(al.recent_history || []);
+        document.getElementById("autoloop-card").style.borderColor = "#2a4a2a";
+      } else {
+        set("al-cycles", "No iniciado");
+        set("al-steps", "—");
+        set("al-best-loss", "—");
+        set("al-lr", "—");
+        set("al-plateau-sub", "python3 auto_train.py");
+        renderHunger(null);
+      }
+    }
+
+    function renderHunger(hunger) {
+      const pill = document.getElementById("al-hunger-level");
+      const signals = document.getElementById("al-hunger-signals");
+      if (!hunger) {
+        set("hunger-card", "No activa");
+        set("hunger-card-sub", "Usa --metabolic-hunger");
+        if (pill) {
+          pill.className = "hunger-pill watch";
+          pill.textContent = "observando";
+        }
+        set("al-hunger-sub", "Sin decisión registrada todavía");
+        if (signals) signals.innerHTML = "";
+        return;
+      }
+
+      const level = hunger.level || "watch";
+      const score = Number(hunger.score || 0);
+      const steps = hunger.recommended_steps || 0;
+      const label = `${level} · ${score.toFixed(2)}`;
+      set("hunger-card", label);
+      set("hunger-card-sub", hunger.should_train ? `${steps.toLocaleString()} steps sugeridos` : "Pausa recomendada");
+      if (pill) {
+        pill.className = "hunger-pill " + level;
+        pill.textContent = hunger.should_train ? `🍽️ ${label}` : `💤 ${label}`;
+      }
+      set("al-hunger-sub", hunger.should_train ? `${steps.toLocaleString()} steps en el próximo ciclo` : "Saciado / observando");
+      if (signals) {
+        signals.innerHTML = Object.entries(hunger.signals || {}).map(([name, raw]) => {
+          const val = Math.max(0, Math.min(1, Number(raw || 0)));
+          return `<div class="signal-row">
+            <span>${escapeHtml(name)}</span>
+            <div class="signal-track"><div class="signal-fill" style="width:${Math.round(val * 100)}%"></div></div>
+            <span>${val.toFixed(2)}</span>
+          </div>`;
+        }).join("");
+      }
+    }
+
+    function renderLossTrend(hist) {
+      const losses = hist.map(h => h[2]).filter(v => v != null && isFinite(v));
+      const trend = document.getElementById("al-trend");
+      if (!losses.length) {
+        if (trend) trend.innerHTML = "";
+        set("al-trend-vals", "Sin historial suficiente");
+        return;
+      }
+      const maxL = Math.max(...losses);
+      const minL = Math.min(...losses);
+      const range = maxL - minL || 0.01;
+      if (trend) {
+        trend.innerHTML = losses.map(l => {
+          const h = Math.max(4, Math.round(36 * (maxL - l) / range));
+          const color = l === minL ? "#4CAF50" : "#2a4a2a";
+          return `<div class="bar" style="height:${h}px;background:${color}" title="loss=${l.toFixed(4)}"></div>`;
+        }).join("");
+      }
+      set("al-trend-vals", losses.map(l => l.toFixed(4)).join(" → "));
+    }
+
+    function updateLsp(lsp, net) {
+      const protocol = lsp.protocol || net.protocol || "LSP v2";
+      set("lsp-protocol", protocol);
+      set("lsp-wire", `${lsp.wire_format || "LYSW"} · ${lsp.float16 !== false ? "float16" : "float32"} · binario`);
+      set("lsp-identity", lsp.identity || "Ed25519");
+      set("lsp-identity-sub", lsp.identity_persistent ? "Identidad persistente en checkpoints" : "Se creará al iniciar la red");
+      set("lsp-merge", lsp.merge_on_transit === false ? "—" : "✅");
+      set("lsp-merge-sub", lsp.merge_on_transit === false ? "No reportado" : "fitness-weighted · TTL decay");
+      const ports = lsp.ports || {};
+      set("feromons-sub", ports.v2_feromon_udp ? `UDP ${ports.v2_feromon_udp}` : "UDP v2");
+    }
+
+    function renderCapabilities(lsp, internet, net) {
+      const grid = document.getElementById("capability-grid");
+      if (!grid) return;
+      const ports = lsp.ports || {};
+      const connected = net.connected_count || 0;
+      const internetReady = !!internet.ready;
+      set("internet-card", internetReady ? "WAN listo" : "LAN");
+      set("internet-card-sub", internetReady ? "Relay/IP pública configurado" : "Internet requiere relay/IP pública");
+
+      const requires = (internet.requires || []).join(" · ");
+      grid.innerHTML = `
+        <div class="cap-item ok">
+          <div class="cap-title">Misma LAN</div>
+          <div class="cap-value">Sí, automático</div>
+          <div class="cap-sub">${escapeHtml(lsp.discovery || "mDNS LAN automático")} · peers vivos: ${connected}</div>
+        </div>
+        <div class="cap-item ${internetReady ? "ok" : "warn"}">
+          <div class="cap-title">Internet / otra casa</div>
+          <div class="cap-value">${internetReady ? "Config detectable" : "No automático"}</div>
+          <div class="cap-sub">${internetReady ? "Hay relay o host público en entorno." : escapeHtml(requires || "Necesita VPS relay, IP pública o port-forwarding.")}</div>
+        </div>
+        <div class="cap-item ok">
+          <div class="cap-title">Puertos</div>
+          <div class="cap-value">LSP v2</div>
+          <div class="cap-sub">UDP ${ports.v2_feromon_udp || 4454} feromonas · TCP ${ports.v2_gossip_tcp || 4455} gossip</div>
+        </div>
+        <div class="cap-item warn">
+          <div class="cap-title">Pendiente WAN completo</div>
+          <div class="cap-value">Relay de feromonas</div>
+          <div class="cap-sub">El chat/status vía VPS existe; el descubrimiento P2P global aún requiere configuración explícita.</div>
+        </div>
+      `;
+    }
+
     function renderSects(sects) {
       const grid = document.getElementById("sects-grid");
-      if (!grid || !sects.length) return;
+      if (!grid) return;
+      if (!sects || !sects.length) {
+        grid.innerHTML = `<div class="sect-card" style="color:#444;font-size:0.85rem;">Sin sectas activas reportadas todavía.</div>`;
+        return;
+      }
       grid.innerHTML = sects.map(s => {
         const alive = s.alive !== false;
-        const icon = s.role_type === "explorador" ? "🟢" : s.role_type === "refinador" ? "🔵" : "⚪";
+        const role = s.role_type || "?";
+        const icon = role.includes("explorador") ? "🟢" : role.includes("refinador") ? "🔵" : role.includes("delf") ? "🐬" : "⚪";
         const modeColor = s.contribution_mode === "relay" ? "#7986CB" : s.contribution_mode === "moderate" ? "#FFB74D" : "#4CAF50";
         return `<div class="sect-card ${alive ? 'sect-alive' : 'sect-legacy'}">
-          <div class="sect-role" style="color:${modeColor}">${icon} ${s.role_type || "?"}</div>
+          <div class="sect-role" style="color:${modeColor}">${icon} ${escapeHtml(role)}</div>
           <div class="sect-fitness">${s.avg_fitness != null ? s.avg_fitness.toFixed(3) : "—"}</div>
           <div class="sect-meta">Agentes: ${s.n_agents ?? "?"} · Peak: ${s.n_agents_peak ?? "?"}</div>
           ${s.contribution_mode ? `<div class="sect-meta" style="color:${modeColor}">${s.contribution_mode}</div>` : ""}
+          ${s.parent_sect_id ? `<div class="sect-meta">↳ hija de ${escapeHtml(s.parent_sect_id)}</div>` : ""}
+          ${s.children_sect_ids && s.children_sect_ids.length ? `<div class="sect-meta">Bifurcó: ${s.children_sect_ids.length} hija(s)</div>` : ""}
           ${!alive ? `<div class="sect-meta" style="color:#555">⚰️ Legado preservado</div>` : ""}
         </div>`;
       }).join("");
@@ -419,11 +586,24 @@
 
     function renderNetwork(nodes, protocol) {
       const grid = document.getElementById("network-grid");
-      if (!grid || !nodes || !nodes.length) return;
+      if (!grid) return;
+      if (!nodes || !nodes.length) {
+        grid.innerHTML = `<div class="node-card">
+          <div class="node-header">
+            <span>💻</span>
+            <span class="node-name">Nodo local</span>
+            <span class="node-mode mode-maximum">local</span>
+          </div>
+          <div style="font-size:1.2rem;color:#4CAF50;font-weight:700">sin peers</div>
+          <div style="font-size:0.8rem;color:#444;margin-top:4px">Arranca otra PC en la misma LAN para descubrir peers.</div>
+          <div style="font-size:0.75rem;color:#4FC3F7;margin-top:6px">${escapeHtml(protocol || "LSP v2")} <span class="badge-v2">v2</span></div>
+        </div>`;
+        return;
+      }
       grid.innerHTML = nodes.map(n => {
         const isVps = n.role === "vps-relay";
         const icon = isVps ? "🌐" : "💻";
-        const label = isVps ? "VPS Relay" : "Nodo Local (GPU)";
+        const label = isVps ? "VPS Relay" : (n.self ? "Nodo actual" : "Nodo remoto");
         const id = (n.node_id || "?").slice(0,8) + "...";
         const step = n.step ? ` · step ${n.step.toLocaleString()}` : "";
         const mode = n.contribution_mode || "maximum";
@@ -436,11 +616,21 @@
             <span class="node-mode ${modeCls}">${mode}</span>
           </div>
           <div style="font-size:1.2rem;color:#4CAF50;font-weight:700">${id}</div>
-          <div style="font-size:0.8rem;color:#444;margin-top:4px">${n.host || "local"}${step}</div>
+          <div style="font-size:0.8rem;color:#444;margin-top:4px">${escapeHtml(n.host || "local")}${step}</div>
           ${gpuFrac ? `<div style="font-size:0.75rem;color:#555;margin-top:4px">${gpuFrac} · ${n.effective_sect_capacity ?? "?"} sectas máx</div>` : ""}
-          <div style="font-size:0.75rem;color:#4FC3F7;margin-top:6px">${protocol || "LSP v2"} <span class="badge-v2">v2</span></div>
+          <div style="font-size:0.75rem;color:#4FC3F7;margin-top:6px">${escapeHtml(protocol || "LSP v2")} <span class="badge-v2">v2</span></div>
         </div>`;
       }).join("");
+    }
+
+    function escapeHtml(value) {
+      return String(value ?? "").replace(/[&<>"']/g, c => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        "\"": "&quot;",
+        "'": "&#39;",
+      }[c]));
     }
 
     loadStatus();

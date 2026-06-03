@@ -74,6 +74,7 @@ class SectRecord:
     parent_sect_id: Optional[str] = None
     children_sect_ids: List[str] = field(default_factory=list)
     n_agents_peak: int = 0                             # máx agentes que tuvo
+    bifurcated_at: Optional[float] = None
 
     # Ciclo de vida
     LOW_FITNESS_THRESHOLD: float = 0.3
@@ -245,6 +246,14 @@ class SectManager:
 
         # 3. Spawn si diversidad baja y hay recursos
         if swarm_diversity < self.DIVERSITY_THRESHOLD:
+            # Primero permitir bifurcación de sectas fuertes: refinador →
+            # refinador-logico + refinador-creativo, etc.
+            for sect in list(self._sects.values()):
+                event = self._maybe_bifurcate(sect, swarm_diversity)
+                if event:
+                    events.append(event)
+                    return events
+
             # Intentar spawnear el rol menos representado
             role = self._most_needed_role()
             new_sect = self.spawn_sect(role)
@@ -314,6 +323,49 @@ class SectManager:
                 return role
         # Todos presentes → spawnear explorador (máxima diversidad)
         return "explorador"
+
+    def _maybe_bifurcate(self, sect: SectRecord, swarm_diversity: float) -> Optional[dict]:
+        """Bifurca una secta madura si la Matriarca lo recomienda."""
+        if sect.bifurcated_at is not None or self.matriarca is None:
+            return None
+        if sect.avg_fitness <= 0.6:
+            return None
+        if not hasattr(self.matriarca, "suggest_bifurcation"):
+            return None
+
+        suggestion = self.matriarca.suggest_bifurcation(sect, swarm_diversity=swarm_diversity)
+        if not suggestion.get("should_bifurcate"):
+            return None
+
+        child_roles = suggestion.get("child_roles", [])[:2]
+        children = []
+        for role in child_roles:
+            child = self.spawn_sect(role, priority=max(sect.priority * 0.9, 0.4))
+            if child is None:
+                continue
+            child.parent_sect_id = sect.sect_id
+            sect.children_sect_ids.append(child.sect_id)
+            children.append(child.sect_id)
+
+        if not children:
+            return None
+
+        sect.bifurcated_at = time.time()
+        if hasattr(self.matriarca, "store_sect_legacy"):
+            self.matriarca.store_sect_legacy(
+                sect,
+                reason="bifurcation",
+                swarm_diversity=swarm_diversity,
+            )
+
+        return {
+            "type": "sect_bifurcation",
+            "sect_id": sect.sect_id,
+            "role_type": sect.role_type,
+            "children": children,
+            "reason": suggestion.get("reason", "matriarca_suggestion"),
+            "confidence": suggestion.get("confidence", 0.0),
+        }
 
     def _store_sect_legacy(self, sect: SectRecord, reason: str):
         """Guarda el legado de una secta en la Matriarca."""

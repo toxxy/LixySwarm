@@ -448,6 +448,31 @@ class Matriarca:
             if n_removed > 0:
                 print(f"  🗃️ Matriarca: compresión generacional — {n_removed} memorias → sintéticas")
 
+    def add(self, embedding: torch.Tensor, text: str, importance: float = 1.0):
+        """
+        Agrega un embedding ya codificado al banco de memorias.
+
+        Algunos gestores de legado (nodos, sectas, hormigas) ya construyen un
+        vector en el espacio `embd_dim`; esta API mantiene ese camino directo
+        sin pasarlo otra vez por `memory_encoder`.
+        """
+        embedding = embedding.detach().to(self.device).float()
+        if embedding.dim() > 1:
+            embedding = embedding.mean(dim=0)
+
+        if embedding.shape[0] != self.cfg.embd_dim:
+            if embedding.shape[0] < self.cfg.embd_dim:
+                embedding = F.pad(embedding, (0, self.cfg.embd_dim - embedding.shape[0]))
+            else:
+                embedding = embedding[:self.cfg.embd_dim]
+
+        self.bank.add(embedding, text, importance)
+
+        if self.bank.size >= self.cfg.max_memories * 0.9:
+            n_removed = self.bank.compress(compression_ratio=0.5)
+            if n_removed > 0:
+                print(f"  🗃️ Matriarca: compresión generacional — {n_removed} memorias → sintéticas")
+
     def penalize_unused(
         self,
         top_k_used: torch.Tensor,

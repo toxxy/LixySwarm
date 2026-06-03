@@ -49,6 +49,23 @@ class MockMatriarca:
         return torch.stack(self._embeddings).to(device)
 
 
+class BifurcatingMatriarca(MockMatriarca):
+    def __init__(self, embd_dim=64):
+        super().__init__(embd_dim=embd_dim)
+        self.legacy_calls = []
+
+    def suggest_bifurcation(self, sect, swarm_diversity: float):
+        return {
+            "should_bifurcate": True,
+            "child_roles": ["refinador_logico", "refinador_creativo"],
+            "reason": "test_low_diversity",
+            "confidence": 0.91,
+        }
+
+    def store_sect_legacy(self, sect, reason: str, **kwargs):
+        self.legacy_calls.append({"sect_id": sect.sect_id, "reason": reason, **kwargs})
+
+
 # ─── Tests NodeManager ─────────────────────────────────────────────────────────
 
 def test_1_node_joins():
@@ -397,6 +414,41 @@ def test_14_relay_disconnects_sects():
     print(f"  ✓ RELAY limpió {3} sectas automáticamente")
 
 
+def test_15_sect_bifurcation():
+    """Test: diversidad baja + secta fuerte → bifurcación guiada por Matriarca."""
+    print("\n[Test 15] Bifurcación de secta")
+    from src.swarm.node_manager import NodeManager, HardwareProfile
+    from src.swarm.sect_manager import SectManager
+
+    mat = BifurcatingMatriarca(embd_dim=64)
+    nm = NodeManager()
+    nm.node_joined("beast", HardwareProfile(cpu_cores=32, ram_gb=128, gpu_vram_gb=80, has_gpu=True))
+
+    sm = SectManager(node_manager=nm, matriarca=mat)
+    parent = sm.spawn_sect("refinador", priority=0.9)
+    assert parent is not None
+    slot = sm.add_agent_to_sect(parent.sect_id, "beast")
+    assert slot is not None
+    sm.update_agent_fitness(parent.sect_id, slot.agent_id, 0.92)
+
+    events = sm.tick(step=1000, swarm_diversity=0.1)
+    bifurcations = [e for e in events if e["type"] == "sect_bifurcation"]
+
+    assert len(bifurcations) == 1, f"Se esperaba bifurcación, got {events}"
+    event = bifurcations[0]
+    assert event["sect_id"] == parent.sect_id
+    assert len(event["children"]) >= 1
+    assert parent.bifurcated_at is not None
+    assert len(parent.children_sect_ids) == len(event["children"])
+    assert mat.legacy_calls and mat.legacy_calls[0]["reason"] == "bifurcation"
+
+    child = sm.get_sect(event["children"][0])
+    assert child is not None
+    assert child.parent_sect_id == parent.sect_id
+    print(f"  ✓ Padre: {parent.sect_id} → hijas={event['children']}")
+    print(f"  ✓ Legado guardado: {mat.legacy_calls[0]}")
+
+
 # ─── Main ──────────────────────────────────────────────────────────────────────
 
 if __name__ == "__main__":
@@ -415,6 +467,7 @@ if __name__ == "__main__":
         test_12_stats,
         test_13_contribution_mode,
         test_14_relay_disconnects_sects,
+        test_15_sect_bifurcation,
     ]
 
     passed = 0

@@ -939,10 +939,10 @@ if __name__ == "__main__":
     from pathlib import Path
     sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
-    import tiktoken
     from src.swarm.orchestrator import LixySwarm, SwarmConfig
+    from src.utils.tokenizer import get_gpt2_encoding
 
-    enc = tiktoken.get_encoding("gpt2")
+    enc = get_gpt2_encoding()
     device = "cuda" if torch.cuda.is_available() else "cpu"
 
     cfg = SwarmConfig(n_agents=3, swarm_rounds=2)

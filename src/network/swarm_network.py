@@ -74,6 +74,7 @@ class SwarmNetwork:
         feromon_port: int = 4444,
         gossip_port: int = 4445,
         checkpoint_dir: str = "checkpoints",
+        protocol: str = "v2",
     ) -> "SwarmNetwork":
         """
         Crea una SwarmNetwork.
@@ -83,7 +84,7 @@ class SwarmNetwork:
             identity = NodeIdentity.from_swarm(swarm, feromon_port=feromon_port, gossip_port=gossip_port)
         else:
             identity = NodeIdentity.generate_anonymous()
-        return cls(identity=identity, mode=mode, checkpoint_dir=checkpoint_dir, swarm=swarm)
+        return cls(identity=identity, mode=mode, checkpoint_dir=checkpoint_dir, swarm=swarm, protocol=protocol)
 
     # ─── Init ─────────────────────────────────────────────────────────────────
 
@@ -93,7 +94,7 @@ class SwarmNetwork:
         mode: str = "auto",
         checkpoint_dir: str = "checkpoints",
         swarm=None,
-        protocol: str = "v1",   # "v1" | "v2" — protocolo de feromonas (v2 es opt-in)
+        protocol: str = "v2",   # "v1" | "v2" — v2 es el protocolo preferido
     ):
         self.identity = identity
         self.mode = mode  # "local" | "lan" | "auto"
@@ -166,8 +167,7 @@ class SwarmNetwork:
             if self.protocol == "v2":
                 try:
                     from src.network.lsp_v2 import LSPNodeV2
-                    from src.network.lsp import LSPIdentity
-                    lsp_identity = LSPIdentity.generate()
+                    lsp_identity = self._load_or_create_lsp_identity()
                     # Puertos v2: offset +10 para no chocar con v1
                     self._lsp_v2_node = LSPNodeV2(
                         lsp_identity,
@@ -205,6 +205,17 @@ class SwarmNetwork:
         if self._lsp_v2_node:
             self._lsp_v2_node.stop()
         log.info("SwarmNetwork detenida")
+
+    def _load_or_create_lsp_identity(self):
+        """Carga identidad Ed25519 persistente para LSP v2, o la crea si falta."""
+        from src.network.lsp import LSPIdentity
+
+        identity_path = self.checkpoint_dir / "lsp_identity.pem"
+        identity = LSPIdentity.load(str(identity_path))
+        if identity is None:
+            identity = LSPIdentity.generate()
+            identity.save(str(identity_path))
+        return identity
 
     # ─── API principal ────────────────────────────────────────────────────────
 

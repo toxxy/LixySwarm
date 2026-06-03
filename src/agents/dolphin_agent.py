@@ -666,7 +666,7 @@ class DolphinSwarmBridge(nn.Module):
 # ─── Tests ────────────────────────────────────────────────────────────────────
 
 if __name__ == "__main__":
-    import tiktoken
+    from src.utils.tokenizer import get_gpt2_encoding
 
     print("🐬 Test DolphinAgent — Phase A\n")
     device = "cuda" if torch.cuda.is_available() else "cpu"
@@ -676,7 +676,7 @@ if __name__ == "__main__":
     dolphin = DolphinAgent(cfg, device=device).to(device)
     print()
 
-    enc = tiktoken.get_encoding("gpt2")
+    enc = get_gpt2_encoding()
 
     # ─── Test 1: Ecolocalización con 5 pings + acoustic_map ───
     print("─" * 60)

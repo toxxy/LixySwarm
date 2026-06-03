@@ -54,9 +54,9 @@ def test_inject_remote_feromon():
 
     from src.swarm.orchestrator import LixySwarm, SwarmConfig
     from src.swarm.runtime_session import RuntimeSession
-    import tiktoken
+    from src.utils.tokenizer import get_gpt2_encoding
 
-    enc = tiktoken.get_encoding("gpt2")
+    enc = get_gpt2_encoding()
     device = "cuda" if torch.cuda.is_available() else "cpu"
     cfg = SwarmConfig(n_agents=3, swarm_rounds=2)
     swarm = LixySwarm(cfg, load_matriarca=True).to(device)
@@ -110,9 +110,9 @@ def test_inject_dimension_mismatch():
 
     from src.swarm.orchestrator import LixySwarm, SwarmConfig
     from src.swarm.runtime_session import RuntimeSession
-    import tiktoken
+    from src.utils.tokenizer import get_gpt2_encoding
 
-    enc = tiktoken.get_encoding("gpt2")
+    enc = get_gpt2_encoding()
     device = "cuda" if torch.cuda.is_available() else "cpu"
     cfg = SwarmConfig(n_agents=3, swarm_rounds=2)
     swarm = LixySwarm(cfg, load_matriarca=True).to(device)
@@ -242,9 +242,9 @@ def test_reset_clears_injection():
 
     from src.swarm.orchestrator import LixySwarm, SwarmConfig
     from src.swarm.runtime_session import RuntimeSession
-    import tiktoken
+    from src.utils.tokenizer import get_gpt2_encoding
 
-    enc = tiktoken.get_encoding("gpt2")
+    enc = get_gpt2_encoding()
     device = "cuda" if torch.cuda.is_available() else "cpu"
     cfg = SwarmConfig(n_agents=3, swarm_rounds=2)
     swarm = LixySwarm(cfg, load_matriarca=True).to(device)

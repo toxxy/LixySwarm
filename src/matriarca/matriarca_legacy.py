@@ -286,7 +286,10 @@ class SectLegacyBank:
         if record.fitness_history:
             hist = torch.tensor(record.fitness_history[-16:], dtype=torch.float32)
             hist_padded = F.pad(hist, (0, max(0, 16 - len(hist))))
-            v[8:24] = hist_padded[:16]
+            available = max(0, self.embd_dim - 8)
+            if available:
+                n = min(16, available)
+                v[8:8 + n] = hist_padded[:n]
 
         return v
 
@@ -338,8 +341,8 @@ class MatriarcaDual:
     def emit_combined(
         self,
         state_embedding: torch.Tensor,
-        personal_weight: float = 0.4,
-        global_weight: float = 0.6,
+        personal_weight: float = 0.7,
+        global_weight: float = 0.3,
     ) -> torch.Tensor:
         """
         Emite infrasónidos combinando conocimiento personal y global.
