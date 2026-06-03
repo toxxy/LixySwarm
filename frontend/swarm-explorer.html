@@ -318,7 +318,11 @@
   <div class="agents-grid" id="agents-grid"></div>
 
   <script>
-    const API = window.LIXYSWARM_API || "http://localhost:8080/api";
+    const API = window.LIXYSWARM_API || (
+      window.location.protocol.startsWith("http")
+        ? window.location.origin + "/api"
+        : "http://localhost:8080/api"
+    );
 
     async function loadStatus() {
       try {
