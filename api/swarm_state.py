@@ -21,7 +21,10 @@ BASE           = Path(__file__).parent.parent
 STATUS_FILE    = BASE / "swarm_status.json"     # publicado por swarm_publisher.py
 NODE_LOG       = BASE / "node.log"
 TRAINING_STATE = BASE / "checkpoints" / "training_state.json"
-LSP_IDENTITY   = BASE / "checkpoints" / "lsp_identity.pem"
+LSP_IDENTITIES = [
+    BASE / "checkpoints" / "lsp_identity.pem",
+    BASE / ".lixyswarm" / "identity.key",
+]
 
 
 def _now() -> str:
@@ -178,7 +181,7 @@ def get_lsp_state() -> dict:
         "protocol": published.get("protocol", "LSP v2"),
         "wire_format": published.get("wire_format", "LYSW"),
         "identity": published.get("identity", "Ed25519"),
-        "identity_persistent": LSP_IDENTITY.exists(),
+        "identity_persistent": any(path.exists() for path in LSP_IDENTITIES),
         "status": published.get("status", "available"),
         "float16": published.get("float16", True),
         "merge_on_transit": published.get("merge_on_transit", True),
@@ -188,6 +191,8 @@ def get_lsp_state() -> dict:
             "v1_gossip_tcp": 4445,
             "v2_feromon_udp": 4454,
             "v2_gossip_tcp": 4455,
+            "standalone_feromon_udp": 7337,
+            "standalone_gossip_tcp": 7338,
         },
         "internet": {
             "ready": wan_ready,
