@@ -74,19 +74,24 @@ class FeromonV2Payload:
 
     def pack(self) -> bytes:
         """Serializa a bytes binarios eficientes (sin overhead JSON)."""
-        import torch
+        import numpy as np
 
-        tensor = self.feromon.cpu().float()  # float32 en CPU
-        n_dims = tensor.numel()
+        if hasattr(self.feromon, "detach"):
+            tensor = self.feromon.detach().cpu().float().numpy()
+        else:
+            tensor = np.asarray(self.feromon, dtype=np.float32)
+        tensor = np.asarray(tensor, dtype=np.float32).reshape(-1)
+        n_dims = tensor.size
 
         bpd = _BYTES_PER_DIM[self.dim_type]
 
         if self.dim_type == DIM_FLOAT16:
-            tensor_bytes = tensor.half().numpy().tobytes()
+            tensor_bytes = tensor.astype(np.float16).tobytes()
         elif self.dim_type == DIM_FLOAT32:
-            tensor_bytes = tensor.numpy().tobytes()
+            tensor_bytes = tensor.astype(np.float32).tobytes()
         elif self.dim_type == DIM_BFLOAT16:
-            tensor_bytes = tensor.bfloat16().numpy().tobytes()
+            import torch
+            tensor_bytes = torch.tensor(tensor).bfloat16().numpy().tobytes()
         else:
             raise ValueError(f"Unknown dim_type: {self.dim_type}")
 
@@ -189,7 +194,9 @@ class FeromonV2Payload:
     @property
     def wire_size(self) -> int:
         """Tamaño en bytes cuando empaquetado."""
-        return 16 + self.feromon.numel() * _BYTES_PER_DIM[self.dim_type]
+        import numpy as np
+        n_dims = self.feromon.numel() if hasattr(self.feromon, "numel") else np.asarray(self.feromon).size
+        return 16 + n_dims * _BYTES_PER_DIM[self.dim_type]
 
 
 # ─── FeromonMergeBuffer ───────────────────────────────────────────────────────
@@ -374,12 +381,9 @@ class LSPNodeV2(LSPNode):
         except Exception as e:
             log.debug(f"request_peer_list {host}:{port}: {e}")
 
-    def send_feromon_v2(self, feromon_tensor, fitness: float = 0.5, step: int = 0):
+    def send_feromon_v2(self, feromon_tensor, fitness: float = 0.5, step: int = 0,
+                        exclude_node_id: str | None = None):
         """Envía FeromonV2Payload binario a todos los peers."""
-        import torch
-        if not isinstance(feromon_tensor, torch.Tensor):
-            feromon_tensor = torch.tensor(feromon_tensor, dtype=torch.float32)
-
         self._step += 1
         actual_step = step if step > 0 else self._step
 
@@ -403,6 +407,8 @@ class LSPNodeV2(LSPNode):
             peers = list(self._peers.values())
 
         for peer in peers:
+            if exclude_node_id and peer.get("node_id") == exclude_node_id:
+                continue
             try:
                 self._udp_sock.sendto(data, (peer["host"], peer["feromon_port"]))
             except Exception as e:
@@ -419,6 +425,10 @@ class LSPNodeV2(LSPNode):
                 return
 
             node_id_hex = pkt.node_id.hex()
+            with self._lock:
+                existing = self._peers.get(node_id_hex, {})
+                gossip_port = existing.get("gossip_port", self.gossip_port)
+            self._register_peer(node_id_hex, addr[0], addr[1], gossip_port)
             self._merge_buffer.push(node_id_hex, payload_obj)
 
             # Flush inmediato

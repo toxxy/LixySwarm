@@ -56,8 +56,12 @@ def run():
             arr = np.array(feromon, dtype=np.float32)
             norm = float(np.linalg.norm(arr))
             log.info(f"🐜 Feromona recibida de {from_node_id[:16]}... norm={norm:.3f}")
+            peer_count = max(0, len(node.peers()) - 1)
+            if peer_count:
+                node.send_feromon_v2(arr, fitness=0.5, step=0, exclude_node_id=from_node_id)
+                log.info(f"🔁 Feromona relay → {peer_count} peer(s)")
         except Exception as e:
-            log.info(f"🐜 Feromona recibida de {from_node_id[:16]}...")
+            log.info(f"🐜 Feromona recibida de {from_node_id[:16]}... relay_error={e}")
 
     @node.on_peer_connected
     def on_peer(node_id, host, port):

@@ -436,6 +436,65 @@ def test_swarm_network_v2_protocol(verbose: bool = False):
     check("SwarmNetworkV2: stop() sin excepcion")
 
 
+def test_lsp_v2_relay_forward(verbose: bool = False):
+    """
+    Fase 2 WAN: un relay LSP v2 reenvía feromonas entre dos peers.
+    """
+    from src.network.lsp import LSPIdentity
+    from src.network.lsp_v2 import LSPNodeV2
+    import numpy as np
+
+    relay = LSPNodeV2(LSPIdentity.generate(), feromon_port=7570, gossip_port=7571)
+    node_a = LSPNodeV2(LSPIdentity.generate(), feromon_port=7572, gossip_port=7573)
+    node_b = LSPNodeV2(LSPIdentity.generate(), feromon_port=7574, gossip_port=7575)
+    received = []
+
+    @relay.on_feromon_received
+    def relay_feromon(feromon, from_node_id):
+        relay.send_feromon_v2(
+            np.asarray(feromon, dtype=np.float32),
+            fitness=0.5,
+            exclude_node_id=from_node_id,
+        )
+
+    @node_b.on_feromon_received
+    def capture_relayed(feromon, node_id_hex):
+        received.append((torch.as_tensor(feromon, dtype=torch.float32), node_id_hex))
+
+    try:
+        relay.start()
+        node_a.start()
+        node_b.start()
+        check("LSP v2 relay: nodos start()")
+
+        node_a.connect_peer("127.0.0.1", 7571)
+        node_b.connect_peer("127.0.0.1", 7571)
+        time.sleep(0.5)
+        check("LSP v2 relay: peers conectados", len(relay.peers()) == 2,
+              f"peers={len(relay.peers())}")
+
+        feromon_orig = torch.linspace(-1, 1, 256)
+        node_a.send_feromon_v2(feromon_orig, fitness=0.8, step=7)
+        deadline = time.time() + 3.0
+        while not received and time.time() < deadline:
+            time.sleep(0.05)
+
+        check("LSP v2 relay: feromona reenviada", len(received) >= 1,
+              "node_b no recibió desde relay")
+        if received:
+            feromon_rx, node_hex = received[0]
+            cos = F.cosine_similarity(feromon_orig.unsqueeze(0), feromon_rx.unsqueeze(0)).item()
+            check("LSP v2 relay: cosine_sim >= 0.999", cos >= 0.999,
+                  f"cos_sim={cos:.4f}")
+            check("LSP v2 relay: emisor es relay",
+                  node_hex[:16] == relay.identity.node_id_hex[:16],
+                  f"node_hex={node_hex[:16]}")
+    finally:
+        node_a.stop()
+        node_b.stop()
+        relay.stop()
+
+
 # ─── Main ─────────────────────────────────────────────────────────────────────
 
 def main():
@@ -480,6 +539,7 @@ def main():
     # Fase 2 — LSP v2
     test_lsp_v2_loopback(verbose=args.verbose)
     test_swarm_network_v2_protocol(verbose=args.verbose)
+    test_lsp_v2_relay_forward(verbose=args.verbose)
 
     # ─── Resumen ──────────────────────────────────────────────────────────────
     print(f"\n{BOLD}{'='*50}{RESET}")
