@@ -198,13 +198,21 @@ def collect_status() -> dict:
     # Puertos LSP v2 del nodo local
     local_feromon_port = int(os.environ.get("LIXYSWARM_FEROMON_PORT", "7337"))
     local_gossip_port  = int(os.environ.get("LIXYSWARM_GOSSIP_PORT", "7338"))
+    local_lsp_listening = False
+    try:
+        probe = _socket.create_connection(("127.0.0.1", local_gossip_port), timeout=0.2)
+        probe.close()
+        local_lsp_listening = True
+    except Exception:
+        local_lsp_listening = False
 
     status["lsp"] = {
         "protocol": "LSP v2",
         "wire_format": "LYSW",
         "identity": "Ed25519",
         "identity_persistent": lsp_identity_file.exists(),
-        "status": "active",
+        "status": "active" if local_lsp_listening else "identity-only",
+        "local_listener": local_lsp_listening,
         "float16": True,
         "merge_on_transit": True,
         "internet": {
@@ -215,7 +223,7 @@ def collect_status() -> dict:
 
     # ─── Peers / nodo local ──────────────────────────────────────────────────
     # Informar al VPS sobre el nodo local para que aparezca en la UI
-    if local_node_id:
+    if local_node_id and local_lsp_listening:
         # Detectar IP de la máquina local (preferir la que ve el VPS)
         local_host = os.environ.get("LIXYSWARM_LOCAL_HOST", "")
         if not local_host:
