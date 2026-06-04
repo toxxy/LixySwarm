@@ -539,6 +539,17 @@ class Matriarca:
     def memory_count(self) -> int:
         return self.bank.size
 
+    @property
+    def metadata(self) -> list[dict]:
+        return self.bank.metadata
+
+    @metadata.setter
+    def metadata(self, value: list[dict]):
+        self.bank.metadata = value
+
+    def get_embeddings(self, device: str = None) -> torch.Tensor:
+        return self.bank.get_embeddings(device)
+
 
 # ─── Test rápido ──────────────────────────────────────────────────────────────
 

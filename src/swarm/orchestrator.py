@@ -458,7 +458,13 @@ class LixySwarm(nn.Module):
                 for ant in self.agents:
                     self.sect_manager.add_agent_to_sect(sect.sect_id, "local")
 
-    def tick_lifecycle(self, step: int, swarm_diversity: float, n_nodes: int = 1) -> list:
+    def tick_lifecycle(
+        self,
+        step: int,
+        swarm_diversity: float,
+        n_nodes: int = 1,
+        include_ant_lifecycle: bool = True,
+    ) -> list:
         """
         Tick del ecosistema del enjambre:
         1. NodeManager: prune nodos muertos + registrar contribución
@@ -477,9 +483,12 @@ class LixySwarm(nn.Module):
         sect_events = self.sect_manager.tick(step, swarm_diversity)
         events.extend(sect_events)
 
-        # Compatibilidad: ciclo de vida de agentes individuales (training)
-        ant_events = self.ant_lifecycle.tick(step, swarm_diversity, n_nodes)
-        events.extend(ant_events)
+        # Compatibilidad: ciclo de vida de agentes individuales.
+        # En training normal se puede desactivar porque añadir agentes cambia
+        # topología + optimizador; las sectas/delfines sí siguen haciendo tick.
+        if include_ant_lifecycle:
+            ant_events = self.ant_lifecycle.tick(step, swarm_diversity, n_nodes)
+            events.extend(ant_events)
 
         # Escalar delfines en sync con la red
         dolphin_events = self.scale_dolphins(n_nodes)

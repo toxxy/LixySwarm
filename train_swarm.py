@@ -99,6 +99,9 @@ class SwarmTrainConfig:
     network_remote_weight: float = 0.25
     network_broadcast_interval: int = 1
 
+    # Lifecycle
+    enable_ant_lifecycle: bool = False
+
 
 # ─── Dataset ──────────────────────────────────────────────────────────────────
 
@@ -702,7 +705,8 @@ def train(cfg: SwarmTrainConfig, swarm_checkpoint: str = None):
                 lifecycle_events = swarm.tick_lifecycle(
                     step=step,
                     swarm_diversity=current_div,
-                    n_nodes=1,  # single-node local; se actualiza cuando LSP activo
+                    n_nodes=max(1, (network.peer_count + 1) if network is not None else 1),
+                    include_ant_lifecycle=cfg.enable_ant_lifecycle,
                 )
                 if lifecycle_events:
                     for ev in lifecycle_events:
@@ -845,6 +849,11 @@ if __name__ == "__main__":
     parser.add_argument("--network-gossip-port", type=int, default=7338)
     parser.add_argument("--network-remote-weight", type=float, default=0.25)
     parser.add_argument("--network-broadcast-interval", type=int, default=1)
+    parser.add_argument(
+        "--enable-ant-lifecycle",
+        action="store_true",
+        help="Permite nacimiento/muerte de hormigas durante training (experimental)",
+    )
     args = parser.parse_args()
 
     cfg = SwarmTrainConfig(
@@ -871,6 +880,7 @@ if __name__ == "__main__":
         network_gossip_port=args.network_gossip_port,
         network_remote_weight=args.network_remote_weight,
         network_broadcast_interval=args.network_broadcast_interval,
+        enable_ant_lifecycle=args.enable_ant_lifecycle,
     )
     # Guardar el path del log en cfg para que el loop evolutivo lo use
     cfg._current_log_path = args.log_path
