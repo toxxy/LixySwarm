@@ -344,8 +344,10 @@
 
         // Métricas principales
         const nNodes = net.connected_count ?? 1;
+        const knownPeers = net.known_peer_count ?? nNodes;
         set("nodes", nNodes);
-        set("nodes-sub", nNodes === 1 ? "Solo nodo local" : nNodes + " nodos en red");
+        const peerHint = knownPeers > nNodes ? ` · ${knownPeers} peers conocidos` : "";
+        set("nodes-sub", (nNodes === 1 ? "1 nodo activo" : nNodes + " nodos activos") + peerHint);
 
         set("speed", met.toks_per_sec != null ? met.toks_per_sec.toLocaleString() : "—");
         set("diversity", d.swarm_diversity != null ? d.swarm_diversity.toFixed(3) : "—");
@@ -499,6 +501,7 @@
       const feromonPort = ports.feromon_udp || 7337;
       const gossipPort = ports.gossip_tcp || 7338;
       const connected = net.connected_count || 0;
+      const knownPeers = net.known_peer_count ?? connected;
       const internetReady = !!internet.ready;
       set("internet-card", internetReady ? "WAN listo" : "LAN");
       set("internet-card-sub", internetReady ? "Relay/IP pública configurado" : "Internet requiere relay/IP pública");
@@ -508,7 +511,7 @@
         <div class="cap-item ok">
           <div class="cap-title">Misma LAN</div>
           <div class="cap-value">Sí, automático</div>
-          <div class="cap-sub">${escapeHtml(lsp.discovery || "mDNS LAN automático")} · peers vivos: ${connected}</div>
+          <div class="cap-sub">${escapeHtml(lsp.discovery || "mDNS LAN automático")} · nodos activos: ${connected} · peers conocidos: ${knownPeers}</div>
         </div>
         <div class="cap-item ${internetReady ? "ok" : "warn"}">
           <div class="cap-title">Internet / otra casa</div>
@@ -608,6 +611,7 @@
       }
       grid.innerHTML = nodes.map(n => {
         const isVps = n.role === "vps-relay";
+        const isActive = n.active !== false && !n.stale;
         const icon = isVps ? "🌐" : "💻";
         const label = isVps ? "VPS Relay" : (n.self ? "Nodo actual" : "Nodo remoto");
         const id = (n.node_id || "?").slice(0,8) + "...";
@@ -615,6 +619,9 @@
         const mode = n.contribution_mode || "maximum";
         const modeCls = `mode-${mode}`;
         const gpuFrac = n.effective_gpu_fraction != null ? (n.effective_gpu_fraction * 100).toFixed(0) + "% GPU" : "";
+        const age = n.age_s != null ? ` · age ${Number(n.age_s).toFixed(0)}s` : "";
+        const status = isActive ? "activo" : "stale";
+        const statusColor = isActive ? "#4CAF50" : "#ff9800";
         return `<div class="node-card">
           <div class="node-header">
             <span>${icon}</span>
@@ -622,7 +629,8 @@
             <span class="node-mode ${modeCls}">${mode}</span>
           </div>
           <div style="font-size:1.2rem;color:#4CAF50;font-weight:700">${id}</div>
-          <div style="font-size:0.8rem;color:#444;margin-top:4px">${escapeHtml(n.host || "local")}${step}</div>
+          <div style="font-size:0.8rem;color:#444;margin-top:4px">${escapeHtml(n.host || "local")}${step}${age}</div>
+          <div style="font-size:0.75rem;color:${statusColor};margin-top:4px">${status}</div>
           ${gpuFrac ? `<div style="font-size:0.75rem;color:#555;margin-top:4px">${gpuFrac} · ${n.effective_sect_capacity ?? "?"} sectas máx</div>` : ""}
           <div style="font-size:0.75rem;color:#4FC3F7;margin-top:6px">${escapeHtml(protocol || "LSP v2")} <span class="badge-v2">v2</span></div>
         </div>`;

@@ -86,7 +86,7 @@ def get_dolphin_state() -> dict:
 def get_network_state() -> dict:
     """Lee nodos P2P del node.log del VPS + status publicado por el nodo local."""
     nodes = []
-    connected = 0
+    known_peer_count = 0
     vps_node_id = None
 
     # 1. Identidad del VPS relay (self) desde node.log
@@ -97,7 +97,7 @@ def get_network_state() -> dict:
             for line in reversed(lines):
                 m = re.search(r"peers=(\d+)", line)
                 if m:
-                    connected = max(connected, int(m.group(1)))
+                    known_peer_count = max(known_peer_count, int(m.group(1)))
                     break
             # Buscar Node ID del VPS (formato: "Node ID: <hex>")
             for line in lines:
@@ -131,6 +131,7 @@ def get_network_state() -> dict:
     # 2. Nodo local desde el status publicado (swarm_publisher.py sube swarm_status.json)
     s = _read_status()
     published_peers = s.get("peers", [])
+    status_stale = s.get("_stale", True)
     if published_peers:
         for p in published_peers:
             p_node_id = p.get("id", "?")
@@ -143,15 +144,17 @@ def get_network_state() -> dict:
                     "gossip_port": p.get("gossip_port"),
                     "role":    p.get("role", "local-gpu"),
                     "self":    False,
+                    "active":  not status_stale,
+                    "stale":   status_stale,
+                    "age_s":   s.get("_age_seconds"),
                 })
-                # Si el status está fresco, el nodo está activo
-                if not s.get("_stale", True):
-                    connected += 1
 
     lsp = get_lsp_state()
+    connected = sum(1 for n in nodes if n.get("self") or n.get("active"))
     return {
         "nodes":           nodes,
         "connected_count": connected,
+        "known_peer_count": known_peer_count,
         "vps_node_id":     vps_node_id[:16] if vps_node_id else None,
         "protocol":        lsp["protocol"],
         "lsp":             lsp,
