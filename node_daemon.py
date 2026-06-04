@@ -9,7 +9,7 @@ Uso en VPS:
 Como servicio systemd:
     Ver VPS_SETUP.md para instrucciones completas.
 """
-import sys, time, signal, logging
+import sys, time, signal, logging, json
 sys.path.insert(0, str(__import__("pathlib").Path(__file__).parent))
 
 logging.basicConfig(
@@ -91,6 +91,24 @@ def run():
         tick += 1
         n_peers = len(node.peers())
         log.info(f"💓 tick={tick} peers={n_peers}")
+
+        # Auto-descubrimiento: leer swarm_status.json para detectar el nodo local
+        # El swarm_publisher en la PC local sube este archivo con su identidad LSP
+        # El handshake real lo inicia el nodo local (outbound) → VPS (inbound) por NAT
+        status_file = __import__("pathlib").Path(__file__).parent / "swarm_status.json"
+        if status_file.exists() and n_peers == 0:
+            try:
+                data = json.loads(status_file.read_text())
+                published_peers = data.get("peers", [])
+                for p in published_peers:
+                    p_host = p.get("host", "")
+                    p_gossip = p.get("gossip_port", 7338)
+                    p_node_id = p.get("id", "?")
+                    if p_host and p_host not in ("127.0.0.1", "0.0.0.0", "localhost"):
+                        log.info(f"📋 Nodo local registrado en swarm_status.json: {p_node_id[:16]}...@{p_host}:{p_gossip}")
+                        log.info(f"   ⏳ Esperando handshake LSP v2 entrante del nodo local (NAT outbound)")
+            except Exception as e:
+                log.debug(f"Auto-descubrimiento vía swarm_status.json: {e}")
 
 if __name__ == "__main__":
     run()

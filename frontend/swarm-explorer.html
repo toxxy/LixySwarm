@@ -489,15 +489,15 @@
       set("lsp-merge", lsp.merge_on_transit === false ? "—" : "✅");
       set("lsp-merge-sub", lsp.merge_on_transit === false ? "No reportado" : "fitness-weighted · TTL decay");
       const ports = lsp.ports || {};
-      set("feromons-sub", `UDP ${ports.standalone_feromon_udp || ports.v2_feromon_udp || "v2"}`);
+      set("feromons-sub", `UDP ${ports.feromon_udp || "7337"}`);
     }
 
     function renderCapabilities(lsp, internet, net) {
       const grid = document.getElementById("capability-grid");
       if (!grid) return;
       const ports = lsp.ports || {};
-      const feromonPort = ports.standalone_feromon_udp || ports.v2_feromon_udp || 4454;
-      const gossipPort = ports.standalone_gossip_tcp || ports.v2_gossip_tcp || 4455;
+      const feromonPort = ports.feromon_udp || 7337;
+      const gossipPort = ports.gossip_tcp || 7338;
       const connected = net.connected_count || 0;
       const internetReady = !!internet.ready;
       set("internet-card", internetReady ? "WAN listo" : "LAN");

@@ -22,11 +22,11 @@ class NodeIdentity:
     """
     node_id: str           # 16-char hex (64-bit SHA256 del IdentityVec)
     host: str              # IP local
-    feromon_port: int = 4444   # UDP — feromonas
-    gossip_port: int = 4445    # TCP — gossip + memorias
+    feromon_port: int = 7337   # UDP — feromonas float16
+    gossip_port: int = 7338    # TCP — handshake + gossip
 
     @classmethod
-    def from_swarm(cls, swarm, host: str = None, feromon_port: int = 4444, gossip_port: int = 4445) -> "NodeIdentity":
+    def from_swarm(cls, swarm, host: str = None, feromon_port: int = 7337, gossip_port: int = 7338) -> "NodeIdentity":
         """Genera identidad desde el IdentityVec del primer AgentBase."""
         # Usar identity_vec del primer agente
         identity_vec = swarm.agents[0].identity_vec
@@ -61,8 +61,8 @@ class Peer:
     """Un nodo vecino conocido."""
     node_id: str
     host: str
-    feromon_port: int = 4444
-    gossip_port: int = 4445
+    feromon_port: int = 7337
+    gossip_port: int = 7338
     last_seen: float = field(default_factory=time.time)
     is_alive: bool = True
     # Última feromona recibida de este peer

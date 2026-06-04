@@ -1,15 +1,8 @@
 """
-LixySwarm Network — Protocolo P2P para enjambre distribuido.
-Fase 1: single-node + descubrimiento LAN via mDNS.
+LixySwarm Network — P2P LSP v2, zero-config.
+Puertos: 7337 UDP / 7338 TCP. Auto-bootstrap via peers.json + seeds + peer exchange.
 """
-from .node import NodeIdentity, Peer, PeerTable
-from .messages import FeromonMessage, GossipMessage
-from .transport import FeromonUDP, GossipTCP
 from .swarm_network import SwarmNetwork
+from .bootstrap import PeersDB, bootstrap_network
 
-__all__ = [
-    "NodeIdentity", "Peer", "PeerTable",
-    "FeromonMessage", "GossipMessage",
-    "FeromonUDP", "GossipTCP",
-    "SwarmNetwork",
-]
+__all__ = ["SwarmNetwork", "PeersDB", "bootstrap_network"]

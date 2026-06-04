@@ -487,11 +487,29 @@ class LSPNode:
                 self._register_peer(remote_node_id, addr[0],
                                     info.get("feromon_port", self.feromon_port),
                                     info.get("gossip_port", self.gossip_port))
-                # Send response handshake
+                # Send response handshake (include peer list if requested)
                 resp_payload = self._make_handshake_payload()
+                if info.get("request_peers"):
+                    resp_dict = json.loads(resp_payload.decode("utf-8"))
+                    resp_dict["peers"] = [
+                        {"host": p["host"], "gossip_port": p["gossip_port"]}
+                        for p in list(self._peers.values())[:50]
+                    ]
+                    resp_payload = json.dumps(resp_dict).encode("utf-8")
                 resp_pkt = LSPPacket.create(PacketType.HANDSHAKE, resp_payload, compress=False)
                 resp_data = resp_pkt.pack(self.identity)
                 conn.sendall(struct.pack("<I", len(resp_data)) + resp_data)
+
+            elif pkt.type == 0x13:  # PEER_LIST
+                from .bootstrap import decode_peer_list
+                peer_addrs = decode_peer_list(pkt.payload)
+                # Forward to v2 callback chain
+                if hasattr(self, '_peer_list_callbacks'):
+                    for cb in self._peer_list_callbacks:
+                        try:
+                            cb(peer_addrs)
+                        except Exception:
+                            pass
 
         except Exception as e:
             log.debug(f"_handle_tcp_conn error from {addr}: {e}")

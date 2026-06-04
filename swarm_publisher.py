@@ -176,6 +176,22 @@ def collect_status() -> dict:
     }
 
     # ─── LSP ────────────────────────────────────────────────────────────────────
+    # Leer identidad LSP local (node_id + puertos)
+    local_node_id = None
+    lsp_identity_file = CHECKPOINT_DIR / "lsp_identity.pem"
+    if lsp_identity_file.exists():
+        try:
+            from src.network.lsp import LSPIdentity
+            ident = LSPIdentity.load(str(lsp_identity_file))
+            if ident:
+                local_node_id = ident.node_id_hex
+        except Exception:
+            pass
+
+    # Puertos LSP v2 del nodo local
+    local_feromon_port = int(os.environ.get("LIXYSWARM_FEROMON_PORT", "7337"))
+    local_gossip_port  = int(os.environ.get("LIXYSWARM_GOSSIP_PORT", "7338"))
+
     status["lsp"] = {
         "protocol": "LSP v2",
         "wire_format": "LYSW",
@@ -189,6 +205,34 @@ def collect_status() -> dict:
             "mode": "relay/public-host" if (os.environ.get("LIXYSWARM_PUBLIC_HOST") or os.environ.get("LIXYSWARM_VPS_HOST")) else "lan-only",
         },
     }
+
+    # ─── Peers / nodo local ──────────────────────────────────────────────────
+    # Informar al VPS sobre el nodo local para que aparezca en la UI
+    if local_node_id:
+        # Detectar IP de la máquina local (preferir la que ve el VPS)
+        local_host = os.environ.get("LIXYSWARM_LOCAL_HOST", "")
+        if not local_host:
+            try:
+                import socket as _socket
+                s = _socket.socket(_socket.AF_INET, _socket.SOCK_DGRAM)
+                s.settimeout(0.1)
+                # Conecta al VPS para descubrir IP de salida
+                vps_for_discovery = os.environ.get("LIXYSWARM_VPS_HOST", "8.8.8.8")
+                s.connect((vps_for_discovery.split("@")[-1], 7338))
+                local_host = s.getsockname()[0]
+                s.close()
+            except Exception:
+                local_host = "127.0.0.1"
+        status["peers"] = [{
+            "id": local_node_id,
+            "host": local_host,
+            "feromon_port": local_feromon_port,
+            "gossip_port": local_gossip_port,
+            "role": "local-gpu",
+            "last_seen": datetime.now(timezone.utc).isoformat(),
+        }]
+    elif status.get("peers") is None:
+        status["peers"] = []
 
     # ─── Auto-training loop ──────────────────────────────────────────────────────
     train_state_file = CHECKPOINT_DIR / "training_state.json"

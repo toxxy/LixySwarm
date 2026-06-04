@@ -265,8 +265,8 @@ class MDNSDiscovery:
                 peer = Peer(
                     node_id=msg["node_id"],
                     host=msg.get("host", addr[0]),
-                    feromon_port=msg.get("feromon_port", 4444),
-                    gossip_port=msg.get("gossip_port", 4445),
+                    feromon_port=msg.get("feromon_port", 7337),
+                    gossip_port=msg.get("gossip_port", 7338),
                 )
                 log.info(f"🌐 Peer descubierto via mDNS: {peer}")
                 self.on_peer_found(peer)

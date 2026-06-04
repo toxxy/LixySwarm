@@ -85,45 +85,75 @@ def get_dolphin_state() -> dict:
 
 
 def get_network_state() -> dict:
-    """Lee nodos P2P del node.log del VPS."""
+    """Lee nodos P2P del node.log del VPS + status publicado por el nodo local."""
     nodes = []
     connected = 0
+    vps_node_id = None
+
+    # 1. Identidad del VPS relay (self) desde node.log
     if NODE_LOG.exists():
         try:
-            lines = NODE_LOG.read_text().splitlines()[-200:]
+            lines = NODE_LOG.read_text().splitlines()[-300:]
             # Buscar líneas de heartbeat con peers
             for line in reversed(lines):
                 m = re.search(r"peers=(\d+)", line)
                 if m:
-                    connected = int(m.group(1))
+                    connected = max(connected, int(m.group(1)))
                     break
-            # Node ID propio
+            # Buscar Node ID del VPS (formato: "Node ID: <hex>")
             for line in lines:
-                m = re.search(r"Node\(([0-9a-f]+)@([\d.]+):(\d+)\)", line)
+                m = re.search(r"Node ID:\s*([0-9a-f]+)", line)
                 if m:
-                    nodes.append({
-                        "node_id": m.group(1),
-                        "host":    m.group(2),
-                        "port":    int(m.group(3)),
-                        "role":    "vps-relay",
-                        "self":    True,
-                    })
+                    vps_node_id = m.group(1)
                     break
         except Exception:
             pass
 
-    # Agrega nodos del status publicado
+    # VPS relay como nodo self (si tiene identidad)
+    standalone_identity = BASE / ".lixyswarm" / "identity.key"
+    if vps_node_id or standalone_identity.exists():
+        if not vps_node_id and standalone_identity.exists():
+            try:
+                from src.network.lsp import LSPIdentity
+                ident = LSPIdentity.load(str(standalone_identity))
+                if ident:
+                    vps_node_id = ident.node_id_hex[:16]
+            except Exception:
+                pass
+        if vps_node_id:
+            nodes.append({
+                "node_id": vps_node_id[:16],
+                "host":    "0.0.0.0",
+                "port":    7338,
+                "role":    "vps-relay",
+                "self":    True,
+            })
+
+    # 2. Nodo local desde el status publicado (swarm_publisher.py sube swarm_status.json)
     s = _read_status()
-    if s.get("peers"):
-        for p in s["peers"]:
-            nodes.append({"node_id": p.get("id","?"), "host": p.get("host","?"), "role": "local", "self": False})
-            connected += 1
+    published_peers = s.get("peers", [])
+    if published_peers:
+        for p in published_peers:
+            p_node_id = p.get("id", "?")
+            # Evitar duplicados
+            if not any(n["node_id"] == p_node_id for n in nodes):
+                nodes.append({
+                    "node_id": p_node_id[:16],
+                    "host":    p.get("host", "?"),
+                    "feromon_port": p.get("feromon_port"),
+                    "gossip_port": p.get("gossip_port"),
+                    "role":    p.get("role", "local-gpu"),
+                    "self":    False,
+                })
+                # Si el status está fresco, el nodo está activo
+                if not s.get("_stale", True):
+                    connected += 1
 
     lsp = get_lsp_state()
     return {
         "nodes":           nodes,
         "connected_count": connected,
-        "vps_node_id":     nodes[0]["node_id"] if nodes else None,
+        "vps_node_id":     vps_node_id[:16] if vps_node_id else None,
         "protocol":        lsp["protocol"],
         "lsp":             lsp,
         "internet":        lsp["internet"],
@@ -194,14 +224,10 @@ def get_lsp_state() -> dict:
         "status": published.get("status", "available"),
         "float16": published.get("float16", True),
         "merge_on_transit": published.get("merge_on_transit", True),
-        "discovery": "mDNS LAN automático",
+        "discovery": "TCP handshake + swarm_status.json",
         "ports": {
-            "v1_feromon_udp": 4444,
-            "v1_gossip_tcp": 4445,
-            "v2_feromon_udp": 4454,
-            "v2_gossip_tcp": 4455,
-            "standalone_feromon_udp": 7337,
-            "standalone_gossip_tcp": 7338,
+            "feromon_udp": 7337,
+            "gossip_tcp": 7338,
         },
         "internet": {
             "ready": wan_ready,

@@ -29,9 +29,10 @@ log = logging.getLogger(__name__)
 # ─── PacketType v2 (nuevos tipos, adicionales a v1) ───────────────────────────
 
 class PacketType(PacketTypeV1):
-    FEROMON_V2   = 0x10  # feromon binario nativo (nuevo)
-    GOSSIP_DELTA = 0x11  # gossip incremental (nuevo)
-    MERGE_HINT   = 0x12  # sugerencia de merge para intermediarios (nuevo)
+    FEROMON_V2   = 0x10  # feromon binario nativo
+    GOSSIP_DELTA = 0x11  # gossip incremental
+    MERGE_HINT   = 0x12  # sugerencia de merge para intermediarios
+    PEER_LIST    = 0x13  # intercambio de peers (addr gossip)
 
 
 # ─── DimType constants ────────────────────────────────────────────────────────
@@ -311,6 +312,69 @@ class LSPNodeV2(LSPNode):
                  gossip_port: int = 7338):
         super().__init__(identity, feromon_port, gossip_port)
         self._merge_buffer = FeromonMergeBuffer()
+        self._peer_list_callbacks: list = []
+
+    # ─── Peer Exchange (addr gossip estilo Bitcoin) ───────────────────────
+
+    def on_peer_list_received(self, callback):
+        """callback(peers: List[Tuple[str,int]]) cuando llega PEER_LIST."""
+        if callable(callback):
+            self._peer_list_callbacks.append(callback)
+        return callback
+
+    def send_peer_list(self, peers: List[dict]):
+        """Envía lista de peers a todos los peers conectados (TCP handshake socket)."""
+        from .bootstrap import encode_peer_list
+        payload = encode_peer_list(peers)
+        pkt = LSPPacket.create(PacketType.PEER_LIST, payload, compress=True)
+        data = pkt.pack(self.identity)
+        with self._lock:
+            peer_list = list(self._peers.values())
+        for peer in peer_list:
+            try:
+                # Enviar por TCP (el socket de gossip/handshake)
+                with socket.create_connection((peer["host"], peer["gossip_port"]), timeout=5.0) as s:
+                    s.sendall(struct.pack("<I", len(data)) + data)
+            except Exception as e:
+                log.debug(f"send_peer_list to {peer['host']}: {e}")
+
+    def request_peer_list(self, host: str, port: int):
+        """Solicita lista de peers a un nodo específico (handshake incluye flag)."""
+        payload = json.dumps({
+            "version": "2.0",
+            "node_id": self.identity.node_id_hex,
+            "feromon_port": self.feromon_port,
+            "gossip_port": self.gossip_port,
+            "request_peers": True,
+        }).encode("utf-8")
+        pkt = LSPPacket.create(PacketType.HANDSHAKE, payload, compress=False)
+        data = pkt.pack(self.identity)
+        try:
+            with socket.create_connection((host, port), timeout=5.0) as s:
+                s.sendall(struct.pack("<I", len(data)) + data)
+                resp_len_bytes = s.recv(4)
+                if len(resp_len_bytes) == 4:
+                    resp_len = struct.unpack("<I", resp_len_bytes)[0]
+                    resp_data = self._recv_exact(s, resp_len)
+                    if resp_data:
+                        resp_pkt = LSPPacket.unpack(resp_data)
+                        if resp_pkt.verify():
+                            info = json.loads(resp_pkt.payload)
+                            self._register_peer(resp_pkt.node_id.hex(), host,
+                                                info.get("feromon_port", self.feromon_port),
+                                                info.get("gossip_port", self.gossip_port))
+                            # Peer list viene en la respuesta
+                            if info.get("peers"):
+                                from .bootstrap import decode_peer_list
+                                peer_list = [(p["host"], p.get("gossip_port", 7338))
+                                             for p in info["peers"]]
+                                for cb in self._peer_list_callbacks:
+                                    try:
+                                        cb(peer_list)
+                                    except Exception:
+                                        pass
+        except Exception as e:
+            log.debug(f"request_peer_list {host}:{port}: {e}")
 
     def send_feromon_v2(self, feromon_tensor, fitness: float = 0.5, step: int = 0):
         """Envía FeromonV2Payload binario a todos los peers."""

@@ -28,6 +28,7 @@ Uso:
 import sys
 import argparse
 import json
+import os
 import time
 from pathlib import Path
 from contextlib import nullcontext
@@ -72,11 +73,11 @@ class OrchestratorConfig:
     max_tokens: int = 200
     session_file: str = "checkpoints/lixy_session.json"
     eval_matriarca: bool = False   # imprimir diagnóstico de la Matriarca al cargar
-    # Red P2P
-    network: bool = False
-    feromon_port: int = 4444
-    gossip_port: int = 4445
-    network_remote_weight: float = 0.3  # peso de feromonas remotas en inferencia
+    # Red P2P (LSP v2, zero-config — auto-bootstrap)
+    network: bool = True                          # siempre ON, P2P automático
+    feromon_port: int = 7337
+    gossip_port: int = 7338
+    network_remote_weight: float = 0.3
 
 
 # ─── Orquestador ──────────────────────────────────────────────────────────────
@@ -186,7 +187,7 @@ class LixyOrchestrator:
         )
         print(f"  🧠 RuntimeSession iniciada (feromon warm-start, roles dinámicos, historial persistente)")
 
-        # Arrancar red P2P si se pidió
+        # Arrancar red P2P si se pidió (zero-config — auto-bootstrap)
         if self.cfg.network:
             self.net = SwarmNetwork.create(
                 swarm=self.swarm,
@@ -200,6 +201,7 @@ class LixyOrchestrator:
                 print(f"\n🌐 ¡Peer conectado al enjambre! {peer}")
 
             self.net.start()
+            # Auto-bootstrap en background vía peers.json + seeds + peer exchange
 
     def _load_session(self):
         """Carga historial de sesión y estado del Delfín si existe."""
@@ -456,8 +458,8 @@ def main():
     parser.add_argument("--status", action="store_true", help="Solo mostrar status")
     parser.add_argument("--evolve", action="store_true", help="Correr loop evolutivo de la Matriarca y salir")
     parser.add_argument("--network", action="store_true", help="Activar red P2P LAN (mDNS)")
-    parser.add_argument("--feromon-port", type=int, default=4444)
-    parser.add_argument("--gossip-port", type=int, default=4445)
+    parser.add_argument("--feromon-port", type=int, default=7337)
+    parser.add_argument("--gossip-port", type=int, default=7338)
     parser.add_argument("--cpu", action="store_true")
     parser.add_argument("--eval-matriarca", action="store_true", help="Mostrar diagnóstico de la Matriarca al cargar")
     args = parser.parse_args()

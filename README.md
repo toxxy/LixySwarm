@@ -66,14 +66,12 @@ OUTPUT
 - **Unihemispheric sleep:** `sleep_state` persists across conversations
 - Doesn't process linearly like current LLMs — maps first, generates after
 
-### 🕸️ SwarmNetwork — P2P
-- SwarmNetwork default ports: UDP 4444 / TCP 4445
-- LSP v2 offset ports: UDP 4454 / TCP 4455
+### 🕸️ SwarmNetwork — P2P (LSP v2)
+- LSP v2 puertos: UDP 7337 (feromonas float16) / TCP 7338 (handshake)
 - Standalone `node_daemon.py`: UDP 7337 / TCP 7338
-- mDNS: zero-configuration LAN auto-discovery
-- LSP v2: native binary pheromones, float16 compression, merge-on-transit, TTL decay
-- Persistent Ed25519 identity stored in `checkpoints/lsp_identity.pem`
-- **Current network scope:** automatic on the same LAN; Internet/WAN requires a VPS relay, public host, or port-forwarding
+- Wire: LYSW binary · float16 feromonas · merge-on-transit · TTL decay
+- Handshake TCP Ed25519 + identidad persistente en `checkpoints/lsp_identity.pem`
+- **Current network scope:** LAN automático; WAN requiere VPS relay o IP pública
 - **Recent tests:** 23/23 network smoke ✅
 
 ---
@@ -209,11 +207,9 @@ LixySwarm can already communicate across machines, but the scope matters:
 | Internet peer-to-peer | ⚠️ Config required | NAT blocks automatic discovery; use VPS relay, public IP, or port-forwarding |
 | Planetary zero-config network | 🔮 | Requires DHT, relay mesh, consensus, reputation |
 
-Practical ports:
-
-- SwarmNetwork v1: UDP `4444`, TCP `4445`
-- SwarmNetwork LSP v2: UDP `4454`, TCP `4455`
-- Standalone LSP node daemon: UDP `7337`, TCP `7338`
+Puertos LSP v2:
+- Feromonas: UDP `7337` (float16, merge-on-transit)
+- Handshake/Gossip: TCP `7338` (Ed25519)
 
 ---
 

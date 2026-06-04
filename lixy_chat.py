@@ -103,7 +103,7 @@ TASK_ICONS = {
 # ── Carga del enjambre ────────────────────────────────────────────────────────
 
 def load_swarm_for_chat(checkpoint: str = None, device: str = None):
-    """Carga LixyOrchestrator con el mejor checkpoint disponible."""
+    """Carga LixyOrchestrator. P2P automático — zero config."""
     SRC_DIR = Path(__file__).parent
     sys.path.insert(0, str(SRC_DIR))
 
@@ -119,7 +119,8 @@ def load_swarm_for_chat(checkpoint: str = None, device: str = None):
         temperature=0.8,
         top_k=50,
         max_tokens=200,
-        eval_matriarca=False,   # activar con --eval-matriarca
+        eval_matriarca=False,
+        # network=True por defecto — auto-bootstrap sin flags
     )
     lixy = LixyOrchestrator(cfg)
     return lixy
