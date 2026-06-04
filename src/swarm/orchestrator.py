@@ -680,6 +680,19 @@ class LixySwarm(nn.Module):
 
         # Normalizar feromona inicial para evitar saturación
         feromon = F.normalize(feromon, dim=-1)
+        remote_provider = getattr(self, "remote_feromon_provider", None)
+        if remote_provider is not None:
+            try:
+                remote_feromon = remote_provider(feromon)
+                if remote_feromon is not None:
+                    feromon = F.normalize(
+                        remote_feromon.to(device=feromon.device, dtype=feromon.dtype),
+                        dim=-1,
+                    )
+            except Exception as e:
+                if not getattr(self, "_remote_feromon_error_logged", False):
+                    print(f"  ⚠ Feromona remota ignorada: {e}")
+                    self._remote_feromon_error_logged = True
 
         for round_idx in range(self.config.swarm_rounds):
             round_feromons = []
@@ -752,6 +765,8 @@ class LixySwarm(nn.Module):
 
         if targets is not None:
             total_loss /= self.config.n_agents * self.config.swarm_rounds
+
+        self._last_feromon = feromon.detach()
 
         return aggregated, total_loss if targets is not None else None, feromon
 

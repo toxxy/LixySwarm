@@ -46,11 +46,21 @@ class NodeIdentity:
         return cls(node_id=node_id, host=host, feromon_port=feromon_port, gossip_port=gossip_port)
 
     @classmethod
-    def generate_anonymous(cls, host: str = "127.0.0.1") -> "NodeIdentity":
+    def generate_anonymous(
+        cls,
+        host: str = "127.0.0.1",
+        feromon_port: int = 7337,
+        gossip_port: int = 7338,
+    ) -> "NodeIdentity":
         """Genera una identidad aleatoria para testing."""
         import os
         node_id = hashlib.sha256(os.urandom(32)).hexdigest()[:16]
-        return cls(node_id=node_id, host=host)
+        return cls(
+            node_id=node_id,
+            host=host,
+            feromon_port=feromon_port,
+            gossip_port=gossip_port,
+        )
 
     def __repr__(self):
         return f"Node({self.node_id[:8]}@{self.host}:{self.feromon_port})"
@@ -129,7 +139,12 @@ class PeerTable:
 
     def get(self, node_id: str) -> Optional[Peer]:
         with self._lock:
-            return self._peers.get(node_id)
+            if node_id in self._peers:
+                return self._peers[node_id]
+            for peer_id, peer in self._peers.items():
+                if peer_id.startswith(node_id) or node_id.startswith(peer_id):
+                    return peer
+            return None
 
     def remove(self, node_id: str):
         with self._lock:
@@ -157,10 +172,16 @@ class PeerTable:
     def update_feromon(self, node_id: str, feromon: torch.Tensor):
         """Actualiza la última feromona recibida de un peer."""
         with self._lock:
-            if node_id in self._peers:
-                self._peers[node_id].latest_feromon = feromon.cpu()
-                self._peers[node_id].feromons_received += 1
-                self._peers[node_id].mark_seen()
+            peer = self._peers.get(node_id)
+            if peer is None:
+                for peer_id, candidate in self._peers.items():
+                    if peer_id.startswith(node_id) or node_id.startswith(peer_id):
+                        peer = candidate
+                        break
+            if peer is not None:
+                peer.latest_feromon = torch.as_tensor(feromon, dtype=torch.float32).cpu()
+                peer.feromons_received += 1
+                peer.mark_seen()
 
     def collect_feromons(self) -> List[torch.Tensor]:
         """Recolecta las últimas feromonas de todos los peers activos."""

@@ -58,7 +58,10 @@ class SwarmNetwork:
         if swarm is not None:
             identity = NodeIdentity.from_swarm(swarm, feromon_port=feromon_port, gossip_port=gossip_port)
         else:
-            identity = NodeIdentity.generate_anonymous()
+            identity = NodeIdentity.generate_anonymous(
+                feromon_port=feromon_port,
+                gossip_port=gossip_port,
+            )
         return cls(identity=identity, mode=mode, checkpoint_dir=checkpoint_dir, swarm=swarm)
 
     def __init__(self, identity, mode="auto", checkpoint_dir="checkpoints", swarm=None):
@@ -158,14 +161,23 @@ class SwarmNetwork:
             @self._lsp_v2_node.on_feromon_received
             def _on_v2_feromon(feromon, node_id_hex):
                 self.stats.feromons_received += 1
-                self.peers.update_feromon(node_id_hex[:16], feromon)
+                self.peers.update_feromon(node_id_hex, feromon)
 
             @self._lsp_v2_node.on_peer_connected
             def _on_v2_peer(node_id_hex, host, port):
-                self.peers_db.add_peer(host, port)
-                peer = Peer(node_id=node_id_hex, host=host,
-                            feromon_port=self.identity.feromon_port,
-                            gossip_port=port)
+                peer_info = next(
+                    (p for p in self._lsp_v2_node.peers() if p.get("node_id") == node_id_hex),
+                    {},
+                )
+                feromon_port = peer_info.get("feromon_port", port)
+                gossip_port = peer_info.get("gossip_port", port)
+                self.peers_db.add_peer(host, gossip_port)
+                peer = Peer(
+                    node_id=node_id_hex,
+                    host=host,
+                    feromon_port=feromon_port,
+                    gossip_port=gossip_port,
+                )
                 self.peers.add(peer)
                 self.stats.peers_known += 1
                 if self._on_peer_connected:
@@ -247,7 +259,8 @@ class SwarmNetwork:
                 mode="linear", align_corners=False,
             ).squeeze()
         combined = (1 - remote_weight) * local_feromon + remote_weight * remote_mean
-        return F.normalize(combined, dim=-1) * local_feromon.norm()
+        local_norm = local_feromon.norm(dim=-1, keepdim=True).clamp_min(1e-8)
+        return F.normalize(combined, dim=-1) * local_norm
 
     def merge_remote_feromons(self, local_feromon: torch.Tensor, remote_weight: float = 0.3) -> torch.Tensor:
         return self.get_combined_feromon(local_feromon, remote_weight)

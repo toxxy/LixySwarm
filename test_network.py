@@ -163,31 +163,25 @@ def test_message_serialization():
 def test_lan_two_nodes(verbose: bool = False):
     section("Test 3 — Modo LAN: dos nodos en localhost")
 
-    received_feromons = []
-    receive_event = threading.Event()
+    import shutil
 
-    # Nodo A: puerto 14444/14445
-    node_a = SwarmNetwork.create(swarm=None, mode="lan")
-    node_a.identity.feromon_port = 14444
-    node_a.identity.gossip_port = 14445
-    node_a.identity.host = "127.0.0.1"
-    node_a.identity.node_id = "node-A"
+    shutil.rmtree("checkpoints/test_network_a", ignore_errors=True)
+    shutil.rmtree("checkpoints/test_network_b", ignore_errors=True)
 
-    # Nodo B: puerto 14446/14447
-    node_b = SwarmNetwork.create(swarm=None, mode="lan")
-    node_b.identity.feromon_port = 14446
-    node_b.identity.gossip_port = 14447
-    node_b.identity.host = "127.0.0.1"
-    node_b.identity.node_id = "node-B"
-
-    # Callback en B para registrar feromonas recibidas
-    original_on_feromon = node_b._on_feromon_received
-    def capture_feromon(msg, addr):
-        received_feromons.append(msg)
-        receive_event.set()
-        if original_on_feromon:
-            original_on_feromon(msg, addr)
-    node_b._on_feromon_received_override = capture_feromon
+    node_a = SwarmNetwork.create(
+        swarm=None,
+        mode="lan",
+        feromon_port=14444,
+        gossip_port=14445,
+        checkpoint_dir="checkpoints/test_network_a",
+    )
+    node_b = SwarmNetwork.create(
+        swarm=None,
+        mode="lan",
+        feromon_port=14446,
+        gossip_port=14447,
+        checkpoint_dir="checkpoints/test_network_b",
+    )
 
     # Arrancar ambos nodos
     try:
@@ -205,28 +199,17 @@ def test_lan_two_nodes(verbose: bool = False):
         node_a.stop()
         return
 
-    # Registrar B como peer de A (normalmente lo haría mDNS)
-    peer_b = Peer(
-        node_id="node-B",
-        host="127.0.0.1",
-        feromon_port=14446,
-        gossip_port=14447,
-    )
-    node_a.peers.add(peer_b)
-    ok("peer_b registrado en node_a")
-
-    # Inyectar callback de captura en el _feromon_udp de B
-    if node_b._feromon_udp:
-        node_b._feromon_udp.on_receive = capture_feromon
-        ok("callback de captura inyectado en node_b UDP")
+    if node_a.connect_peer("127.0.0.1", 14447):
+        ok("node_a.connect_peer(node_b)")
     else:
-        fail("node_b._feromon_udp", "es None — transport no arrancó")
+        fail("node_a.connect_peer(node_b)", "handshake falló")
         node_a.stop(); node_b.stop()
         return
 
+    time.sleep(0.5)
+
     # Enviar feromona de A hacia B
     feromon_sent = torch.randn(256)
-    feromon_sent_norm = F.normalize(feromon_sent.unsqueeze(0), dim=-1).squeeze(0)
 
     try:
         node_a.broadcast_feromon(feromon_sent, agent_id=0)
@@ -237,15 +220,22 @@ def test_lan_two_nodes(verbose: bool = False):
         return
 
     # Esperar recepción (timeout 3s)
-    received = receive_event.wait(timeout=3.0)
-    if received and received_feromons:
+    deadline = time.time() + 3.0
+    received_feromons = []
+    while time.time() < deadline:
+        received_feromons = node_b.collect_feromons()
+        if received_feromons:
+            break
+        time.sleep(0.05)
+
+    if received_feromons:
         ok("feromona recibida en node_b", f"{len(received_feromons)} mensaje(s)")
 
         # Verificar que el tensor es correcto
-        feromon_recv = received_feromons[0].feromon
+        feromon_recv = received_feromons[0]
         if feromon_recv is not None:
             cos_sim = F.cosine_similarity(
-                feromon_sent_norm.unsqueeze(0),
+                F.normalize(feromon_sent.unsqueeze(0), dim=-1),
                 F.normalize(feromon_recv.unsqueeze(0), dim=-1)
             ).item()
             if cos_sim > 0.99:
@@ -406,6 +396,7 @@ def test_lsp_v2_loopback(verbose: bool = False):
 
         if received_v2:
             feromon_rx, node_hex = received_v2[0]
+            feromon_rx = torch.as_tensor(feromon_rx, dtype=torch.float32)
             cos = F.cosine_similarity(feromon_orig.unsqueeze(0),
                                        feromon_rx.float().unsqueeze(0)).item()
             check("LSP v2: cosine_sim >= 0.999", cos >= 0.999,
@@ -420,21 +411,28 @@ def test_lsp_v2_loopback(verbose: bool = False):
 
 def test_swarm_network_v2_protocol(verbose: bool = False):
     """
-    Fase 2: SwarmNetwork con protocol='v2' arranca LSPNodeV2.
+    Fase 2: SwarmNetwork arranca LSPNodeV2 por defecto.
     """
     from src.network.swarm_network import SwarmNetwork
-    from src.network.node import NodeIdentity
     import torch
+    import shutil
 
-    identity = NodeIdentity(node_id="test-v2-net", host="127.0.0.1",
-                            feromon_port=7560, gossip_port=7561)
-    net = SwarmNetwork(identity, mode="local", protocol="v2")
-    net.start()
-    check("SwarmNetworkV2: start() sin excepcion")
-    check("SwarmNetworkV2: protocol=v2", net.protocol == "v2")
-    net.broadcast_feromon(torch.randn(256))
-    check("SwarmNetworkV2: broadcast_feromon OK (local no-op)")
-    net.stop()
+    shutil.rmtree("checkpoints/test_network_v2", ignore_errors=True)
+    net = SwarmNetwork.create(
+        swarm=None,
+        mode="lan",
+        feromon_port=7560,
+        gossip_port=7561,
+        checkpoint_dir="checkpoints/test_network_v2",
+    )
+    try:
+        net.start()
+        check("SwarmNetworkV2: start() sin excepcion")
+        check("SwarmNetworkV2: LSPNodeV2 activo", net._lsp_v2_node is not None)
+        net.broadcast_feromon(torch.randn(256))
+        check("SwarmNetworkV2: broadcast_feromon OK")
+    finally:
+        net.stop()
     check("SwarmNetworkV2: stop() sin excepcion")
 
 
@@ -499,14 +497,12 @@ def main():
     print()
 
     # ─── Diagnóstico de lo que falta para fase 2 ─────────────────────────────
-    print(f"{BOLD}📋 Para Fase 2 (nodo real remoto en LAN):{RESET}")
-    print(f"  1. mDNS requiere unirse al grupo multicast 224.0.0.251")
-    print(f"     → En sandbox puede estar bloqueado; en LAN real funciona")
-    print(f"  2. broadcast_feromon() está implementado pero merge_remote_feromons()")
-    print(f"     no está expuesto como método público de SwarmNetwork")
-    print(f"  3. Falta: API para que el orquestador consulte feromonas remotas en forward()")
-    print(f"  4. Falta: test de integración con LixySwarm real (no solo transporte)")
-    print(f"  5. Configuración de puertos en firewall para peers remotos")
+    print(f"{BOLD}📋 Red LSP v2 actual:{RESET}")
+    print(f"  1. SwarmNetwork usa LSP v2 por defecto en modo LAN/auto")
+    print(f"  2. broadcast_feromon() y merge_remote_feromons() están activos")
+    print(f"  3. LixySwarm puede mezclar feromonas remotas en forward()")
+    print(f"  4. train_swarm.py --network publica y consume feromonas remotas")
+    print(f"  5. Para WAN real se requiere relay/VPS o peer con IP pública")
     print()
 
     sys.exit(exit_code)

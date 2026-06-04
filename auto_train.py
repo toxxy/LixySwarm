@@ -84,6 +84,9 @@ class AutoTrainConfig:
 
     # Red P2P
     network: bool = False        # publicar feromonas via SwarmNetwork
+    network_feromon_port: int = 7337
+    network_gossip_port: int = 7338
+    network_remote_weight: float = 0.25
 
     # Keeper checkpoints (últimos N ciclos)
     keep_last_n: int = 3
@@ -248,18 +251,10 @@ def compute_metabolic_hunger(state: dict, cfg: AutoTrainConfig) -> HungerDecisio
 # ─── Red P2P (opcional) ───────────────────────────────────────────────────────
 
 def maybe_start_network(cfg: AutoTrainConfig):
-    """Arranca SwarmNetwork si --network. Retorna (net, None) o (None, None)."""
-    if not cfg.network:
-        return None
-    try:
-        from src.network.swarm_network import SwarmNetwork
-        net = SwarmNetwork.create(swarm=None, mode="lan", protocol="v2")
-        net.start()
-        print(f"  🌐 Red P2P activa — modo LAN/LSP v2")
-        return net
-    except Exception as e:
-        print(f"  ⚠️  Red P2P no disponible: {e}")
-        return None
+    """La red vive dentro de train_swarm.py, donde existen las feromonas reales."""
+    if cfg.network:
+        print("  🌐 Red P2P se activará dentro del proceso de training")
+    return None
 
 def maybe_broadcast_feromons(net, swarm):
     """Publica feromonas del swarm a la red si está activa."""
@@ -339,9 +334,18 @@ def run_cycle(cycle_n: int, state: dict, cfg: AutoTrainConfig, net=None) -> Opti
         "--eval-steps", str(cfg.eval_steps),
         "--eval-interval", str(cfg.eval_interval),
         "--block-size", str(cfg.block_size),
+        "--checkpoint-dir", str(checkpoint_dir),
     ]
     if input_ckpt:
         cmd += ["--checkpoint", input_ckpt]
+    if cfg.network:
+        cmd += [
+            "--network",
+            "--network-checkpoint-dir", str(checkpoint_dir),
+            "--network-feromon-port", str(cfg.network_feromon_port),
+            "--network-gossip-port", str(cfg.network_gossip_port),
+            "--network-remote-weight", str(cfg.network_remote_weight),
+        ]
     if cfg.mixed:
         cmd += ["--mixed"]
     if cfg.spanish:
@@ -435,6 +439,9 @@ def main():
     parser.add_argument("--spanish", action="store_true")
     parser.add_argument("--triple", action="store_true")
     parser.add_argument("--network", action="store_true", help="Activar red P2P")
+    parser.add_argument("--network-feromon-port", type=int, default=7337)
+    parser.add_argument("--network-gossip-port", type=int, default=7338)
+    parser.add_argument("--network-remote-weight", type=float, default=0.25)
     parser.add_argument("--metabolic-hunger", action="store_true",
                         help="Activar decisión de entrenamiento por hambre metabólica")
     parser.add_argument("--swarm-diversity", type=float, default=None,
@@ -480,6 +487,9 @@ def main():
         plateau_patience=args.plateau_patience,
         keep_last_n=args.keep_last,
         network=args.network,
+        network_feromon_port=args.network_feromon_port,
+        network_gossip_port=args.network_gossip_port,
+        network_remote_weight=args.network_remote_weight,
         metabolic_hunger=args.metabolic_hunger,
         swarm_diversity=args.swarm_diversity,
         mean_confidence=args.mean_confidence,

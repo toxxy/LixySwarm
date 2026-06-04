@@ -91,6 +91,14 @@ class SwarmTrainConfig:
     dtype: str = "bfloat16"
     compile: bool = False    # desactivar por defecto — swarm es complejo
 
+    # Red P2P / colaboración remota
+    network: bool = False
+    network_checkpoint_dir: str = ""
+    network_feromon_port: int = 7337
+    network_gossip_port: int = 7338
+    network_remote_weight: float = 0.25
+    network_broadcast_interval: int = 1
+
 
 # ─── Dataset ──────────────────────────────────────────────────────────────────
 
@@ -383,6 +391,45 @@ def train(cfg: SwarmTrainConfig, swarm_checkpoint: str = None):
     swarm = swarm.to(device)
     swarm.train()
 
+    network = None
+    network_stats = {"remote_mixes": 0, "broadcasts": 0}
+    if cfg.network:
+        try:
+            from src.network.swarm_network import SwarmNetwork
+
+            network_checkpoint_dir = cfg.network_checkpoint_dir or cfg.checkpoint_dir
+            network = SwarmNetwork.create(
+                swarm=swarm,
+                mode="auto",
+                feromon_port=cfg.network_feromon_port,
+                gossip_port=cfg.network_gossip_port,
+                checkpoint_dir=network_checkpoint_dir,
+            )
+
+            @network.on_peer_connected
+            def _on_training_peer(peer):
+                print(
+                    f"  🌐 Peer training conectado: {peer.host} "
+                    f"UDP:{peer.feromon_port} TCP:{peer.gossip_port} id={peer.node_id[:16]}"
+                )
+
+            network.start()
+            time.sleep(3)
+
+            def _merge_remote_feromon(local_feromon):
+                if network.collect_feromons():
+                    network_stats["remote_mixes"] += 1
+                return network.merge_remote_feromons(
+                    local_feromon,
+                    remote_weight=cfg.network_remote_weight,
+                )
+
+            swarm.remote_feromon_provider = _merge_remote_feromon
+            print(f"  🌐 Red P2P training activa — {network.status()}")
+        except Exception as e:
+            print(f"  ⚠ Red P2P training no disponible: {e}")
+            network = None
+
     # ─── Optimizador ───
     # Separar parámetros: agentes, pool/mixer (swarm mechanics), Matriarca
     agent_params = []
@@ -583,6 +630,20 @@ def train(cfg: SwarmTrainConfig, swarm_checkpoint: str = None):
         optimizer.step()
         loss_history.append(loss_accum)
 
+        if network is not None and cfg.network_broadcast_interval > 0:
+            should_broadcast = ((step - start_step + 1) % cfg.network_broadcast_interval) == 0
+            local_feromon = getattr(swarm, "_last_feromon", None)
+            if should_broadcast and local_feromon is not None:
+                with torch.no_grad():
+                    feromon_out = local_feromon.detach()
+                    if feromon_out.dim() > 1:
+                        feromon_out = feromon_out.mean(dim=0)
+                    avg_fitness = 0.5
+                    if swarm._last_fitnesses:
+                        avg_fitness = sum(af.fitness for af in swarm._last_fitnesses) / len(swarm._last_fitnesses)
+                    network.broadcast_feromon(feromon_out, fitness=float(avg_fitness))
+                    network_stats["broadcasts"] += 1
+
         # ─── Tracker de especialización ───
         if swarm._last_fitnesses:
             swarm.specialization.update(swarm._last_fitnesses, step)
@@ -601,6 +662,12 @@ def train(cfg: SwarmTrainConfig, swarm_checkpoint: str = None):
                 f"lr: {lr:.1e} | "
                 f"tok/s: {tokens_per_sec:,.0f}"
             )
+            if network is not None:
+                print(
+                    f"     🌐 {network.stats.summary()} | "
+                    f"remote_mix={network_stats['remote_mixes']} | "
+                    f"broadcasts={network_stats['broadcasts']}"
+                )
 
         # ─── Checkpoint periódico + reporte especialización ───
         if step % cfg.save_interval == 0 and step > start_step:
@@ -692,6 +759,9 @@ def train(cfg: SwarmTrainConfig, swarm_checkpoint: str = None):
     print(f"   🐘 Memorias Matriarca: {mat_mems} ({matriarca_update_count} updates)")
     print(f"   Tiempo: {elapsed:.0f}s")
     print(f"   Reporte: {report}")
+    if network is not None:
+        print(f"   🌐 Red final: {network.stats.summary()}")
+        network.stop()
 
     return best_val_loss, loss_history
 
@@ -759,6 +829,8 @@ if __name__ == "__main__":
     parser.add_argument("--eval-steps", type=int, default=10, help="Batches para estimar val_loss")
     parser.add_argument("--eval-interval", type=int, default=50, help="Intervalo de evaluación")
     parser.add_argument("--checkpoint", type=str, default=None, help="Continuar desde swarm checkpoint")
+    parser.add_argument("--checkpoint-dir", type=str, default="checkpoints", help="Directorio de checkpoints de salida")
+    parser.add_argument("--agent-checkpoint", type=str, default="checkpoints/finetune_best.pt", help="Checkpoint base de agente")
     parser.add_argument("--mixed", action="store_true", help="90%% FineWeb + 10%% personal")
     parser.add_argument("--spanish", action="store_true", help="Corpus Wikipedia español")
     parser.add_argument("--triple", action="store_true", help="70%% FW + 20%% Wiki-ES + 10%% Personal")
@@ -766,9 +838,18 @@ if __name__ == "__main__":
     parser.add_argument("--log-path", type=str, default=None, help="Path del log para loop evolutivo post-training")
     parser.add_argument("--no-compile", action="store_true")
     parser.add_argument("--block-size", type=int, default=512)
+    parser.add_argument("--device", choices=["cuda", "cpu"], default=None)
+    parser.add_argument("--network", action="store_true", help="Mezclar/publicar feromonas vía LSP v2")
+    parser.add_argument("--network-checkpoint-dir", type=str, default="", help="Directorio para identidad/peers LSP")
+    parser.add_argument("--network-feromon-port", type=int, default=7337)
+    parser.add_argument("--network-gossip-port", type=int, default=7338)
+    parser.add_argument("--network-remote-weight", type=float, default=0.25)
+    parser.add_argument("--network-broadcast-interval", type=int, default=1)
     args = parser.parse_args()
 
     cfg = SwarmTrainConfig(
+        checkpoint_dir=args.checkpoint_dir,
+        agent_checkpoint=args.agent_checkpoint,
         max_steps=args.steps,
         batch_size=args.batch,
         learning_rate=args.lr,
@@ -783,6 +864,13 @@ if __name__ == "__main__":
         fw_ratio=args.fw_ratio,
         spanish=args.spanish,
         triple=args.triple,
+        device=args.device or ("cuda" if torch.cuda.is_available() else "cpu"),
+        network=args.network,
+        network_checkpoint_dir=args.network_checkpoint_dir,
+        network_feromon_port=args.network_feromon_port,
+        network_gossip_port=args.network_gossip_port,
+        network_remote_weight=args.network_remote_weight,
+        network_broadcast_interval=args.network_broadcast_interval,
     )
     # Guardar el path del log en cfg para que el loop evolutivo lo use
     cfg._current_log_path = args.log_path

@@ -6,8 +6,18 @@ SwarmNetwork requiere torch (solo nodos GPU/CPU locales).
 LSPIdentity + LSPNodeV2 no requieren torch (VPS relay).
 """
 from .bootstrap import PeersDB, bootstrap_network
+from .messages import FeromonMessage, GossipMessage
+from .node import NodeIdentity, Peer, PeerTable
 
-__all__ = ["PeersDB", "bootstrap_network"]
+__all__ = [
+    "PeersDB",
+    "bootstrap_network",
+    "FeromonMessage",
+    "GossipMessage",
+    "NodeIdentity",
+    "Peer",
+    "PeerTable",
+]
 
 # SwarmNetwork solo si hay torch (nodos locales con GPU/CPU)
 try:
