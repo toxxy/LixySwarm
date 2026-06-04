@@ -117,8 +117,7 @@ class FeromonV2Payload:
 
     @classmethod
     def unpack(cls, data: bytes) -> "FeromonV2Payload":
-        """Deserializa desde bytes binarios."""
-        import torch
+        """Deserializa desde bytes binarios. No requiere torch (VPS-safe)."""
         import numpy as np
 
         FIXED_SIZE = 1 + 2 + 1 + 4 + 4 + 4  # = 16 bytes header
@@ -145,14 +144,18 @@ class FeromonV2Payload:
         elif dim_type == DIM_FLOAT32:
             arr = np.frombuffer(tensor_bytes, dtype=np.float32)
         elif dim_type == DIM_BFLOAT16:
-            # bfloat16 numpy workaround — reinterpret via torch
-            raw = np.frombuffer(tensor_bytes, dtype=np.uint16)
-            t = torch.tensor(raw, dtype=torch.int16).view(torch.bfloat16).float()
-            arr = t.numpy()
+            # bfloat16: reinterpret uint16 → shift left 16 → float32
+            raw = np.frombuffer(tensor_bytes, dtype=np.uint16).astype(np.uint32)
+            arr = (raw << 16).view(np.float32)
         else:
             raise ValueError(f"Unknown dim_type: {dim_type}")
 
-        feromon = torch.tensor(arr.copy(), dtype=torch.float32)
+        # torch optional — numpy ndarray is fine for relay/VPS
+        try:
+            import torch
+            feromon = torch.tensor(arr.copy(), dtype=torch.float32)
+        except ImportError:
+            feromon = arr.copy()  # numpy float32 array — callback-safe
 
         return cls(
             feromon=feromon,
