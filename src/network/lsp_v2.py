@@ -159,9 +159,11 @@ class FeromonV2Payload:
         )
 
     def apply_decay(self, decay: float = 0.95) -> "FeromonV2Payload":
-        """Retorna nuevo payload con feromon * decay y TTL - 1."""
+        """Retorna nuevo payload con feromon * decay y TTL - 1. Numpy-safe."""
+        import numpy as np
+        arr = np.array(self.feromon, dtype=np.float32, copy=False)
         return FeromonV2Payload(
-            feromon=self.feromon * decay,
+            feromon=arr * decay,
             ttl=max(0, self.ttl - 1),
             step=self.step,
             fitness=self.fitness,
@@ -251,8 +253,8 @@ class FeromonMergeBuffer:
         return result
 
     def _merge_payloads(self, payloads: List[FeromonV2Payload]) -> FeromonV2Payload:
-        """Fitness-weighted average de múltiples feromonas."""
-        import torch
+        """Fitness-weighted average de múltiples feromonas. Numpy-safe (VPS)."""
+        import numpy as np
 
         if len(payloads) == 1:
             p = payloads[0]
@@ -266,10 +268,11 @@ class FeromonMergeBuffer:
         else:
             weights = [p.fitness / total_fitness for p in payloads]
 
-        base = payloads[0].feromon.clone()
-        merged_vec = torch.zeros_like(base)
+        # Usar numpy para merge (VPS-safe, sin torch)
+        arr_base = np.array(payloads[0].feromon, dtype=np.float32, copy=False)
+        merged_arr = np.zeros_like(arr_base, dtype=np.float32)
         for w, p in zip(weights, payloads):
-            merged_vec += p.feromon * w
+            merged_arr += np.array(p.feromon, dtype=np.float32) * w
 
         avg_fitness = sum(p.fitness for p in payloads) / len(payloads)
         min_ttl = min(p.ttl for p in payloads)
@@ -277,7 +280,7 @@ class FeromonMergeBuffer:
         max_ts = max(p.timestamp_ms for p in payloads)
 
         result = FeromonV2Payload(
-            feromon=merged_vec,
+            feromon=merged_arr,
             ttl=min_ttl,
             step=max_step,
             fitness=avg_fitness,
