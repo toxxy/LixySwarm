@@ -52,9 +52,9 @@ def run():
     @node.on_feromon_received
     def on_feromon(feromon, from_node_id):
         try:
-            norm = sum(x*x for x in (feromon if not hasattr(feromon, 'norm') else [])) ** 0.5
-            if hasattr(feromon, 'norm'):
-                norm = feromon.norm().item()
+            import numpy as np
+            arr = np.array(feromon, dtype=np.float32)
+            norm = float(np.linalg.norm(arr))
             log.info(f"🐜 Feromona recibida de {from_node_id[:16]}... norm={norm:.3f}")
         except Exception as e:
             log.info(f"🐜 Feromona recibida de {from_node_id[:16]}...")
