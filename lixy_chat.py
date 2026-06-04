@@ -263,12 +263,8 @@ def main():
     print(f"{C.DIM}Cargando enjambre...{C.RESET}", flush=True)
     t0 = time.time()
 
-    # Suprimir output de carga excepto errores críticos
-    import io, contextlib
-    buffer = io.StringIO()
     try:
-        with contextlib.redirect_stdout(buffer):
-            lixy = load_swarm_for_chat(args.checkpoint, device)
+        lixy = load_swarm_for_chat(args.checkpoint, device)
     except Exception as e:
         print(f"\n{C.RED}❌ Error al cargar el modelo: {e}{C.RESET}")
         sys.exit(1)

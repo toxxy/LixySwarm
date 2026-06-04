@@ -106,11 +106,10 @@ class SwarmNetwork:
         time.sleep(2)  # dejar que LSP v2 termine de arrancar
         n = bootstrap_network(self, self.peers_db)
         if n > 0:
-            print(f"🌐 Bootstrap: conectado a {n} peers")
-            # Intercambiar peers con cada uno
+            log.info(f"Bootstrap: connected to {n} peers")
             self._exchange_peers()
         else:
-            print(f"🌐 Bootstrap: sin peers por ahora (esperando conexiones entrantes o seeds)")
+            log.info("Bootstrap: no peers yet (listening for incoming connections)")
 
         # Bootstrap periódico: cada 5 min reintentar si tenemos pocos peers
         while self._running:
@@ -118,7 +117,7 @@ class SwarmNetwork:
             if self.peer_count < 3 and self._lsp_v2_node:
                 n = bootstrap_network(self, self.peers_db, max_bootstrap=4)
                 if n > 0:
-                    log.info(f"Bootstrap periódico: +{n} peers")
+                    log.info(f"Periodic bootstrap: +{n} peers")
                     self._exchange_peers()
 
     def _exchange_peers(self):
@@ -184,11 +183,9 @@ class SwarmNetwork:
             self._bootstrap_thread.start()
 
             self.stats.mode = "lan"
-            log.info(f"SwarmNetwork [LSP v2] — {self.identity}")
-            print(f"🌐 SwarmNetwork LSP v2 activa")
-            print(f"   🐬 Feromonas UDP :{self.identity.feromon_port} (float16)")
-            print(f"   🐬 P2P      TCP :{self.identity.gossip_port} (handshake + peer exchange)")
-            print(f"   📋 peers.json  : {self.peers_db.count} conocidos")
+            log.info(f"SwarmNetwork [LSP v2] — {self.identity} "
+                     f"UDP:{self.identity.feromon_port} TCP:{self.identity.gossip_port} "
+                     f"peers_db:{self.peers_db.count}")
 
         except Exception as e:
             log.warning(f"LSP v2 no pudo arrancar: {e}")

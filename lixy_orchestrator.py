@@ -30,9 +30,12 @@ import argparse
 import json
 import os
 import time
+import logging
 from pathlib import Path
 from contextlib import nullcontext
 from dataclasses import dataclass
+
+log = logging.getLogger("lixy.orchestrator")
 
 import torch
 import torch.nn.functional as F
@@ -198,7 +201,7 @@ class LixyOrchestrator:
 
             @self.net.on_peer_connected
             def _peer_up(peer):
-                print(f"\n🌐 ¡Peer conectado al enjambre! {peer}")
+                log.info(f"Peer connected: {peer.node_id[:12]}...@{peer.host}")
 
             self.net.start()
             # Auto-bootstrap en background vía peers.json + seeds + peer exchange

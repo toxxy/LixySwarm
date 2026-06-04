@@ -440,14 +440,15 @@ class LSPNodeV2(LSPNode):
         try:
             pkt = LSPPacket.unpack(data)
             if not pkt.verify():
-                log.debug(f"Invalid signature from {addr}")
+                log.info(f"Invalid signature from {addr}")
                 return
 
             if pkt.type == PacketType.FEROMON_V2:
+                log.info(f"FEROMON_V2 received from {addr}, handling...")
                 self._handle_feromon_v2(pkt, addr)
             else:
                 # Delegar a v1 handler
                 super()._handle_udp(data, addr)
 
         except Exception as e:
-            log.debug(f"LSPNodeV2._handle_udp error from {addr}: {e}")
+            log.info(f"LSPNodeV2._handle_udp error from {addr}: {e}")

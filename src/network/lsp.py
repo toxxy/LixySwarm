@@ -305,7 +305,7 @@ class LSPNode:
                                                 info.get("gossip_port", self.gossip_port))
             log.info(f"Connected peer {host}:{port}")
         except Exception as e:
-            log.warning(f"connect_peer {host}:{port} failed: {e}")
+            log.debug(f"connect_peer {host}:{port}: {e}")
 
     def send_feromon(self, feromon, fitness: float = 0.5):
         """Envía tensor de feromona a todos los peers conocidos."""
@@ -560,7 +560,7 @@ class LSPNode:
             log.info(f"Peer registered: {node_id_hex[:16]}...@{host}:{feromon_port}")
             for cb in self._peer_callbacks:
                 try:
-                    cb(node_id_hex, host, feromon_port)
+                    cb(node_id_hex, host, gossip_port)
                 except Exception as e:
                     log.debug(f"peer_connected callback error: {e}")
 
