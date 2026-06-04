@@ -203,11 +203,19 @@ class SwarmNetwork:
 
     def _load_or_create_lsp_identity(self):
         from src.network.lsp import LSPIdentity
-        identity_path = self.checkpoint_dir / "lsp_identity.pem"
+        import uuid as _uuid
+        machine_id = _uuid.getnode()  # MAC address como int — único por máquina
+        identity_path = self.checkpoint_dir / f"lsp_identity_{machine_id:012x}.pem"
+
+        # Buscar identidad de ESTA máquina (MAC exacto)
         identity = LSPIdentity.load(str(identity_path))
-        if identity is None:
-            identity = LSPIdentity.generate()
-            identity.save(str(identity_path))
+        if identity is not None:
+            return identity
+
+        # No existe para esta máquina — generar nueva
+        identity = LSPIdentity.generate()
+        identity.save(str(identity_path))
+        log.info(f"New LSP identity (machine={machine_id:012x}): {identity.node_id_hex[:16]}...")
         return identity
 
     # ─── API principal ────────────────────────────────────────────────────────

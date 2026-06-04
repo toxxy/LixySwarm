@@ -22,9 +22,8 @@ STATUS_FILE    = BASE / "swarm_status.json"     # publicado por swarm_publisher.
 NODE_LOG       = BASE / "node.log"
 TRAINING_STATE = BASE / "checkpoints" / "training_state.json"
 LSP_IDENTITIES = [
-    BASE / "checkpoints" / "lsp_identity.pem",
     BASE / ".lixyswarm" / "identity.key",
-]
+] + sorted((BASE / "checkpoints").glob("lsp_identity_*.pem"))
 
 
 def _now() -> str:

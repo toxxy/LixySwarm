@@ -177,8 +177,15 @@ def collect_status() -> dict:
 
     # ─── LSP ────────────────────────────────────────────────────────────────────
     # Leer identidad LSP local (node_id + puertos)
+    import socket as _socket
     local_node_id = None
-    lsp_identity_file = CHECKPOINT_DIR / "lsp_identity.pem"
+    hostname = _socket.gethostname()
+    lsp_identity_file = CHECKPOINT_DIR / f"lsp_identity_{hostname}.pem"
+    # Fallback: buscar cualquier lsp_identity_*.pem
+    if not lsp_identity_file.exists():
+        candidates = sorted(CHECKPOINT_DIR.glob("lsp_identity_*.pem"))
+        if candidates:
+            lsp_identity_file = candidates[0]
     if lsp_identity_file.exists():
         try:
             from src.network.lsp import LSPIdentity
@@ -196,7 +203,7 @@ def collect_status() -> dict:
         "protocol": "LSP v2",
         "wire_format": "LYSW",
         "identity": "Ed25519",
-        "identity_persistent": (CHECKPOINT_DIR / "lsp_identity.pem").exists(),
+        "identity_persistent": lsp_identity_file.exists(),
         "status": "active",
         "float16": True,
         "merge_on_transit": True,
