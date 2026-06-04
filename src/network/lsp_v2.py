@@ -417,23 +417,23 @@ class LSPNodeV2(LSPNode):
 
             # TTL=0 → descartar sin callback
             if payload_obj.ttl <= 0:
-                log.debug(f"FeromonV2 TTL=0, discarding from {addr}")
+                log.info(f"FeromonV2 TTL=0, discarding from {addr}")
                 return
 
             node_id_hex = pkt.node_id.hex()
             self._merge_buffer.push(node_id_hex, payload_obj)
 
-            # Flush inmediato (podría ser lazy también)
+            # Flush inmediato
             merged_list = self._merge_buffer.flush()
             for nid, merged in merged_list:
                 for cb in self._feromon_callbacks:
                     try:
                         cb(merged.feromon, nid)
                     except Exception as e:
-                        log.debug(f"feromon_v2 callback error: {e}")
+                        log.info(f"feromon_v2 callback error: {e}")
 
         except Exception as e:
-            log.debug(f"_handle_feromon_v2 error from {addr}: {e}")
+            log.info(f"_handle_feromon_v2 error from {addr}: {e}")
 
     def _handle_udp(self, data: bytes, addr):
         """Override para manejar también paquetes v2."""
