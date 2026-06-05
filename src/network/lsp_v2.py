@@ -10,6 +10,7 @@ Wire format extendido con soporte de:
 
 from __future__ import annotations
 
+import json
 import struct
 import socket
 import threading
@@ -318,6 +319,7 @@ class LSPNodeV2(LSPNode):
         super().__init__(identity, feromon_port, gossip_port)
         self._merge_buffer = FeromonMergeBuffer()
         self._peer_list_callbacks: list = []
+        self._gossip_delta_callbacks: list = []
 
     # ─── Peer Exchange (addr gossip estilo Bitcoin) ───────────────────────
 
@@ -325,6 +327,12 @@ class LSPNodeV2(LSPNode):
         """callback(peers: List[Tuple[str,int]]) cuando llega PEER_LIST."""
         if callable(callback):
             self._peer_list_callbacks.append(callback)
+        return callback
+
+    def on_gossip_delta_received(self, callback):
+        """callback(delta: dict, from_node_id_hex: str) para Matriarca global."""
+        if callable(callback):
+            self._gossip_delta_callbacks.append(callback)
         return callback
 
     def send_peer_list(self, peers: List[dict]):
@@ -342,6 +350,30 @@ class LSPNodeV2(LSPNode):
                     s.sendall(struct.pack("<I", len(data)) + data)
             except Exception as e:
                 log.debug(f"send_peer_list to {peer['host']}: {e}")
+
+    def send_gossip_delta(self, delta: dict, exclude_node_id: str | None = None):
+        """Envía un delta JSON de gossip global a todos los peers TCP."""
+        if not isinstance(delta, dict):
+            return
+
+        payload = dict(delta)
+        payload.setdefault("source_node_id", self.identity.node_id_hex)
+        payload.setdefault("sent_at", time.time())
+        payload_bytes = json.dumps(payload, ensure_ascii=False).encode("utf-8")
+        pkt = LSPPacket.create(PacketType.GOSSIP_DELTA, payload_bytes, compress=True)
+        data = pkt.pack(self.identity)
+
+        with self._lock:
+            peers = list(self._peers.values())
+
+        for peer in peers:
+            if exclude_node_id and peer.get("node_id") == exclude_node_id:
+                continue
+            try:
+                with socket.create_connection((peer["host"], peer["gossip_port"]), timeout=5.0) as s:
+                    s.sendall(struct.pack("<I", len(data)) + data)
+            except Exception as e:
+                log.debug(f"send_gossip_delta to {peer['host']}: {e}")
 
     def request_peer_list(self, host: str, port: int):
         """Solicita lista de peers a un nodo específico (handshake incluye flag)."""
@@ -442,6 +474,27 @@ class LSPNodeV2(LSPNode):
 
         except Exception as e:
             log.info(f"_handle_feromon_v2 error from {addr}: {e}")
+
+    def _handle_custom_tcp_packet(self, pkt: LSPPacket, conn: socket.socket, addr) -> bool:
+        """Maneja extensiones TCP v2 llamadas desde LSPNode._handle_tcp_conn()."""
+        if pkt.type != PacketType.GOSSIP_DELTA:
+            return False
+
+        try:
+            delta = pkt.payload_json()
+            node_id_hex = pkt.node_id.hex()
+            feromon_port = int(delta.get("feromon_port", self.feromon_port))
+            gossip_port = int(delta.get("gossip_port", self.gossip_port))
+            self._register_peer(node_id_hex, addr[0], feromon_port, gossip_port)
+
+            for cb in self._gossip_delta_callbacks:
+                try:
+                    cb(delta, node_id_hex)
+                except Exception as e:
+                    log.debug(f"gossip_delta callback error: {e}")
+        except Exception as e:
+            log.debug(f"_handle_gossip_delta error from {addr}: {e}")
+        return True
 
     def _handle_udp(self, data: bytes, addr):
         """Override para manejar también paquetes v2."""

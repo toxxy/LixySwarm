@@ -17,10 +17,10 @@ Este módulo añade:
    - Recuperación por similaridad de rol/embedding
    - Compresión generacional cuando supera capacidad
 
-3. MatriarcaDual — arquitectura lista para distribución
+3. MatriarcaDual — arquitectura dual distribuible
    - PersonalMatriarca: memoria privada local (encriptada en futuro)
    - GlobalMatriarca: memoria compartida del enjambre distribuido
-   - Hoy ambas son locales; la red P2P se enchufa sin cambiar la API
+   - Exporta/importa deltas globales seguros para LSP v2
 
 4. MatriarcaEnriched — extiende Matriarca con el layer genético
    - store_sect_legacy(): versión enriquecida del método del SectManager
@@ -321,8 +321,8 @@ class MatriarcaDual:
 
     - GlobalMatriarca: memoria compartida del enjambre
       * Conocimiento técnico, legados de sectas, ADN genético
-      * Se sincroniza con otros nodos vía LSP (cuando Fase 2 esté lista)
-      * Hoy: solo local, API lista para enchufar P2P
+      * Se sincroniza con otros nodos vía LSP v2 (GOSSIP_DELTA)
+      * Exporta solo memorias globales compartibles
 
     Ambas son instancias de Matriarca. Esta clase las coordina.
     """
@@ -336,7 +336,41 @@ class MatriarcaDual:
         from src.matriarca.matriarca import Matriarca
         self.personal = Matriarca(personal_cfg, device=device)
         self.global_ = Matriarca(global_cfg, device=device)
+        self.cfg = personal_cfg
+        self.global_cfg = global_cfg
+        self.bank = self.personal.bank
         self.device = device
+        self._seen_global_memory_ids: set[str] = self._global_memory_ids()
+
+    def emit_infrasound(
+        self,
+        state_embedding: torch.Tensor,
+        use_retrieval: bool = True,
+        top_k: int = 32,
+        update_importance: bool = True,
+        importance_delta: float = 0.05,
+    ) -> torch.Tensor:
+        """
+        API compatible con Matriarca base.
+
+        El runtime pide `emit_infrasound()`, pero internamente usamos la
+        arquitectura dual: personal privado + global compartible.
+        """
+        personal_inf = self.personal.emit_infrasound(
+            state_embedding,
+            use_retrieval=use_retrieval,
+            top_k=top_k,
+            update_importance=update_importance,
+            importance_delta=importance_delta,
+        )
+        global_inf = self.global_.emit_infrasound(
+            state_embedding,
+            use_retrieval=use_retrieval,
+            top_k=top_k,
+            update_importance=update_importance,
+            importance_delta=importance_delta,
+        )
+        return 0.7 * personal_inf + 0.3 * global_inf
 
     def emit_combined(
         self,
@@ -357,24 +391,231 @@ class MatriarcaDual:
     def store_personal(self, embedding: torch.Tensor, text: str, importance: float = 0.8):
         """Almacena en la memoria personal (no se comparte)."""
         self.personal.store_interaction(embedding, text, importance)
+        self._stamp_last_memory(self.personal.bank, scope="personal", private=True)
+
+    def store_interaction(
+        self,
+        state_embedding: torch.Tensor,
+        text: str,
+        importance: float = 1.0,
+        auto_compress: bool = True,
+    ):
+        """API compatible: toda interacción runtime entra a memoria personal."""
+        self.personal.store_interaction(
+            state_embedding,
+            text,
+            importance=importance,
+            auto_compress=auto_compress,
+        )
+        self._stamp_last_memory(self.personal.bank, scope="personal", private=True)
+
+    def add(self, embedding: torch.Tensor, text: str, importance: float = 1.0):
+        """
+        API compatible para legados/síntesis ya embebidos.
+
+        Los legados genéticos no son conversación privada; se guardan en global.
+        """
+        self.global_.add(embedding, text, importance)
+        self._stamp_last_memory(self.global_.bank, scope="global", private=False)
+
+    def penalize_unused(
+        self,
+        top_k_used: torch.Tensor,
+        all_indices: range,
+        penalty: float = -0.02,
+    ):
+        """Feedback de sesión: solo ajusta memoria personal privada."""
+        self.personal.penalize_unused(top_k_used, all_indices, penalty=penalty)
 
     def store_global(self, embedding: torch.Tensor, text: str, importance: float = 0.7):
-        """Almacena en la memoria global (se compartirá vía LSP)."""
+        """Almacena en la memoria global (compartible vía LSP)."""
         self.global_.store_interaction(embedding, text, importance)
+        self._stamp_last_memory(self.global_.bank, scope="global", private=False)
 
-    def merge_global_update(self, remote_embeddings: torch.Tensor, remote_metadata: list):
+    def export_global_delta(
+        self,
+        since_ts: float = 0.0,
+        max_items: int = 64,
+        min_importance: float = 0.0,
+    ) -> dict:
         """
-        Fusiona conocimiento global recibido de otro nodo (preparación LSP Fase 2).
-        Por ahora: añade memorias remotas con importancia reducida.
-        En Fase 2: merge inteligente con TTL + decay.
+        Exporta un delta de memoria global para la red.
+
+        Importante: nunca lee `self.personal`; solo usa `self.global_` y además
+        filtra metadatos marcados como privados/personales.
         """
+        embeddings = self.global_.bank.get_embeddings("cpu")
+        candidates: list[tuple[torch.Tensor, dict]] = []
+
+        for i, meta in enumerate(self.global_.bank.metadata):
+            if i >= embeddings.shape[0]:
+                break
+            if not self._is_shareable_global_meta(meta):
+                continue
+            timestamp = float(meta.get("timestamp", 0.0) or 0.0)
+            importance = float(meta.get("importance", 0.0) or 0.0)
+            if timestamp <= since_ts or importance < min_importance:
+                continue
+
+            emb = embeddings[i].detach().cpu().float()
+            exported_meta = dict(meta)
+            exported_meta["text"] = str(exported_meta.get("text", ""))[:200]
+            exported_meta["scope"] = "global"
+            exported_meta["private"] = False
+            exported_meta["memory_id"] = self._memory_id(exported_meta, emb)
+            candidates.append((emb, exported_meta))
+
+        if max_items > 0:
+            candidates = candidates[-max_items:]
+
+        return {
+            "kind": "matriarca_global_delta",
+            "version": 1,
+            "created_at": time.time(),
+            "count": len(candidates),
+            "metadata": [meta for _, meta in candidates],
+            "embeddings": [emb.to(torch.float16).tolist() for emb, _ in candidates],
+        }
+
+    def merge_global_delta(
+        self,
+        delta: dict,
+        source_id: Optional[str] = None,
+        import_weight: float = 0.8,
+    ) -> int:
+        """Fusiona un delta global recibido por LSP v2."""
+        if not isinstance(delta, dict):
+            return 0
+        if delta.get("kind") != "matriarca_global_delta":
+            return 0
+
+        metadata = delta.get("metadata") or []
+        embeddings = delta.get("embeddings") or []
+        if not metadata or not embeddings:
+            return 0
+
+        remote_embeddings = torch.tensor(embeddings, dtype=torch.float32)
+        return self.merge_global_update(
+            remote_embeddings,
+            metadata,
+            source_id=source_id or delta.get("source_node_id"),
+            import_weight=import_weight,
+        )
+
+    def merge_global_update(
+        self,
+        remote_embeddings: torch.Tensor,
+        remote_metadata: list,
+        source_id: Optional[str] = None,
+        import_weight: float = 0.8,
+    ) -> int:
+        """
+        Fusiona conocimiento global recibido de otro nodo.
+
+        Aplica privacidad, deduplicación por `memory_id`/texto y descuento de
+        importancia por distancia. Retorna cuántas memorias nuevas entraron.
+        """
+        if remote_embeddings is None or remote_metadata is None:
+            return 0
+
+        remote_embeddings = torch.as_tensor(remote_embeddings, dtype=torch.float32)
+        if remote_embeddings.dim() == 1:
+            remote_embeddings = remote_embeddings.unsqueeze(0)
+
+        seen_ids = self._global_memory_ids()
+        seen_texts = self._global_text_hashes()
+        merged = 0
+
         for i, meta in enumerate(remote_metadata):
             if i >= remote_embeddings.shape[0]:
                 break
+            if not isinstance(meta, dict) or not self._is_shareable_global_meta(meta):
+                continue
+
             emb = remote_embeddings[i]
             text = meta.get("text", "[remote]")
-            importance = meta.get("importance", 0.5) * 0.8  # descuento por distancia
+            text_hash = self._text_hash(text)
+            memory_id = self._memory_id(meta, emb)
+            if memory_id in seen_ids or text_hash in seen_texts:
+                continue
+
+            importance = float(meta.get("importance", 0.5) or 0.5) * float(import_weight)
             self.global_.bank.add(emb, text, importance)
+            stored_meta = self.global_.bank.metadata[-1]
+            stored_meta.update({
+                "scope": "global",
+                "private": False,
+                "memory_id": memory_id,
+                "imported_from": source_id or meta.get("source_node_id") or "remote",
+                "imported_at": time.time(),
+            })
+            seen_ids.add(memory_id)
+            seen_texts.add(text_hash)
+            merged += 1
+
+        if merged:
+            self.global_.bank.save()
+            self._seen_global_memory_ids = seen_ids
+        return merged
+
+    def _stamp_last_memory(self, bank, scope: str, private: bool):
+        if not bank.metadata or bank.embeddings is None:
+            return
+        meta = bank.metadata[-1]
+        emb = bank.get_embeddings("cpu")[-1]
+        meta["scope"] = scope
+        meta["private"] = bool(private)
+        meta["memory_id"] = self._memory_id(meta, emb)
+        bank.save()
+
+    def _global_memory_ids(self) -> set[str]:
+        ids: set[str] = set()
+        embeddings = self.global_.bank.get_embeddings("cpu")
+        for i, meta in enumerate(self.global_.bank.metadata):
+            if i >= embeddings.shape[0]:
+                break
+            ids.add(self._memory_id(meta, embeddings[i]))
+        return ids
+
+    def _global_text_hashes(self) -> set[str]:
+        return {
+            self._text_hash(meta.get("text", ""))
+            for meta in self.global_.bank.metadata
+            if isinstance(meta, dict)
+        }
+
+    @staticmethod
+    def _is_shareable_global_meta(meta: dict) -> bool:
+        if not isinstance(meta, dict):
+            return False
+        text = str(meta.get("text", "")).strip()
+        if not text or text == "[memoria_inicial]":
+            return False
+        if meta.get("private") is True or meta.get("share") is False:
+            return False
+        if str(meta.get("scope", "global")).lower() == "personal":
+            return False
+        lowered = text.lower()
+        private_prefixes = ("[personal]", "personal:", "[privado]", "privado:")
+        return not lowered.startswith(private_prefixes)
+
+    @staticmethod
+    def _text_hash(text: str) -> str:
+        normalized = " ".join(str(text).strip().lower().split())
+        return hashlib.sha256(normalized.encode("utf-8")).hexdigest()
+
+    @classmethod
+    def _memory_id(cls, meta: dict, embedding: Optional[torch.Tensor] = None) -> str:
+        if isinstance(meta, dict) and meta.get("memory_id"):
+            return str(meta["memory_id"])
+
+        text_hash = cls._text_hash(meta.get("text", "") if isinstance(meta, dict) else "")
+        timestamp = float(meta.get("timestamp", 0.0) or 0.0) if isinstance(meta, dict) else 0.0
+        emb_hash = ""
+        if embedding is not None:
+            emb = torch.as_tensor(embedding, dtype=torch.float32).detach().cpu().reshape(-1)
+            emb_hash = hashlib.sha256(emb.numpy().tobytes()).hexdigest()[:16]
+        return hashlib.sha256(f"{text_hash}|{timestamp:.6f}|{emb_hash}".encode("utf-8")).hexdigest()
 
     def save(self):
         self.personal.save()
@@ -387,6 +628,21 @@ class MatriarcaDual:
     @property
     def global_memories(self) -> int:
         return self.global_.memory_count
+
+    @property
+    def memory_count(self) -> int:
+        return self.personal_memories + self.global_memories
+
+    @property
+    def metadata(self) -> list[dict]:
+        return self.global_.metadata
+
+    @metadata.setter
+    def metadata(self, value: list[dict]):
+        self.global_.metadata = value
+
+    def get_embeddings(self, device: str = None) -> torch.Tensor:
+        return self.global_.get_embeddings(device)
 
 
 # ─── MatriarcaEnriched — extiende Matriarca con layer genético ────────────────
@@ -467,7 +723,7 @@ class MatriarcaEnriched:
 
         # También guardar en la Matriarca base para orientación general
         emb_for_base = embedding if embedding is not None else self.legacy_bank._encode_record(record)
-        self._matriarca.bank.add(
+        self._matriarca.add(
             emb_for_base,
             record.to_summary(),
             importance=max(record.final_fitness, 0.15),

@@ -14,10 +14,12 @@ Cambios v3:
 """
 
 import sys
+import os
 from pathlib import Path
 from typing import List, Optional
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 import json
+import shutil
 import time
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
@@ -29,6 +31,55 @@ from src.agents.agent_base import AgentBase, AgentConfig
 from src.matriarca.matriarca import Matriarca, MatriarcaConfig
 from src.agents.dolphin_agent import DolphinAgent, DolphinSwarmBridge, DolphinConfig
 from src.swarm.dolphin_pool import DolphinPool
+
+
+def _copy_if_missing(src: Path, dst: Path) -> bool:
+    if src.exists() and not dst.exists() and src.resolve() != dst.resolve():
+        dst.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(src, dst)
+        return True
+    return False
+
+
+def _derive_dual_matriarca_configs(config: "SwarmConfig") -> tuple[MatriarcaConfig, MatriarcaConfig, bool]:
+    base_memory = Path(config.matriarca_config.memory_path)
+    base_checkpoint = Path(config.matriarca_config.checkpoint_path)
+    base_dir = base_memory.parent
+
+    personal_memory = Path(config.matriarca_personal_path) if config.matriarca_personal_path else base_dir / "matriarca_personal_private.json"
+    global_memory = Path(config.matriarca_global_path) if config.matriarca_global_path else base_dir / "matriarca_global_memory.json"
+    personal_checkpoint = (
+        base_dir / "matriarca_personal.pt"
+        if config.matriarca_personal_path is None
+        else personal_memory.with_name(f"{personal_memory.stem}_model.pt")
+    )
+    global_checkpoint = (
+        base_dir / "matriarca_global.pt"
+        if config.matriarca_global_path is None
+        else global_memory.with_name(f"{global_memory.stem}_model.pt")
+    )
+
+    migrated = False
+    migrated |= _copy_if_missing(base_memory, personal_memory)
+    migrated |= _copy_if_missing(base_memory.with_suffix(".pt"), personal_memory.with_suffix(".pt"))
+    migrated |= _copy_if_missing(base_checkpoint, personal_checkpoint)
+
+    personal_cfg = replace(
+        config.matriarca_config,
+        memory_path=str(personal_memory),
+        checkpoint_path=str(personal_checkpoint),
+        encrypt_memory=(
+            config.matriarca_config.encrypt_memory
+            or bool(os.environ.get(config.matriarca_config.encryption_key_env))
+        ),
+    )
+    global_cfg = replace(
+        config.matriarca_config,
+        memory_path=str(global_memory),
+        checkpoint_path=str(global_checkpoint),
+        encrypt_memory=False,
+    )
+    return personal_cfg, global_cfg, migrated
 
 
 # ─── Fitness de Agente 🐜 ─────────────────────────────────────────────────────────
@@ -226,6 +277,9 @@ class SwarmConfig:
     infrasound_weight: float = 0.3   # cuánto peso tienen los infrasónidos vs feromonas
     agent_configs: List[AgentConfig] = field(default_factory=list)
     matriarca_config: MatriarcaConfig = field(default_factory=MatriarcaConfig)
+    use_dual_matriarca: bool = True
+    matriarca_personal_path: Optional[str] = None
+    matriarca_global_path: Optional[str] = None
     dolphin_config: Optional[DolphinConfig] = None   # None = usar config derivada de agent_configs
 
     def __post_init__(self):
@@ -416,11 +470,24 @@ class LixySwarm(nn.Module):
         self.matriarca: Optional[Matriarca] = None
         if load_matriarca:
             device = "cuda" if torch.cuda.is_available() else "cpu"
-            base_mat = Matriarca(config.matriarca_config, device=device)
-            # Envolver con MatriarcaEnriched para habilitar legado genético de sectas
             from src.matriarca.matriarca_legacy import MatriarcaEnriched
-            self.matriarca = MatriarcaEnriched(base_mat)
-            print(f"  🐘 Matriarca conectada: {self.matriarca.memory_count} memorias | 🧬 legados: {self.matriarca.legacy_count}")
+            if config.use_dual_matriarca:
+                from src.matriarca.matriarca_legacy import MatriarcaDual
+                personal_cfg, global_cfg, migrated = _derive_dual_matriarca_configs(config)
+                base_mat = MatriarcaDual(personal_cfg, global_cfg, device=device)
+                if migrated:
+                    print("  🐘 Matriarca legacy migrada → memoria personal privada")
+                self.matriarca = MatriarcaEnriched(base_mat)
+                print(
+                    f"  🐘 MatriarcaDual conectada: "
+                    f"personal={base_mat.personal_memories} | global={base_mat.global_memories} | "
+                    f"🧬 legados: {self.matriarca.legacy_count}"
+                )
+            else:
+                base_mat = Matriarca(config.matriarca_config, device=device)
+                # Envolver con MatriarcaEnriched para habilitar legado genético de sectas
+                self.matriarca = MatriarcaEnriched(base_mat)
+                print(f"  🐘 Matriarca conectada: {self.matriarca.memory_count} memorias | 🧬 legados: {self.matriarca.legacy_count}")
 
         # 🐜 Tracker de especialización
         self.specialization = SpecializationTracker(config.n_agents)

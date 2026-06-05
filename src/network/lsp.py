@@ -481,6 +481,10 @@ class LSPNode:
                 log.debug(f"Invalid signature from TCP {addr}")
                 return
 
+            custom_handler = getattr(self, "_handle_custom_tcp_packet", None)
+            if callable(custom_handler) and custom_handler(pkt, conn, addr):
+                return
+
             if pkt.type == PacketType.HANDSHAKE:
                 info = pkt.payload_json()
                 remote_node_id = info.get("node_id", pkt.node_id.hex())

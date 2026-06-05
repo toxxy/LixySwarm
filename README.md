@@ -58,6 +58,8 @@ OUTPUT
 - Auto-compression at 90% capacity with generational distillation
 - Direct legacy ingestion for pre-encoded node/sect/ant memories
 - Dual-memory mode defaults to personal-dominant context (70% personal / 30% global)
+- Runtime uses `MatriarcaDual` by default: `matriarca_personal_private.*` stays local/private, `matriarca_global_memory.*` is the only shareable bank
+- Personal memory supports AES-256-GCM at rest when `LIXYSWARM_MATRIARCA_KEY` is configured
 - **Current state:** 3,131+ accumulated memories
 
 ### 🐬 DolphinAgent — ~9M params
@@ -71,6 +73,7 @@ OUTPUT
 - Standalone `node_daemon.py`: UDP 7337 / TCP 7338
 - Wire: LYSW binary · float16 feromonas · merge-on-transit · TTL decay
 - Handshake TCP Ed25519 + identidad persistente en `checkpoints/lsp_identity.pem`
+- `GOSSIP_DELTA` sincroniza deltas de Matriarca global sin exportar memoria personal
 - **Current network scope:** LAN automático; WAN requiere VPS relay o IP pública
 - **Recent tests:** 23/23 network smoke ✅
 
@@ -84,6 +87,10 @@ Recently implemented in the main branch:
 - **Robust tokenizer boot:** GPT-2 tokenizer assets are cached locally from a HuggingFace mirror, avoiding Azure timeout failures.
 - **Metabolic Hunger:** `auto_train.py --metabolic-hunger` can decide between `meal`, `snack`, `watch`, and `satiated`.
 - **Sect bifurcation:** strong mature sects can split into child roles when diversity drops and the Matriarca recommends it.
+- **Global Matriarca sync:** initial `GOSSIP_DELTA` path exports synthetic/global memory deltas with privacy filters.
+- **Dual Matriarca runtime:** `LixySwarm`, chat, and orchestrator paths now use personal/global memory separation by default.
+- **Personal memory encryption:** Personal Matriarca can be encrypted at rest with `LIXYSWARM_MATRIARCA_KEY`.
+- **Secure status publishing:** `swarm_publisher.py` now publishes to `POST /swarm/publish` using `LIXYSWARM_PUBLISH_TOKEN`.
 - **Explorer updates:** the frontend shows LSP status, network reach, stale/fresh data, auto-loop state, and hunger signals.
 - **API state bridge:** `/swarm/status` now exposes `auto_loop`, `last_hunger`, `lsp`, and Internet readiness metadata.
 
@@ -111,24 +118,24 @@ LixySwarm/
 │   │   ├── dynamic_roles.py       # DynamicRoleAdapter: roles + temperature
 │   │   └── runtime_session.py     # Cross-turn state, persistent history
 │   ├── network/
-│   │   ├── swarm_network.py       # P2P: UDP + TCP + mDNS + LSP v2
-│   │   ├── lsp.py                 # LSP v1 wire protocol + Ed25519 identity
-│   │   ├── lsp_v2.py              # Binary float16 pheromones + merge-on-transit
+│   │   ├── swarm_network.py       # P2P facade; LSP v2 is the default path
+│   │   ├── lsp.py                 # LSP identity + legacy compatibility helpers
+│   │   ├── lsp_v2.py              # Binary float16 pheromones + GOSSIP_DELTA
 │   │   ├── node.py                # Node identity + routing
-│   │   └── transport.py           # Transport layer
+│   │   └── transport.py           # Legacy v1 transport, kept for compatibility
 │   └── utils/
 │       ├── sampling.py            # rep_penalty + top-k + top-p
 │       └── tokenizer.py           # offline-safe GPT-2 tokenizer cache
 ├── api/
 │   ├── main.py                    # FastAPI backend for chat + swarm state
-│   └── swarm_state.py             # Read-only status bridge for frontend
+│   └── swarm_state.py             # Status bridge + atomic publish storage
 ├── frontend/
 │   ├── chat.html                  # Browser chat UI
 │   └── swarm-explorer.html        # Live swarm dashboard
 ├── paper/
 │   └── LixySwarm_AntElephantDolphin.pdf  # Full academic paper (17 pages)
 ├── auto_train.py                  # Continuous auto-training + Metabolic Hunger
-├── swarm_publisher.py             # Publishes local swarm status to VPS/API
+├── swarm_publisher.py             # Publishes local swarm status to API relay
 ├── train_swarm.py                 # Full swarm training
 ├── train_matriarca.py             # Dedicated Matriarca training
 ├── train.py                       # Base per-agent training
@@ -203,7 +210,7 @@ LixySwarm can already communicate across machines, but the scope matters:
 |---|---:|---|
 | Same machine | ✅ | Local/no-op mode, useful for development |
 | Same LAN/Wi-Fi | ✅ | mDNS discovery + UDP/TCP pheromone/gossip transport |
-| VPS status publishing | ✅ | `swarm_publisher.py` writes status for the API/frontend |
+| VPS/API status publishing | ✅ | `swarm_publisher.py` posts status to `/swarm/publish` with token auth |
 | Internet peer-to-peer | ⚠️ Config required | NAT blocks automatic discovery; use VPS relay, public IP, or port-forwarding |
 | Planetary zero-config network | 🔮 | Requires DHT, relay mesh, consensus, reputation |
 
@@ -248,11 +255,19 @@ python train_swarm.py --steps 7000 --batch 4 --checkpoint checkpoints/swarm_best
 python auto_train.py --metabolic-hunger --swarm-diversity 0.35 --mean-confidence 0.55
 
 # API + frontend
+export LIXYSWARM_PUBLISH_TOKEN="change-me"
+export LIXYSWARM_MATRIARCA_KEY="base64-32-byte-key"
 uvicorn api.main:app --host 0.0.0.0 --port 8080
 # then open frontend/chat.html or frontend/swarm-explorer.html
 
+# Local node → relay/API status publisher
+export LIXYSWARM_API_URL="http://127.0.0.1:8080"
+export LIXYSWARM_PUBLISH_TOKEN="change-me"
+python swarm_publisher.py --once
+
 # Benchmark
 python benchmark.py
+python benchmark.py --health-only --health-batches 10
 
 # P2P network tests
 python test_network.py --skip-lan --skip-gossip

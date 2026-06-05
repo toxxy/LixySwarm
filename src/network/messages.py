@@ -1,9 +1,8 @@
 """
-LixySwarm Network — Formatos de Mensajes
-==========================================
-Serialización ultra-ligera con struct + float16.
-FeromonMessage: ~550 bytes (cabe en un UDP packet)
-GossipMessage: JSON comprimido (TCP)
+LixySwarm Network — Formatos de Mensajes Legacy v1
+===================================================
+LSP v2 vive en `src.network.lsp_v2` y es el protocolo principal.
+Este módulo se conserva para compatibilidad con pruebas y herramientas antiguas.
 """
 import struct
 import hmac

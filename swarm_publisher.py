@@ -1,20 +1,21 @@
 """
-swarm_publisher.py — Publica estado del swarm local al VPS periódicamente.
-Corre en la máquina local (con GPU) y escribe swarm_status.json en el VPS.
+swarm_publisher.py — Publica estado del swarm local al relay/API periódicamente.
+Corre en la máquina local (con GPU) y envía swarm_status.json por HTTP.
 
 Uso:
-    python3 swarm_publisher.py --vps-host <vps-ip> --vps-path /opt/lixyswarm/swarm_status.json
-
-# Configure your VPS in .env or environment:
-    (o simplemente escribe el JSON local y rsync lo sube)
+    LIXYSWARM_API_URL=https://tu-relay:8080 \
+    LIXYSWARM_PUBLISH_TOKEN=... \
+    python3 swarm_publisher.py
 """
 import os
 import json
 import time
 import glob
 import re
-import subprocess
 import argparse
+from urllib import error as urlerror
+from urllib import request as urlrequest
+from urllib.parse import urlparse
 from pathlib import Path
 from datetime import datetime, timezone
 
@@ -23,8 +24,8 @@ CHECKPOINT_DIR = BASE / "checkpoints"
 ANT_SPEC_FILE  = BASE / "checkpoints" / "ant_specialization.json"
 SWARM_LOG_PATTERN = "/tmp/swarm_*.log"
 
-VPS_HOST = os.environ.get("LIXYSWARM_VPS_HOST", "root@localhost")
-VPS_PATH = "/opt/lixyswarm/swarm_status.json"
+API_URL = os.environ.get("LIXYSWARM_API_URL", "http://127.0.0.1:8080")
+PUBLISH_TOKEN = os.environ.get("LIXYSWARM_PUBLISH_TOKEN", "")
 PUBLISH_INTERVAL = 15   # segundos entre publicaciones
 
 
@@ -216,8 +217,8 @@ def collect_status() -> dict:
         "float16": True,
         "merge_on_transit": True,
         "internet": {
-            "ready": bool(os.environ.get("LIXYSWARM_PUBLIC_HOST") or os.environ.get("LIXYSWARM_VPS_HOST")),
-            "mode": "relay/public-host" if (os.environ.get("LIXYSWARM_PUBLIC_HOST") or os.environ.get("LIXYSWARM_VPS_HOST")) else "lan-only",
+            "ready": bool(os.environ.get("LIXYSWARM_PUBLIC_HOST") or os.environ.get("LIXYSWARM_API_URL")),
+            "mode": "relay/public-host" if (os.environ.get("LIXYSWARM_PUBLIC_HOST") or os.environ.get("LIXYSWARM_API_URL")) else "lan-only",
         },
     }
 
@@ -231,9 +232,9 @@ def collect_status() -> dict:
                 import socket as _socket
                 s = _socket.socket(_socket.AF_INET, _socket.SOCK_DGRAM)
                 s.settimeout(0.1)
-                # Conecta al VPS para descubrir IP de salida
-                vps_for_discovery = os.environ.get("LIXYSWARM_VPS_HOST", "8.8.8.8")
-                s.connect((vps_for_discovery.split("@")[-1], 7338))
+                # Conecta al relay/API para descubrir IP de salida
+                relay_for_discovery = urlparse(os.environ.get("LIXYSWARM_API_URL", API_URL)).hostname or "8.8.8.8"
+                s.connect((relay_for_discovery, local_gossip_port))
                 local_host = s.getsockname()[0]
                 s.close()
             except Exception:
@@ -272,31 +273,45 @@ def collect_status() -> dict:
     return status
 
 
-def publish(status: dict, vps_host: str, vps_path: str):
-    """Escribe el JSON en local y lo sube al VPS vía scp."""
-    local_tmp = Path("/tmp/swarm_status_publish.json")
-    local_tmp.write_text(json.dumps(status, indent=2))
 
-    result = subprocess.run(
-        ["sshpass", "-p", "YY6m1XInz..+", "scp",
-         "-o", "StrictHostKeyChecking=no",
-         str(local_tmp), f"{vps_host}:{vps_path}"],
-        capture_output=True, text=True, timeout=15
-    )
-    return result.returncode == 0
+def publish(status: dict, api_url: str, token: str) -> bool:
+    """Publica el estado local en la API del relay por HTTP."""
+    endpoint = api_url.rstrip("/") + "/swarm/publish"
+    body = json.dumps(status).encode("utf-8")
+    headers = {
+        "Content-Type": "application/json",
+        "User-Agent": "LixySwarmPublisher/2.0",
+    }
+    if token:
+        headers["X-LixySwarm-Token"] = token
+
+    req = urlrequest.Request(endpoint, data=body, headers=headers, method="POST")
+    try:
+        with urlrequest.urlopen(req, timeout=15) as resp:
+            resp.read(1024)
+            return 200 <= resp.status < 300
+    except urlerror.HTTPError as exc:
+        detail = exc.read(512).decode("utf-8", errors="replace")
+        print(f"  ⚠ API rechazó publicación: HTTP {exc.code} {detail[:180]}")
+    except Exception as exc:
+        print(f"  ⚠ Error publicando al relay: {exc}")
+    return False
 
 
-def run(vps_host: str, vps_path: str, interval: int, once: bool = False):
-    print(f"🐜 SwarmPublisher arrancando (→ {vps_host}:{vps_path} cada {interval}s)")
+def run(api_url: str, token: str, interval: int, once: bool = False):
+    print(f"🐜 SwarmPublisher arrancando (→ {api_url.rstrip('/')}/swarm/publish cada {interval}s)")
+    if not token:
+        print("  ⚠ LIXYSWARM_PUBLISH_TOKEN no configurado; el relay puede rechazar la publicación")
+
     while True:
         try:
             status = collect_status()
-            ok = publish(status, vps_host, vps_path)
+            ok = publish(status, api_url, token)
             ts = status["timestamp"]
             step = status["metrics"].get("step", "?")
             mem = status.get("matriarca", {}).get("memory_count", "?")
             active = "🟢 training" if status["training_active"] else "💤 idle"
-            print(f"  [{ts[:19]}] {active} | step={step} | memorias={mem} | upload={'✅' if ok else '❌'}")
+            print(f"  [{ts[:19]}] {active} | step={step} | memorias={mem} | publish={'✅' if ok else '❌'}")
         except Exception as e:
             print(f"  ⚠ Error: {e}")
 
@@ -307,9 +322,9 @@ def run(vps_host: str, vps_path: str, interval: int, once: bool = False):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--vps-host", default=VPS_HOST)
-    parser.add_argument("--vps-path", default=VPS_PATH)
+    parser.add_argument("--api-url", default=API_URL, help="URL base de la API relay, ej. https://relay:8080")
+    parser.add_argument("--token", default=PUBLISH_TOKEN, help="Token de publicación; preferible vía LIXYSWARM_PUBLISH_TOKEN")
     parser.add_argument("--interval", type=int, default=PUBLISH_INTERVAL)
     parser.add_argument("--once", action="store_true", help="Publicar una vez y salir")
     args = parser.parse_args()
-    run(args.vps_host, args.vps_path, args.interval, args.once)
+    run(args.api_url, args.token, args.interval, args.once)

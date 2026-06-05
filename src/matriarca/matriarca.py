@@ -11,7 +11,11 @@ Transferencia transgeneracional: al reiniciarse, destila su conocimiento
 a una nueva instancia (knowledge distillation comprimida).
 """
 
+import base64
+import hashlib
+import io
 import json
+import os
 import time
 import math
 from pathlib import Path
@@ -34,6 +38,8 @@ class MatriarcaConfig:
     dropout: float = 0.1
     memory_path: str = "checkpoints/matriarca_memory.json"
     checkpoint_path: str = "checkpoints/matriarca.pt"
+    encrypt_memory: bool = False
+    encryption_key_env: str = "LIXYSWARM_MATRIARCA_KEY"
 
 
 # ─── Modelo ───────────────────────────────────────────────────────────────────
@@ -155,6 +161,7 @@ class MemoryBank:
         self.device = device
         self.memory_path = Path(cfg.memory_path)
         self.memory_path.parent.mkdir(parents=True, exist_ok=True)
+        self._loaded_plaintext = False
 
         # Embeddings en memoria (N, embd_dim)
         self.embeddings: Optional[torch.Tensor] = None
@@ -162,6 +169,94 @@ class MemoryBank:
         self.metadata: list[dict] = []
 
         self._load()
+        if self.cfg.encrypt_memory and self._loaded_plaintext:
+            self.save()
+            print("  🔐 Matriarca: memoria plaintext migrada a AES-256-GCM")
+
+    @staticmethod
+    def _is_encrypted_payload(value) -> bool:
+        return isinstance(value, dict) and value.get("encrypted") is True and value.get("algorithm") == "AES-256-GCM"
+
+    def _encryption_key(self) -> bytes:
+        raw = os.environ.get(self.cfg.encryption_key_env, "")
+        if not raw:
+            raise RuntimeError(
+                f"{self.cfg.encryption_key_env} requerido para cargar/guardar memoria cifrada"
+            )
+
+        padded = raw + ("=" * (-len(raw) % 4))
+        try:
+            decoded = base64.urlsafe_b64decode(padded.encode("utf-8"))
+            if len(decoded) == 32:
+                return decoded
+        except Exception:
+            pass
+        return hashlib.sha256(raw.encode("utf-8")).digest()
+
+    def _encrypt_bytes(self, payload: bytes, aad: bytes) -> dict:
+        from cryptography.hazmat.primitives.ciphers.aead import AESGCM
+
+        nonce = os.urandom(12)
+        ciphertext = AESGCM(self._encryption_key()).encrypt(nonce, payload, aad)
+        return {
+            "encrypted": True,
+            "algorithm": "AES-256-GCM",
+            "nonce": base64.b64encode(nonce).decode("ascii"),
+            "ciphertext": base64.b64encode(ciphertext).decode("ascii"),
+        }
+
+    def _decrypt_bytes(self, envelope: dict, aad: bytes) -> bytes:
+        from cryptography.hazmat.primitives.ciphers.aead import AESGCM
+
+        nonce = base64.b64decode(envelope["nonce"])
+        ciphertext = base64.b64decode(envelope["ciphertext"])
+        return AESGCM(self._encryption_key()).decrypt(nonce, ciphertext, aad)
+
+    def _read_metadata_file(self, path: Path) -> list[dict]:
+        with open(path) as f:
+            payload = json.load(f)
+
+        if self._is_encrypted_payload(payload):
+            if not self.cfg.encrypt_memory:
+                raise RuntimeError(f"{path} está cifrado; activa encrypt_memory")
+            plaintext = self._decrypt_bytes(payload, b"lixyswarm-matriarca-metadata-v1")
+            return json.loads(plaintext.decode("utf-8"))
+
+        self._loaded_plaintext = self.cfg.encrypt_memory
+        return payload
+
+    def _write_metadata_file(self, path: Path):
+        payload = json.dumps(self.metadata, ensure_ascii=False, indent=2).encode("utf-8")
+        with open(path, "w") as f:
+            if self.cfg.encrypt_memory:
+                json.dump(self._encrypt_bytes(payload, b"lixyswarm-matriarca-metadata-v1"), f, indent=2)
+            else:
+                f.write(payload.decode("utf-8"))
+
+    def _read_embeddings_file(self, path: Path) -> torch.Tensor:
+        try:
+            with open(path) as f:
+                payload = json.load(f)
+            if self._is_encrypted_payload(payload):
+                if not self.cfg.encrypt_memory:
+                    raise RuntimeError(f"{path} está cifrado; activa encrypt_memory")
+                plaintext = self._decrypt_bytes(payload, b"lixyswarm-matriarca-embeddings-v1")
+                return torch.load(io.BytesIO(plaintext), map_location=self.device, weights_only=True)
+        except (UnicodeDecodeError, json.JSONDecodeError):
+            payload = None
+
+        self._loaded_plaintext = self.cfg.encrypt_memory
+        return torch.load(path, map_location=self.device, weights_only=True)
+
+    def _write_embeddings_file(self, path: Path):
+        if self.cfg.encrypt_memory:
+            buffer = io.BytesIO()
+            torch.save(self.embeddings, buffer)
+            envelope = self._encrypt_bytes(buffer.getvalue(), b"lixyswarm-matriarca-embeddings-v1")
+            with open(path, "w") as f:
+                json.dump(envelope, f, indent=2)
+        else:
+            torch.save(self.embeddings, path)
 
     def _load(self):
         """Carga memorias desde disco si existen."""
@@ -169,10 +264,10 @@ class MemoryBank:
         emb_path = self.memory_path.with_suffix(".pt")
 
         if meta_path.exists() and emb_path.exists():
-            with open(meta_path) as f:
-                self.metadata = json.load(f)
-            self.embeddings = torch.load(emb_path, map_location=self.device, weights_only=True)
-            print(f"  → Matriarca: {len(self.metadata)} memorias cargadas")
+            self.metadata = self._read_metadata_file(meta_path)
+            self.embeddings = self._read_embeddings_file(emb_path)
+            suffix = " (cifrada)" if self.cfg.encrypt_memory else ""
+            print(f"  → Matriarca: {len(self.metadata)} memorias cargadas{suffix}")
         else:
             # Banco vacío — inicializar con embedding cero
             self.embeddings = torch.zeros(1, self.cfg.embd_dim, device=self.device)
@@ -181,9 +276,8 @@ class MemoryBank:
 
     def save(self):
         """Persiste memorias a disco."""
-        with open(self.memory_path, "w") as f:
-            json.dump(self.metadata, f, ensure_ascii=False, indent=2)
-        torch.save(self.embeddings, self.memory_path.with_suffix(".pt"))
+        self._write_metadata_file(self.memory_path)
+        self._write_embeddings_file(self.memory_path.with_suffix(".pt"))
 
     def add(self, embedding: torch.Tensor, text: str, importance: float = 1.0):
         """Añade una nueva memoria al banco."""
@@ -374,7 +468,8 @@ class Matriarca:
 
         # Cargar checkpoint si existe
         ckpt_path = Path(self.cfg.checkpoint_path)
-        if ckpt_path.exists():
+        emb_path = Path(self.cfg.memory_path).with_suffix(".pt")
+        if ckpt_path.exists() and ckpt_path.resolve() != emb_path.resolve():
             ckpt = torch.load(ckpt_path, map_location=device, weights_only=True)
             self.model.load_state_dict(ckpt["model"])
             print(f"  → Matriarca checkpoint cargado")

@@ -13,6 +13,9 @@ Test  9: SectManager.kill_sect() usa MatriarcaEnriched cuando disponible
 Test 10: SectRecord tiene parent_sect_id, children_sect_ids, n_agents_peak, born_at
 Test 11: MatriarcaDual emit_combined (Personal + Global)
 Test 12: MatriarcaDual.merge_global_update() fusiona conocimiento remoto
+Test 12b: MatriarcaDual.export_global_delta() no filtra memoria personal
+Test 12c: MatriarcaDual.merge_global_delta() deduplica memorias globales
+Test 12d: Personal Matriarca se cifra en reposo con AES-256-GCM
 Test 13: LixySwarm usa MatriarcaEnriched por defecto
 Test 14: route_task() + kill_sect() flujo completo integrado
 Test 15: 15/15 integration tests base siguen pasando
@@ -40,6 +43,18 @@ def fresh_matriarca(tmpdir, name="mat") -> Matriarca:
         checkpoint_path=f"{tmpdir}/{name}.pt",
     )
     return Matriarca(cfg, device="cpu")
+
+
+def tiny_matriarca_cfg(tmpdir, name="mat") -> MatriarcaConfig:
+    return MatriarcaConfig(
+        embd_dim=32,
+        infrasound_dim=16,
+        n_heads=4,
+        n_layers=1,
+        max_memories=64,
+        memory_path=f"{tmpdir}/{name}.json",
+        checkpoint_path=f"{tmpdir}/{name}.pt",
+    )
 
 
 def make_sect(sect_id, role_type, fitness=0.7, n=2) -> SectRecord:
@@ -308,11 +323,109 @@ def test_12_matriarca_dual_merge():
         print(f"  ✓ global memories: {before} → {after} (+{after - before})")
 
 
+def test_12b_matriarca_dual_export_privacy():
+    """Test 12b: export_global_delta() solo exporta memoria global."""
+    print("\n[Test 12b] MatriarcaDual export_global_delta privacidad")
+
+    with tempfile.TemporaryDirectory() as d:
+        dual = MatriarcaDual(
+            tiny_matriarca_cfg(d, "personal"),
+            tiny_matriarca_cfg(d, "global"),
+            device="cpu",
+        )
+        state = torch.randn(32)
+        dual.store_personal(state, "[PERSONAL] secreto local", importance=1.0)
+        dual.store_global(state, "patrón global compartible", importance=0.9)
+
+        delta = dual.export_global_delta(max_items=10)
+        texts = [m.get("text", "") for m in delta["metadata"]]
+
+        assert delta["kind"] == "matriarca_global_delta"
+        assert delta["count"] == 1
+        assert len(delta["embeddings"]) == 1
+        assert len(delta["metadata"]) == 1
+        assert "patrón global compartible" in texts
+        assert all("secreto local" not in t for t in texts)
+        assert all(m.get("scope") == "global" for m in delta["metadata"])
+        assert all(m.get("private") is False for m in delta["metadata"])
+        print(f"  ✓ delta_count={delta['count']} textos={texts}")
+
+
+def test_12c_matriarca_dual_merge_delta_dedup():
+    """Test 12c: merge_global_delta() fusiona una vez y deduplica repetidos."""
+    print("\n[Test 12c] MatriarcaDual merge_global_delta dedupe")
+
+    with tempfile.TemporaryDirectory() as d:
+        source = MatriarcaDual(
+            tiny_matriarca_cfg(d, "src_personal"),
+            tiny_matriarca_cfg(d, "src_global"),
+            device="cpu",
+        )
+        target = MatriarcaDual(
+            tiny_matriarca_cfg(d, "dst_personal"),
+            tiny_matriarca_cfg(d, "dst_global"),
+            device="cpu",
+        )
+        state = torch.randn(32)
+        source.store_global(state, "consenso remoto estable", importance=0.8)
+        delta = source.export_global_delta(max_items=10)
+
+        before = target.global_memories
+        merged_first = target.merge_global_delta(delta, source_id="node-a")
+        merged_second = target.merge_global_delta(delta, source_id="node-a")
+        after = target.global_memories
+
+        assert merged_first == 1, f"debería importar 1, importó {merged_first}"
+        assert merged_second == 0, f"dedupe falló, importó {merged_second}"
+        assert after == before + 1, f"memorias: {before} → {after}"
+        imported = target.global_.bank.metadata[-1]
+        assert imported["imported_from"] == "node-a"
+        assert imported["scope"] == "global"
+        print(f"  ✓ imported={merged_first} dedup={merged_second} memories={after}")
+
+
+def test_12d_personal_matriarca_encrypted_at_rest():
+    """Test 12d: memoria personal cifrada en reposo."""
+    print("\n[Test 12d] Personal Matriarca AES-256-GCM en reposo")
+
+    old_key = os.environ.get("LIXYSWARM_MATRIARCA_KEY")
+    os.environ["LIXYSWARM_MATRIARCA_KEY"] = "test-only-personal-matriarca-key"
+    try:
+        with tempfile.TemporaryDirectory() as d:
+            personal_cfg = tiny_matriarca_cfg(d, "personal_private")
+            personal_cfg.encrypt_memory = True
+            global_cfg = tiny_matriarca_cfg(d, "global_memory")
+
+            dual = MatriarcaDual(personal_cfg, global_cfg, device="cpu")
+            secret_text = "[PERSONAL] secreto local cifrado"
+            dual.store_personal(torch.randn(32), secret_text, importance=1.0)
+
+            personal_json = Path(personal_cfg.memory_path)
+            personal_pt = personal_json.with_suffix(".pt")
+            raw_json = personal_json.read_bytes()
+            raw_pt = personal_pt.read_bytes()
+            assert b"AES-256-GCM" in raw_json
+            assert secret_text.encode("utf-8") not in raw_json
+            assert secret_text.encode("utf-8") not in raw_pt
+
+            reloaded = MatriarcaDual(personal_cfg, global_cfg, device="cpu")
+            texts = [m.get("text", "") for m in reloaded.personal.bank.metadata]
+            assert secret_text in texts
+            assert reloaded.export_global_delta(max_items=10)["count"] == 0
+            print(f"  ✓ personal cifrada y recargada: {reloaded.personal_memories} memorias")
+    finally:
+        if old_key is None:
+            os.environ.pop("LIXYSWARM_MATRIARCA_KEY", None)
+        else:
+            os.environ["LIXYSWARM_MATRIARCA_KEY"] = old_key
+
+
 def test_13_swarm_uses_enriched():
     """Test 13: LixySwarm usa MatriarcaEnriched por defecto."""
     print("\n[Test 13] LixySwarm usa MatriarcaEnriched")
 
     from src.swarm.orchestrator import LixySwarm, SwarmConfig, AgentConfig
+    from src.matriarca.matriarca_legacy import MatriarcaDual
 
     with tempfile.TemporaryDirectory() as d:
         agent_cfgs = [AgentConfig(agent_id=i, n_agents=3) for i in range(3)]
@@ -321,11 +434,25 @@ def test_13_swarm_uses_enriched():
                 memory_path=f"{d}/mat.json",
                 checkpoint_path=f"{d}/mat.pt",
             ))
-        swarm = LixySwarm(cfg, load_matriarca=True).cuda()
+        device = "cuda" if torch.cuda.is_available() else "cpu"
+        swarm = LixySwarm(cfg, load_matriarca=True).to(device)
 
         assert isinstance(swarm.matriarca, MatriarcaEnriched)
+        assert isinstance(swarm.matriarca._matriarca, MatriarcaDual)
         assert swarm.matriarca.legacy_count >= 0
-        print(f"  ✓ MatriarcaEnriched: memories={swarm.matriarca.memory_count} legados={swarm.matriarca.legacy_count}")
+        dual = swarm.matriarca._matriarca
+        assert "personal_private" in Path(dual.personal.cfg.memory_path).name
+        assert "global_memory" in Path(dual.global_.cfg.memory_path).name
+
+        state = torch.randn(cfg.matriarca_config.embd_dim, device=device)
+        swarm.matriarca.store_interaction(state, "[PERSONAL] runtime secreto", importance=1.0)
+        delta = dual.export_global_delta(max_items=10)
+        assert delta["count"] == 0
+        assert all("[PERSONAL]" not in m.get("text", "") for m in delta["metadata"])
+        print(
+            f"  ✓ MatriarcaDual runtime: personal={dual.personal_memories} "
+            f"global={dual.global_memories} legados={swarm.matriarca.legacy_count}"
+        )
 
 
 def test_14_full_integration():
@@ -342,10 +469,11 @@ def test_14_full_integration():
                 memory_path=f"{d}/mat.json",
                 checkpoint_path=f"{d}/mat.pt",
             ))
-        swarm = LixySwarm(cfg, load_matriarca=True).cuda()
+        device = "cuda" if torch.cuda.is_available() else "cpu"
+        swarm = LixySwarm(cfg, load_matriarca=True).to(device)
 
         # 1. route_task — el delfín enruta
-        x = torch.randint(0, 50304, (1, 16)).cuda()
+        x = torch.randint(0, 50304, (1, 16), device=device)
         with torch.no_grad():
             feromon, route, dolphin_info = swarm.route_task(x, use_sects=True)
 
@@ -372,10 +500,14 @@ def test_15_integration_base():
     """Test 15: 15/15 integration tests base siguen pasando."""
     print("\n[Test 15] Integration tests base (subprocess)")
     import subprocess
+    import sys
+    env = dict(os.environ)
+    env["CUDA_VISIBLE_DEVICES"] = ""
     result = subprocess.run(
-        ["python3", "test_integration.py"],
+        [sys.executable, "test_integration.py"],
         capture_output=True, text=True,
-        cwd=os.path.dirname(os.path.abspath(__file__))
+        cwd=os.path.dirname(os.path.abspath(__file__)),
+        env=env,
     )
     output = result.stdout + result.stderr
     assert "15/15" in output, f"Integration tests fallaron:\n{output[-500:]}"
@@ -398,6 +530,9 @@ if __name__ == "__main__":
         test_10_sect_record_new_fields,
         test_11_matriarca_dual,
         test_12_matriarca_dual_merge,
+        test_12b_matriarca_dual_export_privacy,
+        test_12c_matriarca_dual_merge_delta_dedup,
+        test_12d_personal_matriarca_encrypted_at_rest,
         test_13_swarm_uses_enriched,
         test_14_full_integration,
         test_15_integration_base,

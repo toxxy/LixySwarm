@@ -1,9 +1,8 @@
 """
-LixySwarm Network — Capa de Transporte
-========================================
-UDP para feromonas (tolerante a pérdida, baja latencia)
-TCP para gossip de Matriarca (confiable)
-mDNS para descubrimiento LAN (zero-config)
+LixySwarm Network — Capa de Transporte Legacy v1
+================================================
+LSP v2 vive en `src.network.lsp_v2` y es el protocolo principal.
+Este módulo se conserva para compatibilidad con pruebas y tooling antiguo.
 """
 import socket
 import struct

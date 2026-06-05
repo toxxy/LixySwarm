@@ -2,8 +2,8 @@
 swarm_state.py — Lector de estado del LixySwarm para la API.
 
 Arquitectura:
-  - Nodo local (GPU)  → swarm_publisher.py → sube swarm_status.json al VPS cada 15s
-  - VPS (API)         → lee swarm_status.json → expone endpoints al frontend
+  - Nodo local (GPU)  → swarm_publisher.py → POST /swarm/publish cada 15s
+  - VPS (API)         → guarda swarm_status.json → expone endpoints al frontend
 
 Sin cargar modelos. Sin torch en el VPS para las métricas del swarm.
 """
@@ -42,6 +42,23 @@ def _read_status() -> dict:
     except Exception:
         pass
     return {}
+
+
+def save_published_status(status: dict[str, Any], publisher_ip: str | None = None) -> dict[str, Any]:
+    """Guarda el estado publicado por un nodo usando escritura atómica."""
+    if not isinstance(status, dict):
+        raise ValueError("status must be a JSON object")
+
+    data = dict(status)
+    data["_received_at"] = _now()
+    if publisher_ip:
+        data["_publisher_ip"] = publisher_ip
+
+    STATUS_FILE.parent.mkdir(parents=True, exist_ok=True)
+    tmp_file = STATUS_FILE.with_suffix(f"{STATUS_FILE.suffix}.tmp")
+    tmp_file.write_text(json.dumps(data, ensure_ascii=False, indent=2))
+    os.replace(tmp_file, STATUS_FILE)
+    return data
 
 
 def _read_json(path: Path) -> dict:
@@ -206,7 +223,7 @@ def get_lsp_state() -> dict:
     s = _read_status()
     published = s.get("lsp", {}) if isinstance(s.get("lsp"), dict) else {}
     public_host = os.environ.get("LIXYSWARM_PUBLIC_HOST")
-    relay_host = os.environ.get("LIXYSWARM_VPS_HOST")
+    relay_host = os.environ.get("LIXYSWARM_API_URL") or os.environ.get("LIXYSWARM_VPS_HOST")
     published_internet = published.get("internet", {}) if isinstance(published.get("internet"), dict) else {}
     standalone_identity = BASE / ".lixyswarm" / "identity.key"
     is_vps_relay = standalone_identity.exists()
@@ -226,7 +243,7 @@ def get_lsp_state() -> dict:
         "status": published.get("status", "available"),
         "float16": published.get("float16", True),
         "merge_on_transit": published.get("merge_on_transit", True),
-        "discovery": "TCP handshake + swarm_status.json",
+        "discovery": "TCP handshake + API status publish",
         "ports": {
             "feromon_udp": 7337,
             "gossip_tcp": 7338,

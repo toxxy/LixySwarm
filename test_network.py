@@ -495,6 +495,132 @@ def test_lsp_v2_relay_forward(verbose: bool = False):
         relay.stop()
 
 
+def test_lsp_v2_gossip_delta_loopback(verbose: bool = False):
+    """
+    Fase 2 Matriarca global: LSP v2 transporta GOSSIP_DELTA por TCP.
+    """
+    from src.network.lsp import LSPIdentity
+    from src.network.lsp_v2 import LSPNodeV2
+
+    node_a = LSPNodeV2(LSPIdentity.generate(), feromon_port=7580, gossip_port=7581)
+    node_b = LSPNodeV2(LSPIdentity.generate(), feromon_port=7582, gossip_port=7583)
+    received = []
+
+    @node_b.on_gossip_delta_received
+    def capture_delta(delta, node_id_hex):
+        received.append((delta, node_id_hex))
+
+    try:
+        node_a.start()
+        node_b.start()
+        check("LSP v2 gossip: nodos start()")
+
+        node_a._register_peer(node_b.identity.node_id_hex, "127.0.0.1", 7582, 7583)
+        delta = {
+            "kind": "matriarca_global_delta",
+            "version": 1,
+            "count": 1,
+            "metadata": [{"text": "memoria global loopback", "importance": 0.7, "scope": "global"}],
+            "embeddings": [[0.1, 0.2, 0.3, 0.4]],
+        }
+        node_a.send_gossip_delta(delta)
+
+        deadline = time.time() + 3.0
+        while not received and time.time() < deadline:
+            time.sleep(0.05)
+
+        check("LSP v2 gossip: delta recibido", len(received) == 1,
+              f"received={len(received)}")
+        if received:
+            delta_rx, node_hex = received[0]
+            check("LSP v2 gossip: kind correcto",
+                  delta_rx.get("kind") == "matriarca_global_delta",
+                  f"kind={delta_rx.get('kind')}")
+            check("LSP v2 gossip: node_id correcto",
+                  node_hex[:16] == node_a.identity.node_id_hex[:16],
+                  f"node_hex={node_hex[:16]}")
+    finally:
+        node_a.stop()
+        node_b.stop()
+
+
+def test_swarm_network_global_matriarca_sync(verbose: bool = False):
+    """
+    Fase 2 Matriarca global: SwarmNetwork sincroniza MatriarcaDual.
+    """
+    from src.matriarca.matriarca import MatriarcaConfig
+    from src.matriarca.matriarca_legacy import MatriarcaDual
+    import shutil
+
+    shutil.rmtree("checkpoints/test_global_sync_a", ignore_errors=True)
+    shutil.rmtree("checkpoints/test_global_sync_b", ignore_errors=True)
+
+    def tiny_cfg(root: str, name: str) -> MatriarcaConfig:
+        return MatriarcaConfig(
+            embd_dim=32,
+            infrasound_dim=16,
+            n_heads=4,
+            n_layers=1,
+            max_memories=64,
+            memory_path=f"{root}/{name}.json",
+            checkpoint_path=f"{root}/{name}.pt",
+        )
+
+    dual_a = MatriarcaDual(
+        tiny_cfg("checkpoints/test_global_sync_a", "personal"),
+        tiny_cfg("checkpoints/test_global_sync_a", "global"),
+        device="cpu",
+    )
+    dual_b = MatriarcaDual(
+        tiny_cfg("checkpoints/test_global_sync_b", "personal"),
+        tiny_cfg("checkpoints/test_global_sync_b", "global"),
+        device="cpu",
+    )
+    net_a = SwarmNetwork.create(
+        swarm=None,
+        mode="lan",
+        feromon_port=7584,
+        gossip_port=7585,
+        checkpoint_dir="checkpoints/test_global_sync_a",
+    )
+    net_b = SwarmNetwork.create(
+        swarm=None,
+        mode="lan",
+        feromon_port=7586,
+        gossip_port=7587,
+        checkpoint_dir="checkpoints/test_global_sync_b",
+    )
+    net_a.attach_global_matriarca(dual_a)
+    net_b.attach_global_matriarca(dual_b)
+
+    try:
+        net_a.start()
+        net_b.start()
+        check("SwarmNetwork global: nodos start()")
+
+        net_a._lsp_v2_node._register_peer(net_b._lsp_v2_node.identity.node_id_hex, "127.0.0.1", 7586, 7587)
+        dual_a.store_personal(torch.randn(32), "[PERSONAL] no debe viajar", importance=1.0)
+        dual_a.store_global(torch.randn(32), "memoria global desde swarmnetwork", importance=0.9)
+
+        sent = net_a.broadcast_global_delta(max_items=8)
+        check("SwarmNetwork global: delta enviado", sent == 1, f"sent={sent}")
+
+        deadline = time.time() + 4.0
+        while net_b.stats.global_memories_received < 1 and time.time() < deadline:
+            time.sleep(0.05)
+
+        texts = [m.get("text", "") for m in dual_b.global_.bank.metadata]
+        check("SwarmNetwork global: memoria recibida",
+              "memoria global desde swarmnetwork" in texts,
+              f"texts={texts}")
+        check("SwarmNetwork global: privacidad personal",
+              all("no debe viajar" not in text for text in texts),
+              f"texts={texts}")
+    finally:
+        net_a.stop()
+        net_b.stop()
+
+
 # ─── Main ─────────────────────────────────────────────────────────────────────
 
 def main():
@@ -540,6 +666,8 @@ def main():
     test_lsp_v2_loopback(verbose=args.verbose)
     test_swarm_network_v2_protocol(verbose=args.verbose)
     test_lsp_v2_relay_forward(verbose=args.verbose)
+    test_lsp_v2_gossip_delta_loopback(verbose=args.verbose)
+    test_swarm_network_global_matriarca_sync(verbose=args.verbose)
 
     # ─── Resumen ──────────────────────────────────────────────────────────────
     print(f"\n{BOLD}{'='*50}{RESET}")
@@ -562,7 +690,8 @@ def main():
     print(f"  2. broadcast_feromon() y merge_remote_feromons() están activos")
     print(f"  3. LixySwarm puede mezclar feromonas remotas en forward()")
     print(f"  4. train_swarm.py --network publica y consume feromonas remotas")
-    print(f"  5. Para WAN real se requiere relay/VPS o peer con IP pública")
+    print(f"  5. MatriarcaDual sincroniza memoria global vía GOSSIP_DELTA")
+    print(f"  6. Para WAN real se requiere relay/VPS o peer con IP pública")
     print()
 
     sys.exit(exit_code)

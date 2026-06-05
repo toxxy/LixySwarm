@@ -98,6 +98,10 @@ class SwarmTrainConfig:
     network_gossip_port: int = 7338
     network_remote_weight: float = 0.25
     network_broadcast_interval: int = 1
+    network_global_sync: bool = True
+    network_global_interval: int = 50
+    network_global_delta_items: int = 32
+    network_global_min_importance: float = 0.2
 
     # Lifecycle
     enable_ant_lifecycle: bool = False
@@ -395,7 +399,15 @@ def train(cfg: SwarmTrainConfig, swarm_checkpoint: str = None):
     swarm.train()
 
     network = None
-    network_stats = {"remote_mixes": 0, "broadcasts": 0}
+    global_sync = None
+    global_seen_ids: set[str] = set()
+    network_stats = {
+        "remote_mixes": 0,
+        "broadcasts": 0,
+        "global_broadcasts": 0,
+        "global_items_sent": 0,
+        "global_imports": 0,
+    }
     if cfg.network:
         try:
             from src.network.swarm_network import SwarmNetwork
@@ -408,6 +420,23 @@ def train(cfg: SwarmTrainConfig, swarm_checkpoint: str = None):
                 gossip_port=cfg.network_gossip_port,
                 checkpoint_dir=network_checkpoint_dir,
             )
+
+            if cfg.network_global_sync:
+                from src.matriarca.matriarca_legacy import MatriarcaDual
+
+                global_sync = MatriarcaDual(
+                    personal_cfg=MatriarcaConfig(
+                        memory_path=str(Path(cfg.checkpoint_dir) / "matriarca_personal_private.json"),
+                        checkpoint_path=str(Path(cfg.checkpoint_dir) / "matriarca_personal_private.pt"),
+                    ),
+                    global_cfg=MatriarcaConfig(
+                        memory_path=str(Path(cfg.checkpoint_dir) / "matriarca_global_memory.json"),
+                        checkpoint_path=str(Path(cfg.checkpoint_dir) / "matriarca_global.pt"),
+                    ),
+                    device="cpu",
+                )
+                network.attach_global_matriarca(global_sync)
+                global_seen_ids = set(global_sync._global_memory_ids())
 
             @network.on_peer_connected
             def _on_training_peer(peer):
@@ -429,9 +458,53 @@ def train(cfg: SwarmTrainConfig, swarm_checkpoint: str = None):
 
             swarm.remote_feromon_provider = _merge_remote_feromon
             print(f"  🌐 Red P2P training activa — {network.status()}")
+            if global_sync is not None:
+                print(
+                    f"  🐘🌐 Matriarca global activa — "
+                    f"{global_sync.global_memories} memorias globales compartibles"
+                )
         except Exception as e:
             print(f"  ⚠ Red P2P training no disponible: {e}")
             network = None
+            global_sync = None
+
+    def _mirror_received_global_memories() -> int:
+        if global_sync is None or swarm.matriarca is None:
+            return 0
+
+        mirrored = 0
+        sync_lock = getattr(network, "_global_sync_lock", nullcontext())
+        with sync_lock:
+            embeddings = global_sync.global_.bank.get_embeddings("cpu")
+            for i, meta in enumerate(global_sync.global_.bank.metadata):
+                if i >= embeddings.shape[0]:
+                    break
+                memory_id = meta.get("memory_id") or global_sync._memory_id(meta, embeddings[i])
+                if memory_id in global_seen_ids:
+                    continue
+                global_seen_ids.add(memory_id)
+                if not meta.get("imported_from"):
+                    continue
+                if not global_sync._is_shareable_global_meta(meta):
+                    continue
+
+                text = str(meta.get("text", "[global]"))[:200]
+                mirror_text = text if text.lower().startswith("[global]") else f"[global] {text}"
+                importance = float(meta.get("importance", 0.5) or 0.5) * 0.7
+                swarm.matriarca.add(
+                    embeddings[i],
+                    text=mirror_text,
+                    importance=importance,
+                )
+                swarm.matriarca.bank.metadata[-1].update({
+                    "scope": "global_import",
+                    "private": False,
+                    "source_memory_id": memory_id,
+                    "imported_from": meta.get("imported_from"),
+                })
+                swarm.matriarca.bank.save()
+                mirrored += 1
+        return mirrored
 
     # ─── Optimizador ───
     # Separar parámetros: agentes, pool/mixer (swarm mechanics), Matriarca
@@ -647,6 +720,22 @@ def train(cfg: SwarmTrainConfig, swarm_checkpoint: str = None):
                     network.broadcast_feromon(feromon_out, fitness=float(avg_fitness))
                     network_stats["broadcasts"] += 1
 
+        if network is not None and global_sync is not None:
+            mirrored = _mirror_received_global_memories()
+            if mirrored:
+                network_stats["global_imports"] += mirrored
+
+            if cfg.network_global_interval > 0:
+                should_gossip_global = ((step - start_step + 1) % cfg.network_global_interval) == 0
+                if should_gossip_global:
+                    sent_items = network.broadcast_global_delta(
+                        max_items=cfg.network_global_delta_items,
+                        min_importance=cfg.network_global_min_importance,
+                    )
+                    if sent_items:
+                        network_stats["global_broadcasts"] += 1
+                        network_stats["global_items_sent"] += sent_items
+
         # ─── Tracker de especialización ───
         if swarm._last_fitnesses:
             swarm.specialization.update(swarm._last_fitnesses, step)
@@ -669,7 +758,9 @@ def train(cfg: SwarmTrainConfig, swarm_checkpoint: str = None):
                 print(
                     f"     🌐 {network.stats.summary()} | "
                     f"remote_mix={network_stats['remote_mixes']} | "
-                    f"broadcasts={network_stats['broadcasts']}"
+                    f"broadcasts={network_stats['broadcasts']} | "
+                    f"global_tx={network_stats['global_items_sent']} | "
+                    f"global_imports={network_stats['global_imports']}"
                 )
 
         # ─── Checkpoint periódico + reporte especialización ───
@@ -681,12 +772,26 @@ def train(cfg: SwarmTrainConfig, swarm_checkpoint: str = None):
             if swarm.matriarca and swarm._last_fitnesses:
                 for af in swarm._last_fitnesses:
                     label = swarm.specialization._infer_label(str(af.agent_id))
+                    memory_embedding = torch.randn(swarm.matriarca.cfg.embd_dim) * 0.1
+                    memory_text = (
+                        f"[hormiga_{af.agent_id}] label={label} "
+                        f"fitness={af.fitness:.3f} div={af.feromon_divergence:.3f}"
+                    )
                     swarm.matriarca.store_interaction(
-                        torch.randn(swarm.matriarca.cfg.embd_dim) * 0.1,  # embedding sintético
-                        text=f"[hormiga_{af.agent_id}] label={label} fitness={af.fitness:.3f} div={af.feromon_divergence:.3f}",
+                        memory_embedding,  # embedding sintético
+                        text=memory_text,
                         importance=af.fitness,
                         auto_compress=False,
                     )
+                    if global_sync is not None:
+                        sync_lock = getattr(network, "_global_sync_lock", nullcontext())
+                        with sync_lock:
+                            global_sync.store_global(
+                                memory_embedding,
+                                text=f"[global] {memory_text}",
+                                importance=af.fitness,
+                            )
+                            global_seen_ids = set(global_sync._global_memory_ids())
             # Reporte de especialización cada save_interval
             if step % (cfg.save_interval * 2) == 0:
                 print(swarm.specialization.report(step))
@@ -849,6 +954,10 @@ if __name__ == "__main__":
     parser.add_argument("--network-gossip-port", type=int, default=7338)
     parser.add_argument("--network-remote-weight", type=float, default=0.25)
     parser.add_argument("--network-broadcast-interval", type=int, default=1)
+    parser.add_argument("--no-network-global-sync", action="store_true", help="Desactiva Matriarca global P2P")
+    parser.add_argument("--network-global-interval", type=int, default=50, help="Intervalo para publicar deltas globales")
+    parser.add_argument("--network-global-delta-items", type=int, default=32, help="Máx memorias globales por delta")
+    parser.add_argument("--network-global-min-importance", type=float, default=0.2, help="Importancia mínima para compartir global")
     parser.add_argument(
         "--enable-ant-lifecycle",
         action="store_true",
@@ -880,6 +989,10 @@ if __name__ == "__main__":
         network_gossip_port=args.network_gossip_port,
         network_remote_weight=args.network_remote_weight,
         network_broadcast_interval=args.network_broadcast_interval,
+        network_global_sync=not args.no_network_global_sync,
+        network_global_interval=args.network_global_interval,
+        network_global_delta_items=args.network_global_delta_items,
+        network_global_min_importance=args.network_global_min_importance,
         enable_ant_lifecycle=args.enable_ant_lifecycle,
     )
     # Guardar el path del log en cfg para que el loop evolutivo lo use

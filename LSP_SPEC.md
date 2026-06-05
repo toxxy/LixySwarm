@@ -1,6 +1,6 @@
 # LixySwarm Protocol (LSP) — Specification v2.0
 
-**Status:** Draft  
+**Status:** Draft + implementation notes (2026-06-05)
 **Authors:** LixySwarm Team  
 **Repo:** https://github.com/toxxy/LixySwarm  
 **Reference implementation:** `src/network/lsp_v2.py`, `src/network/lsp_merge.py`
@@ -30,6 +30,19 @@
 
 ---
 
+## Implementation Status — 2026-06-05
+
+LSP v2 is the canonical path in this repository. The implemented baseline is:
+
+- `SwarmNetwork` defaults to LSP v2 for pheromones and TCP gossip.
+- `GOSSIP_DELTA` carries synthetic Global Matriarca deltas; personal memory must not be exported.
+- `swarm_publisher.py` publishes dashboard state through `POST /swarm/publish` with token auth.
+- Legacy v1 `messages.py` and `transport.py` remain for compatibility only.
+
+Not yet complete: DHT/Kademlia discovery, reputation, nonce/sequence anti-replay, encrypted Personal Matriarca storage, and consensus. Treat those as roadmap items, not available protocol guarantees.
+
+---
+
 ## 1. Introduction
 
 LSP (LixySwarm Protocol) is a native binary protocol for distributed pheromone exchange between AI swarm nodes. It is **not** a wrapper over a generic transport — it defines the semantics of pheromone signals, node identity, and swarm topology as first-class protocol concepts.
@@ -38,7 +51,7 @@ LSP runs over:
 - **UDP** — pheromone signals (fire-and-forget, low latency)
 - **TCP** — gossip and handshake (reliable, ordered)
 
-The same protocol runs on a LAN (mDNS discovery, zero config) or on the open internet (DHT/relay discovery). The discovery layer is pluggable; the protocol is identical in both cases.
+The same protocol runs on a LAN (mDNS/explicit peers) or on the open internet through configured peers/relays. DHT-backed zero-config WAN discovery is planned, not currently complete.
 
 ---
 
@@ -66,7 +79,7 @@ The Matriarca memory bank is split into two independent banks:
 - **PersonalMatriarca**: private to the local node, never shared over the network, optionally encrypted at rest. Contains interaction history, user preferences, session memories.
 - **GlobalMatriarca**: shared knowledge accumulated from all nodes in the swarm. Populated via gossip and `merge_global_update()`. Safe to broadcast.
 
-The combined infrasound emission is a weighted sum: `0.4 × personal + 0.6 × global` (configurable).
+The combined infrasound emission is a weighted sum: `0.7 × personal + 0.3 × global` by current default, configurable per runtime.
 
 ### AD-002: Ed25519 Identity Without Central CA
 
@@ -178,13 +191,16 @@ Gossip packets (Type `0x02`, `0x11`) carry JSON payloads over TCP. Wire format i
 // request — ask for memories newer than timestamp
 { "kind": "request", "node_id": "<hex>", "since_ts": 1699990000.0 }
 
-// memories — transfer memory records
-{ "kind": "memories", "node_id": "<hex>",
-  "memories": [{"text": "...", "importance": 0.8, "embd": [0.1, ...]}] }
+// global_delta — transfer synthetic Global Matriarca deltas only
+{ "kind": "global_delta", "node_id": "<hex>",
+  "memories": [{"content_hash": "...", "importance": 0.8, "embedding": [0.1, ...]}],
+  "privacy": "global-only" }
 
 // ping — discovery heartbeat
 { "kind": "ping", "node_id": "<hex>", "feromon_port": 7337, "gossip_port": 7338 }
 ```
+
+`GOSSIP_DELTA` must not carry raw personal conversation text. If a field contains text, it must be synthetic/global-safe content generated for swarm sharing.
 
 ---
 
@@ -329,9 +345,10 @@ results = buf.flush()
 
 `SwarmNetwork` and `LSPNodeV2` support an optional `MatriarcaDual` instance. When present:
 
-- Incoming pheromones update the **GlobalMatriarca** (shared knowledge)
+- Incoming `GOSSIP_DELTA` packets update the **GlobalMatriarca** (shared knowledge)
+- Incoming pheromones influence the runtime swarm state and may inform later safe/global synthesis
 - Local interaction memories go to **PersonalMatriarca** (private)
-- `emit_combined()` blends both: `0.4 × personal + 0.6 × global`
+- `emit_combined()` blends both: `0.7 × personal + 0.3 × global` by default
 
 ```
 Node A                        Network                        Node B
@@ -382,13 +399,14 @@ Node A                                  Node B
 ```
 Node A                                  Node B
   │                                        │
-  │──── GOSSIP digest (TCP) ──────────────►│
+  │──── GOSSIP_DELTA digest (TCP) ────────►│
   │     {memory_count:42, newest_ts:...}   │
   │                                        │ compare with local
-  │◄──── GOSSIP request ───────────────────│
+  │◄──── GOSSIP_DELTA request ─────────────│
   │      {since_ts: ...}                   │
-  │──── GOSSIP memories ──────────────────►│
-  │     [{text, importance, embd}, ...]    │
+  │──── GOSSIP_DELTA global_delta ────────►│
+  │     [{content_hash, importance,        │
+  │       embedding, privacy}, ...]        │
   │                                        │ MatriarcaDual.merge_global_update()
 ```
 
@@ -494,6 +512,8 @@ For a new implementation in any language to be LSP-compliant:
 - [ ] Handle packet types: FEROMON(0x01), GOSSIP(0x02), HANDSHAKE(0x03), PING(0x04), PONG(0x05)
 - [ ] Handle v2 types: FEROMON_V2(0x10), GOSSIP_DELTA(0x11), MERGE_HINT(0x12)
 - [ ] Implement FeromonV2 binary payload (dim_type, n_dims, ttl, step, fitness, ts_delta, tensor)
+- [ ] Reject/export-filter personal memory in every `GOSSIP_DELTA` path
+- [ ] Add nonce/sequence anti-replay for `GOSSIP_DELTA`
 - [ ] Implement TTL decrement and discard on TTL=0
 - [ ] Implement decay factor application (0.95 per hop)
 - [ ] Implement fitness-weighted merge (FeromonMergeBuffer equivalent)

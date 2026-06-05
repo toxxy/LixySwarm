@@ -32,6 +32,9 @@ class NetworkStats:
     peers_known: int = 0
     feromons_sent: int = 0
     feromons_received: int = 0
+    global_deltas_sent: int = 0
+    global_deltas_received: int = 0
+    global_memories_received: int = 0
     gossip_rounds: int = 0
     started_at: float = 0.0
 
@@ -40,7 +43,8 @@ class NetworkStats:
         return (
             f"mode={self.mode} | peers={self.peers_known} | "
             f"feromon_rx={self.feromons_received} | feromon_tx={self.feromons_sent} | "
-            f"gossip={self.gossip_rounds} | uptime={uptime:.0f}s"
+            f"gossip={self.gossip_rounds} | global_rx={self.global_memories_received} | "
+            f"uptime={uptime:.0f}s"
         )
 
 
@@ -75,8 +79,11 @@ class SwarmNetwork:
         self._lsp_v2_node = None
         self._running = False
         self._bootstrap_thread = None
+        self._stop_event = threading.Event()
+        self._global_sync_lock = threading.RLock()
         self._on_peer_connected = None
         self._on_peer_lost = None
+        self.matriarca_dual = None
 
     def on_peer_connected(self, fn):
         self._on_peer_connected = fn
@@ -85,6 +92,11 @@ class SwarmNetwork:
     def on_peer_lost(self, fn):
         self._on_peer_lost = fn
         return fn
+
+    def attach_global_matriarca(self, matriarca_dual):
+        """Adjunta una MatriarcaDual para sincronizar su memoria global."""
+        self.matriarca_dual = matriarca_dual
+        return matriarca_dual
 
     # ─── WAN / Relay ──────────────────────────────────────────────────────────
 
@@ -106,7 +118,10 @@ class SwarmNetwork:
 
     def _bootstrap_loop(self):
         """Auto-bootstrap: intenta peers guardados, seeds, luego peer exchange."""
-        time.sleep(2)  # dejar que LSP v2 termine de arrancar
+        if self._stop_event.wait(2):  # dejar que LSP v2 termine de arrancar
+            return
+        if not self._running:
+            return
         n = bootstrap_network(self, self.peers_db)
         if n > 0:
             log.info(f"Bootstrap: connected to {n} peers")
@@ -116,7 +131,8 @@ class SwarmNetwork:
 
         # Bootstrap periódico: cada 5 min reintentar si tenemos pocos peers
         while self._running:
-            time.sleep(300)
+            if self._stop_event.wait(300):
+                break
             if self.peer_count < 3 and self._lsp_v2_node:
                 n = bootstrap_network(self, self.peers_db, max_bootstrap=4)
                 if n > 0:
@@ -141,6 +157,7 @@ class SwarmNetwork:
         if self._running:
             return
         self._running = True
+        self._stop_event.clear()
         self.stats.started_at = time.time()
 
         if self.mode == "local":
@@ -189,6 +206,19 @@ class SwarmNetwork:
                 self.peers_db.add_peers_batch(peer_addrs)
                 log.debug(f"Peer exchange: received {len(peer_addrs)} addrs")
 
+            @self._lsp_v2_node.on_gossip_delta_received
+            def _on_gossip_delta(delta, node_id_hex):
+                self.stats.gossip_rounds += 1
+                self.stats.global_deltas_received += 1
+                if self.matriarca_dual is None:
+                    return
+                try:
+                    with self._global_sync_lock:
+                        merged = self.matriarca_dual.merge_global_delta(delta, source_id=node_id_hex)
+                    self.stats.global_memories_received += merged
+                except Exception as e:
+                    log.debug(f"global matriarca merge error: {e}")
+
             # Auto-bootstrap en thread separado (zero-config)
             self._bootstrap_thread = threading.Thread(
                 target=self._bootstrap_loop, daemon=True, name="bootstrap")
@@ -208,9 +238,13 @@ class SwarmNetwork:
 
     def stop(self):
         self._running = False
+        self._stop_event.set()
         if self._lsp_v2_node:
             self._lsp_v2_node.stop()
             self._lsp_v2_node = None
+        if self._bootstrap_thread and self._bootstrap_thread.is_alive():
+            self._bootstrap_thread.join(timeout=2.0)
+        self._bootstrap_thread = None
         log.info("SwarmNetwork detenida")
 
     def _load_or_create_lsp_identity(self):
@@ -241,6 +275,30 @@ class SwarmNetwork:
             self.stats.feromons_sent += max(1, len(self.peers.alive_peers()))
         except Exception as e:
             log.debug(f"broadcast_feromon v2 error: {e}")
+
+    def broadcast_global_delta(self, max_items: int = 64, min_importance: float = 0.0) -> int:
+        """Publica memorias globales compartibles de la MatriarcaDual adjunta."""
+        if self._lsp_v2_node is None or self.matriarca_dual is None:
+            return 0
+        try:
+            with self._global_sync_lock:
+                delta = self.matriarca_dual.export_global_delta(
+                    max_items=max_items,
+                    min_importance=min_importance,
+                )
+            count = int(delta.get("count", 0))
+            if count <= 0:
+                return 0
+            delta["source_node_id"] = self.identity.node_id
+            delta["feromon_port"] = self.identity.feromon_port
+            delta["gossip_port"] = self.identity.gossip_port
+            self._lsp_v2_node.send_gossip_delta(delta)
+            self.stats.gossip_rounds += 1
+            self.stats.global_deltas_sent += 1
+            return count
+        except Exception as e:
+            log.debug(f"broadcast_global_delta error: {e}")
+            return 0
 
     def collect_feromons(self) -> List[torch.Tensor]:
         if not self.peers.count:
@@ -281,4 +339,10 @@ class SwarmNetwork:
             "peers": self.peers.count,
             "peers_list": [p.to_dict() for p in self.peers.alive_peers()],
             "stats": self.stats.summary(),
+            "global_sync": {
+                "attached": self.matriarca_dual is not None,
+                "deltas_sent": self.stats.global_deltas_sent,
+                "deltas_received": self.stats.global_deltas_received,
+                "memories_received": self.stats.global_memories_received,
+            },
         }

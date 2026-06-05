@@ -1,25 +1,34 @@
-"""
-LixySwarm Network — P2P LSP v2, zero-config.
-Puertos: 7337 UDP / 7338 TCP. Auto-bootstrap via peers.json + seeds + peer exchange.
+"""Network public API.
 
-SwarmNetwork requiere torch (solo nodos GPU/CPU locales).
-LSPIdentity + LSPNodeV2 no requieren torch (VPS relay).
+LSP v2 es el camino principal. Los mensajes/transporte v1 quedan disponibles
+como compatibilidad legacy y se importan solo si sus dependencias existen.
 """
 from .bootstrap import PeersDB, bootstrap_network
-from .messages import FeromonMessage, GossipMessage
+from .lsp import LSPIdentity
+from .lsp_v2 import FeromonMergeBuffer, FeromonV2Payload, LSPNodeV2, PacketType
 from .node import NodeIdentity, Peer, PeerTable
 
 __all__ = [
+    "LSPIdentity",
+    "LSPNodeV2",
+    "PacketType",
+    "FeromonV2Payload",
+    "FeromonMergeBuffer",
     "PeersDB",
     "bootstrap_network",
-    "FeromonMessage",
-    "GossipMessage",
     "NodeIdentity",
     "Peer",
     "PeerTable",
 ]
 
-# SwarmNetwork solo si hay torch (nodos locales con GPU/CPU)
+# Compatibilidad v1: requiere torch por FeromonMessage.
+try:
+    from .messages import FeromonMessage, GossipMessage
+    __all__.extend(["FeromonMessage", "GossipMessage"])
+except ImportError:
+    pass
+
+# SwarmNetwork solo si hay torch (nodos locales con GPU/CPU).
 try:
     from .swarm_network import SwarmNetwork
     __all__.append("SwarmNetwork")

@@ -16,6 +16,7 @@ Uso:
   python3 benchmark.py --checkpoint ckpt.pt   # checkpoint específico
   python3 benchmark.py --no-gpt2              # sin comparativa GPT-2
   python3 benchmark.py --batches 50           # menos batches (más rápido)
+  python3 benchmark.py --health-only          # solo sensores del organismo
 """
 
 import sys, os, time, json, math, re, argparse
@@ -126,6 +127,13 @@ def text_stats(text: str) -> dict:
         "ttr":    ttr(text),
         "rttr":   rttr(text),
     }
+
+
+def _safe_float(value, default=None):
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return default
 
 
 # ─── Perplexity ───────────────────────────────────────────────────────────────
@@ -324,7 +332,7 @@ def load_swarm_for_bench(checkpoint_path: str, device: str) -> tuple:
 
     swarm = LixySwarm(swarm_cfg, load_matriarca=True, agent_checkpoint=None)
     state = {k.replace("_orig_mod.", ""): v for k, v in ckpt["model"].items()}
-    swarm.load_state_dict(state, strict=False)
+    load_result = swarm.load_state_dict(state, strict=False)
     swarm.eval()
     swarm = swarm.to(device)
 
@@ -333,8 +341,262 @@ def load_swarm_for_bench(checkpoint_path: str, device: str) -> tuple:
         "val_loss": ckpt.get("val_loss", "?"),
         "n_params": sum(p.numel() for p in swarm.parameters()),
         "checkpoint": Path(checkpoint_path).name,
+        "checkpoint_path": str(checkpoint_path),
+        "agent_config": ac,
+        "swarm_config": ckpt.get("swarm_config", {}),
+        "train_config": ckpt.get("train_config", {}),
+        "load_compatibility": {
+            "missing_count": len(load_result.missing_keys),
+            "unexpected_count": len(load_result.unexpected_keys),
+            "missing_keys_sample": list(load_result.missing_keys[:20]),
+            "unexpected_keys_sample": list(load_result.unexpected_keys[:20]),
+        },
     }
     return swarm, agent_cfg, meta
+
+
+# ─── Organism health ──────────────────────────────────────────────────────────
+
+def infer_training_val_dataset(train_config: dict) -> dict:
+    """Infiere el dataset de validación usado por train_swarm.py."""
+    data_dir = Path(train_config.get("data_dir", "data"))
+    personal_path = data_dir / "finetune" / "personal_tokens.bin"
+    fineweb_val = data_dir / "pretrain" / "fineweb_val.bin"
+
+    if train_config.get("mixed"):
+        mode = "mixed"
+        path = fineweb_val if fineweb_val.exists() else personal_path
+    elif train_config.get("triple"):
+        mode = "triple"
+        path = fineweb_val if fineweb_val.exists() else personal_path
+    elif train_config.get("spanish"):
+        mode = "spanish"
+        path = data_dir / "spanish" / "wiki_es_tokens.bin"
+    else:
+        mode = "personal"
+        path = personal_path
+
+    return {
+        "mode": mode,
+        "path": str(path),
+        "exists": path.exists(),
+        "size_bytes": path.stat().st_size if path.exists() else None,
+    }
+
+
+def evaluate_training_val_loss(
+    swarm: LixySwarm,
+    agent_cfg: AgentConfig,
+    meta: dict,
+    n_batches: int,
+    device: str,
+    ctx,
+) -> dict:
+    """Recalcula la pérdida en el dominio de validación real del checkpoint."""
+    val_info = infer_training_val_dataset(meta.get("train_config", {}))
+    result = {
+        "dataset": val_info,
+        "saved_val_loss": _safe_float(meta.get("val_loss")),
+        "recomputed": None,
+        "loss_delta": None,
+        "loss_ratio": None,
+        "status": "missing_dataset",
+    }
+    if not val_info["exists"]:
+        return result
+
+    dataset = TokenDataset(Path(val_info["path"]), agent_cfg.block_size)
+    batch_size = int(meta.get("train_config", {}).get("batch_size", 4) or 4)
+    print(f"\n🫀 Health — validación real del checkpoint ({val_info['mode']}, {n_batches} batches)...")
+    recomputed = compute_perplexity(
+        swarm,
+        dataset,
+        n_batches=n_batches,
+        batch_size=batch_size,
+        device=device,
+        is_swarm=True,
+        ctx=ctx,
+    )
+    result["recomputed"] = recomputed
+
+    saved = result["saved_val_loss"]
+    current = _safe_float(recomputed.get("mean_loss"))
+    if saved is not None and current is not None:
+        result["loss_delta"] = round(current - saved, 4)
+        result["loss_ratio"] = round(current / max(saved, 1e-9), 3)
+        if result["loss_ratio"] <= 1.15:
+            result["status"] = "stable"
+        elif result["loss_ratio"] <= 1.6:
+            result["status"] = "watch"
+        else:
+            result["status"] = "attention"
+    elif current is not None:
+        result["status"] = "measured"
+
+    print(
+        f"  saved={saved} | actual={recomputed.get('mean_loss')} | "
+        f"ratio={result.get('loss_ratio')} | status={result['status']}"
+    )
+    return result
+
+
+def evaluate_matriarca_health(swarm: LixySwarm) -> dict | None:
+    """Evalúa Matriarca sin alterar el runtime del modelo."""
+    try:
+        sys.path.insert(0, str(SRC_DIR))
+        from train_matriarca import matriarca_eval
+        return matriarca_eval(matriarca=swarm.matriarca, verbose=False)
+    except Exception as e:
+        print(f"  ⚠ matriarca_eval: {e}")
+        return None
+
+
+def build_organism_health(results: dict, meta: dict, training_val_eval: dict | None) -> dict:
+    """Construye señales de salud del organismo sin modificar arquitectura."""
+    compatibility = meta.get("load_compatibility", {})
+    missing = compatibility.get("missing_count", 0)
+    unexpected = compatibility.get("unexpected_count", 0)
+    compatibility_status = "ok" if missing == 0 and unexpected == 0 else "attention"
+
+    fineweb = results.get("fineweb_val") or {}
+    training_dataset = (training_val_eval or {}).get("dataset", {})
+    benchmark_domain = {
+        "fineweb_path": str(DATA_DIR / "pretrain" / "fineweb_val.bin"),
+        "training_val_path": training_dataset.get("path"),
+        "same_as_training_val": training_dataset.get("path") == str(DATA_DIR / "pretrain" / "fineweb_val.bin"),
+        "status": "aligned" if training_dataset.get("path") == str(DATA_DIR / "pretrain" / "fineweb_val.bin") else "domain_shift",
+    }
+
+    matriarca = results.get("matriarca_eval")
+    mat_signal = None
+    if matriarca:
+        active_pct = matriarca.get("importance", {}).get("pct_active")
+        diversity = matriarca.get("diversity", {}).get("semantic_diversity")
+        mat_signal = {
+            "memory_count": matriarca.get("total_memories"),
+            "active_pct": active_pct,
+            "diversity": diversity,
+            "types": matriarca.get("types", {}),
+            "status": "watch" if active_pct is not None and active_pct < 0.10 else "ok",
+        }
+
+    generation = results.get("generation_summary")
+    gen_signal = None
+    if generation:
+        gen_signal = {
+            "avg_rep_5": generation.get("avg_rep_5"),
+            "avg_rep_10": generation.get("avg_rep_10"),
+            "avg_ttr": generation.get("avg_ttr"),
+            "lang_correct": generation.get("lang_correct"),
+            "status": (
+                "attention"
+                if generation.get("avg_rep_5", 0) >= 0.30
+                else "watch"
+                if generation.get("lang_correct", 1.0) < 0.60
+                else "ok"
+            ),
+        }
+
+    recommendations = []
+    if compatibility_status != "ok":
+        recommendations.append("Reentrenar o migrar checkpoint: hay capas sin match exacto.")
+    if training_val_eval and training_val_eval.get("status") in {"watch", "attention"}:
+        recommendations.append("Hacer ciclo corto de adaptación y repetir health contra el dominio real del checkpoint.")
+    if benchmark_domain["status"] == "domain_shift" and fineweb:
+        recommendations.append("Separar métricas por dominio: FineWeb mide generalización, no salud del checkpoint personal.")
+    if mat_signal and mat_signal["status"] == "watch":
+        recommendations.append("Revisar activación de Matriarca: muchas memorias, pocas activas.")
+    if gen_signal and gen_signal["status"] == "watch":
+        recommendations.append("Medir bilingüismo por dominio; el organismo está priorizando español/personalidad.")
+
+    statuses = [
+        compatibility_status,
+        (training_val_eval or {}).get("status"),
+        mat_signal.get("status") if mat_signal else None,
+        gen_signal.get("status") if gen_signal else None,
+    ]
+    if "attention" in statuses:
+        overall = "attention"
+    elif "watch" in statuses:
+        overall = "watch"
+    else:
+        overall = "stable"
+
+    return {
+        "overall": overall,
+        "signals": {
+            "checkpoint_compatibility": {
+                **compatibility,
+                "status": compatibility_status,
+            },
+            "training_val_alignment": training_val_eval,
+            "benchmark_domain": benchmark_domain,
+            "matriarca": mat_signal,
+            "generation": gen_signal,
+        },
+        "recommendations": recommendations,
+        "note": "Observability only: no cambia pesos, arquitectura ni memoria.",
+    }
+
+
+def print_organism_health(health: dict):
+    def pct(value):
+        return f"{value:.0%}" if isinstance(value, (int, float)) else "?"
+
+    def num(value, digits=3):
+        return f"{value:.{digits}f}" if isinstance(value, (int, float)) else "?"
+
+    print(f"\n🫀 ORGANISM HEALTH — {health['overall'].upper()}")
+    signals = health.get("signals", {})
+    compat = signals.get("checkpoint_compatibility", {})
+    print(
+        f"  Checkpoint: {compat.get('status')} | "
+        f"missing={compat.get('missing_count')} unexpected={compat.get('unexpected_count')}"
+    )
+
+    train_val = signals.get("training_val_alignment") or {}
+    dataset = train_val.get("dataset", {})
+    if train_val:
+        print(
+            f"  Dominio entrenado: {dataset.get('mode')} | "
+            f"saved={train_val.get('saved_val_loss')} actual={train_val.get('recomputed', {}).get('mean_loss')} | "
+            f"ratio={train_val.get('loss_ratio')} status={train_val.get('status')}"
+        )
+
+    domain = signals.get("benchmark_domain", {})
+    if domain.get("status") == "domain_shift":
+        print("  FineWeb: domain_shift frente al dominio real del checkpoint")
+
+    matriarca = signals.get("matriarca")
+    if matriarca:
+        print(
+            f"  Matriarca: mem={matriarca.get('memory_count')} "
+            f"activas={pct(matriarca.get('active_pct'))} "
+            f"div={num(matriarca.get('diversity'))} status={matriarca.get('status')}"
+        )
+
+    generation = signals.get("generation")
+    if generation:
+        print(
+            f"  Generación: rep@5={pct(generation.get('avg_rep_5'))} "
+            f"lang={pct(generation.get('lang_correct'))} status={generation.get('status')}"
+        )
+
+    if health.get("recommendations"):
+        print("  Recomendaciones:")
+        for rec in health["recommendations"]:
+            print(f"    - {rec}")
+
+
+def save_results(results: dict, timestamp: str) -> tuple[Path, Path]:
+    EXPERIMENTS_DIR.mkdir(exist_ok=True)
+    out_path = EXPERIMENTS_DIR / f"benchmark_{timestamp}.json"
+    ckpt_out = CHECKPOINT_DIR / f"benchmark_{timestamp}.json"
+    with open(out_path, "w") as f:
+        json.dump(results, f, indent=2, ensure_ascii=False, default=str)
+    import shutil
+    shutil.copy(out_path, ckpt_out)
+    return out_path, ckpt_out
 
 
 # ─── Main benchmark ───────────────────────────────────────────────────────────
@@ -354,6 +616,7 @@ def run_benchmark(args) -> dict:
         "timestamp": timestamp,
         "device": device,
         "n_batches": n_batches,
+        "health_batches": args.health_batches,
     }
 
     # ─── 1. Cargar swarm ──────────────────────────────────────────────────────
@@ -374,6 +637,33 @@ def run_benchmark(args) -> dict:
     swarm, agent_cfg, meta = load_swarm_for_bench(ckpt_path, device)
     results["model"] = meta
     print(f"  step={meta['step']} | val_loss={meta['val_loss']:.4f} | params={meta['n_params']/1e6:.0f}M")
+    compat = meta.get("load_compatibility", {})
+    print(
+        f"  compatibilidad: missing={compat.get('missing_count', 0)} | "
+        f"unexpected={compat.get('unexpected_count', 0)}"
+    )
+
+    if args.health_only:
+        print(f"\n🐘 Diagnóstico Matriarca...")
+        mat_metrics = evaluate_matriarca_health(swarm)
+        results["matriarca_eval"] = mat_metrics
+        if mat_metrics:
+            m = mat_metrics
+            print(f"  Memorias: {m['total_memories']} | "
+                  f"activas: {m['importance']['pct_active']:.0%} | "
+                  f"diversidad: {m['diversity']['semantic_diversity']:.3f}")
+            print(f"  Tipos: {m['types']}")
+
+        training_val_eval = evaluate_training_val_loss(
+            swarm, agent_cfg, meta, args.health_batches, device, ctx
+        )
+        results["training_val_eval"] = training_val_eval
+        results["organism_health"] = build_organism_health(results, meta, training_val_eval)
+        print_organism_health(results["organism_health"])
+        out_path, ckpt_out = save_results(results, timestamp)
+        print(f"\n💾 Resultados: {out_path}")
+        print(f"💾 Copia en:   {ckpt_out}")
+        return results
 
     # ─── 2. Perplexity FineWeb val ────────────────────────────────────────────
     fw_val = DATA_DIR / "fineweb_val.bin"
@@ -444,19 +734,14 @@ def run_benchmark(args) -> dict:
 
     # ─── 4c. Diagnóstico de la Matriarca ───────────────────────────────────
     print(f"\n🐘 Diagnóstico Matriarca...")
-    try:
-        sys.path.insert(0, str(SRC_DIR))
-        from train_matriarca import matriarca_eval
-        mat_metrics = matriarca_eval(matriarca=swarm.matriarca, verbose=False)
-        results["matriarca_eval"] = mat_metrics
+    mat_metrics = evaluate_matriarca_health(swarm)
+    results["matriarca_eval"] = mat_metrics
+    if mat_metrics:
         m = mat_metrics
         print(f"  Memorias: {m['total_memories']} | "
               f"activas: {m['importance']['pct_active']:.0%} | "
               f"diversidad: {m['diversity']['semantic_diversity']:.3f}")
         print(f"  Tipos: {m['types']}")
-    except Exception as e:
-        print(f"  ⚠ matriarca_eval: {e}")
-        results["matriarca_eval"] = None
 
     # ─── 5. Muestras generadas + métricas de texto ───────────────────────────
     print(f"\n✍️  Generando {len(EVAL_PROMPTS)} muestras...")
@@ -505,6 +790,14 @@ def run_benchmark(args) -> dict:
         ) / len(all_stats), 3),
     }
 
+    # ─── 5b. Health del organismo ───────────────────────────────────────────
+    training_val_eval = evaluate_training_val_loss(
+        swarm, agent_cfg, meta, args.health_batches, device, ctx
+    )
+    results["training_val_eval"] = training_val_eval
+    results["organism_health"] = build_organism_health(results, meta, training_val_eval)
+    print_organism_health(results["organism_health"])
+
     # ─── 6. Resumen comparativo ───────────────────────────────────────────────
     print(f"\n{'='*60}")
     print(f"📊 RESUMEN — LixySwarm step={meta['step']}")
@@ -544,12 +837,7 @@ def run_benchmark(args) -> dict:
     print(f"  Idioma correcto:     {gs['lang_correct']:8.0%}")
 
     # ─── 7. Guardar resultados ────────────────────────────────────────────────
-    EXPERIMENTS_DIR.mkdir(exist_ok=True)
-    out_path = EXPERIMENTS_DIR / f"benchmark_{timestamp}.json"
-    ckpt_out = CHECKPOINT_DIR / f"benchmark_{timestamp}.json"
-    with open(out_path, "w") as f:
-        json.dump(results, f, indent=2, ensure_ascii=False, default=str)
-    import shutil; shutil.copy(out_path, ckpt_out)
+    out_path, ckpt_out = save_results(results, timestamp)
     print(f"\n💾 Resultados: {out_path}")
     print(f"💾 Copia en:   {ckpt_out}")
 
@@ -564,6 +852,8 @@ def main():
     parser.add_argument("--batches", type=int, default=100, help="Batches para perplexity")
     parser.add_argument("--no-gpt2", action="store_true", help="Skip GPT-2 baseline")
     parser.add_argument("--no-compare", action="store_true", help="Skip comparativa de checkpoints")
+    parser.add_argument("--health-only", action="store_true", help="Solo sensores del organismo, sin benchmark completo")
+    parser.add_argument("--health-batches", type=int, default=10, help="Batches para health del dominio entrenado")
     parser.add_argument("--cpu", action="store_true", help="Forzar CPU")
     args = parser.parse_args()
 
