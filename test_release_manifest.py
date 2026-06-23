@@ -1,9 +1,12 @@
 from dataclasses import replace
+import time
 
 import pytest
 
 from src.network.artifact_store import ArtifactStore
 from src.network.lsp import LSPIdentity
+from src.network.swarm_network import SwarmNetwork
+from src.contribution import ContributionPolicy, ResourceGovernor
 from src.release import ReleaseError, ReleaseManifest, ReleaseRegistry, TrustPolicy
 
 
@@ -97,3 +100,72 @@ def test_release_rejects_unsafe_model_format():
             model_format="pickle-arbitrary-code",
             sequence=0,
         )
+
+
+def test_trusted_release_and_model_propagate_peer_to_peer(tmp_path):
+    signer = LSPIdentity.generate()
+    policy = TrustPolicy(
+        threshold=1, trusted_signers=(signer.node_id_hex,)
+    )
+    provider_store = ArtifactStore(tmp_path / "provider-artifacts")
+    receiver_store = ArtifactStore(tmp_path / "receiver-artifacts")
+    model_path = tmp_path / "model.bin"
+    model_path.write_bytes(b"peer distributed signed model")
+    model = provider_store.import_file(model_path, kind="model")
+    release = ReleaseManifest.create(
+        model_artifact_id=model.artifact_id,
+        model_format="pytorch-weights-only-v1",
+        sequence=0,
+    ).sign(signer)
+    provider_registry = ReleaseRegistry(tmp_path / "provider-releases")
+    receiver_registry = ReleaseRegistry(tmp_path / "receiver-releases")
+    provider_registry.accept(release, policy, provider_store)
+    provider_registry.activate(release.release_id, policy, provider_store)
+
+    provider_governor = ResourceGovernor(
+        ContributionPolicy.for_mode("relay"),
+        storage_path=tmp_path / "provider-state",
+    )
+    receiver_governor = ResourceGovernor(
+        ContributionPolicy.for_mode("relay"),
+        storage_path=tmp_path / "receiver-state",
+    )
+    provider = SwarmNetwork.create(
+        mode="lan", gossip_port=0, target_outbound=0,
+        checkpoint_dir=tmp_path / "provider-net",
+        contribution_profile=provider_governor.advertised_profile(
+            available_work={"artifact"}
+        ),
+    )
+    receiver = SwarmNetwork.create(
+        mode="lan", gossip_port=0, target_outbound=0,
+        checkpoint_dir=tmp_path / "receiver-net",
+        contribution_profile=receiver_governor.advertised_profile(
+            available_work={"artifact"}
+        ),
+    )
+    provider.start()
+    receiver.start()
+    provider.enable_work(provider_governor)
+    receiver.enable_work(receiver_governor)
+    provider.enable_artifacts(provider_store)
+    receiver.enable_artifacts(receiver_store)
+    provider.enable_release_distribution(
+        provider_registry, policy, provider_store
+    )
+    receiver.enable_release_distribution(
+        receiver_registry, policy, receiver_store, auto_activate=True
+    )
+    try:
+        assert receiver.connect_peer("127.0.0.1", provider._lsp_v3_node.port)
+        deadline = time.time() + 8
+        while time.time() < deadline:
+            active = receiver_registry.active()
+            if active and receiver_store.has(model.artifact_id):
+                break
+            time.sleep(0.05)
+        assert receiver_registry.active().release_id == release.release_id
+        assert receiver_store.has(model.artifact_id)
+    finally:
+        receiver.stop()
+        provider.stop()

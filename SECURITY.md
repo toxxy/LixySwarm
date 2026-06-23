@@ -32,6 +32,7 @@ If a secret or private datum has ever entered Git history, deleting it from the 
 - Gradient quorum mode requires distinct identities, validates archive bounds/metadata/tensor shapes/finiteness, and produces a coordinate median without applying it.
 - Each accepted work result has a portable Ed25519 receipt bound to worker, requester, job, content, and time.
 - Model releases require a locally configured threshold of trusted Ed25519 signers; optional genesis pinning, revocation, monotonic activation, weights-only loading, and explicit rollback prevent silent downgrade.
+- Release announcements are signature-checked before download; referenced artifacts are hash-verified. Automatic activation is a persisted explicit opt-in and is off by default.
 - Outbound selection prefers distinct coarse network groups. Protocol violations accrue local decaying scores and persistent temporary bans keyed by hashes rather than raw identifiers.
 
 These controls are incomplete. HELLO/traffic metadata remains visible and long sessions do not rekey; resource claims and compute results remain self-reported/unattested; work runs in-process; local bans do not provide Sybil or global reputation defenses; personal encryption is optional; gradients can leak training data at their endpoints; and most API endpoints are unauthenticated. Legacy v2 has weaker verification and must not be enabled on the public network.

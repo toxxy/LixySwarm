@@ -108,6 +108,7 @@ class SwarmNetwork:
         self.matriarca_dual = None
         self.work_coordinator = None
         self.artifact_service = None
+        self.release_distributor = None
 
     def on_peer_connected(self, fn):
         self._on_peer_connected = fn
@@ -160,6 +161,17 @@ class SwarmNetwork:
         return self.artifact_service.fetch(
             artifact_id, peer_id=peer_id, **kwargs
         )
+
+    def enable_release_distribution(
+        self, registry, policy, store, *, auto_activate: bool = False
+    ):
+        if self.release_distributor is None:
+            from src.release import ReleaseDistributor
+            self.release_distributor = ReleaseDistributor(
+                self, registry, policy, store, auto_activate=auto_activate
+            )
+            self.release_distributor.announce_active()
+        return self.release_distributor
 
     # ─── WAN / Relay ──────────────────────────────────────────────────────────
 
@@ -345,6 +357,11 @@ class SwarmNetwork:
             self._register_runtime_node(node_id_hex, hello.get("resources", {}))
             if is_new and self._on_peer_connected:
                 self._on_peer_connected(peer)
+            if self.release_distributor is not None:
+                try:
+                    self.release_distributor.peer_connected(node_id_hex)
+                except Exception:
+                    pass
 
         @self._lsp_v3_node.on_peer_lost
         def _on_v3_peer_lost(node_id_hex):
@@ -381,6 +398,9 @@ class SwarmNetwork:
     def stop(self):
         self._running = False
         self._stop_event.set()
+        if self.release_distributor:
+            self.release_distributor.close()
+            self.release_distributor = None
         if self.work_coordinator:
             self.work_coordinator.close()
             self.work_coordinator = None

@@ -57,7 +57,7 @@ python3 -m pip install -e . --no-deps
 pytest -q
 ```
 
-The full suite passed **166 tests** on 2026-06-22.
+The full suite passed **167 tests** on 2026-06-22.
 
 Join as a connectivity/artifact node, or explicitly consent to compute:
 
@@ -89,6 +89,8 @@ lixyswarm start --release
 ```
 
 The repository provides the mechanism but does not ship official signer keys, a genesis release, or model weights.
+
+Connected peers announce locally trusted releases and receivers download/verify referenced artifacts directly from the announcer. Add `--auto-activate` to `trust-init` only when automatic monotonic activation is desired; the choice is persisted locally and defaults off.
 
 Run `pytest --collect-only -q` for the current collection count. Test totals in old experiment reports refer to earlier scripts or revisions.
 

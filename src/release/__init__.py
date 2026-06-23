@@ -6,5 +6,9 @@ from .manifest import (
     ReleaseRegistry,
     TrustPolicy,
 )
+from .distribution import ReleaseDistributor
 
-__all__ = ["ReleaseError", "ReleaseManifest", "ReleaseRegistry", "TrustPolicy"]
+__all__ = [
+    "ReleaseDistributor", "ReleaseError", "ReleaseManifest",
+    "ReleaseRegistry", "TrustPolicy",
+]

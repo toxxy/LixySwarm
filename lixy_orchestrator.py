@@ -63,6 +63,7 @@ from src.contribution import (
     ResourceGovernor,
     ResourceRequirements,
 )
+from src.release import ReleaseRegistry, TrustPolicy
 from src.utils.tokenizer import get_gpt2_encoding
 
 CHECKPOINT_DIR = Path("checkpoints")
@@ -298,6 +299,15 @@ class LixyOrchestrator:
             if self.net._lsp_v3_node is not None:
                 self.net.enable_work(self.governor, max_workers=1)
                 self.net.enable_artifacts(self.artifact_store)
+                trust_path = contribution_home / "release_trust.json"
+                if trust_path.is_file():
+                    release_policy = TrustPolicy.load(trust_path)
+                    self.net.enable_release_distribution(
+                        ReleaseRegistry(contribution_home / "releases"),
+                        release_policy,
+                        self.artifact_store,
+                        auto_activate=release_policy.auto_activate,
+                    )
                 self.net.register_work_handler(
                     "inference.generate.v1",
                     "inference",

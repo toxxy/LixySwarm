@@ -211,10 +211,13 @@ class TrustPolicy:
     trusted_signers: tuple[str, ...] = ()
     pinned_genesis_release_id: str = ""
     revoked_release_ids: tuple[str, ...] = ()
+    auto_activate: bool = False
 
     def validate(self):
         if self.version != 1:
             raise ReleaseError("unsupported trust policy version")
+        if not isinstance(self.auto_activate, bool):
+            raise ReleaseError("auto-activate policy must be boolean")
         if not 1 <= self.threshold <= len(self.trusted_signers) <= MAX_RELEASE_SIGNERS:
             raise ReleaseError("trust threshold is invalid")
         if len(set(self.trusted_signers)) != len(self.trusted_signers):
@@ -262,6 +265,7 @@ class TrustPolicy:
                 trusted_signers=tuple(value["trusted_signers"]),
                 pinned_genesis_release_id=value.get("pinned_genesis_release_id", ""),
                 revoked_release_ids=tuple(value.get("revoked_release_ids", [])),
+                auto_activate=value.get("auto_activate", False),
             )
             policy.validate()
             return policy

@@ -106,6 +106,15 @@ def start_node(args) -> int:
             max_total_bytes=max(1, int(policy.max_disk_gb * 1024 ** 3)),
         )
         network.enable_artifacts(artifact_store)
+        trust_path = home / "release_trust.json"
+        if trust_path.is_file():
+            release_policy = TrustPolicy.load(trust_path)
+            network.enable_release_distribution(
+                ReleaseRegistry(home / "releases"),
+                release_policy,
+                artifact_store,
+                auto_activate=release_policy.auto_activate,
+            )
 
     stopping = False
 
@@ -298,12 +307,14 @@ def initialize_release_trust(args) -> int:
         threshold=args.threshold,
         trusted_signers=tuple(sorted(set(args.signer))),
         pinned_genesis_release_id=args.pinned_genesis,
+        auto_activate=args.auto_activate,
     )
     policy.save(home / "release_trust.json")
     print(json.dumps({
         "threshold": policy.threshold,
         "trusted_signer_count": len(policy.trusted_signers),
         "genesis_pinned": bool(policy.pinned_genesis_release_id),
+        "auto_activate": policy.auto_activate,
     }, sort_keys=True))
     return 0
 
@@ -444,6 +455,7 @@ def build_parser() -> argparse.ArgumentParser:
     trust.add_argument("--signer", action="append", required=True)
     trust.add_argument("--threshold", type=int, required=True)
     trust.add_argument("--pinned-genesis", default="")
+    trust.add_argument("--auto-activate", action="store_true")
     trust.set_defaults(handler=initialize_release_trust)
 
     release_accept = subparsers.add_parser(

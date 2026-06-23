@@ -63,6 +63,7 @@ class PacketType:
     PONG = 0x06
     WORK_OFFER = 0x07
     WORK_RESULT = 0x08
+    RELEASE_ANNOUNCE = 0x09
 
 
 _VALID_PACKET_TYPES = {
@@ -74,6 +75,7 @@ _VALID_PACKET_TYPES = {
     PacketType.PONG,
     PacketType.WORK_OFFER,
     PacketType.WORK_RESULT,
+    PacketType.RELEASE_ANNOUNCE,
 }
 
 
@@ -359,6 +361,7 @@ class LSPNodeV3:
         self._global_delta_callbacks: list[Callable] = []
         self._work_offer_callbacks: list[Callable] = []
         self._work_result_callbacks: list[Callable] = []
+        self._release_callbacks: list[Callable] = []
 
     def _reset_process_session(self):
         self.session_id = os.urandom(16)
@@ -435,6 +438,19 @@ class LSPNodeV3:
     def send_work_result(self, node_id: str, result: dict) -> bool:
         return self._send_json_to_peer(PacketType.WORK_RESULT, node_id, result)
 
+    def announce_release(self, manifest: dict) -> int:
+        payload = json.dumps(
+            manifest, ensure_ascii=False, separators=(",", ":")
+        ).encode()
+        if len(payload) > 64 * 1024:
+            raise ProtocolError("Release announcement exceeds 64 KiB")
+        return self._broadcast_sync(PacketType.RELEASE_ANNOUNCE, payload, ttl=8)
+
+    def send_release_announcement(self, node_id: str, manifest: dict) -> bool:
+        return self._send_json_to_peer(
+            PacketType.RELEASE_ANNOUNCE, node_id, manifest
+        )
+
     def peers(self) -> list[dict]:
         with self._snapshot_lock:
             return [dict(peer) for peer in self._snapshot.values()]
@@ -493,6 +509,10 @@ class LSPNodeV3:
 
     def on_work_result_received(self, callback: Callable):
         self._work_result_callbacks.append(callback)
+        return callback
+
+    def on_release_announced(self, callback: Callable):
+        self._release_callbacks.append(callback)
         return callback
 
     # Event-loop lifecycle --------------------------------------------------
@@ -822,6 +842,11 @@ class LSPNodeV3:
             result = self._parse_json(packet.payload, max_size=256 * 1024)
             for callback in self._work_result_callbacks:
                 callback(result, session.node_id)
+            return
+        if packet.packet_type == PacketType.RELEASE_ANNOUNCE:
+            manifest = self._parse_json(packet.payload, max_size=64 * 1024)
+            for callback in self._release_callbacks:
+                callback(manifest, session.node_id)
             return
 
     # Serialization helpers -------------------------------------------------

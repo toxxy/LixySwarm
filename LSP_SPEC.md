@@ -58,6 +58,7 @@ Captured application payloads cannot be decrypted after both process-ephemeral k
 | `0x06` | PONG | echoed ping payload |
 | `0x07` | WORK_OFFER | canonical, content-addressed declarative work JSON, maximum 256 KiB |
 | `0x08` | WORK_RESULT | bounded status/output JSON tied to a pending peer/job |
+| `0x09` | RELEASE_ANNOUNCE | threshold-signed release manifest, maximum 64 KiB |
 
 The first frame in each direction must be a fresh HELLO. The sender public key in all subsequent frames must match the session peer identity.
 
@@ -99,6 +100,8 @@ Every `WorkResult` contains a second portable Ed25519 receipt over the job ID, w
 
 Current operations are isolated inference, artifact describe/read-chunk, and gradient computation. Artifacts use full-file SHA-256 identities, bounded manifests, 96 KiB raw chunks, per-chunk SHA-256, atomic commit, and final full-file verification. Gradient results are candidates and are never applied by the protocol.
 
+Trusted release announcements are deduplicated and relayed only after the receiver's local threshold policy validates them. Acquisition runs outside the transport loop, pulls every referenced artifact from the announcing peer, verifies full hashes, and stores the accepted manifest. Activation remains manual unless the persisted trust policy explicitly enables auto-activation.
+
 ## Compatibility
 
 LSP v2 remains available only through `SwarmNetwork(..., protocol="v2")`. LSP v3 is the default. v2 and v3 do not share a socket or negotiate an in-place upgrade.
@@ -110,5 +113,5 @@ LSP v2 remains available only through `SwarmNetwork(..., protocol="v2")`. LSP v3
 - Stronger autonomous-system/network diversity, feeler connections, and adversarial eclipse tests.
 - Capability/result reputation, hardware verification, and Sybil resistance beyond local misbehavior bans.
 - DHT discovery after persistent peer exchange is stable.
-- Official threshold trust roots/genesis artifacts, network release announcement/discovery, replicated inference verification, fair scheduling, cancellation, and job recovery.
+- Official threshold trust roots/genesis artifacts, multi-provider content lookup beyond the announcing peer, replicated inference verification, fair scheduling, cancellation, and job recovery.
 - Fuzzing, load tests, mixed-version upgrades, and an external security audit.

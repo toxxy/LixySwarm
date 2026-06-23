@@ -63,7 +63,8 @@
 - [x] Add exact-model bounded gradient computation over safe NumPy token artifacts; never apply results automatically.
 - [x] Add three-to-31-peer exact-input gradient quorum and streaming coordinate-median candidate artifacts.
 - [x] Add threshold-signed model release manifests, local trust thresholds, pinned genesis, revocation, monotonic activation, and explicit rollback.
-- [ ] Add dataset provenance manifests, official key operations/recovery, and network release announcement/discovery.
+- [x] Add encrypted P2P release announcement, trust-before-download artifact acquisition, deduplicated relay, and persisted opt-in auto-activation.
+- [ ] Add dataset provenance manifests, official key operations/recovery, and multi-provider/DHT content lookup.
 - [ ] Add content/provider discovery, replication, availability scoring, and garbage collection.
 - [ ] Add persistent queues, cancellation, retry/failure rescheduling, fairness, and per-identity quotas.
 - [ ] Move work into an OS/container sandbox with CPU/GPU/RAM/disk/network enforcement.
