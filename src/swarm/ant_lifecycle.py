@@ -280,10 +280,14 @@ class AntLifecycleManager:
                         new_ant.identity_vec.copy_(legacy_slice.to(device))
                     inherited = True
 
-        # Copiar pesos del padre (agente de mayor fitness) — excluye identity_vec
+        # Copy the fittest parent's weights, excluding its unique identity.
         parent = max(self.swarm.agents, key=lambda a: self._get_fitness(a))
-        parent_state = {k: v.clone() for k, v in parent.state_dict().items()}
-        parent_state.pop("identity_vec", None)  # identidad única — no copiar
+        # load_state_dict copies into the new agent. Cloning the complete state
+        # first duplicates hundreds of MB on GPU and can exhaust VRAM.
+        parent_state = {
+            k: v for k, v in parent.state_dict().items()
+            if k != "identity_vec"
+        }
         new_ant.load_state_dict(parent_state, strict=False)
 
         # Añadir al enjambre

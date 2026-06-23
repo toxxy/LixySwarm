@@ -662,8 +662,8 @@ if __name__ == "__main__":
     print(f"  Infrasónidos emitidos: shape={infrasound.shape}, norm={infrasound.norm():.4f}")
 
     # Almacenar interacción
-    matriarca.store_interaction(state, "Emmanuel preguntó por el LLM", importance=0.9)
-    matriarca.store_interaction(state * 0.5, "Emmanuel pidió un video", importance=0.7)
+    matriarca.store_interaction(state, "The user asked about the LLM", importance=0.9)
+    matriarca.store_interaction(state * 0.5, "The user requested a video", importance=0.7)
     print(f"  Memorias almacenadas: {matriarca.memory_count}")
 
     # Guardar

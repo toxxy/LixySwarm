@@ -51,7 +51,10 @@ def save_published_status(status: dict[str, Any], publisher_ip: str | None = Non
 
     data = dict(status)
     data["_received_at"] = _now()
-    if publisher_ip:
+    store_publisher_ip = os.environ.get("LIXYSWARM_STORE_PUBLISHER_IP", "").lower() in {
+        "1", "true", "yes",
+    }
+    if publisher_ip and store_publisher_ip:
         data["_publisher_ip"] = publisher_ip
 
     STATUS_FILE.parent.mkdir(parents=True, exist_ok=True)
@@ -149,6 +152,9 @@ def get_network_state() -> dict:
     s = _read_status()
     published_peers = s.get("peers", [])
     status_stale = s.get("_stale", True)
+    expose_peer_hosts = os.environ.get("LIXYSWARM_EXPOSE_PEER_HOSTS", "").lower() in {
+        "1", "true", "yes",
+    }
     if published_peers:
         for p in published_peers:
             p_node_id = p.get("id", "?")
@@ -156,7 +162,7 @@ def get_network_state() -> dict:
             if not any(n["node_id"] == p_node_id for n in nodes):
                 nodes.append({
                     "node_id": p_node_id[:16],
-                    "host":    p.get("host", "?"),
+                    "host":    p.get("host") if expose_peer_hosts else None,
                     "feromon_port": p.get("feromon_port"),
                     "gossip_port": p.get("gossip_port"),
                     "role":    p.get("role", "local-gpu"),

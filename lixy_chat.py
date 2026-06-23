@@ -2,7 +2,7 @@
 """
 lixy_chat.py — Chat CLI para Lixy-0.1 🐜🐘🐬
 ==============================================
-Interface de chat interactiva para Emmanuel.
+Interactive chat interface for a local user.
 
 Uso:
     python3 lixy_chat.py                        # carga swarm_best.pt automáticamente

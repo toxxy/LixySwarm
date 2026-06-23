@@ -14,7 +14,7 @@ Uso:
   python3 lixy_orchestrator.py
 
   # Una sola respuesta:
-  python3 lixy_orchestrator.py --prompt "Hola, soy Emmanuel"
+  python3 lixy_orchestrator.py --prompt "Hello"
 
   # Con checkpoint específico:
   python3 lixy_orchestrator.py --checkpoint checkpoints/swarm_best.pt

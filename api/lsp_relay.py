@@ -23,7 +23,7 @@ from typing import Optional
 log = logging.getLogger("lixy.relay")
 
 # Config — en producción viene de env vars o config file
-LOCAL_NODE_HOST = None   # IP del nodo local de Emmanuel (None = no relay disponible)
+LOCAL_NODE_HOST = None   # Configure explicitly; never commit an operator address.
 LOCAL_NODE_PORT = 7338   # TCP gossip port
 RELAY_TIMEOUT   = 30     # segundos máximo para esperar respuesta
 

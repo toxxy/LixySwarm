@@ -151,7 +151,7 @@ def collect_status() -> dict:
         if pt.exists():
             try:
                 import torch
-                ckpt = torch.load(pt, map_location="cpu", weights_only=False)
+                ckpt = torch.load(pt, map_location="cpu", weights_only=True)
                 status["checkpoint"] = {
                     "name": name,
                     "step": ckpt.get("step"),
@@ -224,6 +224,9 @@ def collect_status() -> dict:
 
     # ─── Peers / nodo local ──────────────────────────────────────────────────
     # Informar al VPS sobre el nodo local para que aparezca en la UI
+    publish_addresses = os.environ.get("LIXYSWARM_PUBLISH_NETWORK_ADDRESSES", "").lower() in {
+        "1", "true", "yes",
+    }
     if local_node_id and local_lsp_listening:
         # Detectar IP de la máquina local (preferir la que ve el VPS)
         local_host = os.environ.get("LIXYSWARM_LOCAL_HOST", "")
@@ -241,7 +244,7 @@ def collect_status() -> dict:
                 local_host = "127.0.0.1"
         status["peers"] = [{
             "id": local_node_id,
-            "host": local_host,
+            "host": local_host if publish_addresses else None,
             "feromon_port": local_feromon_port,
             "gossip_port": local_gossip_port,
             "role": "local-gpu",

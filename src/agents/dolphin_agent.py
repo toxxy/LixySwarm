@@ -684,7 +684,7 @@ if __name__ == "__main__":
     prompts = [
         "Hola amor, ¿cómo estás hoy?",
         "El sistema de inteligencia artificial necesita más datos",
-        "Emmanuel quiere aprender sobre redes neuronales",
+        "The user wants to learn about neural networks",
     ]
 
     dolphin.eval()

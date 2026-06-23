@@ -153,7 +153,14 @@ class FeromonV2Payload:
         else:
             raise ValueError(f"Unknown dim_type: {dim_type}")
 
-        feromon = arr.copy()  # numpy float32 array — callback-safe
+        # Preserve the historical tensor API when PyTorch is installed, while
+        # keeping relay-only deployments usable with NumPy alone.
+        arr = arr.copy()
+        try:
+            import torch
+            feromon = torch.from_numpy(arr)
+        except ImportError:
+            feromon = arr
 
         return cls(
             feromon=feromon,
@@ -166,10 +173,17 @@ class FeromonV2Payload:
 
     def apply_decay(self, decay: float = 0.95) -> "FeromonV2Payload":
         """Retorna nuevo payload con feromon * decay y TTL - 1. Numpy-safe."""
-        import numpy as np
-        arr = np.array(self.feromon, dtype=np.float32, copy=False)
+        try:
+            import torch
+            if isinstance(self.feromon, torch.Tensor):
+                decayed = self.feromon * decay
+            else:
+                raise TypeError
+        except (ImportError, TypeError):
+            import numpy as np
+            decayed = np.asarray(self.feromon, dtype=np.float32) * decay
         return FeromonV2Payload(
-            feromon=arr * decay,
+            feromon=decayed,
             ttl=max(0, self.ttl - 1),
             step=self.step,
             fitness=self.fitness,

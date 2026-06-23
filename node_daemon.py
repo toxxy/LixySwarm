@@ -1,7 +1,7 @@
 """
 LixySwarm VPS Node — Primer nodo externo de la red P2P
 Escucha en 0.0.0.0:7337 (UDP feromon) y 0.0.0.0:7338 (TCP gossip).
-Conecta con el nodo local de Emmanuel cuando PEER_HOST esté configurado.
+Connects to an upstream peer when LIXYSWARM_PEER_HOST is configured.
 
 Uso en VPS:
     python3 node_daemon.py
@@ -9,7 +9,7 @@ Uso en VPS:
 Como servicio systemd:
     Ver VPS_SETUP.md para instrucciones completas.
 """
-import sys, time, signal, logging, json
+import os, sys, time, signal, logging, json
 sys.path.insert(0, str(__import__("pathlib").Path(__file__).parent))
 
 logging.basicConfig(
@@ -23,11 +23,13 @@ logging.basicConfig(
 log = logging.getLogger(__name__)
 
 # ─── Config ───────────────────────────────────────────────────────────────────
-PEER_HOST    = None       # IP del nodo local de Emmanuel — None = solo escuchar
-FEROMON_PORT = 7337       # UDP
-GOSSIP_PORT  = 7338       # TCP
+PEER_HOST    = os.environ.get("LIXYSWARM_PEER_HOST")
+FEROMON_PORT = int(os.environ.get("LIXYSWARM_FEROMON_PORT", "7337"))
+GOSSIP_PORT  = int(os.environ.get("LIXYSWARM_GOSSIP_PORT", "7338"))
 
-IDENTITY_PATH = "/opt/lixyswarm/.lixyswarm/identity.key"
+IDENTITY_PATH = os.environ.get(
+    "LIXYSWARM_IDENTITY_PATH", "/opt/lixyswarm/.lixyswarm/identity.key"
+)
 
 def run():
     from src.network.lsp import LSPIdentity
@@ -70,7 +72,7 @@ def run():
     node.start()
     log.info("✅ LSPNodeV2 activo")
 
-    # Conectar al nodo de Emmanuel si IP configurada
+    # Connect to an explicitly configured upstream peer.
     if PEER_HOST:
         try:
             node.connect_peer(PEER_HOST, GOSSIP_PORT)

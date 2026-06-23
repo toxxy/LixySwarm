@@ -2,7 +2,7 @@
 test_lsp_v2.py — 12 tests para LSP v2
 
 Run:
-    cd /home/toxxy/Dropbox/Lixy/clawd/workspace/lixy-llm
+    cd /path/to/lixy-llm
     python -m pytest test_lsp_v2.py -v
 """
 

@@ -12,6 +12,7 @@ Zero-config: el nodo arranca, lee peers.json, intenta bootstrap nodes,
 intercambia peers, y automáticamente se integra a la red.
 """
 import json
+import os
 import time
 import socket
 import logging
@@ -23,15 +24,29 @@ log = logging.getLogger("lixy.bootstrap")
 
 # ─── Bootstrap seeds ─────────────────────────────────────────────────────────
 
-# DNS seeds — dominios que resuelven a múltiples nodos relay
-DNS_SEEDS: List[Tuple[str, int]] = [
-    # ("seed.lixyswarm.io", 7338),   # futuro dominio DNS seed
-]
+def _configured_seeds() -> List[Tuple[str, int]]:
+    """Read comma-separated host[:port] seeds without embedding operator IPs."""
+    result: List[Tuple[str, int]] = []
+    for raw in os.environ.get("LIXYSWARM_BOOTSTRAP_SEEDS", "").split(","):
+        value = raw.strip()
+        if not value:
+            continue
+        host, separator, port_text = value.rpartition(":")
+        if not separator:
+            host, port_text = value, "7338"
+        try:
+            port = int(port_text)
+        except ValueError:
+            log.warning("Ignoring invalid bootstrap seed port")
+            continue
+        if host and 0 < port < 65536:
+            result.append((host, port))
+    return result
 
-# Hardcoded bootstrap — relays permanentes
-HARDCODED_BOOTSTRAP: List[Tuple[str, int]] = [
-    ("31.97.9.54", 7338),  # VPS relay principal
-]
+
+# Public DNS seeds may be added here after they are operated as public
+# infrastructure. Private/operator addresses must use the environment variable.
+DNS_SEEDS: List[Tuple[str, int]] = []
 
 
 def resolve_dns_seed(host: str) -> List[str]:
@@ -45,7 +60,7 @@ def resolve_dns_seed(host: str) -> List[str]:
 
 def get_bootstrap_addresses() -> List[Tuple[str, int]]:
     """Retorna lista completa de direcciones bootstrap (DNS + hardcoded)."""
-    addresses = list(HARDCODED_BOOTSTRAP)
+    addresses = _configured_seeds()
 
     for host, port in DNS_SEEDS:
         for ip in resolve_dns_seed(host):

@@ -33,6 +33,7 @@ build/
 venv/
 env/
 .env
+.env.*
 .venv
 
 # Jupyter
@@ -57,6 +58,11 @@ experiments/*.pt
 lixy_session.json
 lixy_session_*.json
 *.session.json
+swarm_status.json
+node.log
+*.pem
+*.key
+peers*.json
 
 # Corpus personal + metadata (privado, contiene datos personales)
 data/corpus/personal_corpus.txt
@@ -65,11 +71,7 @@ data/corpus/corpus_metadata.json
 # Documentación interna de Cody (rutas locales, datos privados)
 CODY_MEMORY.md
 
-# Setup de VPS (contiene IPs y rutas internas)
-VPS_SETUP.md
-
 # Artículos personales
-articulo_emmanuel.pdf
 *.pdf
 
 # Credenciales / tokens (nunca subir)
