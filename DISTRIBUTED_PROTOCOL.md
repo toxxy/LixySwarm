@@ -17,11 +17,13 @@ new node
 
 Saved addresses and peer exchange are preferred after initial discovery. The VPS runs `node_daemon.py` as a seed, not as a required relay. An automated acceptance test starts all three nodes in separate interpreters, learns the direct client route only through peer exchange, kills the seed process, and verifies an encrypted signed delta still arrives directly.
 
-Configure multiple endpoints until official DNS seeds are published:
+The first public bootstrap endpoint is compiled into the client, so a default installation needs no seed configuration. Operators can replace the defaults with multiple endpoints:
 
 ```bash
 export LIXYSWARM_BOOTSTRAP_SEEDS='seed-a.example.net:7338,seed-b.example.net:7338'
 ```
+
+Setting `LIXYSWARM_BOOTSTRAP_SEEDS` to an empty value disables bootstrap completely. Saved peers continue to work.
 
 ## Current data flows
 
@@ -45,7 +47,7 @@ Nodes behind NAT need only outbound TCP connectivity. Public nodes and seeds acc
 ## Current limits
 
 - Established-session payloads are signed and ChaCha20-Poly1305 encrypted after a signed X25519 HELLO. HELLO metadata, peer addresses, frame sizes, timing, and volume remain visible; in-session rekeying is not implemented.
-- No public built-in DNS seed domain is committed yet.
+- One public static bootstrap endpoint is built in. No redundant independently operated seed or public DNS seed domain is committed yet.
 - No DHT, Sybil defense, decentralized capability reputation, or verified hardware capacity. Local protocol misbehavior scores and temporary bans are implemented.
 - Scheduling capacity declarations are self-reported. Verified useful-work evidence and bounded newcomer exploration affect ordering. Inbound admission is memory-bounded and identity-quotad. Cooperative deadline/cancellation checks cover built-in inference, training, and artifact transfer. Automatically selected single-peer jobs retry send failure, disconnect, timeout, overload/capacity rejection, and peer-specific handler failure within one total deadline. Verified inference and gradient quorums replace a bounded number of failed members, retain their exact configured cardinality, prefer replacements outside retained network groups, and expose attempt/replacement counts. Explicit single-peer assignments remain exact. Durable crash recovery, Sybil-independent issuer reputation, hardware attestation, and forced termination remain missing.
 - Replication reduces reliance on one worker but does not defeat coordinated Sybil identities. It also exposes the requested prompt to every selected worker.

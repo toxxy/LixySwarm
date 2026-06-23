@@ -9,7 +9,9 @@
 - `.env` files, tokens, passwords, API keys, or private keys
 - `checkpoints/`, `data/`, personal corpora, memory banks, or session histories
 - LSP identity PEM/key files or peer caches
-- runtime status files, logs, operator IP addresses, or local filesystem paths
+- runtime status files, logs, ordinary operator/peer IP addresses, or local filesystem paths
+
+The sole address exception is a bootstrap endpoint whose operator explicitly authorizes permanent public use. That designation does not permit publishing credentials, inventory, logs, peer caches, or other addresses observed by the seed.
 
 If a secret or private datum has ever entered Git history, deleting it from the latest revision is insufficient. Rotate the secret and rewrite/purge history using an approved process.
 

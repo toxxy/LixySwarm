@@ -29,6 +29,7 @@ def test_cli_status_is_machine_readable(tmp_path, capsys):
         "distinct_issuers": 0,
         "validated_tokens": 0,
     }
+    assert output["bootstrap_configured"] is True
 
 
 def test_cli_missing_policy_is_connectivity_only(tmp_path, capsys):

@@ -54,7 +54,7 @@ tokens
   -> repetition-penalized top-k/top-p sampling in RuntimeSession
 ```
 
-LSP v3 multiplexes pheromones, peer exchange, global-memory deltas, work offers, and work results over persistent TCP `7338` sessions. Large artifacts move as verified chunks through typed work. A node loads saved peers, bootstraps from multiple configured seeds, learns direct routes, and continues if a seed disappears. In-process and separate-process three-node acceptance tests verify encrypted direct communication after the seed process exits. There are no built-in public DNS seed domains yet; configure endpoints with `LIXYSWARM_BOOTSTRAP_SEEDS=host:7338[,host:7338]`.
+LSP v3 multiplexes pheromones, peer exchange, global-memory deltas, work offers, and work results over persistent TCP `7338` sessions. Large artifacts move as verified chunks through typed work. A fresh node includes the project's first public bootstrap seed, learns direct routes, persists peers, and continues if the seed disappears. `LIXYSWARM_BOOTSTRAP_SEEDS=host:7338[,host:7338]` replaces the defaults; an explicitly empty value disables bootstrap. In-process and separate-process three-node acceptance tests verify encrypted direct communication after the seed exits. A second independent seed and public DNS seed domains are still required before public release.
 
 ## Install and verify
 
@@ -153,7 +153,7 @@ LSP v3 closes the v2 signature, replay, framing, outbound-NAT, and application-p
 
 Publisher authentication uses `LIXYSWARM_PUBLISH_TOKEN`. Personal Matriarca encryption is enabled only when `LIXYSWARM_MATRIARCA_KEY` is set. Network addresses are not published or exposed by default; enabling that requires explicit environment flags documented in [SECURITY.md](SECURITY.md).
 
-Never commit checkpoints, corpora, session histories, identities, peer databases, logs, `.env` files, or operator addresses.
+Never commit checkpoints, corpora, session histories, identities, peer databases, logs, `.env` files, or operator addresses. The only address exception is an endpoint explicitly authorized and operated as public bootstrap infrastructure.
 
 ## Documentation
 

@@ -19,6 +19,7 @@ from src.network import (
     UsefulWorkLedger,
 )
 from src.network.lsp import LSPIdentity
+from src.network.bootstrap import get_seed_endpoints
 from src.release import ReleaseManifest, ReleaseRegistry, TrustPolicy
 
 
@@ -93,7 +94,7 @@ def show_status(args) -> int:
         "known_peers": known_peers,
         "scheduler": scheduler,
         "useful_work": useful_work,
-        "bootstrap_configured": bool(os.environ.get("LIXYSWARM_BOOTSTRAP_SEEDS")),
+        "bootstrap_configured": bool(get_seed_endpoints()),
     }, indent=2, sort_keys=True))
     return 0
 
@@ -152,7 +153,7 @@ def start_node(args) -> int:
         print("Run 'lixyswarm init --mode balanced' to contribute compute.")
     if not network.seeds and not (home / "peers_v3.json").exists():
         print("No bootstrap seed is configured and no saved peers exist.")
-        print("Set LIXYSWARM_BOOTSTRAP_SEEDS until official DNS seeds ship.")
+        print("Set LIXYSWARM_BOOTSTRAP_SEEDS or remove an empty override.")
 
     print(
         f"LixySwarm node started: protocol=v3 mode={policy.mode} "

@@ -53,7 +53,7 @@ LSP v3 provides the final topology foundation and an initial compute/data plane.
 
 - Make personal-memory encryption mandatory for production, with managed key rotation and recovery.
 - Prove that personal text and embeddings cannot reach global exports across every write/import path.
-- Do not publish peer/operator addresses by default; current code now requires explicit opt-in flags.
+- Do not publish ordinary peer/operator addresses by default; current code requires explicit opt-in flags. Explicitly designated public bootstrap endpoints are the narrow exception.
 - Define retention, deletion, consent, export, and incident-response procedures.
 - Add automated secret and PII scanning in pre-commit and CI, including Git history.
 - Establish dataset licenses, provenance, opt-out handling, and jurisdiction-specific compliance.
@@ -69,7 +69,7 @@ LSP v3 provides the final topology foundation and an initial compute/data plane.
 
 ### Discovery and reachability
 
-- Operate multiple public DNS seeds under separate operators/failure domains and commit their domains as defaults.
+- Add at least one independently operated public seed and public DNS seeds in separate failure domains. The first static public bootstrap is now a client default, but it remains a single initial-discovery failure point.
 - Implement a Kademlia-style DHT or another measured decentralized discovery layer.
 - Validate IPv6 and common consumer NAT networks. Outbound-only nodes must remain full participants without port forwarding.
 - Add autonomous-system-aware diversity, health scoring, circuit breaking, feeler connections, and adversarial eclipse tests beyond the current coarse group preference.

@@ -22,7 +22,7 @@ Ed25519 proves continuity of a pseudonymous node identity and message integrity.
 ## Discovery layers
 
 1. Persistent address book.
-2. Multiple DNS/bootstrap seeds.
+2. Built-in public bootstrap plus operator-configurable DNS/bootstrap seeds.
 3. Peer exchange.
 4. DHT after the first three layers are adversarially tested.
 
@@ -35,7 +35,7 @@ The compute layer distributes complete inference requests and bounded gradient j
 ## Remaining decisions
 
 - In-session key rotation and independent review of the implemented X25519/HKDF/ChaCha20-Poly1305 construction.
-- Seed domains and independent operators.
+- A second independent seed and stable public seed domains.
 - Network reputation and eclipse resistance.
 - Network announcement/discovery for the implemented threshold-signed local release registry, plus official trust-root/genesis operations.
 - Process/container sandboxing beyond the implemented consent governor and allowlisted scheduler.

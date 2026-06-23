@@ -40,6 +40,10 @@ def _read_json(path: Path) -> dict | None:
 
 def collect_status() -> dict:
     """Recolecta todo el estado del swarm local."""
+    bootstrap_override = os.environ.get("LIXYSWARM_BOOTSTRAP_SEEDS")
+    bootstrap_available = (
+        bootstrap_override is None or bool(bootstrap_override.strip())
+    )
     status = {
         "timestamp": datetime.now(timezone.utc).isoformat(),
         "source": "local",
@@ -230,11 +234,11 @@ def collect_status() -> dict:
         "internet": {
             "ready": bool(
                 os.environ.get("LIXYSWARM_PUBLIC_HOST")
-                or os.environ.get("LIXYSWARM_BOOTSTRAP_SEEDS")
+                or bootstrap_available
             ),
             "mode": (
                 "public-peer" if os.environ.get("LIXYSWARM_PUBLIC_HOST")
-                else "outbound-p2p" if os.environ.get("LIXYSWARM_BOOTSTRAP_SEEDS")
+                else "outbound-p2p" if bootstrap_available
                 else "unbootstrapped"
             ),
         },

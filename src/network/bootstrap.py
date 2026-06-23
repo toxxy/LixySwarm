@@ -1,15 +1,8 @@
-"""
-bootstrap.py — P2P Bootstrap & Peer Discovery (LSP v2)
-========================================================
-Inspirado en Bitcoin Core:
-  - DNS seeds para descubrimiento inicial
-  - Hardcoded bootstrap nodes como fallback
-  - peers.json: cache persistente de peers conocidos
-  - Peer exchange: al conectar, intercambiar listas de peers
-  - Auto-reconexión a peers conocidos
+"""P2P bootstrap and peer discovery shared by LSP v2 and LSP v3.
 
-Zero-config: el nodo arranca, lee peers.json, intenta bootstrap nodes,
-intercambia peers, y automáticamente se integra a la red.
+A fresh node can use public bootstrap endpoints, exchange peer addresses, and
+then prefer its persistent address book. Seeds introduce peers; they are not
+relays, coordinators, or authorities.
 """
 import json
 import os
@@ -25,7 +18,7 @@ log = logging.getLogger("lixy.bootstrap")
 # ─── Bootstrap seeds ─────────────────────────────────────────────────────────
 
 def _configured_seeds() -> List[Tuple[str, int]]:
-    """Read comma-separated host[:port] seeds without embedding operator IPs."""
+    """Read a comma-separated host[:port] bootstrap override."""
     result: List[Tuple[str, int]] = []
     for raw in os.environ.get("LIXYSWARM_BOOTSTRAP_SEEDS", "").split(","):
         value = raw.strip()
@@ -39,14 +32,25 @@ def _configured_seeds() -> List[Tuple[str, int]]:
         except ValueError:
             log.warning("Ignoring invalid bootstrap seed port")
             continue
-        if host and 0 < port < 65536:
-            result.append((host, port))
+        endpoint = (host, port)
+        if host and 0 < port < 65536 and endpoint not in result:
+            result.append(endpoint)
     return result
 
 
-# Public DNS seeds may be added here after they are operated as public
-# infrastructure. Private/operator addresses must use the environment variable.
+# The first explicitly authorized public bootstrap. It is an introduction
+# point only: it does not relay established peer traffic or hold authority.
+PUBLIC_BOOTSTRAP_SEEDS: List[Tuple[str, int]] = [
+    ("31.97.9.54", 7338),
+]
+
+# Add independently operated DNS names here as they become available.
 DNS_SEEDS: List[Tuple[str, int]] = []
+
+
+def _seed_override_is_set() -> bool:
+    """An explicitly present variable replaces defaults, including empty."""
+    return "LIXYSWARM_BOOTSTRAP_SEEDS" in os.environ
 
 
 def resolve_dns_seed(host: str) -> List[str]:
@@ -59,8 +63,11 @@ def resolve_dns_seed(host: str) -> List[str]:
 
 
 def get_bootstrap_addresses() -> List[Tuple[str, int]]:
-    """Retorna lista completa de direcciones bootstrap (DNS + hardcoded)."""
-    addresses = _configured_seeds()
+    """Return resolved bootstrap addresses for the legacy bootstrap path."""
+    if _seed_override_is_set():
+        return _configured_seeds()
+
+    addresses = list(PUBLIC_BOOTSTRAP_SEEDS)
 
     for host, port in DNS_SEEDS:
         for ip in resolve_dns_seed(host):
@@ -77,8 +84,13 @@ def get_seed_endpoints() -> List[Tuple[str, int]]:
     LSP v3 resolves these endpoints periodically through PeerManager. Keeping
     the hostname allows DNS rotation to continue working after process start.
     """
+    sources = (
+        _configured_seeds()
+        if _seed_override_is_set()
+        else [*PUBLIC_BOOTSTRAP_SEEDS, *DNS_SEEDS]
+    )
     endpoints: List[Tuple[str, int]] = []
-    for endpoint in [*_configured_seeds(), *DNS_SEEDS]:
+    for endpoint in sources:
         if endpoint not in endpoints:
             endpoints.append(endpoint)
     return endpoints

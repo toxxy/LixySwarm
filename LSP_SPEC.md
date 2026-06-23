@@ -68,7 +68,7 @@ The first frame in each direction must be a fresh HELLO. The sender public key i
 ## Discovery
 
 1. Load the persistent `peers_v3.json` address book.
-2. Add configured DNS/bootstrap endpoints.
+2. Add the built-in public bootstrap endpoint, unless explicitly overridden.
 3. Resolve every A/AAAA record for redundancy.
 4. Maintain a target of eight outbound sessions by default.
 5. Exchange up to 100 peer addresses after every connection.
@@ -129,7 +129,7 @@ LSP v2 remains available only through `SwarmNetwork(..., protocol="v2")`. LSP v3
 ## Remaining protocol work
 
 - In-session key rotation/rekeying and an external cryptographic review of the custom handshake.
-- Public DNS seed domains operated in independent failure domains.
+- A second independently operated seed plus public DNS seed domains in separate failure domains.
 - Stronger autonomous-system/network diversity, feeler connections, and adversarial eclipse tests.
 - Sybil-independent issuer/result reputation, identity aging, hardware verification, and eclipse resistance beyond local misbehavior bans and connected-peer useful-work evidence.
 - DHT discovery after persistent peer exchange is stable.

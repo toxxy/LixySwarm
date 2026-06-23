@@ -230,16 +230,17 @@ def get_lsp_state() -> dict:
     s = _read_status()
     published = s.get("lsp", {}) if isinstance(s.get("lsp"), dict) else {}
     public_host = os.environ.get("LIXYSWARM_PUBLIC_HOST")
-    configured_seeds = os.environ.get("LIXYSWARM_BOOTSTRAP_SEEDS")
+    seed_override = os.environ.get("LIXYSWARM_BOOTSTRAP_SEEDS")
+    bootstrap_available = seed_override is None or bool(seed_override.strip())
     published_internet = published.get("internet", {}) if isinstance(published.get("internet"), dict) else {}
     standalone_identity = BASE / ".lixyswarm" / "identity.key"
     is_seed = standalone_identity.exists()
-    wan_ready = bool(public_host or configured_seeds or published_internet.get("ready") or is_seed)
+    wan_ready = bool(public_host or bootstrap_available or published_internet.get("ready") or is_seed)
     wan_mode = (
         "seed"
         if is_seed
         else published_internet.get("mode")
-        or ("public-peer" if public_host else "outbound-p2p" if configured_seeds else "unbootstrapped")
+        or ("public-peer" if public_host else "outbound-p2p" if bootstrap_available else "unbootstrapped")
     )
 
     return {
@@ -258,7 +259,7 @@ def get_lsp_state() -> dict:
         "peer_exchange": published.get("peer_exchange", True),
         "seed_independent": published.get("seed_independent", True),
         "merge_on_transit": published.get("merge_on_transit", False),
-        "discovery": "DNS seeds + persistent peer exchange + saved address book",
+        "discovery": "public bootstrap + persistent peer exchange + saved address book",
         "ports": published.get("ports", {
             "session_tcp": 7338,
             "legacy_feromon_udp": 7337,

@@ -4,7 +4,7 @@
 
 The VPS is a replaceable bootstrap seed. It accepts persistent LSP v3 sessions and shares learned peer addresses. It does not relay model traffic, coordinate decisions, or remain necessary after peers connect.
 
-Do not commit real addresses, credentials, private keys, or inventory details. Publish the seed through a stable DNS name.
+Do not commit credentials, private keys, private inventory details, or ordinary peer/operator addresses. A bootstrap address may be committed only when its operator explicitly designates it as public infrastructure. Prefer a stable DNS name for long-term operation.
 
 ## Install
 
@@ -69,12 +69,20 @@ Ordinary participants do not open ports or use a VPN. They initiate outbound TCP
 
 ## Client bootstrap
 
-Until official seed domains are compiled into a release:
+The first project-operated seed is compiled into the client. A default installation can therefore start directly:
+
+```bash
+lixyswarm start
+```
+
+An operator can replace the built-in endpoint, including with multiple seeds:
 
 ```bash
 export LIXYSWARM_BOOTSTRAP_SEEDS='seed.example.net:7338'
 lixyswarm start
 ```
+
+An explicitly empty `LIXYSWARM_BOOTSTRAP_SEEDS` disables public bootstrap. The built-in endpoint is only an introduction service; it is not a relay, coordinator, trust root, model host, or required dependency after peer discovery.
 
 The basic command contributes connectivity and explicitly imported artifacts only. A participant can use a separately verified local checkpoint with `--checkpoint`, or configure threshold trust, activate a signed local release, and use `lixyswarm start --release`. The repository does not publish official signer keys, a pinned genesis, or model weights yet, so acquisition must not be automated from an untrusted peer.
 
