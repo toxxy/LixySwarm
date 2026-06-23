@@ -70,11 +70,22 @@ def show_status(args) -> int:
             known_peers = len(json.loads(peers_path.read_text()).get("peers", []))
         except Exception:
             pass
+    useful_work = {
+        "validated_training_credits": 0,
+        "distinct_issuers": 0,
+        "validated_tokens": 0,
+    }
+    identity = LSPIdentity.load(str(home / "lsp_identity.pem"))
+    if identity is not None:
+        useful_work = UsefulWorkLedger(
+            home / "useful_work_credits.json", identity.node_id_hex
+        ).summary()
     print(json.dumps({
         "home": str(home),
         "profile": governor.advertised_profile(),
         "governor": governor.status(),
         "known_peers": known_peers,
+        "useful_work": useful_work,
         "bootstrap_configured": bool(os.environ.get("LIXYSWARM_BOOTSTRAP_SEEDS")),
     }, indent=2, sort_keys=True))
     return 0

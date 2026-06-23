@@ -20,6 +20,11 @@ def test_cli_status_is_machine_readable(tmp_path, capsys):
     output = json.loads(capsys.readouterr().out)
     assert output["profile"]["mode"] == "relay"
     assert output["known_peers"] == 0
+    assert output["useful_work"] == {
+        "validated_training_credits": 0,
+        "distinct_issuers": 0,
+        "validated_tokens": 0,
+    }
 
 
 def test_cli_missing_policy_is_connectivity_only(tmp_path, capsys):

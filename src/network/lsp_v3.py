@@ -65,6 +65,7 @@ class PacketType:
     WORK_RESULT = 0x08
     RELEASE_ANNOUNCE = 0x09
     USEFUL_WORK_CREDIT = 0x0A
+    USEFUL_WORK_PROOFS = 0x0B
 
 
 _VALID_PACKET_TYPES = {
@@ -78,6 +79,7 @@ _VALID_PACKET_TYPES = {
     PacketType.WORK_RESULT,
     PacketType.RELEASE_ANNOUNCE,
     PacketType.USEFUL_WORK_CREDIT,
+    PacketType.USEFUL_WORK_PROOFS,
 }
 
 
@@ -349,6 +351,7 @@ class LSPNodeV3:
         self._sequence = 0
         self._sessions: dict[str, PeerSession] = {}
         self._snapshot: dict[str, dict] = {}
+        self._latest_useful_work_proofs: dict[str, dict] = {}
         self._snapshot_lock = threading.RLock()
         self._server: Optional[asyncio.AbstractServer] = None
         self._loop: Optional[asyncio.AbstractEventLoop] = None
@@ -365,6 +368,8 @@ class LSPNodeV3:
         self._work_result_callbacks: list[Callable] = []
         self._release_callbacks: list[Callable] = []
         self._credit_callbacks: list[Callable] = []
+        self._useful_work_proof_callbacks: list[Callable] = []
+        self._useful_work_proof_provider: Optional[Callable] = None
 
     def _reset_process_session(self):
         self.session_id = os.urandom(16)
@@ -459,6 +464,45 @@ class LSPNodeV3:
             PacketType.USEFUL_WORK_CREDIT, node_id, credit
         )
 
+    def set_useful_work_proof_provider(self, provider: Callable):
+        if not callable(provider):
+            raise TypeError("useful-work proof provider must be callable")
+        self._useful_work_proof_provider = provider
+        self.announce_useful_work_proofs()
+
+    def announce_useful_work_proofs(self) -> int:
+        payload = self._useful_work_proof_payload()
+        loop = self._loop
+        if (
+            payload is None
+            or loop is None
+            or loop.is_closed()
+            or not loop.is_running()
+        ):
+            return 0
+        coroutine = self._broadcast(
+            PacketType.USEFUL_WORK_PROOFS, payload, ttl=1
+        )
+        if threading.current_thread() is self._thread:
+            asyncio.create_task(coroutine)
+            return self.peer_count
+        try:
+            future = asyncio.run_coroutine_threadsafe(coroutine, loop)
+            return int(future.result(timeout=15.0))
+        except RuntimeError:
+            coroutine.close()
+            return 0
+
+    def update_peer_useful_work(self, node_id: str, evidence: dict) -> bool:
+        with self._snapshot_lock:
+            peer = self._snapshot.get(node_id)
+            if peer is None:
+                return False
+            resources = dict(peer.get("resources", {}))
+            resources["useful_work"] = dict(evidence)
+            peer["resources"] = resources
+        return True
+
     def peers(self) -> list[dict]:
         with self._snapshot_lock:
             return [dict(peer) for peer in self._snapshot.values()]
@@ -525,6 +569,17 @@ class LSPNodeV3:
 
     def on_useful_work_credit(self, callback: Callable):
         self._credit_callbacks.append(callback)
+        return callback
+
+    def on_useful_work_proofs(self, callback: Callable):
+        self._useful_work_proof_callbacks.append(callback)
+        with self._snapshot_lock:
+            pending = [
+                (dict(proofs), node_id)
+                for node_id, proofs in self._latest_useful_work_proofs.items()
+            ]
+        for proofs, node_id in pending:
+            callback(proofs, node_id)
         return callback
 
     # Event-loop lifecycle --------------------------------------------------
@@ -754,6 +809,14 @@ class LSPNodeV3:
                 ttl=1,
                 encryption_key=session.encryption_key,
             ))
+        proof_payload = self._useful_work_proof_payload()
+        if proof_payload is not None:
+            await session.send_raw(self._new_packet(
+                PacketType.USEFUL_WORK_PROOFS,
+                proof_payload,
+                ttl=1,
+                encryption_key=session.encryption_key,
+            ))
 
     async def _close_session(self, session: PeerSession, *, notify: bool = True):
         current = self._sessions.get(session.node_id)
@@ -762,6 +825,7 @@ class LSPNodeV3:
             self._sessions.pop(session.node_id, None)
             with self._snapshot_lock:
                 self._snapshot.pop(session.node_id, None)
+                self._latest_useful_work_proofs.pop(session.node_id, None)
         if not session.writer.is_closing():
             session.writer.close()
             try:
@@ -864,6 +928,13 @@ class LSPNodeV3:
             credit = self._parse_json(packet.payload, max_size=16 * 1024)
             for callback in self._credit_callbacks:
                 callback(credit, session.node_id)
+            return
+        if packet.packet_type == PacketType.USEFUL_WORK_PROOFS:
+            proofs = self._parse_json(packet.payload, max_size=64 * 1024)
+            with self._snapshot_lock:
+                self._latest_useful_work_proofs[session.node_id] = dict(proofs)
+            for callback in self._useful_work_proof_callbacks:
+                callback(proofs, session.node_id)
             return
 
     # Serialization helpers -------------------------------------------------
@@ -974,6 +1045,21 @@ class LSPNodeV3:
             payload["advertised_host"] = self.advertised_host
         return json.dumps(payload, separators=(",", ":")).encode()
 
+    def _useful_work_proof_payload(self) -> Optional[bytes]:
+        provider = self._useful_work_proof_provider
+        if provider is None:
+            return None
+        try:
+            value = provider()
+            if not isinstance(value, dict):
+                return None
+            payload = json.dumps(
+                value, sort_keys=True, separators=(",", ":"), allow_nan=False
+            ).encode()
+            return payload if len(payload) <= 64 * 1024 else None
+        except (TypeError, ValueError, OSError):
+            return None
+
     def _parse_hello(self, payload: bytes) -> dict:
         hello = self._parse_json(payload, max_size=16 * 1024)
         if hello.get("protocol") != 3:
@@ -1006,6 +1092,9 @@ class LSPNodeV3:
         # Bound untrusted metadata even though the complete HELLO is also capped.
         hello["capabilities"] = dict(list(hello.get("capabilities", {}).items())[:32])
         hello["resources"] = dict(list(hello.get("resources", {}).items())[:32])
+        # Useful-work evidence is accepted only through the encrypted proof
+        # packet and inserted locally after full credit verification.
+        hello["resources"].pop("useful_work", None)
         return hello
 
     @staticmethod

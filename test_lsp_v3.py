@@ -25,6 +25,8 @@ from src.network.peer_manager import (
     validate_peer_address,
 )
 from src.network.swarm_network import SwarmNetwork
+from src.network.useful_work import UsefulWorkCredit, UsefulWorkLedger
+from src.network.work_protocol import ResultReceipt, WorkResult
 from src.network.node import NodeIdentity
 from src.swarm.node_manager import NodeManager
 
@@ -249,6 +251,49 @@ def test_v3_delivers_useful_work_credit_to_exact_peer(tmp_path):
         right.stop()
 
 
+def test_v3_exchanges_useful_work_proofs_after_encrypted_handshake(tmp_path):
+    left = _node(tmp_path, "proof-left", target_outbound=0)
+    right = _node(tmp_path, "proof-right", target_outbound=0)
+    bundle = {
+        "version": 1,
+        "worker_node_id": left.identity.node_id_hex,
+        "credits": [],
+    }
+    received = []
+    event = threading.Event()
+    left.set_useful_work_proof_provider(lambda: bundle)
+
+    left.start()
+    right.start()
+    try:
+        assert left.connect_peer("127.0.0.1", right.port)
+        assert _wait_for(
+            lambda: left.identity.node_id_hex
+            in right._latest_useful_work_proofs
+        )
+
+        @right.on_useful_work_proofs
+        def capture(proofs, node_id):
+            received.append((proofs, node_id))
+            event.set()
+
+        assert event.wait(3.0)
+        assert received == [(bundle, left.identity.node_id_hex)]
+    finally:
+        left.stop()
+        right.stop()
+
+
+def test_v3_hello_cannot_self_declare_useful_work(tmp_path):
+    node = _node(tmp_path, "untrusted-reputation", target_outbound=0)
+    node.port = 17338
+    node.resource_profile["useful_work"] = {
+        "verified": True, "firsthand_credits": 16
+    }
+    parsed = node._parse_hello(node._hello_payload())
+    assert "useful_work" not in parsed["resources"]
+
+
 def test_v3_network_continues_after_seed_shutdown(tmp_path):
     seed = _node(tmp_path, "seed", target_outbound=0)
     seed.start()
@@ -336,6 +381,66 @@ def test_swarm_network_uses_v3_by_default(tmp_path):
     finally:
         left.stop()
         right.stop()
+
+
+def test_swarm_network_verifies_firsthand_training_evidence(tmp_path):
+    worker_network = SwarmNetwork.create(
+        mode="lan", gossip_port=0,
+        checkpoint_dir=str(tmp_path / "evidence-worker"), target_outbound=0,
+    )
+    requester_network = SwarmNetwork.create(
+        mode="lan", gossip_port=0,
+        checkpoint_dir=str(tmp_path / "evidence-requester"), target_outbound=0,
+    )
+    worker_network.start()
+    requester_network.start()
+    try:
+        worker = worker_network._lsp_v3_node.identity
+        requester = requester_network._lsp_v3_node.identity
+        result = WorkResult(
+            job_id="11" * 32,
+            status="ok",
+            output={"gradient_artifact_id": "12" * 32},
+        )
+        receipt = ResultReceipt.create(
+            result, worker, requester.node_id_hex
+        ).to_dict()
+        credit = UsefulWorkCredit.issue(
+            requester,
+            worker_node_id=worker.node_id_hex,
+            receipt=receipt,
+            gradient_artifact_id="12" * 32,
+            aggregate_artifact_id="13" * 32,
+            model_artifact_id="14" * 32,
+            dataset_artifact_id="15" * 32,
+            token_count=256,
+        )
+        worker_ledger = UsefulWorkLedger(
+            tmp_path / "worker-credits.json", worker.node_id_hex
+        )
+        assert worker_ledger.add(credit.to_dict())
+        worker_network.attach_useful_work_ledger(worker_ledger)
+        requester_network.attach_useful_work_ledger(UsefulWorkLedger(
+            tmp_path / "requester-credits.json", requester.node_id_hex
+        ))
+
+        assert requester_network.connect_peer(
+            "127.0.0.1", worker_network._lsp_v3_node.port
+        )
+        assert _wait_for(lambda: bool(
+            requester_network._lsp_v3_node.peers()
+            and requester_network._lsp_v3_node.peers()[0]
+            .get("resources", {}).get("useful_work", {})
+            .get("firsthand_credits") == 1
+        ))
+        evidence = requester_network._lsp_v3_node.peers()[0]["resources"][
+            "useful_work"
+        ]
+        assert evidence["verified"]
+        assert evidence["firsthand_tokens"] == 256
+    finally:
+        worker_network.stop()
+        requester_network.stop()
 
 
 def test_v3_peer_resources_join_runtime_node_manager(tmp_path):

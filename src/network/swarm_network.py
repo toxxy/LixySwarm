@@ -191,7 +191,25 @@ class SwarmNetwork:
     def attach_useful_work_ledger(self, ledger):
         if self._lsp_v3_node is None:
             raise RuntimeError("useful-work ledger requires active LSP v3")
+        if self.useful_work_ledger is ledger:
+            return ledger
+        if self.useful_work_ledger is not None:
+            raise RuntimeError("a useful-work ledger is already attached")
         self.useful_work_ledger = ledger
+
+        from src.network.useful_work import verify_useful_work_bundle
+
+        @self._lsp_v3_node.on_useful_work_proofs
+        def _proofs(value, from_node_id):
+            try:
+                evidence = verify_useful_work_bundle(
+                    value,
+                    worker_node_id=from_node_id,
+                    firsthand_issuer_id=self._lsp_v3_node.identity.node_id_hex,
+                )
+            except (TypeError, ValueError):
+                return
+            self._lsp_v3_node.update_peer_useful_work(from_node_id, evidence)
 
         @self._lsp_v3_node.on_useful_work_credit
         def _credit(value, from_node_id):
@@ -200,7 +218,9 @@ class SwarmNetwork:
             try:
                 ledger.add(value)
             except Exception:
-                pass
+                return
+            self._lsp_v3_node.announce_useful_work_proofs()
+        self._lsp_v3_node.set_useful_work_proof_provider(ledger.proof_bundle)
         return ledger
 
     def send_useful_work_credit(self, peer_id: str, credit: dict) -> bool:

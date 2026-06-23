@@ -249,3 +249,56 @@ def test_compute_scheduler_requires_configured_identity_work(tmp_path):
         ) == valid_identity.node_id_hex
     finally:
         coordinator.close()
+
+
+def test_scheduler_prioritizes_verified_useful_work(tmp_path):
+    experienced = LSPIdentity.generate()
+    unproven = LSPIdentity.generate()
+
+    class FakeNode:
+        identity = LSPIdentity.generate()
+
+        def on_work_offer_received(self, _callback):
+            return None
+
+        def on_work_result_received(self, _callback):
+            return None
+
+        def peers(self):
+            base = {
+                "work": {"training": True}, "cpu_cores": 4,
+                "ram_gb": 8, "disk_gb": 8, "has_gpu": True,
+            }
+            return [
+                {
+                    "node_id": unproven.node_id_hex,
+                    "host": "8.8.8.8",
+                    "resources": {**base, "gpu_vram_gb": 24},
+                },
+                {
+                    "node_id": experienced.node_id_hex,
+                    "host": "1.1.1.1",
+                    "resources": {
+                        **base,
+                        "gpu_vram_gb": 8,
+                        "useful_work": {
+                            "verified": True,
+                            "firsthand_credits": 1,
+                            "firsthand_tokens": 512,
+                            "distinct_issuers": 1,
+                            "presented_credits": 1,
+                            "validated_tokens": 512,
+                        },
+                    },
+                },
+            ]
+
+    coordinator = WorkCoordinator(
+        FakeNode(), _governor(tmp_path / "useful-governor", "relay")
+    )
+    try:
+        assert coordinator.select_peer(
+            ResourceRequirements(kind="training")
+        ) == experienced.node_id_hex
+    finally:
+        coordinator.close()

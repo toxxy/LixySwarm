@@ -6,10 +6,13 @@ import base64
 import hashlib
 import json
 import os
-import time
 import threading
+import time
 from dataclasses import asdict, dataclass
 from pathlib import Path
+
+
+MAX_PRESENTED_CREDITS = 16
 
 
 def _canonical(value: dict) -> bytes:
@@ -65,6 +68,8 @@ class UsefulWorkCredit:
             raise ValueError("credit receipt worker mismatch")
         if receipt.get("requester_node_id") != identity.node_id_hex:
             raise ValueError("credit issuer did not request the work")
+        if worker_node_id == identity.node_id_hex:
+            raise ValueError("self-issued useful-work credit is not allowed")
         _verify_worker_receipt(receipt)
         body = {
             "version": 1,
@@ -107,6 +112,8 @@ class UsefulWorkCredit:
             len(value) != 64 or any(c not in "0123456789abcdef" for c in value)
             for value in hex_fields
         ):
+            return False
+        if self.worker_node_id == self.issuer_node_id:
             return False
         if not 1 <= self.token_count <= 4096 or not 0 < self.issued_at <= time.time() + 300:
             return False
@@ -205,6 +212,40 @@ class UsefulWorkLedger:
                 "validated_tokens": sum(c.token_count for c in self._credits.values()),
             }
 
+    def proof_bundle(self, *, limit: int = MAX_PRESENTED_CREDITS) -> dict:
+        """Present bounded evidence, preferring distinct and recent issuers."""
+        limit = max(0, min(int(limit), MAX_PRESENTED_CREDITS))
+        with self._lock:
+            if limit == 0:
+                return {
+                    "version": 1,
+                    "worker_node_id": self.owner_node_id,
+                    "credits": [],
+                }
+            ordered = sorted(
+                self._credits.values(),
+                key=lambda credit: (credit.issued_at, credit.credit_id),
+                reverse=True,
+            )
+            selected = []
+            deferred = []
+            issuers = set()
+            for credit in ordered:
+                if credit.issuer_node_id in issuers:
+                    deferred.append(credit)
+                    continue
+                issuers.add(credit.issuer_node_id)
+                selected.append(credit)
+                if len(selected) == limit:
+                    break
+            if len(selected) < limit:
+                selected.extend(deferred[:limit - len(selected)])
+            return {
+                "version": 1,
+                "worker_node_id": self.owner_node_id,
+                "credits": [credit.to_dict() for credit in selected],
+            }
+
     def _load(self):
         if not self.path.exists():
             return
@@ -229,3 +270,46 @@ class UsefulWorkLedger:
         }, sort_keys=True, separators=(",", ":")))
         os.chmod(temporary, 0o600)
         os.replace(temporary, self.path)
+
+
+def verify_useful_work_bundle(
+    value: dict,
+    *,
+    worker_node_id: str,
+    firsthand_issuer_id: str | None = None,
+) -> dict:
+    """Verify a peer's bounded evidence and return privacy-safe counters."""
+    if not isinstance(value, dict) or set(value) != {
+        "version", "worker_node_id", "credits"
+    }:
+        raise ValueError("invalid useful-work proof schema")
+    if value["version"] != 1 or value["worker_node_id"] != worker_node_id:
+        raise ValueError("useful-work proof identity mismatch")
+    raw_credits = value["credits"]
+    if not isinstance(raw_credits, list) or len(raw_credits) > MAX_PRESENTED_CREDITS:
+        raise ValueError("useful-work proof exceeds the credit limit")
+    credits = []
+    credit_ids = set()
+    for raw_credit in raw_credits:
+        try:
+            credit = UsefulWorkCredit.from_dict(raw_credit)
+        except (TypeError, ValueError) as exc:
+            raise ValueError("useful-work proof contains an invalid credit") from exc
+        if credit.worker_node_id != worker_node_id:
+            raise ValueError("useful-work credit belongs to another worker")
+        if credit.credit_id in credit_ids:
+            raise ValueError("useful-work proof repeats a credit")
+        credit_ids.add(credit.credit_id)
+        credits.append(credit)
+    firsthand = [
+        credit for credit in credits
+        if firsthand_issuer_id and credit.issuer_node_id == firsthand_issuer_id
+    ]
+    return {
+        "verified": True,
+        "presented_credits": len(credits),
+        "distinct_issuers": len({credit.issuer_node_id for credit in credits}),
+        "validated_tokens": sum(credit.token_count for credit in credits),
+        "firsthand_credits": len(firsthand),
+        "firsthand_tokens": sum(credit.token_count for credit in firsthand),
+    }

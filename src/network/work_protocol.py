@@ -476,13 +476,29 @@ class WorkCoordinator:
             ):
                 continue
             candidates.append(peer)
-        candidates.sort(
-            key=lambda peer: (
-                float(peer.get("resources", {}).get("gpu_vram_gb", 0.0)),
-                int(peer.get("resources", {}).get("cpu_cores", 1)),
-            ),
-            reverse=True,
-        )
+        def scheduling_rank(peer: dict) -> tuple:
+            resources = peer.get("resources", {})
+            useful = resources.get("useful_work", {})
+            if not isinstance(useful, dict) or useful.get("verified") is not True:
+                useful = {}
+
+            def bounded_int(name: str, maximum: int) -> int:
+                try:
+                    return max(0, min(int(useful.get(name, 0)), maximum))
+                except (TypeError, ValueError, OverflowError):
+                    return 0
+
+            return (
+                bounded_int("firsthand_credits", 16),
+                bounded_int("firsthand_tokens", 65_536),
+                bounded_int("distinct_issuers", 16),
+                bounded_int("presented_credits", 16),
+                bounded_int("validated_tokens", 65_536),
+                float(resources.get("gpu_vram_gb", 0.0)),
+                int(resources.get("cpu_cores", 1)),
+            )
+
+        candidates.sort(key=scheduling_rank, reverse=True)
         diverse = []
         repeated = []
         groups = set()

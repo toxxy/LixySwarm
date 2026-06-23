@@ -72,7 +72,8 @@
 - [x] Add exact-model deterministic replicated inference, coarse network-group selection, strict output majority, and supporting receipts.
 - [x] Add optional persistent Ed25519-bound identity work and requester-enforced compute difficulty; keep it disabled by default.
 - [x] Issue and persist dual-signed, duplicate-resistant credits for gradient results included in validated quorum aggregates.
-- [ ] Exchange useful-work proofs and apply issuer-diverse reputation/identity aging to scheduling; neither proof of useful work nor optional Hashcash alone establishes independence.
+- [x] Exchange bounded useful-work proofs with direct peers and prioritize firsthand, then issuer-diverse, verified evidence in scheduling.
+- [ ] Add Sybil-independent issuer trust/identity aging and starvation-resistant exploration; neither useful-work credits nor optional Hashcash alone establishes independence.
 - [ ] Add poisoning/anomaly tests, gradient privacy defenses, and audited promotion rules before model updates.
 
 ## P2: Internet topology and operations

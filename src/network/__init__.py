@@ -21,7 +21,11 @@ from .training_worker import (
 )
 from .gradient_aggregation import GradientAggregator, GradientCandidate
 from .identity_work import load_or_mine_identity_work, verify_identity_work
-from .useful_work import UsefulWorkCredit, UsefulWorkLedger
+from .useful_work import (
+    UsefulWorkCredit,
+    UsefulWorkLedger,
+    verify_useful_work_bundle,
+)
 
 __all__ = [
     "LSPIdentity",
@@ -60,6 +64,7 @@ __all__ = [
     "verify_identity_work",
     "UsefulWorkCredit",
     "UsefulWorkLedger",
+    "verify_useful_work_bundle",
 ]
 
 # Compatibilidad v1: requiere torch por FeromonMessage.

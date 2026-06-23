@@ -60,6 +60,7 @@ Captured application payloads cannot be decrypted after both process-ephemeral k
 | `0x08` | WORK_RESULT | bounded status/output JSON tied to a pending peer/job |
 | `0x09` | RELEASE_ANNOUNCE | threshold-signed release manifest, maximum 64 KiB |
 | `0x0A` | USEFUL_WORK_CREDIT | worker receipt plus requester aggregation attestation, maximum 16 KiB |
+| `0x0B` | USEFUL_WORK_PROOFS | up to 16 dual-signed credits presented after encryption, maximum 64 KiB |
 
 The first frame in each direction must be a fresh HELLO. The sender public key in all subsequent frames must match the session peer identity.
 
@@ -102,7 +103,9 @@ Identity work is disabled by default. An operator can set `LIXYSWARM_IDENTITY_WO
 
 Every `WorkResult` contains a second portable Ed25519 receipt over the job ID, worker, requester, output/error digest, and completion time. The requester verifies this receipt against the transport peer before accepting the result. Gradient quorum artifacts retain the receipts as provenance; a receipt proves what a pseudonymous identity asserted, not that the computation was honest or that identities are independent.
 
-After a gradient candidate enters a validated quorum aggregate, the requester signs a useful-work credit containing the worker's signed result receipt and the exact model, dataset, candidate, aggregate, and token count. The stable credit ID prevents repeated aggregation of one job/result from increasing the worker's local count. Credits are delivered over the encrypted session and stored by the worker. Network-wide credit discovery, issuer-weighted reputation, and scheduler priority are not implemented yet.
+After a gradient candidate enters a validated quorum aggregate, the requester signs a useful-work credit containing the worker's signed result receipt and the exact model, dataset, candidate, aggregate, and token count. The stable credit ID prevents repeated aggregation of one job/result from increasing the worker's local count. Credits are delivered over the encrypted session and stored by the worker.
+
+A worker presents at most 16 credits, preferring recent credits from distinct issuers, after the encrypted handshake. Presentations received before the local ledger/verifier starts are retained only for the authenticated live session and replayed to the verifier, removing startup-order dependence. HELLO-provided `useful_work` values are discarded. The receiver validates both signatures and worker ownership, stores only privacy-safe counters in its peer snapshot, and identifies credits that it issued firsthand. Scheduling prefers firsthand evidence, then bounded issuer diversity and capacity. Multi-hop discovery, issuer trust/aging, and Sybil independence are not implemented.
 
 Current operations are isolated inference, artifact describe/read-chunk, and gradient computation. Artifacts use full-file SHA-256 identities, bounded manifests, 96 KiB raw chunks, per-chunk SHA-256, atomic commit, and final full-file verification. Gradient results are candidates and are never applied by the protocol.
 
@@ -117,7 +120,7 @@ LSP v2 remains available only through `SwarmNetwork(..., protocol="v2")`. LSP v3
 - In-session key rotation/rekeying and an external cryptographic review of the custom handshake.
 - Public DNS seed domains operated in independent failure domains.
 - Stronger autonomous-system/network diversity, feeler connections, and adversarial eclipse tests.
-- Capability/result reputation, hardware verification, and Sybil resistance beyond local misbehavior bans.
+- Sybil-independent issuer/result reputation, identity aging, hardware verification, and eclipse resistance beyond local misbehavior bans and connected-peer useful-work evidence.
 - DHT discovery after persistent peer exchange is stable.
-- Official threshold trust roots/genesis artifacts, multi-provider content lookup beyond the announcing peer, cross-hardware validation of replicated inference, useful-credit-aware fair scheduling, cancellation, and job recovery.
+- Official threshold trust roots/genesis artifacts, multi-provider content lookup beyond the announcing peer, cross-hardware validation of replicated inference, starvation-resistant fair scheduling, cancellation, and job recovery.
 - Fuzzing, load tests, mixed-version upgrades, and an external security audit.
