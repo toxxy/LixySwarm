@@ -35,7 +35,7 @@ LSP v3 provides the final topology foundation and an initial compute/data plane.
 - Same-job bounded fallback across distinct eligible peers for automatic single-peer work, including cancellation of timed-out attempts and receipt-derived artifact-provider selection.
 - Optional Ed25519-bound identity work and requester-enforced compute difficulty; disabled by default and retained only as a configurable admission defense.
 - Encrypted P2P release announcement, trust-before-download validation, direct artifact acquisition, deduplicated relay, and persisted opt-in auto-activation.
-- A complete local run of 196 tests on the assessment date.
+- A complete local run of 201 tests on the assessment date.
 
 ## Release blockers
 

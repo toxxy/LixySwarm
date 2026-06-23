@@ -42,7 +42,8 @@ from src.agents.agent_base import AgentBase, AgentConfig
 class TrainConfig:
     # Datos
     data_dir: str = "data"
-    mode: str = "personal"          # personal | pretrain | finetune
+    mode: str = "personal"          # personal | pretrain | bilingual | finetune
+    english_ratio: float = 0.7       # bilingual: FineWeb share
     
     # Modelo
     block_size: int = 512           # context length (512 para empezar, puede subir a 1024)
@@ -51,6 +52,7 @@ class TrainConfig:
     batch_size: int = 8             # mini-batch size
     grad_accum_steps: int = 4       # gradient accumulation → batch efectivo = 32
     max_steps: int = 1000
+    seed: int = 42
     
     # Learning rate schedule (cosine decay con warmup)
     learning_rate: float = 6e-4
@@ -84,22 +86,91 @@ class TrainConfig:
 class TokenDataset(Dataset):
     """Dataset de tokens binarios (uint16, formato nanoGPT)."""
     
-    def __init__(self, data_path: Path, block_size: int):
+    def __init__(
+        self,
+        data_path: Path,
+        block_size: int,
+        *,
+        random_samples: bool = False,
+        seed: int = 42,
+        sample_offset: int = 0,
+    ):
         self.data = np.memmap(data_path, dtype=np.uint16, mode='r')
         self.block_size = block_size
+        self.random_samples = bool(random_samples)
+        self.seed = int(seed)
+        self.sample_offset = max(0, int(sample_offset))
+        if len(self.data) <= self.block_size + 1:
+            raise ValueError("token dataset is shorter than one training block")
         print(f"  Dataset: {data_path.name} — {len(self.data):,} tokens")
     
     def __len__(self):
         return len(self.data) - self.block_size
     
     def __getitem__(self, idx):
+        if self.random_samples:
+            logical_index = self.sample_offset + int(idx)
+            rng = np.random.default_rng(
+                self.seed ^ (logical_index * 2654435761 & 0xFFFFFFFF)
+            )
+            idx = int(rng.integers(0, len(self.data) - self.block_size - 1))
         chunk = torch.from_numpy(self.data[idx:idx+self.block_size+1].astype(np.int64))
         x = chunk[:-1]
         y = chunk[1:]
         return x, y
 
 
-def get_dataloaders(cfg: TrainConfig):
+class BilingualTokenDataset(Dataset):
+    """Deterministic FineWeb/Wikipedia-ES sampling without personal text."""
+
+    def __init__(
+        self,
+        english_path: Path,
+        spanish_path: Path,
+        block_size: int,
+        *,
+        english_ratio: float = 0.7,
+        seed: int = 42,
+        sample_offset: int = 0,
+    ):
+        if not 0.0 <= float(english_ratio) <= 1.0:
+            raise ValueError("english_ratio must be in [0, 1]")
+        self.english = np.memmap(english_path, dtype=np.uint16, mode="r")
+        self.spanish = np.memmap(spanish_path, dtype=np.uint16, mode="r")
+        self.block_size = int(block_size)
+        self.english_ratio = float(english_ratio)
+        self.seed = int(seed)
+        self.sample_offset = max(0, int(sample_offset))
+        self.english_len = len(self.english) - self.block_size
+        self.spanish_len = len(self.spanish) - self.block_size
+        if min(self.english_len, self.spanish_len) <= 1:
+            raise ValueError("bilingual source is shorter than one block")
+        print(
+            f"  Bilingual: FineWeb {len(self.english)/1e6:.0f}M + "
+            f"Wikipedia-ES {len(self.spanish)/1e6:.0f}M tokens "
+            f"({self.english_ratio:.0%}/{1-self.english_ratio:.0%})"
+        )
+
+    def __len__(self):
+        return max(self.english_len, self.spanish_len)
+
+    def __getitem__(self, idx):
+        logical_index = self.sample_offset + int(idx)
+        rng = np.random.default_rng(
+            self.seed ^ (logical_index * 2654435761 & 0xFFFFFFFF)
+        )
+        if rng.random() < self.english_ratio:
+            data, length = self.english, self.english_len
+        else:
+            data, length = self.spanish, self.spanish_len
+        start = int(rng.integers(0, length))
+        chunk = torch.from_numpy(
+            data[start:start + self.block_size + 1].astype(np.int64)
+        )
+        return chunk[:-1], chunk[1:]
+
+
+def get_dataloaders(cfg: TrainConfig, *, sample_offset: int = 0):
     data_dir = Path(cfg.data_dir)
     
     if cfg.mode == "personal":
@@ -108,6 +179,10 @@ def get_dataloaders(cfg: TrainConfig):
     elif cfg.mode == "pretrain":
         train_path = data_dir / "pretrain" / "fineweb_train.bin"
         val_path = data_dir / "pretrain" / "fineweb_val.bin"
+    elif cfg.mode == "bilingual":
+        train_path = data_dir / "pretrain" / "fineweb_train.bin"
+        spanish_path = data_dir / "spanish" / "wiki_es_tokens.bin"
+        val_path = data_dir / "pretrain" / "fineweb_val.bin"
     elif cfg.mode == "finetune":
         train_path = data_dir / "finetune" / "personal_tokens.bin"
         val_path = train_path
@@ -115,16 +190,37 @@ def get_dataloaders(cfg: TrainConfig):
         raise ValueError(f"modo desconocido: {cfg.mode}")
     
     if not train_path.exists():
+        preparation = "download" if cfg.mode in {"pretrain", "bilingual"} else "personal"
         raise FileNotFoundError(
             f"No encontré el dataset: {train_path}\n"
-            f"Corre primero: python3 src/data/prepare_pretrain.py --{'download' if cfg.mode == 'pretrain' else 'personal'}"
+            f"Corre primero: python3 src/data/prepare_pretrain.py --{preparation}"
         )
     
-    train_ds = TokenDataset(train_path, cfg.block_size)
+    if cfg.mode == "bilingual":
+        if not spanish_path.exists():
+            raise FileNotFoundError(
+                f"No encontré el dataset: {spanish_path}"
+            )
+        train_ds = BilingualTokenDataset(
+            train_path,
+            spanish_path,
+            cfg.block_size,
+            english_ratio=cfg.english_ratio,
+            seed=cfg.seed,
+            sample_offset=sample_offset,
+        )
+    else:
+        train_ds = TokenDataset(
+            train_path,
+            cfg.block_size,
+            random_samples=True,
+            seed=cfg.seed,
+            sample_offset=sample_offset,
+        )
     val_ds = TokenDataset(val_path, cfg.block_size)
     
     train_loader = DataLoader(
-        train_ds, batch_size=cfg.batch_size, shuffle=True,
+        train_ds, batch_size=cfg.batch_size, shuffle=False,
         num_workers=0, pin_memory=True, drop_last=True
     )
     val_loader = DataLoader(
@@ -177,13 +273,40 @@ def estimate_loss(model, val_loader, cfg: TrainConfig, ctx):
 
 # ─── Entrenamiento Principal ───────────────────────────────────────────────────
 
-def train(cfg: TrainConfig, checkpoint_path: str = None):
+def _portable_model_state(model) -> dict:
+    source = getattr(model, "_orig_mod", model)
+    return source.state_dict()
+
+
+def _save_checkpoint_atomic(value: dict, path: Path):
+    path.parent.mkdir(parents=True, exist_ok=True)
+    temporary = path.with_suffix(path.suffix + ".tmp")
+    torch.save(value, temporary)
+    temporary.replace(path)
+
+
+def train(
+    cfg: TrainConfig,
+    checkpoint_path: str = None,
+    *,
+    resume: bool = False,
+):
     print("🐜 Lixy-0.1 — Entrenamiento")
     print(f"   Modo: {cfg.mode}")
     print(f"   Device: {cfg.device}")
     print(f"   dtype: {cfg.dtype}")
     print(f"   Steps: {cfg.max_steps}")
+    print(f"   Seed: {cfg.seed}")
     print()
+
+    if cfg.max_steps < 0:
+        raise ValueError("max_steps must be non-negative")
+    if not 0.0 <= float(cfg.english_ratio) <= 1.0:
+        raise ValueError("english_ratio must be in [0, 1]")
+    torch.manual_seed(cfg.seed)
+    np.random.seed(cfg.seed)
+    if torch.cuda.is_available():
+        torch.cuda.manual_seed_all(cfg.seed)
     
     # Device & dtype
     device = cfg.device
@@ -202,12 +325,34 @@ def train(cfg: TrainConfig, checkpoint_path: str = None):
     model = AgentBase(model_cfg)
     model = model.to(device)
     
-    # Cargar checkpoint si se especificó
+    loaded_checkpoint = None
+    start_step = 0
+    best_val_loss = float('inf')
+    # Cargar checkpoint si se especificó. --checkpoint is a warm start;
+    # --resume also restores optimizer/global progress from this exact run.
     if checkpoint_path and Path(checkpoint_path).exists():
         print(f"  → Cargando checkpoint: {checkpoint_path}")
-        ckpt = torch.load(checkpoint_path, map_location=device)
-        model.load_state_dict(ckpt['model'])
-        print(f"  → Checkpoint cargado (step {ckpt.get('step', '?')})")
+        loaded_checkpoint = torch.load(
+            checkpoint_path, map_location="cpu", weights_only=True
+        )
+        state = {
+            key.removeprefix("_orig_mod."): value
+            for key, value in loaded_checkpoint['model'].items()
+        }
+        model.load_state_dict(state)
+        if resume:
+            start_step = int(loaded_checkpoint.get("step", 0))
+            best_val_loss = float(
+                loaded_checkpoint.get("val_loss", float('inf'))
+            )
+        print(
+            f"  → Checkpoint cargado (step {loaded_checkpoint.get('step', '?')}, "
+            f"{'resume' if resume else 'warm start'})"
+        )
+    elif checkpoint_path:
+        raise FileNotFoundError(f"Checkpoint no encontrado: {checkpoint_path}")
+    if start_step > cfg.max_steps:
+        raise ValueError("resume step is beyond the requested target step")
     
     # torch.compile (PyTorch 2.x — ~2x speedup en RTX 5090)
     if cfg.compile and device == 'cuda':
@@ -229,12 +374,26 @@ def train(cfg: TrainConfig, checkpoint_path: str = None):
         ],
         lr=cfg.learning_rate,
         betas=(cfg.beta1, cfg.beta2),
-        fused=True,  # kernel fused para RTX 5090 (más rápido)
+        fused=(device == "cuda"),
     )
+    if resume and loaded_checkpoint and "optimizer" in loaded_checkpoint:
+        optimizer.load_state_dict(loaded_checkpoint["optimizer"])
+        print("  → Estado del optimizador restaurado")
+    if resume and loaded_checkpoint:
+        if "rng_state" in loaded_checkpoint:
+            torch.set_rng_state(loaded_checkpoint["rng_state"].cpu())
+        if torch.cuda.is_available() and "cuda_rng_state_all" in loaded_checkpoint:
+            torch.cuda.set_rng_state_all([
+                value.cpu() for value in loaded_checkpoint["cuda_rng_state_all"]
+            ])
+        print("  → Estado RNG restaurado")
     
     # ─── Datos ───
     print("📊 Cargando datos...")
-    train_loader, val_loader = get_dataloaders(cfg)
+    samples_seen = start_step * cfg.batch_size * cfg.grad_accum_steps
+    train_loader, val_loader = get_dataloaders(
+        cfg, sample_offset=samples_seen
+    )
     
     # ─── Training loop ───
     print()
@@ -248,9 +407,7 @@ def train(cfg: TrainConfig, checkpoint_path: str = None):
     train_iter = iter(train_loader)
     
     t0 = time.time()
-    best_val_loss = float('inf')
-    
-    for step in range(cfg.max_steps + 1):
+    for step in range(start_step, cfg.max_steps + 1):
         # Eval periódica
         if step % cfg.eval_interval == 0:
             val_loss = estimate_loss(model, val_loader, cfg, ctx)
@@ -261,14 +418,23 @@ def train(cfg: TrainConfig, checkpoint_path: str = None):
             if val_loss < best_val_loss:
                 best_val_loss = val_loss
                 ckpt = {
-                    "model": model.state_dict(),
+                    "model": _portable_model_state(model),
                     "optimizer": optimizer.state_dict(),
                     "step": step,
                     "val_loss": val_loss,
+                    "tokens_seen": (
+                        step * cfg.batch_size * cfg.grad_accum_steps
+                        * cfg.block_size
+                    ),
+                    "rng_state": torch.get_rng_state(),
+                    "cuda_rng_state_all": (
+                        torch.cuda.get_rng_state_all()
+                        if torch.cuda.is_available() else []
+                    ),
                     "config": asdict(cfg),
                     "model_config": asdict(model_cfg),
                 }
-                torch.save(ckpt, checkpoint_dir / "best.pt")
+                _save_checkpoint_atomic(ckpt, checkpoint_dir / "best.pt")
                 print(f"  ✓ Mejor checkpoint guardado (val_loss={val_loss:.4f})")
         
         if step == cfg.max_steps:
@@ -311,8 +477,9 @@ def train(cfg: TrainConfig, checkpoint_path: str = None):
             t1 = time.time()
             dt = t1 - t0
             tokens_per_sec = (
-                cfg.batch_size * cfg.grad_accum_steps * cfg.block_size * step / dt
-                if step > 0 else 0
+                cfg.batch_size * cfg.grad_accum_steps * cfg.block_size
+                * (step - start_step + 1) / dt
+                if dt > 0 else 0
             )
             print(
                 f"  step {step:5d} | loss: {loss_accum:.4f} | "
@@ -322,14 +489,23 @@ def train(cfg: TrainConfig, checkpoint_path: str = None):
     
     # Guardar checkpoint final
     final_ckpt = {
-        "model": model.state_dict(),
+        "model": _portable_model_state(model),
         "optimizer": optimizer.state_dict(),
         "step": cfg.max_steps,
         "val_loss": best_val_loss,
+        "tokens_seen": (
+            cfg.max_steps * cfg.batch_size * cfg.grad_accum_steps
+            * cfg.block_size
+        ),
+        "rng_state": torch.get_rng_state(),
+        "cuda_rng_state_all": (
+            torch.cuda.get_rng_state_all()
+            if torch.cuda.is_available() else []
+        ),
         "config": asdict(cfg),
         "model_config": asdict(model_cfg),
     }
-    torch.save(final_ckpt, checkpoint_dir / "final.pt")
+    _save_checkpoint_atomic(final_ckpt, checkpoint_dir / "final.pt")
     print()
     print(f"✅ Entrenamiento completo!")
     print(f"   Mejor val_loss: {best_val_loss:.4f}")
@@ -340,11 +516,23 @@ def train(cfg: TrainConfig, checkpoint_path: str = None):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Entrenar Lixy-0.1")
-    parser.add_argument("--mode", choices=["personal", "pretrain", "finetune"], default="personal")
+    parser.add_argument(
+        "--mode",
+        choices=["personal", "pretrain", "bilingual", "finetune"],
+        default="personal",
+    )
     parser.add_argument("--steps", type=int, default=500)
     parser.add_argument("--batch", type=int, default=8)
     parser.add_argument("--lr", type=float, default=6e-4)
-    parser.add_argument("--checkpoint", type=str, help="Cargar checkpoint existente")
+    checkpoint_group = parser.add_mutually_exclusive_group()
+    checkpoint_group.add_argument(
+        "--checkpoint", type=str,
+        help="Warm start de pesos; reinicia optimizador y step",
+    )
+    checkpoint_group.add_argument(
+        "--resume", type=str,
+        help="Reanudar pesos, optimizador y step de la misma corrida",
+    )
     parser.add_argument(
         "--checkpoint-dir",
         type=str,
@@ -353,6 +541,13 @@ if __name__ == "__main__":
     )
     parser.add_argument("--no-compile", action="store_true", help="Desactivar torch.compile")
     parser.add_argument("--block-size", type=int, default=512)
+    parser.add_argument("--seed", type=int, default=42)
+    parser.add_argument(
+        "--english-ratio",
+        type=float,
+        default=0.7,
+        help="FineWeb fraction in bilingual mode",
+    )
     args = parser.parse_args()
     
     cfg = TrainConfig(
@@ -363,6 +558,12 @@ if __name__ == "__main__":
         compile=not args.no_compile,
         block_size=args.block_size,
         checkpoint_dir=args.checkpoint_dir,
+        seed=args.seed,
+        english_ratio=args.english_ratio,
     )
     
-    train(cfg, checkpoint_path=args.checkpoint)
+    train(
+        cfg,
+        checkpoint_path=args.resume or args.checkpoint,
+        resume=bool(args.resume),
+    )

@@ -68,31 +68,37 @@ python3 -m pip install -e . --no-deps
 pytest -q
 ```
 
-The full suite passed **196 tests** on 2026-06-23.
+The full suite passed **201 tests** on 2026-06-23.
 
-## Local language recovery
+## Clean language foundation
 
-Do not repair language coherence by training only on a small personal corpus; that can overwrite general language behavior. Keep the existing checkpoints untouched, evaluate the base agent on FineWeb first, then run a short low-learning-rate recovery into an isolated directory:
-
-```bash
-python3 train.py --mode pretrain --steps 0 --batch 8 --lr 1e-4 \
-  --checkpoint checkpoints/finetune_best.pt \
-  --checkpoint-dir checkpoints/language_recovery
-
-python3 train.py --mode pretrain --steps 500 --batch 8 --lr 1e-4 \
-  --checkpoint checkpoints/finetune_best.pt \
-  --checkpoint-dir checkpoints/language_recovery
-```
-
-Build a new swarm from the recovered agent instead of continuing an architecture-mismatched swarm checkpoint:
+Old checkpoints are historical artifacts and are not required. A new bilingual foundation can start from random weights using only FineWeb and Wikipedia-ES; personal text must not be mixed into this stage:
 
 ```bash
-python3 train_swarm.py --steps 100 --batch 4 --lr 3e-5 --mixed \
-  --agent-checkpoint checkpoints/language_recovery/best.pt \
-  --checkpoint-dir checkpoints/swarm_language_recovery
+python3 train.py --mode bilingual --english-ratio 0.7 \
+  --steps 5000 --batch 8 --lr 6e-4 --seed 42 \
+  --checkpoint-dir checkpoints/foundation_v1
 ```
 
-Compare fixed prompts and validation loss before increasing the run length. These local checkpoint/data directories are ignored and must never be committed.
+`--steps` is an absolute target when resuming. The resume path restores model weights, optimizer state, CPU/GPU random state, global step, deterministic sample position, and portable uncompiled state keys:
+
+```bash
+python3 train.py --mode bilingual --english-ratio 0.7 \
+  --steps 10000 --batch 8 --lr 6e-4 --seed 42 \
+  --resume checkpoints/foundation_v1/final.pt \
+  --checkpoint-dir checkpoints/foundation_v1
+```
+
+After fixed bilingual prompts and validation loss show usable language, construct a new swarm without loading any historical swarm checkpoint:
+
+```bash
+python3 train_swarm.py --steps 100 --batch 4 --lr 3e-5 \
+  --bilingual --fw-ratio 0.7 \
+  --agent-checkpoint checkpoints/foundation_v1/best.pt \
+  --checkpoint-dir checkpoints/swarm_foundation_v1
+```
+
+Network nodes are dynamic. Model-agent birth/death remains experimental and must stay disabled during this foundation run because live parameter insertion is not yet optimizer-safe. Checkpoint/data directories are ignored and must never be committed.
 
 Join as a connectivity/artifact node, or explicitly consent to compute:
 

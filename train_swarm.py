@@ -55,6 +55,7 @@ class SwarmTrainConfig:
     # Dataset
     mixed: bool = False           # True = 90% FineWeb + 10% personal
     fw_ratio: float = 0.9         # proporción FineWeb en modo mixto
+    bilingual: bool = False       # FineWeb + Wikipedia ES, sin datos personales
     spanish: bool = False         # True = corpus español (wiki_es_tokens.bin)
     triple: bool = False          # True = 70% FineWeb + 20% Wiki-ES + 10% Personal
 
@@ -233,6 +234,70 @@ class TripleDataset(Dataset):
             i = int(rng.integers(0, self.personal_len))
             data, l = self._get('personal'), self.personal_len
         chunk = torch.from_numpy(data[i:i + self.block_size + 1].astype(np.int64))
+        return chunk[:-1], chunk[1:]
+
+
+class BilingualDataset(Dataset):
+    """Deterministic FineWeb/Wikipedia-ES mixture without personal data."""
+
+    def __init__(
+        self,
+        fw_path: Path,
+        wiki_path: Path,
+        block_size: int,
+        fw_ratio: float = 0.7,
+        seed: int = 42,
+    ):
+        if not 0.0 <= float(fw_ratio) <= 1.0:
+            raise ValueError("fw_ratio must be in [0, 1]")
+        self.fw_path = str(fw_path)
+        self.wiki_path = str(wiki_path)
+        self.block_size = int(block_size)
+        self.fw_ratio = float(fw_ratio)
+        self.seed = int(seed)
+        fw = np.memmap(fw_path, dtype=np.uint16, mode="r")
+        wiki = np.memmap(wiki_path, dtype=np.uint16, mode="r")
+        self.fw_len = len(fw) - self.block_size
+        self.wiki_len = len(wiki) - self.block_size
+        if min(self.fw_len, self.wiki_len) <= 1:
+            raise ValueError("bilingual source is shorter than one block")
+        self._len = max(self.fw_len, self.wiki_len)
+        self._fw = None
+        self._wiki = None
+        print(
+            f"  BilingualDataset: FineWeb {len(fw)/1e6:.0f}M + "
+            f"Wiki-ES {len(wiki)/1e6:.0f}M tokens"
+        )
+        print(
+            f"  Ratio: {self.fw_ratio*100:.0f}% FineWeb / "
+            f"{(1-self.fw_ratio)*100:.0f}% Wiki-ES"
+        )
+
+    def __len__(self):
+        return self._len
+
+    def __getitem__(self, idx):
+        rng = np.random.default_rng(
+            self.seed ^ (int(idx) * 2654435761 & 0xFFFFFFFF)
+        )
+        if rng.random() < self.fw_ratio:
+            if self._fw is None:
+                self._fw = np.memmap(
+                    self.fw_path, dtype=np.uint16, mode="r"
+                )
+            data = self._fw
+            length = self.fw_len
+        else:
+            if self._wiki is None:
+                self._wiki = np.memmap(
+                    self.wiki_path, dtype=np.uint16, mode="r"
+                )
+            data = self._wiki
+            length = self.wiki_len
+        start = int(rng.integers(0, length))
+        chunk = torch.from_numpy(
+            data[start:start + self.block_size + 1].astype(np.int64)
+        )
         return chunk[:-1], chunk[1:]
 
 
@@ -558,23 +623,41 @@ def train(cfg: SwarmTrainConfig, swarm_checkpoint: str = None):
     fw_train_path = Path(cfg.data_dir) / "pretrain" / "fineweb_train.bin"
     fw_val_path   = Path(cfg.data_dir) / "pretrain" / "fineweb_val.bin"
 
-    if not personal_path.exists():
-        raise FileNotFoundError(f"Dataset no encontrado: {personal_path}")
-
-    if cfg.mixed:
-        if not fw_train_path.exists():
-            raise FileNotFoundError(f"FineWeb no encontrado: {fw_train_path}")
-        print(f"  Modo: MIXTO ({cfg.fw_ratio*100:.0f}% FineWeb + {(1-cfg.fw_ratio)*100:.0f}% Personal)")
-        dataset = MixedDataset(fw_train_path, personal_path, cfg.block_size, fw_ratio=cfg.fw_ratio)
-        val_dataset = TokenDataset(fw_val_path, cfg.block_size) if fw_val_path.exists() else TokenDataset(personal_path, cfg.block_size)
-    elif cfg.triple:
+    if cfg.triple:
         wiki_path = Path(cfg.data_dir) / "spanish" / "wiki_es_tokens.bin"
         fw_val_path2 = fw_val_path if fw_val_path.exists() else personal_path
-        if not fw_train_path.exists() or not wiki_path.exists():
-            raise FileNotFoundError(f"Triple dataset requiere FineWeb ({fw_train_path}) y Wiki-ES ({wiki_path})")
+        if not fw_train_path.exists() or not wiki_path.exists() or not personal_path.exists():
+            raise FileNotFoundError(
+                "Triple dataset requires FineWeb, Wikipedia-ES, and personal tokens"
+            )
         print(f"  Modo: TRIPLE (70% FineWeb + 20% Wiki-ES + 10% Personal)")
         dataset = TripleDataset(fw_train_path, wiki_path, personal_path, cfg.block_size)
         val_dataset = TokenDataset(fw_val_path2, cfg.block_size)
+    elif cfg.bilingual:
+        wiki_path = Path(cfg.data_dir) / "spanish" / "wiki_es_tokens.bin"
+        if not fw_train_path.exists() or not wiki_path.exists():
+            raise FileNotFoundError(
+                "Bilingual dataset requires FineWeb and Wikipedia-ES"
+            )
+        dataset = BilingualDataset(
+            fw_train_path,
+            wiki_path,
+            cfg.block_size,
+            fw_ratio=cfg.fw_ratio,
+        )
+        val_dataset = (
+            TokenDataset(fw_val_path, cfg.block_size)
+            if fw_val_path.exists()
+            else TokenDataset(wiki_path, cfg.block_size)
+        )
+    elif cfg.mixed:
+        if not fw_train_path.exists() or not personal_path.exists():
+            raise FileNotFoundError(
+                "Mixed dataset requires FineWeb and personal tokens"
+            )
+        print(f"  Modo: MIXTO ({cfg.fw_ratio*100:.0f}% FineWeb + {(1-cfg.fw_ratio)*100:.0f}% Personal)")
+        dataset = MixedDataset(fw_train_path, personal_path, cfg.block_size, fw_ratio=cfg.fw_ratio)
+        val_dataset = TokenDataset(fw_val_path, cfg.block_size) if fw_val_path.exists() else TokenDataset(personal_path, cfg.block_size)
     elif cfg.spanish:
         spanish_path = Path(cfg.data_dir) / "spanish" / "wiki_es_tokens.bin"
         if not spanish_path.exists():
@@ -583,6 +666,8 @@ def train(cfg: SwarmTrainConfig, swarm_checkpoint: str = None):
         dataset = TokenDataset(spanish_path, cfg.block_size)
         val_dataset = dataset
     else:
+        if not personal_path.exists():
+            raise FileNotFoundError(f"Dataset no encontrado: {personal_path}")
         print("  Modo: solo Personal")
         dataset = TokenDataset(personal_path, cfg.block_size)
         val_dataset = dataset
@@ -941,6 +1026,11 @@ if __name__ == "__main__":
     parser.add_argument("--checkpoint-dir", type=str, default="checkpoints", help="Directorio de checkpoints de salida")
     parser.add_argument("--agent-checkpoint", type=str, default="checkpoints/finetune_best.pt", help="Checkpoint base de agente")
     parser.add_argument("--mixed", action="store_true", help="90%% FineWeb + 10%% personal")
+    parser.add_argument(
+        "--bilingual",
+        action="store_true",
+        help="FineWeb + Wikipedia-ES without personal data",
+    )
     parser.add_argument("--spanish", action="store_true", help="Corpus Wikipedia español")
     parser.add_argument("--triple", action="store_true", help="70%% FW + 20%% Wiki-ES + 10%% Personal")
     parser.add_argument("--fw-ratio", type=float, default=0.9)
@@ -964,6 +1054,8 @@ if __name__ == "__main__":
         help="Permite nacimiento/muerte de hormigas durante training (experimental)",
     )
     args = parser.parse_args()
+    if sum(map(bool, (args.mixed, args.bilingual, args.spanish, args.triple))) > 1:
+        parser.error("choose only one dataset mode")
 
     cfg = SwarmTrainConfig(
         checkpoint_dir=args.checkpoint_dir,
@@ -979,6 +1071,7 @@ if __name__ == "__main__":
         compile=not args.no_compile and args.steps > 100,
         block_size=args.block_size,
         mixed=args.mixed,
+        bilingual=args.bilingual,
         fw_ratio=args.fw_ratio,
         spanish=args.spanish,
         triple=args.triple,

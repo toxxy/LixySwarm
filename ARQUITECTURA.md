@@ -91,9 +91,9 @@ LSP v2, legacy JSON/HMAC, UDP, and mDNS modules remain for explicit compatibilit
 
 ## Training and evaluation
 
-- `train.py`: base agent training.
+- `train.py`: base-agent training from random weights or an explicit warm start, deterministic FineWeb/Wikipedia-ES sampling without a global shuffle, atomic portable checkpoints, and exact optimizer/step/sample-position resume.
 - `train_matriarca.py`: memory model training.
-- `train_swarm.py`: complete swarm training, optional remote pheromone/global delta paths, optional ant lifecycle.
+- `train_swarm.py`: complete swarm training, including a bilingual non-personal dataset mode, optional remote pheromone/global delta paths, and an experimental ant lifecycle that must remain disabled while optimizer-safe live topology changes are unresolved.
 - `auto_train.py`: repeated cycles, checkpoint rotation, plateau LR reduction, graceful signal handling, and optional metabolic-hunger decisions.
 - `benchmark.py`: perplexity, generation statistics, checkpoint comparison, and organism-health observations.
 
