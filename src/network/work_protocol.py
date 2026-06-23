@@ -286,12 +286,38 @@ class WorkCoordinator:
             requirements, required_model_id=required_model_id
         )
 
+    def select_peers(
+        self,
+        requirements: ResourceRequirements,
+        *,
+        required_model_id: Optional[str] = None,
+        limit: int = 3,
+    ) -> list[str]:
+        requirements.validate()
+        return [
+            str(peer["node_id"])
+            for peer in self._eligible_peers(
+                requirements, required_model_id=required_model_id
+            )[:max(0, int(limit))]
+        ]
+
     def _select_peer(
         self,
         requirements: ResourceRequirements,
         *,
         required_model_id: Optional[str] = None,
     ) -> Optional[str]:
+        candidates = self._eligible_peers(
+            requirements, required_model_id=required_model_id
+        )
+        return str(candidates[0]["node_id"]) if candidates else None
+
+    def _eligible_peers(
+        self,
+        requirements: ResourceRequirements,
+        *,
+        required_model_id: Optional[str] = None,
+    ) -> list[dict]:
         candidates = []
         for peer in self.node.peers():
             resources = peer.get("resources", {})
@@ -323,8 +349,6 @@ class WorkCoordinator:
                 if not isinstance(models, list) or required_model_id not in models:
                     continue
             candidates.append(peer)
-        if not candidates:
-            return None
         candidates.sort(
             key=lambda peer: (
                 float(peer.get("resources", {}).get("gpu_vram_gb", 0.0)),
@@ -332,7 +356,7 @@ class WorkCoordinator:
             ),
             reverse=True,
         )
-        return str(candidates[0]["node_id"])
+        return candidates
 
     def _on_offer(self, value: dict, from_node_id: str):
         self._executor.submit(self._execute_offer, value, from_node_id)

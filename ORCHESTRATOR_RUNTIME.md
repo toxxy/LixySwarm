@@ -47,7 +47,7 @@ Do not enable global export for content that has not been explicitly stored in t
 
 When enabled, `SwarmNetwork` defaults to persistent LSP v3 sessions, supplies blended remote pheromones, exchanges global deltas, and enables typed work. Signed peer HELLO resource profiles are added to and removed from runtime `NodeManager`. The scheduler can assign inference, artifact, and gradient jobs, but declarations are self-reported and Dolphin/sect allocation is not automatically driven by unverified capacity.
 
-Remote inference uses a fresh non-persistent `RuntimeSession`, disables personal Matriarca retrieval and importance changes, records no history, does not update Dolphin sleep/acoustic state, and serializes model access with local inference. Distributed training requires an exact checkpoint file hash, a content-addressed `application/x-npy` token dataset, bounded token range, and declared RAM/disk sufficient for the estimated gradient. Returned gradients remain unapplied candidates.
+Remote inference uses a fresh non-persistent `RuntimeSession`, disables personal Matriarca retrieval and importance changes, records no history, does not read/update Dolphin sleep/acoustic state, and serializes model access with local inference. Distributed training requires an exact checkpoint file hash, a content-addressed `application/x-npy` token dataset, bounded token range, and declared RAM/disk sufficient for the estimated gradient. `compute_gradient_quorum()` requests matching distinct peers in parallel and emits a streaming coordinate-median artifact; every candidate and aggregate remains unapplied.
 
 ## Known runtime gaps
 

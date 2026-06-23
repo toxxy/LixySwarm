@@ -32,7 +32,7 @@ export LIXYSWARM_BOOTSTRAP_SEEDS='seed-a.example.net:7338,seed-b.example.net:733
 - Work: canonical signed-origin offers with deadlines, idempotency, allowlisted local handlers, and consent/resource leases.
 - Inference: complete prompt jobs on a matching consenting peer; remote requests cannot access or mutate the operator's personal memory/session state.
 - Artifacts: SHA-256 manifests and resumable verified chunks without source filenames or paths.
-- Training: bounded token batches against an exact local model hash; results are NPZ gradient artifacts and are never applied automatically.
+- Training: bounded token batches against an exact local model hash; results are NPZ gradient artifacts and are never applied automatically. Quorum mode validates three-to-31 distinct peer results and produces a streaming coordinate median.
 
 Nodes behind NAT need only outbound TCP connectivity. Public nodes and seeds accept inbound sessions. No VPN or port forwarding is required for an outbound-only participant.
 
@@ -42,7 +42,7 @@ Nodes behind NAT need only outbound TCP connectivity. Public nodes and seeds acc
 - No public built-in DNS seed domain is committed yet.
 - No DHT, Sybil defense, decentralized capability reputation, or verified hardware capacity. Local protocol misbehavior scores and temporary bans are implemented.
 - Scheduling declarations are self-reported; there is no result reputation, fairness, hardware attestation, redundant execution, or failure rescheduling.
-- Gradient correctness is not yet independently verified or Byzantine-aggregated.
+- Coordinate median tolerates a minority of arbitrary candidates only when quorum identities are genuinely independent. Current pseudonymous identities are cheap and therefore do not establish that assumption.
 - Model release signing/version promotion and dataset governance remain external.
 
 See `LSP_SPEC.md` for the wire format and `INTERNET_SCALE_READINESS.md` for release gates.

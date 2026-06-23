@@ -30,7 +30,7 @@ A DHT is not a substitute for safe sessions or verified peer data. It is deliber
 
 ## Compute architecture direction
 
-The first compute layer now distributes complete inference requests and bounded gradient jobs rather than latency-sensitive tensor operations per token. Training inputs/results use content-addressed dataset/model/gradient identifiers. This establishes transport and execution plumbing; critical work still needs replication, comparison, and robust aggregation before any gradient can affect a shared release.
+The compute layer distributes complete inference requests and bounded gradient jobs rather than latency-sensitive tensor operations per token. Training inputs/results use content-addressed dataset/model/gradient identifiers. Gradient quorum mode validates exact inputs from three-to-31 distinct identities and creates a coordinate-median artifact. No gradient is applied. Because identities are cheap, quorum membership still needs Sybil-independent selection before it can authorize a shared release.
 
 ## Remaining decisions
 
@@ -39,4 +39,4 @@ The first compute layer now distributes complete inference requests and bounded 
 - Network reputation and eclipse resistance.
 - Publisher-signed model registry/release manifests and rollback governance.
 - Process/container sandboxing beyond the implemented consent governor and allowlisted scheduler.
-- Replicated inference/training verification and Byzantine-robust gradient aggregation.
+- Sybil-independent quorum selection, signed result receipts, replicated inference verification, and governed promotion of robust gradient aggregates.

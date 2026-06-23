@@ -19,6 +19,7 @@ from .training_worker import (
     TrainingWorkError,
     validate_gradient_artifact,
 )
+from .gradient_aggregation import GradientAggregator, GradientCandidate
 
 __all__ = [
     "LSPIdentity",
@@ -50,6 +51,8 @@ __all__ = [
     "TrainingWorker",
     "TrainingWorkError",
     "validate_gradient_artifact",
+    "GradientAggregator",
+    "GradientCandidate",
 ]
 
 # Compatibilidad v1: requiere torch por FeromonMessage.

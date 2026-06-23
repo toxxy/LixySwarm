@@ -22,12 +22,13 @@ The default swarm configuration contains:
 - Node, sect, and ant lifecycle managers exercised by local tests.
 - LSP v3 persistent sessions, mandatory signatures, anti-replay, DNS/bootstrap discovery, peer exchange, resource declaration, and global-memory deltas.
 - Consent-gated typed work for isolated peer inference and bounded gradient computation; peers never provide executable code.
+- Three-to-31-peer gradient quorums with exact-input validation and chunked coordinate-median aggregation; aggregate results remain unapplied candidates.
 - SHA-256 content-addressed model, dataset, evaluation, and gradient artifacts with resumable chunk transfer and end-to-end verification.
 - A `lixyswarm` CLI for contribution policy, persistent node startup, and privacy-safe artifact import/listing.
 - FastAPI status/chat endpoints, a status publisher, and two static frontends.
 - Continuous training and an opt-in metabolic-hunger decision function.
 
-Some paper descriptions are only partially represented. In particular, the main forward pass does not implement the paper's exact `fitness × confidence × role_weight` equation. Distributed work is an initial replicated-job implementation: inference and gradient candidates work, but robust aggregation, redundant result verification, hardware attestation, fairness, cancellation, and Byzantine defenses do not.
+Some paper descriptions are only partially represented. In particular, the main forward pass does not implement the paper's exact `fitness × confidence × role_weight` equation. Distributed work supports replicated gradient quorums and coordinate-median aggregation, but pseudonymous identities are not Sybil-independent; inference verification, hardware attestation, fairness, cancellation, and release promotion governance remain.
 
 ## Architecture
 
@@ -54,7 +55,7 @@ python3 -m pip install -e . --no-deps
 pytest -q
 ```
 
-The full suite passed **159 tests** on 2026-06-22.
+The full suite passed **161 tests** on 2026-06-22.
 
 Join as a connectivity/artifact node, or explicitly consent to compute:
 
@@ -90,7 +91,7 @@ Large checkpoints and training datasets are intentionally excluded from Git. A f
 
 ## Network safety
 
-LSP v3 closes the v2 signature, replay, framing, outbound-NAT, and application-payload confidentiality gaps and adds coarse path diversity/local bans, but the public network is not release-ready. Remaining blockers include key rotation/cryptographic review, Sybil-resistant result/capability reputation, authenticated API access, official redundant DNS seeds, adversarial load/fuzz testing, publisher-signed release manifests, process-level job isolation, and Byzantine-safe result validation/aggregation. See [INTERNET_SCALE_READINESS.md](INTERNET_SCALE_READINESS.md).
+LSP v3 closes the v2 signature, replay, framing, outbound-NAT, and application-payload confidentiality gaps and adds coarse path diversity/local bans, but the public network is not release-ready. Remaining blockers include key rotation/cryptographic review, Sybil-independent quorum membership and result reputation, authenticated API access, official redundant DNS seeds, adversarial load/fuzz testing, publisher-signed release manifests, process-level job isolation, and governed model promotion. See [INTERNET_SCALE_READINESS.md](INTERNET_SCALE_READINESS.md).
 
 Publisher authentication uses `LIXYSWARM_PUBLISH_TOKEN`. Personal Matriarca encryption is enabled only when `LIXYSWARM_MATRIARCA_KEY` is set. Network addresses are not published or exposed by default; enabling that requires explicit environment flags documented in [SECURITY.md](SECURITY.md).
 

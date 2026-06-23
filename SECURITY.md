@@ -29,6 +29,7 @@ If a secret or private datum has ever entered Git history, deleting it from the 
 - Remote inference cannot read/write personal Matriarca memory or session/Dolphin state.
 - Artifact manifests expose hashes, sizes, types, and timestamps—not source filenames or paths. Chunk and full-object hashes are verified before commit.
 - Training workers never load peer checkpoints and never apply returned gradients; they require the exact locally loaded model hash and safe NumPy token arrays.
+- Gradient quorum mode requires distinct identities, validates archive bounds/metadata/tensor shapes/finiteness, and produces a coordinate median without applying it.
 - Outbound selection prefers distinct coarse network groups. Protocol violations accrue local decaying scores and persistent temporary bans keyed by hashes rather than raw identifiers.
 
 These controls are incomplete. HELLO/traffic metadata remains visible and long sessions do not rekey; resource claims and compute results remain self-reported/unattested; work runs in-process; local bans do not provide Sybil or global reputation defenses; personal encryption is optional; gradients can leak training data at their endpoints; and most API endpoints are unauthenticated. Legacy v2 has weaker verification and must not be enabled on the public network.
@@ -42,7 +43,7 @@ These controls are incomplete. HELLO/traffic metadata remains visible and long s
 5. Explicit CORS allowlist, request limits, concurrency limits, timeouts, and audit logs that exclude content/secrets.
 6. Unprivileged services, minimal filesystem permissions, network firewalling, dependency scanning, SBOM, and signed releases.
 7. Automated secret/PII scans on commits and full history plus an independent security review.
-8. Replicated compute verification, poisoning/gradient-inversion defenses, robust aggregation, signed release manifests, and an explicit promotion authority.
+8. Sybil-independent quorum membership, signed result receipts, replicated inference verification, poisoning/gradient-inversion defenses, signed release manifests, and an explicit promotion authority. Coordinate median alone is insufficient.
 
 See `INTERNET_SCALE_READINESS.md` for the full public-network gate.
 

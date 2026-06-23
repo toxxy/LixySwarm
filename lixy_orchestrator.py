@@ -32,6 +32,7 @@ import os
 import time
 import logging
 import threading
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 from contextlib import nullcontext
 from dataclasses import dataclass
@@ -50,6 +51,8 @@ from src.matriarca.matriarca import MatriarcaConfig
 from src.swarm.runtime_session import RuntimeSession
 from src.network import (
     ArtifactStore,
+    GradientAggregator,
+    GradientCandidate,
     SwarmNetwork,
     TrainingWorker,
     digest_file,
@@ -516,13 +519,107 @@ class LixyOrchestrator:
         )
         if not selected_peer:
             raise RuntimeError("No connected peer has the required training model")
+        candidate, details = self._request_gradient_candidate(
+            selected_peer,
+            dataset_artifact_id=dataset_artifact_id,
+            start_token=int(start_token),
+            token_count=int(token_count),
+            requirements=requirements,
+            timeout_s=timeout_s,
+        )
+        return {
+            "gradient_artifact_id": candidate.artifact_id,
+            "path": str(candidate.path),
+            **details,
+            "applied": False,
+        }
+
+    def compute_gradient_quorum(
+        self,
+        dataset_artifact_id: str,
+        *,
+        start_token: int = 0,
+        token_count: int = 512,
+        quorum: int = 3,
+        timeout_s: float = 300.0,
+        ram_gb: float = 2.0,
+        disk_gb: float = 2.0,
+    ) -> dict:
+        """Request distinct peers and produce an unapplied coordinate median."""
+        if self.net is None or self.net.work_coordinator is None:
+            raise RuntimeError("Distributed training is not available")
+        if not self.model_artifact_id:
+            raise RuntimeError("This node has no versioned training model")
+        if self.artifact_store is None or not self.artifact_store.has(dataset_artifact_id):
+            raise ValueError("Dataset artifact must be published locally first")
+        quorum = int(quorum)
+        if not 3 <= quorum <= 31:
+            raise ValueError("quorum must be between 3 and 31")
+        requirements = ResourceRequirements(
+            kind="training", cpu_slots=1,
+            ram_gb=float(ram_gb), disk_gb=float(disk_gb),
+        )
+        peers = self.net.work_coordinator.select_peers(
+            requirements,
+            required_model_id=self.model_artifact_id,
+            limit=quorum,
+        )
+        if len(peers) != quorum:
+            raise RuntimeError(f"Gradient quorum requires {quorum} eligible peers")
+        candidates = []
+        details = []
+        with ThreadPoolExecutor(
+            max_workers=quorum, thread_name_prefix="lixy-gradient-quorum"
+        ) as executor:
+            futures = {
+                executor.submit(
+                    self._request_gradient_candidate,
+                    peer,
+                    dataset_artifact_id=dataset_artifact_id,
+                    start_token=int(start_token),
+                    token_count=int(token_count),
+                    requirements=requirements,
+                    timeout_s=timeout_s,
+                ): peer
+                for peer in peers
+            }
+            for future in as_completed(futures):
+                candidate, detail = future.result()
+                candidates.append(candidate)
+                details.append(detail)
+        manifest, aggregation = GradientAggregator(self.artifact_store).aggregate(
+            candidates,
+            self.swarm,
+            model_artifact_id=self.model_artifact_id,
+            dataset_artifact_id=dataset_artifact_id,
+            start_token=int(start_token),
+            token_count=int(token_count),
+        )
+        return {
+            "gradient_artifact_id": manifest.artifact_id,
+            "path": str(self.artifact_store._object_path(manifest.artifact_id)),
+            "aggregation": aggregation,
+            "candidate_metrics": details,
+            "applied": False,
+        }
+
+    def _request_gradient_candidate(
+        self,
+        selected_peer: str,
+        *,
+        dataset_artifact_id: str,
+        start_token: int,
+        token_count: int,
+        requirements: ResourceRequirements,
+        timeout_s: float,
+    ) -> tuple[GradientCandidate, dict]:
         result = self.net.submit_work(
             "training.gradient.v1",
             {
                 "model_artifact_id": self.model_artifact_id,
                 "dataset_artifact_id": dataset_artifact_id,
-                "start_token": int(start_token),
-                "token_count": int(token_count),
+                "start_token": start_token,
+                "token_count": token_count,
             },
             requirements,
             peer_id=selected_peer,
@@ -548,16 +645,17 @@ class LixyOrchestrator:
             self.swarm,
             expected_model_id=self.model_artifact_id,
             expected_dataset_id=dataset_artifact_id,
-            expected_start_token=int(start_token),
-            expected_token_count=int(token_count),
+            expected_start_token=start_token,
+            expected_token_count=token_count,
         )
-        return {
-            "gradient_artifact_id": gradient_id,
-            "path": str(path),
+        return GradientCandidate(
+            artifact_id=gradient_id,
+            peer_id=selected_peer,
+            path=path,
+        ), {
             "loss": result.output.get("loss"),
             "gradient_norm": result.output.get("gradient_norm"),
             "validation": validation,
-            "applied": False,
         }
 
     def chat(self, message: str, store: bool = True) -> str:

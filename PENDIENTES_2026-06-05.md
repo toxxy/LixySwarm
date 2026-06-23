@@ -61,12 +61,13 @@
 - [x] Add isolated distributed inference that cannot access personal runtime state.
 - [x] Add SHA-256 artifact manifests, resumable chunks, quotas, atomic commit, and complete verification.
 - [x] Add exact-model bounded gradient computation over safe NumPy token artifacts; never apply results automatically.
+- [x] Add three-to-31-peer exact-input gradient quorum and streaming coordinate-median candidate artifacts.
 - [ ] Add publisher-signed model/dataset release manifests, provenance, revocation, and rollback.
 - [ ] Add content/provider discovery, replication, availability scoring, and garbage collection.
 - [ ] Add persistent queues, cancellation, retry/failure rescheduling, fairness, and per-identity quotas.
 - [ ] Move work into an OS/container sandbox with CPU/GPU/RAM/disk/network enforcement.
-- [ ] Replicate inference/training jobs and validate results across independent identities.
-- [ ] Implement poisoning detection, gradient privacy defenses, and Byzantine-robust aggregation before model updates.
+- [ ] Make quorum membership Sybil-independent and persist signed result receipts; add replicated inference validation.
+- [ ] Add poisoning/anomaly tests, gradient privacy defenses, and audited promotion rules before model updates.
 
 ## P2: Internet topology and operations
 

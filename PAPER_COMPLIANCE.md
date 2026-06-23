@@ -57,7 +57,7 @@ Status meanings:
 | Replay protection with sequence/message ID | Implemented in v3 | Per-session monotonic sequences, random message IDs, bounded replay cache, timestamps, and session IDs are verified by tests. |
 | Distributed inference contribution | Partial | Signed-origin typed work selects consenting peers and executes an allowlisted full-request inference handler. Remote prompts cannot access/write personal Matriarca, history, or Dolphin state. There is no redundant result verification, fairness, cancellation, or process sandbox. |
 | Content-addressed model/dataset artifacts | Partial | SHA-256 manifests, quotas, resumable chunks, per-chunk hashes, atomic commit, and full verification are implemented. Hashes prove content, not publisher authority; release signing, provenance, replication, and discovery by content are missing. |
-| Distributed training contribution | Partial | A worker fetches a safe NumPy token artifact, requires the exact locally loaded checkpoint hash, computes a bounded real gradient, and returns a verified NPZ artifact without applying it. Byzantine replication/aggregation, poisoning defenses, privacy controls, and promotion governance are missing. |
+| Distributed training contribution | Partial | A worker fetches a safe NumPy token artifact, requires the exact locally loaded checkpoint hash, computes a bounded real gradient, and returns a verified NPZ artifact without applying it. Three-to-31-peer quorum mode validates candidates and creates a streaming coordinate median. Sybil-independent membership, signed receipts, poisoning/privacy defenses, and promotion governance are missing. |
 
 ## Training, observability, and autonomy
 
@@ -85,4 +85,4 @@ Before the next paper/release revision:
 
 ## Compliance verdict
 
-The repository supports the paper's central prototype thesis and now includes a post-paper encrypted LSP v3 topology plus initial inference, artifact, gradient, diversity, and local-ban work. It does **not** yet satisfy the paper's target Internet-scale compute ecosystem because results are not redundantly verified or robustly aggregated, work lacks process isolation and attestation, and Sybil-resistant reputation, governance, key rotation/review, and public seed operations remain. The correct current stage remains **Infant / research prototype**.
+The repository supports the paper's central prototype thesis and now includes a post-paper encrypted LSP v3 topology plus inference, artifact, gradient quorum/median, diversity, and local-ban work. It does **not** yet satisfy the paper's target Internet-scale compute ecosystem because cheap identities undermine quorum independence, inference results are not replicated, work lacks process isolation/attestation, and governance, key rotation/review, and public seed operations remain. The correct current stage remains **Infant / research prototype**.

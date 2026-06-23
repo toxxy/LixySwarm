@@ -23,7 +23,8 @@ LSP v3 provides the final topology foundation and an initial compute/data plane.
 - Isolated remote inference that cannot read/write personal Matriarca or conversation state.
 - SHA-256 artifact manifests, resumable chunk transfer, per-chunk validation, atomic commit, and full-file verification.
 - Exact-model bounded gradient jobs over safe NumPy token artifacts; gradients are returned but never applied.
-- A complete local run of 159 tests on the assessment date.
+- Three-to-31-identity gradient quorums with exact metadata/tensor validation, bounded ZIP inspection, and streaming coordinate-median output.
+- A complete local run of 161 tests on the assessment date.
 
 ## Release blockers
 
@@ -73,7 +74,7 @@ LSP v3 provides the final topology foundation and an initial compute/data plane.
 - Current artifact hashes prove bytes, not publisher authority. Add signed release manifests, model/dataset provenance, version promotion, revocation, and rollback. The public Git repository does not ship checkpoints.
 - Current inference is replicated whole-request execution. Benchmark it, then add redundant candidate verification/expert routing only where measurements justify it.
 - Add scheduler fairness, hardware attestation/capability validation, process/container job isolation, quotas, cancellation, cost limits, and failure rescheduling.
-- Replicate gradient jobs across independent identities, compare results, detect poisoning/non-determinism, and implement Byzantine-robust aggregation. No returned gradient may be applied until this gate exists.
+- Make quorum membership Sybil-independent, persist signed result receipts, quantify non-determinism, add poisoning/anomaly tests, and define an audited promotion threshold. Coordinate median exists, but cheap identities invalidate its honest-majority assumption on an open network.
 - Address gradient inversion and endpoint training-data leakage; encrypted transport does not make untrusted workers or requesters trustworthy.
 
 ### Operations
