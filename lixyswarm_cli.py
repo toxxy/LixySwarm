@@ -12,7 +12,7 @@ import time
 from pathlib import Path
 
 from src.contribution import ContributionPolicy, ResourceGovernor
-from src.network import ArtifactStore, SwarmNetwork
+from src.network import ArtifactStore, SwarmNetwork, UsefulWorkLedger
 from src.network.lsp import LSPIdentity
 from src.release import ReleaseManifest, ReleaseRegistry, TrustPolicy
 
@@ -106,6 +106,10 @@ def start_node(args) -> int:
             max_total_bytes=max(1, int(policy.max_disk_gb * 1024 ** 3)),
         )
         network.enable_artifacts(artifact_store)
+        network.attach_useful_work_ledger(UsefulWorkLedger(
+            home / "useful_work_credits.json",
+            network._lsp_v3_node.identity.node_id_hex,
+        ))
         trust_path = home / "release_trust.json"
         if trust_path.is_file():
             release_policy = TrustPolicy.load(trust_path)

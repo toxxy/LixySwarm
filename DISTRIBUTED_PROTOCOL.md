@@ -29,13 +29,14 @@ export LIXYSWARM_BOOTSTRAP_SEEDS='seed-a.example.net:7338,seed-b.example.net:733
 - Global memory: global-only filtered JSON delta over the same session.
 - Peer discovery: validated address lists, persistent address book, retry/backoff.
 - Resources: bounded capability declaration registered in `NodeManager`.
+- Optional identity cost: when configured, compute peers persist a key-bound SHA-256 work stamp and requesters enforce their own minimum. It is disabled by default and is not the network's useful-work reward.
 - Work: canonical signed-origin offers with deadlines, idempotency, allowlisted local handlers, and consent/resource leases.
 - Results: portable Ed25519 receipts bind worker/requester/job/output and are preserved in gradient quorum provenance.
 - Releases: trusted threshold manifests gossip across encrypted direct sessions; receivers fetch and verify model/support artifacts from the announcer, then accept or explicitly auto-activate according to persisted local policy.
 - Inference: complete prompt jobs on a matching consenting peer; remote requests cannot access or mutate the operator's personal memory/session state.
 - Verified inference: deterministic greedy execution on three-to-nine exact-model peers, selected across coarse network groups, requires a strict identical-output majority and returns every supporting signed receipt.
 - Artifacts: SHA-256 manifests and resumable verified chunks without source filenames or paths.
-- Training: bounded token batches against an exact local model hash; results are NPZ gradient artifacts and are never applied automatically. Quorum mode validates three-to-31 distinct peer results and produces a streaming coordinate median.
+- Training: bounded token batches against an exact local model hash; results are NPZ gradient artifacts and are never applied automatically. Quorum mode validates three-to-31 distinct peer results, produces a streaming coordinate median, and returns a dual-signed useful-work credit to each included worker.
 
 Nodes behind NAT need only outbound TCP connectivity. Public nodes and seeds accept inbound sessions. No VPN or port forwarding is required for an outbound-only participant.
 
@@ -44,8 +45,10 @@ Nodes behind NAT need only outbound TCP connectivity. Public nodes and seeds acc
 - Established-session payloads are signed and ChaCha20-Poly1305 encrypted after a signed X25519 HELLO. HELLO metadata, peer addresses, frame sizes, timing, and volume remain visible; in-session rekeying is not implemented.
 - No public built-in DNS seed domain is committed yet.
 - No DHT, Sybil defense, decentralized capability reputation, or verified hardware capacity. Local protocol misbehavior scores and temporary bans are implemented.
-- Scheduling declarations are self-reported; there is no result reputation, fairness, hardware attestation, redundant execution, or failure rescheduling.
+- Scheduling declarations are self-reported; there is no credit-aware result reputation, fairness, hardware attestation, general redundant execution beyond verified inference, or failure rescheduling.
 - Replication reduces reliance on one worker but does not defeat coordinated Sybil identities. It also exposes the requested prompt to every selected worker.
+- Optional identity work can raise the cost of key creation but does not prove distinct ownership. It is a configurable abuse control, not the primary contribution system.
+- Useful-work credits bind a worker-signed result receipt to a requester-signed aggregation claim and deduplicate repeated use of one result. They are not yet exchanged for scheduler priority, and malicious or colluding issuers can still make false quality claims.
 - Coordinate median tolerates a minority of arbitrary candidates only when quorum identities are genuinely independent. Current pseudonymous identities are cheap and therefore do not establish that assumption.
 - Threshold-signed release manifests, local trust policies, pinned genesis, encrypted P2P announcement/acquisition, monotonic activation, revocation, and explicit rollback are implemented. Official keys/genesis, multi-provider lookup, and collective promotion policy remain external.
 

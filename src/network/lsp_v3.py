@@ -64,6 +64,7 @@ class PacketType:
     WORK_OFFER = 0x07
     WORK_RESULT = 0x08
     RELEASE_ANNOUNCE = 0x09
+    USEFUL_WORK_CREDIT = 0x0A
 
 
 _VALID_PACKET_TYPES = {
@@ -76,6 +77,7 @@ _VALID_PACKET_TYPES = {
     PacketType.WORK_OFFER,
     PacketType.WORK_RESULT,
     PacketType.RELEASE_ANNOUNCE,
+    PacketType.USEFUL_WORK_CREDIT,
 }
 
 
@@ -362,6 +364,7 @@ class LSPNodeV3:
         self._work_offer_callbacks: list[Callable] = []
         self._work_result_callbacks: list[Callable] = []
         self._release_callbacks: list[Callable] = []
+        self._credit_callbacks: list[Callable] = []
 
     def _reset_process_session(self):
         self.session_id = os.urandom(16)
@@ -451,6 +454,11 @@ class LSPNodeV3:
             PacketType.RELEASE_ANNOUNCE, node_id, manifest
         )
 
+    def send_useful_work_credit(self, node_id: str, credit: dict) -> bool:
+        return self._send_json_to_peer(
+            PacketType.USEFUL_WORK_CREDIT, node_id, credit
+        )
+
     def peers(self) -> list[dict]:
         with self._snapshot_lock:
             return [dict(peer) for peer in self._snapshot.values()]
@@ -513,6 +521,10 @@ class LSPNodeV3:
 
     def on_release_announced(self, callback: Callable):
         self._release_callbacks.append(callback)
+        return callback
+
+    def on_useful_work_credit(self, callback: Callable):
+        self._credit_callbacks.append(callback)
         return callback
 
     # Event-loop lifecycle --------------------------------------------------
@@ -847,6 +859,11 @@ class LSPNodeV3:
             manifest = self._parse_json(packet.payload, max_size=64 * 1024)
             for callback in self._release_callbacks:
                 callback(manifest, session.node_id)
+            return
+        if packet.packet_type == PacketType.USEFUL_WORK_CREDIT:
+            credit = self._parse_json(packet.payload, max_size=16 * 1024)
+            for callback in self._credit_callbacks:
+                callback(credit, session.node_id)
             return
 
     # Serialization helpers -------------------------------------------------

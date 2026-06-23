@@ -20,6 +20,8 @@ from .training_worker import (
     validate_gradient_artifact,
 )
 from .gradient_aggregation import GradientAggregator, GradientCandidate
+from .identity_work import load_or_mine_identity_work, verify_identity_work
+from .useful_work import UsefulWorkCredit, UsefulWorkLedger
 
 __all__ = [
     "LSPIdentity",
@@ -54,6 +56,10 @@ __all__ = [
     "validate_gradient_artifact",
     "GradientAggregator",
     "GradientCandidate",
+    "load_or_mine_identity_work",
+    "verify_identity_work",
+    "UsefulWorkCredit",
+    "UsefulWorkLedger",
 ]
 
 # Compatibilidad v1: requiere torch por FeromonMessage.

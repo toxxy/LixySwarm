@@ -4,6 +4,7 @@ from dataclasses import replace
 from src.contribution import ContributionPolicy, ResourceGovernor, ResourceRequirements
 from src.network.lsp import LSPIdentity
 from src.network.lsp_v3 import LSPNodeV3
+from src.network.identity_work import load_or_mine_identity_work
 from src.network.work_protocol import (
     ResultReceipt,
     WorkCoordinator,
@@ -207,3 +208,44 @@ def test_scheduler_filters_peers_that_cannot_meet_requirements(tmp_path):
         coordinator.close()
         requester.stop()
         worker.stop()
+
+
+def test_compute_scheduler_requires_configured_identity_work(tmp_path):
+    valid_identity = LSPIdentity.generate()
+    invalid_identity = LSPIdentity.generate()
+    proof = load_or_mine_identity_work(
+        tmp_path / "valid-proof.json", valid_identity.node_id_hex, bits=8
+    )
+
+    class FakeNode:
+        identity = LSPIdentity.generate()
+
+        def on_work_offer_received(self, _callback):
+            return None
+
+        def on_work_result_received(self, _callback):
+            return None
+
+        def peers(self):
+            base = {
+                "work": {"inference": True}, "cpu_cores": 4,
+                "ram_gb": 4, "disk_gb": 4, "gpu_vram_gb": 0,
+                "has_gpu": False,
+            }
+            return [
+                {"node_id": invalid_identity.node_id_hex, "host": "8.8.8.8",
+                 "resources": {**base, "identity_work": {}}},
+                {"node_id": valid_identity.node_id_hex, "host": "1.1.1.1",
+                 "resources": {**base, "identity_work": proof}},
+            ]
+
+    coordinator = WorkCoordinator(
+        FakeNode(), _governor(tmp_path / "governor", "relay"),
+        minimum_identity_work_bits=8,
+    )
+    try:
+        assert coordinator.select_peer(
+            ResourceRequirements(kind="inference")
+        ) == valid_identity.node_id_hex
+    finally:
+        coordinator.close()

@@ -21,6 +21,7 @@ from typing import Callable, Optional
 
 from src.contribution import ResourceGovernor, ResourceRequirements
 from .peer_manager import network_group
+from .identity_work import verify_identity_work
 
 
 MAX_WORK_JSON_SIZE = 256 * 1024
@@ -319,9 +320,13 @@ class WorkCoordinator:
         governor: ResourceGovernor,
         *,
         max_workers: int = 2,
+        minimum_identity_work_bits: int = 0,
     ):
         self.node = node
         self.governor = governor
+        self.minimum_identity_work_bits = max(
+            0, min(int(minimum_identity_work_bits), 28)
+        )
         self._handlers: dict[str, tuple[str, Callable]] = {}
         self._pending: dict[str, _PendingWork] = {}
         self._inflight: set[str] = set()
@@ -460,6 +465,16 @@ class WorkCoordinator:
                 models = resources.get("models", [])
                 if not isinstance(models, list) or required_model_id not in models:
                     continue
+            if (
+                requirements.kind in {"inference", "training"}
+                and self.minimum_identity_work_bits > 0
+                and not verify_identity_work(
+                    str(peer.get("node_id", "")),
+                    resources.get("identity_work", {}),
+                    minimum_bits=self.minimum_identity_work_bits,
+                )
+            ):
+                continue
             candidates.append(peer)
         candidates.sort(
             key=lambda peer: (

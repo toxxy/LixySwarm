@@ -57,6 +57,8 @@ from src.network import (
     GradientCandidate,
     SwarmNetwork,
     TrainingWorker,
+    UsefulWorkCredit,
+    UsefulWorkLedger,
     digest_file,
     validate_gradient_artifact,
 )
@@ -332,6 +334,10 @@ class LixyOrchestrator:
             if self.net._lsp_v3_node is not None:
                 self.net.enable_work(self.governor, max_workers=1)
                 self.net.enable_artifacts(self.artifact_store)
+                self.net.attach_useful_work_ledger(UsefulWorkLedger(
+                    contribution_home / "useful_work_credits.json",
+                    self.net._lsp_v3_node.identity.node_id_hex,
+                ))
                 trust_path = contribution_home / "release_trust.json"
                 if trust_path.is_file():
                     release_policy = TrustPolicy.load(trust_path)
@@ -711,11 +717,29 @@ class LixyOrchestrator:
             start_token=int(start_token),
             token_count=int(token_count),
         )
+        credits = []
+        issuer = self.net._lsp_v3_node.identity
+        for candidate in candidates:
+            if not candidate.receipt:
+                continue
+            credit = UsefulWorkCredit.issue(
+                issuer,
+                worker_node_id=candidate.peer_id,
+                receipt=candidate.receipt,
+                gradient_artifact_id=candidate.artifact_id,
+                aggregate_artifact_id=manifest.artifact_id,
+                model_artifact_id=self.model_artifact_id,
+                dataset_artifact_id=dataset_artifact_id,
+                token_count=int(token_count),
+            )
+            self.net.send_useful_work_credit(candidate.peer_id, credit.to_dict())
+            credits.append(credit.to_dict())
         return {
             "gradient_artifact_id": manifest.artifact_id,
             "path": str(self.artifact_store._object_path(manifest.artifact_id)),
             "aggregation": aggregation,
             "candidate_metrics": details,
+            "useful_work_credits": credits,
             "applied": False,
         }
 

@@ -221,6 +221,34 @@ def test_v3_persistent_session_carries_pheromone(tmp_path):
         right.stop()
 
 
+def test_v3_delivers_useful_work_credit_to_exact_peer(tmp_path):
+    left = _node(tmp_path, "credit-left", target_outbound=0)
+    right = _node(tmp_path, "credit-right", target_outbound=0)
+    received = []
+    event = threading.Event()
+
+    @right.on_useful_work_credit
+    def capture(credit, node_id):
+        received.append((credit, node_id))
+        event.set()
+
+    left.start()
+    right.start()
+    try:
+        assert left.connect_peer("127.0.0.1", right.port)
+        assert _wait_for(lambda: left.peer_count == 1 and right.peer_count == 1)
+        assert left.send_useful_work_credit(
+            right.identity.node_id_hex, {"credit_id": "01" * 32}
+        )
+        assert event.wait(3.0)
+        assert received == [(
+            {"credit_id": "01" * 32}, left.identity.node_id_hex
+        )]
+    finally:
+        left.stop()
+        right.stop()
+
+
 def test_v3_network_continues_after_seed_shutdown(tmp_path):
     seed = _node(tmp_path, "seed", target_outbound=0)
     seed.start()

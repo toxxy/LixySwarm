@@ -59,6 +59,7 @@ Captured application payloads cannot be decrypted after both process-ephemeral k
 | `0x07` | WORK_OFFER | canonical, content-addressed declarative work JSON, maximum 256 KiB |
 | `0x08` | WORK_RESULT | bounded status/output JSON tied to a pending peer/job |
 | `0x09` | RELEASE_ANNOUNCE | threshold-signed release manifest, maximum 64 KiB |
+| `0x0A` | USEFUL_WORK_CREDIT | worker receipt plus requester aggregation attestation, maximum 16 KiB |
 
 The first frame in each direction must be a fresh HELLO. The sender public key in all subsequent frames must match the session peer identity.
 
@@ -89,14 +90,19 @@ HELLO may declare bounded scheduling metadata:
 - GPU presence and VRAM;
 - available disk.
 - available work kinds and, when applicable, locally loaded model hashes.
+- an optional Hashcash-style identity-work proof bound to the HELLO Ed25519 identity.
 
 `SwarmNetwork` registers these peers in its runtime `NodeManager` and removes them on disconnect. The scheduler filters candidates with these values, while workers enforce their own persisted consent and resource leases. Values remain self-reported and are not proof of capacity.
+
+Identity work is disabled by default. An operator can set `LIXYSWARM_IDENTITY_WORK_BITS` from 1 to 28 to mine a persistent stamp whose challenge binds the network ID, Ed25519 public key, and nonce. Requesters then reject inference/training workers below their configured minimum; connectivity and artifact exchange remain open. This is optional admission friction, not proof of useful work.
 
 ## Typed work and artifacts
 
 `WorkUnit` hashes canonical JSON containing origin, operation, kind, resource requirements, payload, deadline, and nonce. The signed session identity must equal the claimed origin. Workers execute only locally registered handlers; peer-supplied code, scripts, commands, shells, and executables are forbidden. Completed IDs are cached for idempotency.
 
 Every `WorkResult` contains a second portable Ed25519 receipt over the job ID, worker, requester, output/error digest, and completion time. The requester verifies this receipt against the transport peer before accepting the result. Gradient quorum artifacts retain the receipts as provenance; a receipt proves what a pseudonymous identity asserted, not that the computation was honest or that identities are independent.
+
+After a gradient candidate enters a validated quorum aggregate, the requester signs a useful-work credit containing the worker's signed result receipt and the exact model, dataset, candidate, aggregate, and token count. The stable credit ID prevents repeated aggregation of one job/result from increasing the worker's local count. Credits are delivered over the encrypted session and stored by the worker. Network-wide credit discovery, issuer-weighted reputation, and scheduler priority are not implemented yet.
 
 Current operations are isolated inference, artifact describe/read-chunk, and gradient computation. Artifacts use full-file SHA-256 identities, bounded manifests, 96 KiB raw chunks, per-chunk SHA-256, atomic commit, and final full-file verification. Gradient results are candidates and are never applied by the protocol.
 
@@ -113,5 +119,5 @@ LSP v2 remains available only through `SwarmNetwork(..., protocol="v2")`. LSP v3
 - Stronger autonomous-system/network diversity, feeler connections, and adversarial eclipse tests.
 - Capability/result reputation, hardware verification, and Sybil resistance beyond local misbehavior bans.
 - DHT discovery after persistent peer exchange is stable.
-- Official threshold trust roots/genesis artifacts, multi-provider content lookup beyond the announcing peer, replicated inference verification, fair scheduling, cancellation, and job recovery.
+- Official threshold trust roots/genesis artifacts, multi-provider content lookup beyond the announcing peer, cross-hardware validation of replicated inference, useful-credit-aware fair scheduling, cancellation, and job recovery.
 - Fuzzing, load tests, mixed-version upgrades, and an external security audit.

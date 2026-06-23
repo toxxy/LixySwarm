@@ -54,7 +54,7 @@ class SwarmNetwork:
     def create(cls, swarm=None, mode="auto", feromon_port=7337, gossip_port=7338,
                checkpoint_dir="checkpoints", protocol="v3", seeds=None,
                target_outbound=8, allow_private_peers=None,
-               contribution_profile=None):
+               contribution_profile=None, identity_work_bits=None):
         if swarm is not None:
             identity = NodeIdentity.from_swarm(swarm, feromon_port=feromon_port, gossip_port=gossip_port)
         else:
@@ -72,11 +72,13 @@ class SwarmNetwork:
             target_outbound=target_outbound,
             allow_private_peers=allow_private_peers,
             contribution_profile=contribution_profile,
+            identity_work_bits=identity_work_bits,
         )
 
     def __init__(self, identity, mode="auto", checkpoint_dir="checkpoints", swarm=None,
                  protocol="v3", seeds=None, target_outbound=8,
-                 allow_private_peers=None, contribution_profile=None):
+                 allow_private_peers=None, contribution_profile=None,
+                 identity_work_bits=None):
         self.identity = identity
         self.mode = mode
         self.protocol = str(protocol).lower()
@@ -89,6 +91,15 @@ class SwarmNetwork:
         self.contribution_profile = (
             dict(contribution_profile) if contribution_profile is not None else None
         )
+        default_work_bits = 0 if mode in {"lan", "test"} else int(
+            os.environ.get("LIXYSWARM_IDENTITY_WORK_BITS", "0")
+        )
+        self.identity_work_bits = (
+            default_work_bits if identity_work_bits is None
+            else int(identity_work_bits)
+        )
+        if not 0 <= self.identity_work_bits <= 28:
+            raise ValueError("identity_work_bits must be in [0, 28]")
         self.allow_private_peers = (
             mode in {"lan", "test"}
             if allow_private_peers is None
@@ -109,6 +120,7 @@ class SwarmNetwork:
         self.work_coordinator = None
         self.artifact_service = None
         self.release_distributor = None
+        self.useful_work_ledger = None
 
     def on_peer_connected(self, fn):
         self._on_peer_connected = fn
@@ -130,7 +142,10 @@ class SwarmNetwork:
         if self.work_coordinator is None:
             from .work_protocol import WorkCoordinator
             self.work_coordinator = WorkCoordinator(
-                self._lsp_v3_node, governor, max_workers=max_workers
+                self._lsp_v3_node,
+                governor,
+                max_workers=max_workers,
+                minimum_identity_work_bits=self.identity_work_bits,
             )
         return self.work_coordinator
 
@@ -172,6 +187,26 @@ class SwarmNetwork:
             )
             self.release_distributor.announce_active()
         return self.release_distributor
+
+    def attach_useful_work_ledger(self, ledger):
+        if self._lsp_v3_node is None:
+            raise RuntimeError("useful-work ledger requires active LSP v3")
+        self.useful_work_ledger = ledger
+
+        @self._lsp_v3_node.on_useful_work_credit
+        def _credit(value, from_node_id):
+            if value.get("issuer_node_id") != from_node_id:
+                return
+            try:
+                ledger.add(value)
+            except Exception:
+                pass
+        return ledger
+
+    def send_useful_work_credit(self, peer_id: str, credit: dict) -> bool:
+        if self._lsp_v3_node is None:
+            return False
+        return self._lsp_v3_node.send_useful_work_credit(peer_id, credit)
 
     # ─── WAN / Relay ──────────────────────────────────────────────────────────
 
@@ -326,7 +361,15 @@ class SwarmNetwork:
         from src.network.lsp_v3 import LSPNodeV3
 
         identity = self._load_or_create_lsp_identity()
-        resources = self.contribution_profile or self._local_resource_profile()
+        resources = dict(
+            self.contribution_profile or self._local_resource_profile()
+        )
+        from src.network.identity_work import load_or_mine_identity_work
+        resources["identity_work"] = load_or_mine_identity_work(
+            self.checkpoint_dir / "identity_work_v1.json",
+            identity.node_id_hex,
+            bits=self.identity_work_bits,
+        )
         self._lsp_v3_node = LSPNodeV3(
             identity,
             host="0.0.0.0",

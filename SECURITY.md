@@ -32,6 +32,8 @@ If a secret or private datum has ever entered Git history, deleting it from the 
 - Gradient quorum mode requires distinct identities, validates archive bounds/metadata/tensor shapes/finiteness, and produces a coordinate median without applying it.
 - Each accepted work result has a portable Ed25519 receipt bound to worker, requester, job, content, and time.
 - Verified inference requires an exact deterministic majority from distinct model-matched peers, preferring separate coarse network groups. The prompt is disclosed to every selected worker and cheap Sybil identities can still collude.
+- Hashcash-style identity work is disabled by default. Operators may configure a requester-enforced minimum bound to each Ed25519 identity as admission friction, but it does not prove different owners or useful computation.
+- Gradient contributors receive credits only after inclusion in a validated quorum aggregate. Each credit contains the worker-signed result receipt plus the requester's signed aggregation claim and is stable across replay. Issuer trust and Sybil-independent reputation are still unsolved.
 - Model releases require a locally configured threshold of trusted Ed25519 signers; optional genesis pinning, revocation, monotonic activation, weights-only loading, and explicit rollback prevent silent downgrade.
 - Release announcements are signature-checked before download; referenced artifacts are hash-verified. Automatic activation is a persisted explicit opt-in and is off by default.
 - Outbound selection prefers distinct coarse network groups. Protocol violations accrue local decaying scores and persistent temporary bans keyed by hashes rather than raw identifiers.
@@ -47,7 +49,7 @@ These controls are incomplete. HELLO/traffic metadata remains visible and long s
 5. Explicit CORS allowlist, request limits, concurrency limits, timeouts, and audit logs that exclude content/secrets.
 6. Unprivileged services, minimal filesystem permissions, network firewalling, dependency scanning, SBOM, and signed releases.
 7. Automated secret/PII scans on commits and full history plus an independent security review.
-8. Sybil-independent quorum membership, replicated inference verification, poisoning/gradient-inversion defenses, official separated signing operations/key recovery, and a collective promotion policy. Receipts, threshold manifests, and coordinate median alone are insufficient.
+8. Sybil-independent quorum membership, cross-hardware replicated-inference validation, useful-credit issuer reputation, poisoning/gradient-inversion defenses, official separated signing operations/key recovery, and a collective promotion policy. Receipts, credits, threshold manifests, exact majority, and coordinate median alone are insufficient.
 
 See `INTERNET_SCALE_READINESS.md` for the full public-network gate.
 

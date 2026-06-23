@@ -70,7 +70,9 @@
 - [ ] Move work into an OS/container sandbox with CPU/GPU/RAM/disk/network enforcement.
 - [x] Persist portable Ed25519 worker result receipts in gradient quorum provenance.
 - [x] Add exact-model deterministic replicated inference, coarse network-group selection, strict output majority, and supporting receipts.
-- [ ] Make inference/training quorum membership Sybil-independent and validate cross-hardware determinism.
+- [x] Add optional persistent Ed25519-bound identity work and requester-enforced compute difficulty; keep it disabled by default.
+- [x] Issue and persist dual-signed, duplicate-resistant credits for gradient results included in validated quorum aggregates.
+- [ ] Exchange useful-work proofs and apply issuer-diverse reputation/identity aging to scheduling; neither proof of useful work nor optional Hashcash alone establishes independence.
 - [ ] Add poisoning/anomaly tests, gradient privacy defenses, and audited promotion rules before model updates.
 
 ## P2: Internet topology and operations
@@ -84,7 +86,7 @@
 ## Long-term research
 
 - [ ] Reputation-weighted decentralized consensus.
-- [ ] Safe distributed model promotion and decentralized version governance; gradient candidates alone are implemented.
+- [ ] Safe decentralized model promotion governance; threshold-signed releases and unapplied gradient candidates exist, but collective proposal/acceptance policy does not.
 - [ ] GrowthGate with empirical promotion/rollback criteria.
 - [ ] Sandboxed self-modification with containment and human release authority.
 - [ ] Multimodal nodes after text/network behavior is reproducible and secure.

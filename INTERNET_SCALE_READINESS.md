@@ -26,8 +26,10 @@ LSP v3 provides the final topology foundation and an initial compute/data plane.
 - Three-to-31-identity gradient quorums with exact metadata/tensor validation, bounded ZIP inspection, and streaming coordinate-median output.
 - Portable worker result receipts and a threshold-signed local model release registry with pinned genesis, revocation, monotonic activation, and explicit rollback.
 - Three-to-nine-peer deterministic inference with model matching, coarse network-group diversity, strict exact-majority acceptance, and supporting receipts.
+- Dual-signed, replay-deduplicated useful-training credits issued to workers whose gradient candidates enter a validated quorum aggregate; local worker ledgers persist them.
+- Optional Ed25519-bound identity work and requester-enforced compute difficulty; disabled by default and retained only as a configurable admission defense.
 - Encrypted P2P release announcement, trust-before-download validation, direct artifact acquisition, deduplicated relay, and persisted opt-in auto-activation.
-- A complete local run of 168 tests on the assessment date.
+- A complete local run of 173 tests on the assessment date.
 
 ## Release blockers
 
@@ -77,7 +79,7 @@ LSP v3 provides the final topology foundation and an initial compute/data plane.
 - Threshold signatures now prove authority according to each node's local trust policy, and trusted releases propagate peer-to-peer. Publish independent official signer keys and a pinned genesis, add multi-provider/DHT content lookup, dataset provenance, key-rotation/recovery procedures, and collective promotion rules. The public Git repository does not ship checkpoints.
 - Current inference is replicated whole-request execution. Benchmark it, then add redundant candidate verification/expert routing only where measurements justify it.
 - Add scheduler fairness, hardware attestation/capability validation, process/container job isolation, quotas, cancellation, cost limits, and failure rescheduling.
-- Make inference/gradient quorum membership Sybil-independent, quantify cross-hardware determinism, add poisoning/anomaly tests, and connect receipt-backed aggregates to an audited threshold release proposal. Exact majority and coordinate median exist, but cheap identities invalidate their honest-majority assumption on an open network.
+- Advertise/query useful-work proofs and use issuer-diverse, aged reputation in scheduling without turning any seed into an authority. Measure optional identity-work economics only as an abuse-control fallback. Quantify cross-hardware determinism, add poisoning/anomaly tests, and connect receipt-backed aggregates to an audited threshold release proposal. Neither credits nor work stamps prove independent control.
 - Address gradient inversion and endpoint training-data leakage; encrypted transport does not make untrusted workers or requesters trustworthy.
 
 ### Operations
