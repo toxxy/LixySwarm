@@ -33,6 +33,7 @@ export LIXYSWARM_BOOTSTRAP_SEEDS='seed-a.example.net:7338,seed-b.example.net:733
 - Results: portable Ed25519 receipts bind worker/requester/job/output and are preserved in gradient quorum provenance.
 - Releases: trusted threshold manifests gossip across encrypted direct sessions; receivers fetch and verify model/support artifacts from the announcer, then accept or explicitly auto-activate according to persisted local policy.
 - Inference: complete prompt jobs on a matching consenting peer; remote requests cannot access or mutate the operator's personal memory/session state.
+- Verified inference: deterministic greedy execution on three-to-nine exact-model peers, selected across coarse network groups, requires a strict identical-output majority and returns every supporting signed receipt.
 - Artifacts: SHA-256 manifests and resumable verified chunks without source filenames or paths.
 - Training: bounded token batches against an exact local model hash; results are NPZ gradient artifacts and are never applied automatically. Quorum mode validates three-to-31 distinct peer results and produces a streaming coordinate median.
 
@@ -44,6 +45,7 @@ Nodes behind NAT need only outbound TCP connectivity. Public nodes and seeds acc
 - No public built-in DNS seed domain is committed yet.
 - No DHT, Sybil defense, decentralized capability reputation, or verified hardware capacity. Local protocol misbehavior scores and temporary bans are implemented.
 - Scheduling declarations are self-reported; there is no result reputation, fairness, hardware attestation, redundant execution, or failure rescheduling.
+- Replication reduces reliance on one worker but does not defeat coordinated Sybil identities. It also exposes the requested prompt to every selected worker.
 - Coordinate median tolerates a minority of arbitrary candidates only when quorum identities are genuinely independent. Current pseudonymous identities are cheap and therefore do not establish that assumption.
 - Threshold-signed release manifests, local trust policies, pinned genesis, encrypted P2P announcement/acquisition, monotonic activation, revocation, and explicit rollback are implemented. Official keys/genesis, multi-provider lookup, and collective promotion policy remain external.
 

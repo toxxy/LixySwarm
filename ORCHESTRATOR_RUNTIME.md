@@ -49,6 +49,8 @@ When enabled, `SwarmNetwork` defaults to persistent LSP v3 sessions, supplies bl
 
 Remote inference uses a fresh non-persistent `RuntimeSession`, disables personal Matriarca retrieval and importance changes, records no history, does not read/update Dolphin sleep/acoustic state, and serializes model access with local inference. Distributed training requires an exact checkpoint file hash, a content-addressed `application/x-npy` token dataset, bounded token range, and declared RAM/disk sufficient for the estimated gradient. `compute_gradient_quorum()` requests matching distinct peers in parallel and emits a streaming coordinate-median artifact; every candidate and aggregate remains unapplied.
 
+`generate_distributed_verified()` sends a deterministic greedy request to an odd quorum of three-to-nine peers advertising the exact checkpoint hash. Candidate selection prefers different coarse network groups; acceptance requires a strict byte-identical text majority, and the returned record includes supporting Ed25519 receipts. This is replication, not proof against Sybil-controlled workers.
+
 `lixyswarm start --release` loads only the locally active manifest after rechecking its threshold signatures, trust policy, content-addressed artifacts, chain state, and `pytorch-weights-only-v1` format. Direct `--checkpoint` remains an explicit operator-trusted path and does not claim release governance.
 
 ## Known runtime gaps

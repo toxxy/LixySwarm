@@ -20,6 +20,7 @@ from dataclasses import asdict, dataclass, field, replace
 from typing import Callable, Optional
 
 from src.contribution import ResourceGovernor, ResourceRequirements
+from .peer_manager import network_group
 
 
 MAX_WORK_JSON_SIZE = 256 * 1024
@@ -467,7 +468,17 @@ class WorkCoordinator:
             ),
             reverse=True,
         )
-        return candidates
+        diverse = []
+        repeated = []
+        groups = set()
+        for peer in candidates:
+            group = network_group(str(peer.get("host", "unknown")))
+            if group in groups:
+                repeated.append(peer)
+            else:
+                groups.add(group)
+                diverse.append(peer)
+        return diverse + repeated
 
     def _on_offer(self, value: dict, from_node_id: str):
         self._executor.submit(self._execute_offer, value, from_node_id)

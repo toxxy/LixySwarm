@@ -69,7 +69,8 @@
 - [ ] Add persistent queues, cancellation, retry/failure rescheduling, fairness, and per-identity quotas.
 - [ ] Move work into an OS/container sandbox with CPU/GPU/RAM/disk/network enforcement.
 - [x] Persist portable Ed25519 worker result receipts in gradient quorum provenance.
-- [ ] Make quorum membership Sybil-independent and add replicated inference validation.
+- [x] Add exact-model deterministic replicated inference, coarse network-group selection, strict output majority, and supporting receipts.
+- [ ] Make inference/training quorum membership Sybil-independent and validate cross-hardware determinism.
 - [ ] Add poisoning/anomaly tests, gradient privacy defenses, and audited promotion rules before model updates.
 
 ## P2: Internet topology and operations

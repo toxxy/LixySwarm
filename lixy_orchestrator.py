@@ -32,6 +32,8 @@ import os
 import time
 import logging
 import threading
+import hashlib
+from collections import Counter
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 from contextlib import nullcontext
@@ -76,7 +78,7 @@ def _validate_remote_inference_payload(payload: dict) -> dict:
     """Validate the stable inference.generate.v1 network schema."""
     if not isinstance(payload, dict):
         raise ValueError("payload must be an object")
-    allowed = {"prompt", "max_tokens", "temperature", "top_k"}
+    allowed = {"prompt", "max_tokens", "temperature", "top_k", "deterministic"}
     if set(payload) - allowed:
         raise ValueError("unsupported inference field")
     prompt = payload.get("prompt")
@@ -87,6 +89,9 @@ def _validate_remote_inference_payload(payload: dict) -> dict:
     max_tokens = int(payload.get("max_tokens", 200))
     temperature = float(payload.get("temperature", 0.7))
     top_k = int(payload.get("top_k", 50))
+    deterministic = payload.get("deterministic", False)
+    if not isinstance(deterministic, bool):
+        raise ValueError("deterministic must be boolean")
     if not 1 <= max_tokens <= MAX_REMOTE_TOKENS:
         raise ValueError("max_tokens is out of range")
     if not 0.05 <= temperature <= 2.0:
@@ -98,6 +103,34 @@ def _validate_remote_inference_payload(payload: dict) -> dict:
         "max_tokens": max_tokens,
         "temperature": temperature,
         "top_k": top_k,
+        "deterministic": deterministic,
+    }
+
+
+def _inference_majority(results: list[tuple[str, str, dict]]) -> dict:
+    """Require a strict exact-output majority from distinct peer identities."""
+    peer_ids = [peer_id for peer_id, _text, _receipt in results]
+    if len(peer_ids) < 3 or len(set(peer_ids)) != len(peer_ids):
+        raise RuntimeError("Verified inference requires distinct peer identities")
+    counts = Counter(text for _peer_id, text, _receipt in results)
+    text, votes = counts.most_common(1)[0]
+    required = len(results) // 2 + 1
+    if votes < required:
+        raise RuntimeError("Inference quorum did not reach an exact majority")
+    supporters = [
+        {
+            "peer_id": peer_id,
+            "receipt": receipt,
+            "output_sha256": hashlib.sha256(text.encode("utf-8")).hexdigest(),
+        }
+        for peer_id, candidate, receipt in results if candidate == text
+    ]
+    return {
+        "text": text,
+        "votes": votes,
+        "required": required,
+        "replicas": len(results),
+        "supporters": supporters,
     }
 
 
@@ -347,10 +380,15 @@ class LixyOrchestrator:
                 record_history=False,
                 update_runtime_state=False,
                 use_memory=False,
+                greedy=request["deterministic"],
             )
         if len(response.encode("utf-8")) > MAX_REMOTE_OUTPUT_BYTES:
             raise ValueError("generated output exceeds 128 KiB")
-        return {"text": response}
+        return {
+            "text": response,
+            "model_artifact_id": self.model_artifact_id,
+            "deterministic": request["deterministic"],
+        }
 
     def _load_session(self):
         """Carga historial de sesión y estado del Delfín si existe."""
@@ -482,6 +520,66 @@ class LixyOrchestrator:
         if not isinstance(text, str):
             raise RuntimeError("peer returned an invalid inference result")
         return text
+
+    def generate_distributed_verified(
+        self,
+        prompt: str,
+        *,
+        replicas: int = 3,
+        max_tokens: int = None,
+        timeout_s: float = 120.0,
+    ) -> dict:
+        """Run deterministic inference on diverse peers and require a majority."""
+        if self.net is None or self.net.work_coordinator is None:
+            raise RuntimeError("Distributed inference is not available")
+        replicas = int(replicas)
+        if not 3 <= replicas <= 9 or replicas % 2 == 0:
+            raise ValueError("replicas must be an odd number between 3 and 9")
+        requirements = ResourceRequirements(
+            kind="inference", cpu_slots=1, ram_gb=0.5
+        )
+        peers = self.net.work_coordinator.select_peers(
+            requirements,
+            required_model_id=self.model_artifact_id,
+            limit=replicas,
+        )
+        if len(peers) != replicas:
+            raise RuntimeError(f"Verified inference requires {replicas} eligible peers")
+        payload = _validate_remote_inference_payload({
+            "prompt": prompt,
+            "max_tokens": max_tokens if max_tokens is not None else self.cfg.max_tokens,
+            "temperature": 1.0,
+            "top_k": 1,
+            "deterministic": True,
+        })
+        results = []
+        with ThreadPoolExecutor(
+            max_workers=replicas, thread_name_prefix="lixy-inference-quorum"
+        ) as executor:
+            futures = {
+                executor.submit(
+                    self.net.submit_work,
+                    "inference.generate.v1",
+                    payload,
+                    requirements,
+                    peer_id=peer_id,
+                    timeout_s=timeout_s,
+                ): peer_id for peer_id in peers
+            }
+            for future in as_completed(futures):
+                peer_id = futures[future]
+                result = future.result()
+                if result.status != "ok":
+                    raise RuntimeError(result.error or "replicated inference failed")
+                if result.output.get("model_artifact_id") != self.model_artifact_id:
+                    raise RuntimeError("peer used a different model")
+                if result.output.get("deterministic") is not True:
+                    raise RuntimeError("peer did not honor deterministic inference")
+                text = result.output.get("text")
+                if not isinstance(text, str):
+                    raise RuntimeError("peer returned invalid inference text")
+                results.append((peer_id, text, result.receipt))
+        return _inference_majority(results)
 
     def publish_artifact(
         self,

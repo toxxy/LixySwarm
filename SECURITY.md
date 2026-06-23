@@ -31,6 +31,7 @@ If a secret or private datum has ever entered Git history, deleting it from the 
 - Training workers never load peer checkpoints and never apply returned gradients; they require the exact locally loaded model hash and safe NumPy token arrays.
 - Gradient quorum mode requires distinct identities, validates archive bounds/metadata/tensor shapes/finiteness, and produces a coordinate median without applying it.
 - Each accepted work result has a portable Ed25519 receipt bound to worker, requester, job, content, and time.
+- Verified inference requires an exact deterministic majority from distinct model-matched peers, preferring separate coarse network groups. The prompt is disclosed to every selected worker and cheap Sybil identities can still collude.
 - Model releases require a locally configured threshold of trusted Ed25519 signers; optional genesis pinning, revocation, monotonic activation, weights-only loading, and explicit rollback prevent silent downgrade.
 - Release announcements are signature-checked before download; referenced artifacts are hash-verified. Automatic activation is a persisted explicit opt-in and is off by default.
 - Outbound selection prefers distinct coarse network groups. Protocol violations accrue local decaying scores and persistent temporary bans keyed by hashes rather than raw identifiers.

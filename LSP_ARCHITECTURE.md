@@ -39,4 +39,4 @@ The compute layer distributes complete inference requests and bounded gradient j
 - Network reputation and eclipse resistance.
 - Network announcement/discovery for the implemented threshold-signed local release registry, plus official trust-root/genesis operations.
 - Process/container sandboxing beyond the implemented consent governor and allowlisted scheduler.
-- Sybil-independent quorum selection, replicated inference verification, and network governance for promotion of receipt-backed robust gradient aggregates.
+- Sybil-independent quorum selection beyond the implemented deterministic exact-majority inference and coordinate-median gradient quorums, plus network governance for promotion.

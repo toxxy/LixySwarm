@@ -401,6 +401,7 @@ class RuntimeSession:
         record_history: bool = True,
         update_runtime_state: bool = True,
         use_memory: bool = True,
+        greedy: bool = False,
     ) -> str:
         """
         Procesa un turno de conversación.
@@ -563,6 +564,7 @@ class RuntimeSession:
                     repetition_penalty=self.repetition_penalty,
                     recent_penalty=self.repetition_penalty * 2.5,
                     recent_window=8,
+                    greedy=greedy,
                 )
                 x = torch.cat((x, next_token), dim=1)
 

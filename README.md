@@ -24,13 +24,14 @@ The default swarm configuration contains:
 - Consent-gated typed work for isolated peer inference and bounded gradient computation; peers never provide executable code.
 - Three-to-31-peer gradient quorums with exact-input validation and chunked coordinate-median aggregation; aggregate results remain unapplied candidates.
 - Ed25519 work-result receipts bound to worker, requester, job, output, and timestamp, retained in quorum provenance.
+- Deterministic replicated inference across three-to-nine model-matched peers with coarse network-group diversity and an exact-output majority rule.
 - Threshold-signed model release manifests, local trust roots, pinned genesis support, monotonic activation, revocation lists, and explicit rollback.
 - SHA-256 content-addressed model, dataset, evaluation, and gradient artifacts with resumable chunk transfer and end-to-end verification.
 - A `lixyswarm` CLI for contribution policy, persistent node startup, and privacy-safe artifact import/listing.
 - FastAPI status/chat endpoints, a status publisher, and two static frontends.
 - Continuous training and an opt-in metabolic-hunger decision function.
 
-Some paper descriptions are only partially represented. In particular, the main forward pass does not implement the paper's exact `fitness × confidence × role_weight` equation. Distributed work supports signed receipts, replicated gradient quorums, and coordinate-median aggregation, but pseudonymous identities are not Sybil-independent; inference verification, hardware attestation, fairness, cancellation, and network-wide promotion governance remain.
+Some paper descriptions are only partially represented. In particular, the main forward pass does not implement the paper's exact `fitness × confidence × role_weight` equation. Distributed work supports receipt-backed inference/gradient quorums and robust aggregation, but pseudonymous identities and coarse network groups are not Sybil-independent; hardware attestation, fairness, cancellation, and network-wide promotion governance remain.
 
 ## Architecture
 
@@ -57,7 +58,7 @@ python3 -m pip install -e . --no-deps
 pytest -q
 ```
 
-The full suite passed **167 tests** on 2026-06-22.
+The full suite passed **168 tests** on 2026-06-22.
 
 Join as a connectivity/artifact node, or explicitly consent to compute:
 

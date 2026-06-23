@@ -6,6 +6,7 @@ import pytest
 
 from lixy_orchestrator import (
     LixyOrchestrator,
+    _inference_majority,
     _validate_remote_inference_payload,
 )
 
@@ -18,6 +19,7 @@ def test_remote_inference_schema_is_bounded():
         "top_k": 20,
     })
     assert value["max_tokens"] == 32
+    assert value["deterministic"] is False
 
     with pytest.raises(ValueError, match="unsupported"):
         _validate_remote_inference_payload({"prompt": "x", "private_path": "/tmp"})
@@ -32,6 +34,7 @@ def test_remote_handler_disables_all_personal_state():
     orchestrator.cfg = SimpleNamespace(device="cpu")
     orchestrator.swarm = object()
     orchestrator.enc = object()
+    orchestrator.model_artifact_id = "ab" * 32
     orchestrator._inference_lock = threading.RLock()
     observed = {}
 
@@ -49,12 +52,14 @@ def test_remote_handler_disables_all_personal_state():
             {"prompt": "network request", "max_tokens": 8}, None
         )
 
-    assert result == {"text": "isolated"}
+    assert result["text"] == "isolated"
+    assert result["deterministic"] is False
     assert observed["session_file"] is None
     assert observed["store_memory"] is False
     assert observed["record_history"] is False
     assert observed["update_runtime_state"] is False
     assert observed["use_memory"] is False
+    assert observed["greedy"] is False
 
 
 def test_distributed_generation_never_silently_falls_back():
@@ -63,3 +68,26 @@ def test_distributed_generation_never_silently_falls_back():
     orchestrator.net = SimpleNamespace(work_coordinator=None)
     with pytest.raises(RuntimeError, match="not available"):
         orchestrator.generate_distributed("hello")
+
+
+def test_inference_quorum_requires_exact_majority_and_distinct_peers():
+    result = _inference_majority([
+        ("01" * 32, "same", {"a": 1}),
+        ("02" * 32, "other", {"b": 2}),
+        ("03" * 32, "same", {"c": 3}),
+    ])
+    assert result["text"] == "same"
+    assert result["votes"] == 2
+    assert len(result["supporters"]) == 2
+    with pytest.raises(RuntimeError, match="majority"):
+        _inference_majority([
+            ("01" * 32, "a", {}),
+            ("02" * 32, "b", {}),
+            ("03" * 32, "c", {}),
+        ])
+    with pytest.raises(RuntimeError, match="distinct"):
+        _inference_majority([
+            ("01" * 32, "same", {}),
+            ("01" * 32, "same", {}),
+            ("03" * 32, "same", {}),
+        ])
