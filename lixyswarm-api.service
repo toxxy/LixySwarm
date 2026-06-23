@@ -4,12 +4,18 @@ After=network.target
 
 [Service]
 Type=simple
-User=root
-WorkingDirectory=/opt/lixyswarm
-ExecStart=/opt/lixyswarm/venv/bin/uvicorn api.main:app --host 0.0.0.0 --port 8080 --workers 1
+User=lixyswarm
+Group=lixyswarm
+WorkingDirectory=/opt/lixyswarm/app
+ExecStart=/opt/lixyswarm/venv/bin/uvicorn api.main:app --host 127.0.0.1 --port 8001 --root-path /api --workers 1
 Restart=on-failure
 RestartSec=5
-Environment=PYTHONPATH=/opt/lixyswarm
+Environment=PYTHONPATH=/opt/lixyswarm/app
+UMask=0077
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+ProtectHome=true
 
 [Install]
 WantedBy=multi-user.target

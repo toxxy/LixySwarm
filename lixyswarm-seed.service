@@ -16,14 +16,20 @@ ExecStart=/opt/lixyswarm/venv/bin/python /opt/lixyswarm/app/node_daemon.py
 Restart=always
 RestartSec=5
 StateDirectory=lixyswarm
+StateDirectoryMode=0700
+UMask=0077
 NoNewPrivileges=true
 PrivateTmp=true
+PrivateDevices=true
 ProtectSystem=strict
 ProtectHome=true
+ProtectHostname=true
 ProtectKernelTunables=true
 ProtectKernelModules=true
+ProtectKernelLogs=true
 ProtectControlGroups=true
 RestrictSUIDSGID=true
+RestrictAddressFamilies=AF_INET AF_INET6
 LockPersonality=true
 
 [Install]

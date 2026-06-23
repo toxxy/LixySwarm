@@ -1,6 +1,6 @@
 # Public LSP v3 Seed Deployment
 
-**Updated:** 2026-06-22
+**Updated:** 2026-06-23
 
 The VPS is a replaceable bootstrap seed. It accepts persistent LSP v3 sessions and shares learned peer addresses. It does not relay model traffic, coordinate decisions, or remain necessary after peers connect.
 
@@ -32,6 +32,30 @@ sudo systemctl daemon-reload
 sudo systemctl enable --now lixyswarm-seed
 sudo systemctl status lixyswarm-seed
 ```
+
+## Web explorer and API
+
+The checked-in API service binds only to loopback on port `8001`. Do not expose that port directly. Serve the static explorer and proxy `/api/` through nginx (or an equivalent TLS reverse proxy):
+
+```nginx
+server {
+    listen 8080;
+    root /opt/lixyswarm/app/frontend;
+    index swarm-explorer.html;
+
+    location / {
+        try_files $uri $uri/ =404;
+    }
+
+    location /api/ {
+        proxy_pass http://127.0.0.1:8001/;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+    }
+}
+```
+
+Use a dedicated DNS name plus HTTPS before presenting the explorer as a production endpoint. The API remains a research interface; binding it behind nginx does not replace endpoint authentication.
 
 ## Firewall and DNS
 
