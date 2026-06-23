@@ -28,6 +28,7 @@ If a secret or private datum has ever entered Git history, deleting it from the 
 - Peer work cannot contain executable code and can invoke only fixed local handlers. Recursive payload limits, deadlines, rate windows, and resource leases are enforced.
 - Remote work admission reserves from a fixed queue and enforces per-identity active/queued and minute-window quotas. Every parseable overload rejection is signed; the executor's internal queue cannot grow without the protocol reservation succeeding.
 - Work cancellation is bound to the authenticated requester identity and active job ID. Built-in inference/training poll cancellation and deadlines; outputs produced after cancellation are discarded and the final error receipt is signed.
+- Automatic fallback is bounded to five by the local API and three by default, uses distinct already-eligible peers and one total deadline, and never overrides an explicit peer/quorum assignment. Late results from a previous attempt fail the expected-peer check.
 - Remote inference cannot read/write personal Matriarca memory or session/Dolphin state.
 - Artifact manifests expose hashes, sizes, types, and timestamps—not source filenames or paths. Chunk and full-object hashes are verified before commit.
 - Training workers never load peer checkpoints and never apply returned gradients; they require the exact locally loaded model hash and safe NumPy token arrays.

@@ -30,6 +30,20 @@ MAX_WORK_LIFETIME_S = 60 * 60
 MAX_COMPLETED_CACHE = 2048
 OFFER_RATE_WINDOW_S = 60.0
 MAX_TRACKED_OFFER_IDENTITIES = 1024
+TRANSIENT_WORK_ERRORS = {
+    "work_queue_full",
+    "peer_queue_limit",
+    "peer_rate_limit",
+    "worker_identity_limit",
+    "worker_shutting_down",
+    "cpu_job_limit",
+    "gpu_job_limit",
+    "user_activity_or_system_load",
+    "ram_limit",
+    "disk_policy_limit",
+    "disk_unavailable",
+    "storage_unavailable",
+}
 _OPERATION_RE = re.compile(r"^[a-z0-9][a-z0-9_.-]{2,127}$")
 _HEX_64_RE = re.compile(r"^[0-9a-f]{64}$")
 _FORBIDDEN_PAYLOAD_KEYS = {"code", "script", "command", "shell", "executable"}
@@ -420,15 +434,23 @@ class WorkCoordinator:
         peer_id: Optional[str] = None,
         timeout_s: float = 60.0,
         cancel_event: Optional[threading.Event] = None,
+        max_attempts: int = 3,
     ) -> WorkResult:
         if not isinstance(payload, dict):
             raise WorkProtocolError("Work payload must be an object")
         requirements.validate()
         required_model_id = str(payload.get("model_artifact_id", "")) or None
-        selected = peer_id or self._select_peer(
-            requirements, required_model_id=required_model_id
+        max_attempts = max(1, min(int(max_attempts), 5))
+        candidates = (
+            [peer_id]
+            if peer_id
+            else self._submission_candidates(
+                requirements,
+                required_model_id=required_model_id,
+                limit=max_attempts,
+            )
         )
-        if not selected:
+        if not candidates:
             raise RuntimeError(f"No peer advertises {requirements.kind} capacity")
         work = WorkUnit.create(
             origin_node_id=self.node.identity.node_id_hex,
@@ -438,37 +460,98 @@ class WorkCoordinator:
             payload=payload,
             timeout_s=timeout_s,
         )
-        pending = _PendingWork(expected_peer=selected)
-        with self._lock:
-            self._pending[work.job_id] = pending
-        if not self.node.send_work_offer(selected, work.to_dict()):
-            with self._lock:
-                self._pending.pop(work.job_id, None)
-            raise ConnectionError("Failed to send work offer")
-        wait_deadline = time.monotonic() + max(1.0, float(timeout_s))
-        while not pending.event.is_set():
-            remaining = wait_deadline - time.monotonic()
-            if remaining <= 0:
-                with self._lock:
-                    self._pending.pop(work.job_id, None)
-                self._request_cancellation(
-                    selected, work.job_id, "requester_timeout"
-                )
-                return WorkResult(
-                    job_id=work.job_id, status="error", error="work_timeout"
-                )
+        total_deadline = time.monotonic() + max(1.0, float(timeout_s))
+        last_result = None
+        sent_any = False
+        for attempt_index, selected in enumerate(candidates):
             if cancel_event is not None and cancel_event.is_set():
-                with self._lock:
-                    self._pending.pop(work.job_id, None)
-                self._request_cancellation(
-                    selected, work.job_id, "requester_cancelled"
-                )
                 return WorkResult(
                     job_id=work.job_id, status="error", error="work_cancelled"
                 )
-            pending.event.wait(timeout=min(0.1, remaining))
-        return pending.result or WorkResult(
+            if attempt_index > 0:
+                self._record_retry_attempt(selected)
+            pending = _PendingWork(expected_peer=selected)
+            with self._lock:
+                self._pending[work.job_id] = pending
+            if not self.node.send_work_offer(selected, work.to_dict()):
+                self._remove_pending(work.job_id, pending)
+                continue
+            sent_any = True
+            remaining_attempts = len(candidates) - attempt_index
+            remaining_total = total_deadline - time.monotonic()
+            if remaining_total <= 0:
+                self._remove_pending(work.job_id, pending)
+                self._request_cancellation(
+                    selected, work.job_id, "requester_timeout"
+                )
+                last_result = WorkResult(
+                    job_id=work.job_id, status="error", error="work_timeout"
+                )
+                break
+            attempt_budget = remaining_total / max(1, remaining_attempts)
+            attempt_deadline = time.monotonic() + attempt_budget
+            while not pending.event.is_set():
+                remaining = min(
+                    attempt_deadline - time.monotonic(),
+                    total_deadline - time.monotonic(),
+                )
+                if remaining <= 0:
+                    self._remove_pending(work.job_id, pending)
+                    self._request_cancellation(
+                        selected, work.job_id, "requester_timeout"
+                    )
+                    last_result = WorkResult(
+                        job_id=work.job_id,
+                        status="error",
+                        error="work_timeout",
+                    )
+                    break
+                if cancel_event is not None and cancel_event.is_set():
+                    self._remove_pending(work.job_id, pending)
+                    self._request_cancellation(
+                        selected, work.job_id, "requester_cancelled"
+                    )
+                    return WorkResult(
+                        job_id=work.job_id,
+                        status="error",
+                        error="work_cancelled",
+                    )
+                pending.event.wait(timeout=min(0.1, remaining))
+            if pending.event.is_set():
+                last_result = pending.result or WorkResult(
+                    job_id=work.job_id,
+                    status="error",
+                    error="missing_work_result",
+                )
+            if not self._is_transient_result(last_result):
+                return last_result
+            if time.monotonic() >= total_deadline:
+                break
+        if last_result is not None:
+            return last_result
+        if not sent_any:
+            raise ConnectionError("Failed to send work offer to eligible peers")
+        return WorkResult(
             job_id=work.job_id, status="error", error="missing_work_result"
+        )
+
+    def _remove_pending(self, job_id: str, pending: _PendingWork):
+        with self._lock:
+            if self._pending.get(job_id) is pending:
+                self._pending.pop(job_id, None)
+
+    @staticmethod
+    def _is_transient_result(result: WorkResult) -> bool:
+        if result.error in {"work_cancelled", "work_deadline_exceeded"}:
+            return False
+        return (
+            result.error == "work_timeout"
+            or result.error == "missing_work_result"
+            or result.error in TRANSIENT_WORK_ERRORS
+            or (
+                result.status == "error"
+                and result.error.startswith("handler_failed:")
+            )
         )
 
     def _request_cancellation(self, peer_id: str, job_id: str, reason: str):
@@ -515,6 +598,37 @@ class WorkCoordinator:
         return self._select_peer(
             requirements, required_model_id=required_model_id
         )
+
+    def _submission_candidates(
+        self,
+        requirements: ResourceRequirements,
+        *,
+        required_model_id: Optional[str],
+        limit: int,
+    ) -> list[str]:
+        with self._lock:
+            ranked = self._eligible_peers(
+                requirements, required_model_id=required_model_id
+            )
+            primary = self._choose_candidates(ranked, limit=1)
+            if not primary:
+                return []
+            primary_id = str(primary[0]["node_id"])
+            ordered = [primary_id] + [
+                str(peer["node_id"]) for peer in ranked
+                if str(peer["node_id"]) != primary_id
+            ]
+            return ordered[:max(1, int(limit))]
+
+    def _record_retry_attempt(self, node_id: str):
+        connected_at = None
+        for peer in self.node.peers():
+            if str(peer.get("node_id", "")) == node_id:
+                connected_at = peer.get("connected_at")
+                break
+        with self._lock:
+            self.scheduler_history.observe([node_id], now=connected_at)
+            self.scheduler_history.record_dispatch([node_id])
 
     def select_peers(
         self,

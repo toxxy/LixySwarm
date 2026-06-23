@@ -699,3 +699,152 @@ def test_work_execution_enforces_deadline():
     assert execution.cancellation_reason() == "work_deadline_exceeded"
     with pytest.raises(WorkCancelledError, match="work_deadline_exceeded"):
         execution.raise_if_cancelled()
+
+
+def test_submit_retries_send_failure_and_transient_overload(tmp_path):
+    requester_identity = LSPIdentity.generate()
+    workers = [LSPIdentity.generate() for _ in range(3)]
+
+    class RetryNode:
+        identity = requester_identity
+
+        def __init__(self):
+            self.attempts = []
+
+        def on_work_offer_received(self, callback):
+            self.offer_callback = callback
+
+        def on_work_result_received(self, callback):
+            self.result_callback = callback
+
+        def on_work_cancel_received(self, callback):
+            self.cancel_callback = callback
+
+        def peers(self):
+            base = {
+                "work": {"inference": True}, "cpu_cores": 4,
+                "ram_gb": 4, "disk_gb": 4, "has_gpu": False,
+                "gpu_vram_gb": 0,
+            }
+            hosts = ["8.8.8.8", "1.1.1.1", "9.9.9.9"]
+            return [{
+                "node_id": worker.node_id_hex,
+                "host": host,
+                "resources": base,
+            } for worker, host in zip(workers, hosts)]
+
+        def send_work_offer(self, peer_id, value):
+            self.attempts.append(peer_id)
+            index = [worker.node_id_hex for worker in workers].index(peer_id)
+            if index == 0:
+                return False
+            result = WorkResult(
+                job_id=value["job_id"],
+                status="rejected" if index == 1 else "ok",
+                output={} if index == 1 else {"text": "recovered"},
+                error="work_queue_full" if index == 1 else "",
+            )
+            receipt = ResultReceipt.create(
+                result, workers[index], requester_identity.node_id_hex
+            )
+            signed = replace(result, receipt=receipt.to_dict())
+            self.result_callback(signed.to_dict(), peer_id)
+            return True
+
+    node = RetryNode()
+    coordinator = WorkCoordinator(
+        node, _governor(tmp_path / "retry-governor", "relay")
+    )
+    try:
+        result = coordinator.submit(
+            "inference.retry.v1",
+            {"prompt": "recover"},
+            ResourceRequirements(kind="inference"),
+            timeout_s=3,
+            max_attempts=3,
+        )
+        assert result.status == "ok"
+        assert result.output == {"text": "recovered"}
+        assert node.attempts == [worker.node_id_hex for worker in workers]
+        assert coordinator.scheduler_history.snapshot()["dispatch_count"] == 3
+    finally:
+        coordinator.close()
+
+
+def test_submit_cancels_timed_out_peer_before_retry(tmp_path):
+    requester_identity = LSPIdentity.generate()
+    workers = [LSPIdentity.generate() for _ in range(2)]
+
+    class TimeoutNode:
+        identity = requester_identity
+
+        def __init__(self):
+            self.attempts = []
+            self.cancellations = []
+
+        def on_work_offer_received(self, callback):
+            self.offer_callback = callback
+
+        def on_work_result_received(self, callback):
+            self.result_callback = callback
+
+        def on_work_cancel_received(self, callback):
+            self.cancel_callback = callback
+
+        def peers(self):
+            base = {
+                "work": {"inference": True}, "cpu_cores": 4,
+                "ram_gb": 4, "disk_gb": 4, "has_gpu": False,
+                "gpu_vram_gb": 0,
+            }
+            return [{
+                "node_id": workers[0].node_id_hex,
+                "host": "8.8.8.8",
+                "resources": base,
+            }, {
+                "node_id": workers[1].node_id_hex,
+                "host": "1.1.1.1",
+                "resources": base,
+            }]
+
+        def send_work_offer(self, peer_id, value):
+            self.attempts.append(peer_id)
+            if peer_id == workers[0].node_id_hex:
+                return True
+            result = WorkResult(
+                job_id=value["job_id"], status="ok", output={"text": "fallback"}
+            )
+            receipt = ResultReceipt.create(
+                result, workers[1], requester_identity.node_id_hex
+            )
+            self.result_callback(
+                replace(result, receipt=receipt.to_dict()).to_dict(), peer_id
+            )
+            return True
+
+        def send_work_cancel(self, peer_id, value):
+            self.cancellations.append((peer_id, value))
+            return True
+
+    node = TimeoutNode()
+    coordinator = WorkCoordinator(
+        node, _governor(tmp_path / "timeout-retry-governor", "relay")
+    )
+    try:
+        result = coordinator.submit(
+            "inference.retry-timeout.v1",
+            {"prompt": "fallback"},
+            ResourceRequirements(kind="inference"),
+            timeout_s=2,
+            max_attempts=2,
+        )
+        assert result.status == "ok"
+        assert result.output == {"text": "fallback"}
+        assert node.attempts == [worker.node_id_hex for worker in workers]
+        assert len(node.cancellations) == 1
+        cancelled_peer, cancellation = node.cancellations[0]
+        assert cancelled_peer == workers[0].node_id_hex
+        assert cancellation["reason"] == "requester_timeout"
+        assert cancellation["job_id"] == result.job_id
+    finally:
+        coordinator.close()

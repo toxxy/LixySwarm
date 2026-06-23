@@ -81,6 +81,8 @@ Work units are canonical JSON identified by SHA-256 and tied to the signed origi
 
 Inbound offers reserve one of a fixed number of active/queued slots before reaching the executor. Per-identity concurrent and minute-window quotas prevent one connected identity from monopolizing that finite queue; overflow produces a signed rejection rather than allocating more pending futures. Requester timeouts/cancellation set a worker-side event only for the matching authenticated origin and job. Built-in inference and training poll this event/deadline at safe boundaries and discard cancelled output. The queue remains in-memory, and non-cooperative code or an executing CUDA kernel cannot be forcibly terminated without process isolation.
 
+For automatically scheduled single-peer work, the requester retains a bounded ordered fallback set. It reuses the exact job ID across at most three distinct peers and only advances on transport failure, timeout, overload/capacity rejection, missing response, or handler failure. One total deadline bounds the sequence. Explicit peer and quorum assignments are fixed; durable/quorum recovery remains future work.
+
 `ArtifactStore` addresses objects by SHA-256, omits source filenames and paths from manifests, applies storage quotas, transfers 96 KiB chunks, verifies each chunk, and verifies the complete object before commit.
 
 `ReleaseManifest` separates model governance from peer transport. Nodes configure their own Ed25519 signer set and threshold, may pin a genesis release, reject revoked manifests, activate only a monotonic predecessor chain, and require explicit confirmation for rollback. The managed runtime uses weights-only loading for this path. No official trust roots or genesis are embedded yet.

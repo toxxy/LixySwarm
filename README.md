@@ -28,6 +28,7 @@ The default swarm configuration contains:
 - Persistent requester-local scheduling history gives an identity-aged newcomer one exploration opportunity every five selections without reducing available quorum network-group diversity; only pseudonymous node IDs and counters are stored.
 - Inbound work admission has a fixed global queue, per-identity concurrent and per-minute quotas, and portable signed overload rejections; remote offers cannot grow the executor queue without bound.
 - Requester timeout or explicit local cancellation sends an authenticated `WORK_CANCEL`; compatible handlers receive a `WorkUnit` subclass with deadline/cancellation checks. Remote inference checks per generated token and gradient work checks between expensive phases and parameters.
+- Automatically scheduled single-peer work retries up to three distinct eligible peers within one total deadline, preserving the job ID and cancelling a timed-out attempt. Explicit peer choices and fixed quorum members are never replaced silently.
 - Deterministic replicated inference across three-to-nine model-matched peers with coarse network-group diversity and an exact-output majority rule.
 - Optional persistent Hashcash-style identity-work stamps bound to Ed25519 keys; operators may configure a minimum with `LIXYSWARM_IDENTITY_WORK_BITS`, but the default is zero because useful validated training—not expendable hashing—is the intended reputation basis.
 - Threshold-signed model release manifests, local trust roots, pinned genesis support, monotonic activation, revocation lists, and explicit rollback.
@@ -67,7 +68,7 @@ python3 -m pip install -e . --no-deps
 pytest -q
 ```
 
-The full suite passed **188 tests** on 2026-06-23.
+The full suite passed **190 tests** on 2026-06-23.
 
 Join as a connectivity/artifact node, or explicitly consent to compute:
 

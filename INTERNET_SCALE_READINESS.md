@@ -31,9 +31,10 @@ LSP v3 provides the final topology foundation and an initial compute/data plane.
 - Private persistent selection counters plus one-in-five, 60-second continuity-aged newcomer exploration that preserves available quorum network-group diversity.
 - Fixed inbound work capacity, per-identity active/queued and minute-window quotas, bounded identity-rate state, and signed overload responses.
 - Authenticated requester cancellation, coordinator deadline checks, `WorkUnit`-compatible cooperative contexts, per-token remote-inference polling, and multi-boundary gradient polling.
+- Same-job bounded fallback across distinct eligible peers for automatic single-peer work, including cancellation of timed-out attempts and receipt-derived artifact-provider selection.
 - Optional Ed25519-bound identity work and requester-enforced compute difficulty; disabled by default and retained only as a configurable admission defense.
 - Encrypted P2P release announcement, trust-before-download validation, direct artifact acquisition, deduplicated relay, and persisted opt-in auto-activation.
-- A complete local run of 188 tests on the assessment date.
+- A complete local run of 190 tests on the assessment date.
 
 ## Release blockers
 
@@ -82,7 +83,7 @@ LSP v3 provides the final topology foundation and an initial compute/data plane.
 
 - Threshold signatures now prove authority according to each node's local trust policy, and trusted releases propagate peer-to-peer. Publish independent official signer keys and a pinned genesis, add multi-provider/DHT content lookup, dataset provenance, key-rotation/recovery procedures, and collective promotion rules. The public Git repository does not ship checkpoints.
 - Current inference is replicated whole-request execution. Benchmark it, then add redundant candidate verification/expert routing only where measurements justify it.
-- Add durable scheduler fair-share accounting, hardware attestation/capability validation, process/container job isolation with forced termination, per-job cost limits, and failure rescheduling.
+- Add durable scheduler fair-share accounting, hardware attestation/capability validation, process/container job isolation with forced termination, per-job cost limits, quorum-member replacement, and crash-persistent recovery.
 - Extend direct-peer useful-work presentation into Sybil-independent issuer trust without turning any seed into an authority. Validate exploration fairness and abuse resistance under churn. Optional identity work remains only an off-by-default abuse-control fallback. Quantify cross-hardware determinism, add poisoning/anomaly tests, and connect receipt-backed aggregates to an audited threshold release proposal. Neither credits, continuity age, nor work stamps prove independent control.
 - Address gradient inversion and endpoint training-data leakage; encrypted transport does not make untrusted workers or requesters trustworthy.
 

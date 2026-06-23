@@ -503,7 +503,7 @@ class LixyOrchestrator:
         peer_id: str = None,
         timeout_s: float = 120.0,
     ) -> str:
-        """Request inference from a consenting peer; never silently falls back."""
+        """Request inference from consenting peers; never fall back to local state."""
         if self.net is None or self.net.work_coordinator is None:
             raise RuntimeError("Distributed inference is not available")
         payload = _validate_remote_inference_payload({
@@ -637,13 +637,8 @@ class LixyOrchestrator:
             kind="training", cpu_slots=1,
             ram_gb=float(ram_gb), disk_gb=float(disk_gb),
         )
-        selected_peer = peer_id or self.net.work_coordinator.select_peer(
-            requirements, required_model_id=self.model_artifact_id
-        )
-        if not selected_peer:
-            raise RuntimeError("No connected peer has the required training model")
         candidate, details = self._request_gradient_candidate(
-            selected_peer,
+            peer_id,
             dataset_artifact_id=dataset_artifact_id,
             start_token=int(start_token),
             token_count=int(token_count),
@@ -746,7 +741,7 @@ class LixyOrchestrator:
 
     def _request_gradient_candidate(
         self,
-        selected_peer: str,
+        selected_peer: str | None,
         *,
         dataset_artifact_id: str,
         start_token: int,
@@ -768,6 +763,11 @@ class LixyOrchestrator:
         )
         if result.status != "ok":
             raise RuntimeError(result.error or "distributed training failed")
+        actual_peer = str(result.receipt.get("worker_node_id", ""))
+        if len(actual_peer) != 64 or any(
+            char not in "0123456789abcdef" for char in actual_peer
+        ):
+            raise RuntimeError("gradient result has no valid worker identity")
         gradient = result.output.get("gradient", {})
         gradient_id = gradient.get("artifact_id")
         if not isinstance(gradient_id, str) or len(gradient_id) != 64:
@@ -778,7 +778,7 @@ class LixyOrchestrator:
             raise RuntimeError("peer returned a gradient for another dataset")
         path = self.net.fetch_artifact(
             gradient_id,
-            peer_id=selected_peer,
+            peer_id=actual_peer,
             timeout_s=timeout_s,
         )
         validation = validate_gradient_artifact(
@@ -791,12 +791,13 @@ class LixyOrchestrator:
         )
         return GradientCandidate(
             artifact_id=gradient_id,
-            peer_id=selected_peer,
+            peer_id=actual_peer,
             path=path,
             receipt=result.receipt,
         ), {
             "loss": result.output.get("loss"),
             "gradient_norm": result.output.get("gradient_norm"),
+            "worker_node_id": actual_peer,
             "validation": validation,
         }
 
