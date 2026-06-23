@@ -39,7 +39,7 @@
 
 ## P1: reproducibility
 
-- [ ] Publish artifact hashes and a private-data-free release manifest.
+- [ ] Publish actual private-data-free artifact hashes and an official threshold-signed genesis manifest; the format/tooling is implemented.
 - [ ] Pin dependencies and publish container/build instructions.
 - [ ] Provide dataset provenance and exact evaluation commands.
 - [ ] Add paper-table regeneration and metric schema validation to CI.
@@ -62,11 +62,13 @@
 - [x] Add SHA-256 artifact manifests, resumable chunks, quotas, atomic commit, and complete verification.
 - [x] Add exact-model bounded gradient computation over safe NumPy token artifacts; never apply results automatically.
 - [x] Add three-to-31-peer exact-input gradient quorum and streaming coordinate-median candidate artifacts.
-- [ ] Add publisher-signed model/dataset release manifests, provenance, revocation, and rollback.
+- [x] Add threshold-signed model release manifests, local trust thresholds, pinned genesis, revocation, monotonic activation, and explicit rollback.
+- [ ] Add dataset provenance manifests, official key operations/recovery, and network release announcement/discovery.
 - [ ] Add content/provider discovery, replication, availability scoring, and garbage collection.
 - [ ] Add persistent queues, cancellation, retry/failure rescheduling, fairness, and per-identity quotas.
 - [ ] Move work into an OS/container sandbox with CPU/GPU/RAM/disk/network enforcement.
-- [ ] Make quorum membership Sybil-independent and persist signed result receipts; add replicated inference validation.
+- [x] Persist portable Ed25519 worker result receipts in gradient quorum provenance.
+- [ ] Make quorum membership Sybil-independent and add replicated inference validation.
 - [ ] Add poisoning/anomaly tests, gradient privacy defenses, and audited promotion rules before model updates.
 
 ## P2: Internet topology and operations

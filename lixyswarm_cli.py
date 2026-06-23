@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import re
 import signal
 import sys
 import time
@@ -12,10 +13,19 @@ from pathlib import Path
 
 from src.contribution import ContributionPolicy, ResourceGovernor
 from src.network import ArtifactStore, SwarmNetwork
+from src.network.lsp import LSPIdentity
+from src.release import ReleaseManifest, ReleaseRegistry, TrustPolicy
 
 
 def _home() -> Path:
     return Path(os.environ.get("LIXYSWARM_HOME", "~/.lixyswarm")).expanduser()
+
+
+def _version_tuple(value: str) -> tuple[int, int, int]:
+    match = re.match(r"^(\d+)\.(\d+)\.(\d+)", value)
+    if not match:
+        raise ValueError("invalid semantic version")
+    return tuple(int(item) for item in match.groups())
 
 
 def _policy_path(home: Path) -> Path:
@@ -73,7 +83,7 @@ def show_status(args) -> int:
 def start_node(args) -> int:
     home = Path(args.home).expanduser()
     home.mkdir(parents=True, exist_ok=True)
-    if args.checkpoint:
+    if args.checkpoint or args.release:
         return start_model_node(args, home)
     policy = ContributionPolicy.load(_policy_path(home))
     governor = ResourceGovernor(policy, storage_path=home)
@@ -138,13 +148,33 @@ def start_model_node(args, home: Path) -> int:
     """Start the complete model runtime and contribute registered compute."""
     from lixy_orchestrator import LixyOrchestrator, OrchestratorConfig
 
-    checkpoint = Path(args.checkpoint).expanduser()
+    release_id = ""
+    weights_only = False
+    if args.release:
+        policy = TrustPolicy.load(home / "release_trust.json")
+        store = ArtifactStore(home / "artifacts")
+        registry = ReleaseRegistry(home / "releases")
+        release = registry.verify_active(policy, store)
+        if release.model_format != "pytorch-weights-only-v1":
+            print("The active release model format is not supported by this runtime.", file=sys.stderr)
+            return 2
+        required = _version_tuple(release.minimum_client_version)
+        if (0, 3, 0) < required:
+            print("The active release requires a newer LixySwarm client.", file=sys.stderr)
+            return 2
+        checkpoint = store.object_path(release.model_artifact_id)
+        release_id = release.release_id
+        weights_only = True
+    else:
+        checkpoint = Path(args.checkpoint).expanduser()
     if not checkpoint.is_file():
         print(f"Checkpoint not found: {checkpoint}", file=sys.stderr)
         return 2
     os.environ["LIXYSWARM_HOME"] = str(home)
     orchestrator = LixyOrchestrator(OrchestratorConfig(
         checkpoint=str(checkpoint),
+        checkpoint_weights_only=weights_only,
+        release_id=release_id,
         device="cpu" if args.cpu else "cuda" if _cuda_available() else "cpu",
         network=True,
         gossip_port=args.port,
@@ -163,6 +193,7 @@ def start_model_node(args, home: Path) -> int:
         "protocol": "v3",
         "mode": orchestrator.governor.policy.mode if orchestrator.governor else "local",
         "model_artifact_id": orchestrator.model_artifact_id,
+        "release_id": release_id or None,
         "inference_handler": True,
         "training_handler": orchestrator.training_worker is not None,
     }, sort_keys=True))
@@ -215,6 +246,114 @@ def list_artifacts(args) -> int:
     return 0
 
 
+def release_keygen(args) -> int:
+    destination = Path(args.path).expanduser()
+    if destination.exists():
+        print("Refusing to overwrite an existing release key.", file=sys.stderr)
+        return 2
+    identity = LSPIdentity.generate()
+    identity.save(str(destination))
+    print(json.dumps({"signer_id": identity.node_id_hex}, sort_keys=True))
+    return 0
+
+
+def create_release(args) -> int:
+    home = Path(args.home).expanduser()
+    store = ArtifactStore(home / "artifacts")
+    if not store.has(args.model_id):
+        print("Model artifact is not present in the local store.", file=sys.stderr)
+        return 2
+    manifest = ReleaseManifest.create(
+        model_artifact_id=args.model_id,
+        model_format=args.model_format,
+        sequence=args.sequence,
+        previous_release_id=args.previous,
+        config_artifact_id=args.config_id,
+        tokenizer_artifact_id=args.tokenizer_id,
+        minimum_client_version=args.minimum_client_version,
+    )
+    manifest.save(args.output)
+    print(json.dumps({"release_id": manifest.release_id}, sort_keys=True))
+    return 0
+
+
+def sign_release(args) -> int:
+    identity = LSPIdentity.load(str(Path(args.key).expanduser()))
+    if identity is None:
+        print("Release signing key was not found.", file=sys.stderr)
+        return 2
+    manifest = ReleaseManifest.load(args.manifest).sign(identity)
+    manifest.save(args.output or args.manifest)
+    print(json.dumps({
+        "release_id": manifest.release_id,
+        "signer_id": identity.node_id_hex,
+        "signature_count": len(manifest.signatures),
+    }, sort_keys=True))
+    return 0
+
+
+def initialize_release_trust(args) -> int:
+    home = Path(args.home).expanduser()
+    policy = TrustPolicy(
+        threshold=args.threshold,
+        trusted_signers=tuple(sorted(set(args.signer))),
+        pinned_genesis_release_id=args.pinned_genesis,
+    )
+    policy.save(home / "release_trust.json")
+    print(json.dumps({
+        "threshold": policy.threshold,
+        "trusted_signer_count": len(policy.trusted_signers),
+        "genesis_pinned": bool(policy.pinned_genesis_release_id),
+    }, sort_keys=True))
+    return 0
+
+
+def accept_release(args) -> int:
+    home = Path(args.home).expanduser()
+    policy = TrustPolicy.load(home / "release_trust.json")
+    store = ArtifactStore(home / "artifacts")
+    registry = ReleaseRegistry(home / "releases")
+    manifest = ReleaseManifest.load(args.manifest)
+    registry.accept(manifest, policy, store)
+    if args.activate:
+        registry.activate(manifest.release_id, policy, store)
+    print(json.dumps({
+        "release_id": manifest.release_id,
+        "accepted": True,
+        "activated": bool(args.activate),
+    }, sort_keys=True))
+    return 0
+
+
+def rollback_release(args) -> int:
+    home = Path(args.home).expanduser()
+    policy = TrustPolicy.load(home / "release_trust.json")
+    store = ArtifactStore(home / "artifacts")
+    registry = ReleaseRegistry(home / "releases")
+    manifest = registry.rollback(
+        args.release_id,
+        policy,
+        store,
+        explicit_confirmation=args.yes,
+    )
+    print(json.dumps({
+        "release_id": manifest.release_id,
+        "rollback": True,
+    }, sort_keys=True))
+    return 0
+
+
+def release_status(args) -> int:
+    home = Path(args.home).expanduser()
+    active = ReleaseRegistry(home / "releases").active()
+    print(json.dumps({
+        "active_release_id": active.release_id if active else None,
+        "active_sequence": active.sequence if active else None,
+        "trust_configured": (home / "release_trust.json").is_file(),
+    }, indent=2, sort_keys=True))
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="lixyswarm")
     parser.add_argument("--home", default=str(_home()))
@@ -233,9 +372,15 @@ def build_parser() -> argparse.ArgumentParser:
     start_parser.add_argument("--outbound-peers", type=int, default=8)
     start_parser.add_argument("--allow-private-peers", action="store_true")
     start_parser.add_argument("--status-interval", type=float, default=30.0)
-    start_parser.add_argument(
+    model_source = start_parser.add_mutually_exclusive_group()
+    model_source.add_argument(
         "--checkpoint",
         help="load a trusted local checkpoint and contribute inference/training",
+    )
+    model_source.add_argument(
+        "--release",
+        action="store_true",
+        help="load the locally active threshold-signed release",
     )
     start_parser.add_argument("--cpu", action="store_true")
     start_parser.set_defaults(handler=start_node)
@@ -261,6 +406,64 @@ def build_parser() -> argparse.ArgumentParser:
         "artifact-list", help="list local artifact manifests without source paths"
     )
     artifact_list.set_defaults(handler=list_artifacts)
+
+    keygen = subparsers.add_parser(
+        "release-keygen", help="create a separate Ed25519 release signing key"
+    )
+    keygen.add_argument("path")
+    keygen.set_defaults(handler=release_keygen)
+
+    release_create = subparsers.add_parser(
+        "release-create", help="create an unsigned model release manifest"
+    )
+    release_create.add_argument("--model-id", required=True)
+    release_create.add_argument(
+        "--model-format",
+        choices=["pytorch-weights-only-v1", "safetensors-v1"],
+        required=True,
+    )
+    release_create.add_argument("--sequence", type=int, required=True)
+    release_create.add_argument("--previous", default="")
+    release_create.add_argument("--config-id", default="")
+    release_create.add_argument("--tokenizer-id", default="")
+    release_create.add_argument("--minimum-client-version", default="0.3.0")
+    release_create.add_argument("--output", required=True)
+    release_create.set_defaults(handler=create_release)
+
+    release_sign = subparsers.add_parser(
+        "release-sign", help="add one release signature"
+    )
+    release_sign.add_argument("manifest")
+    release_sign.add_argument("--key", required=True)
+    release_sign.add_argument("--output")
+    release_sign.set_defaults(handler=sign_release)
+
+    trust = subparsers.add_parser(
+        "trust-init", help="configure local threshold release trust"
+    )
+    trust.add_argument("--signer", action="append", required=True)
+    trust.add_argument("--threshold", type=int, required=True)
+    trust.add_argument("--pinned-genesis", default="")
+    trust.set_defaults(handler=initialize_release_trust)
+
+    release_accept = subparsers.add_parser(
+        "release-accept", help="verify and locally accept a signed release"
+    )
+    release_accept.add_argument("manifest")
+    release_accept.add_argument("--activate", action="store_true")
+    release_accept.set_defaults(handler=accept_release)
+
+    release_rollback = subparsers.add_parser(
+        "release-rollback", help="explicitly roll back to an accepted release"
+    )
+    release_rollback.add_argument("release_id")
+    release_rollback.add_argument("--yes", action="store_true")
+    release_rollback.set_defaults(handler=rollback_release)
+
+    release_status_parser = subparsers.add_parser(
+        "release-status", help="show local active release state"
+    )
+    release_status_parser.set_defaults(handler=release_status)
     return parser
 
 

@@ -37,6 +37,6 @@ The compute layer distributes complete inference requests and bounded gradient j
 - In-session key rotation and independent review of the implemented X25519/HKDF/ChaCha20-Poly1305 construction.
 - Seed domains and independent operators.
 - Network reputation and eclipse resistance.
-- Publisher-signed model registry/release manifests and rollback governance.
+- Network announcement/discovery for the implemented threshold-signed local release registry, plus official trust-root/genesis operations.
 - Process/container sandboxing beyond the implemented consent governor and allowlisted scheduler.
-- Sybil-independent quorum selection, signed result receipts, replicated inference verification, and governed promotion of robust gradient aggregates.
+- Sybil-independent quorum selection, replicated inference verification, and network governance for promotion of receipt-backed robust gradient aggregates.

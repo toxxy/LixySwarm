@@ -8,6 +8,7 @@ commands. ResourceGovernor consent and leases gate every execution.
 from __future__ import annotations
 
 import hashlib
+import base64
 import json
 import os
 import re
@@ -15,7 +16,7 @@ import threading
 import time
 from collections import OrderedDict
 from concurrent.futures import ThreadPoolExecutor
-from dataclasses import asdict, dataclass, field
+from dataclasses import asdict, dataclass, field, replace
 from typing import Callable, Optional
 
 from src.contribution import ResourceGovernor, ResourceRequirements
@@ -159,20 +160,130 @@ class WorkUnit:
 
 
 @dataclass(frozen=True)
+class ResultReceipt:
+    version: int
+    job_id: str
+    worker_node_id: str
+    requester_node_id: str
+    result_digest: str
+    finished_at: float
+    signature: str
+
+    @staticmethod
+    def _body(result: "WorkResult", worker_node_id: str, requester_node_id: str) -> dict:
+        result_body = {
+            "job_id": result.job_id,
+            "status": result.status,
+            "output": result.output,
+            "error": result.error,
+            "finished_at": result.finished_at,
+        }
+        return {
+            "version": 1,
+            "job_id": result.job_id,
+            "worker_node_id": worker_node_id,
+            "requester_node_id": requester_node_id,
+            "result_digest": hashlib.sha256(_canonical_json(result_body)).hexdigest(),
+            "finished_at": result.finished_at,
+        }
+
+    @classmethod
+    def create(cls, result: "WorkResult", identity, requester_node_id: str):
+        body = cls._body(
+            result, identity.node_id_hex, requester_node_id
+        )
+        signature = identity.sign(
+            b"LixySwarm work result receipt v1\x00" + _canonical_json(body)
+        )
+        return cls(
+            **body,
+            signature=base64.b64encode(signature).decode("ascii"),
+        )
+
+    @classmethod
+    def from_dict(cls, value: dict) -> "ResultReceipt":
+        if not isinstance(value, dict) or set(value) != {
+            "version", "job_id", "worker_node_id", "requester_node_id",
+            "result_digest", "finished_at", "signature",
+        }:
+            raise WorkProtocolError("Result receipt fields do not match the schema")
+        try:
+            receipt = cls(**value)
+        except TypeError as exc:
+            raise WorkProtocolError("Invalid result receipt") from exc
+        for identifier in (
+            receipt.job_id, receipt.worker_node_id,
+            receipt.requester_node_id, receipt.result_digest,
+        ):
+            if not _HEX_64_RE.fullmatch(str(identifier)):
+                raise WorkProtocolError("Invalid result receipt identifier")
+        if receipt.version != 1:
+            raise WorkProtocolError("Unsupported result receipt version")
+        try:
+            signature = base64.b64decode(receipt.signature, validate=True)
+        except (TypeError, ValueError) as exc:
+            raise WorkProtocolError("Invalid result receipt signature encoding") from exc
+        if len(signature) != 64:
+            raise WorkProtocolError("Invalid result receipt signature length")
+        return receipt
+
+    def verify(
+        self,
+        result: "WorkResult",
+        *,
+        expected_worker_id: str,
+        expected_requester_id: str,
+    ) -> bool:
+        if (
+            self.worker_node_id != expected_worker_id
+            or self.requester_node_id != expected_requester_id
+        ):
+            return False
+        expected = self._body(result, expected_worker_id, expected_requester_id)
+        body = {
+            key: getattr(self, key) for key in expected
+        }
+        if body != expected:
+            return False
+        try:
+            from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PublicKey
+            from cryptography.exceptions import InvalidSignature
+            Ed25519PublicKey.from_public_bytes(
+                bytes.fromhex(expected_worker_id)
+            ).verify(
+                base64.b64decode(self.signature, validate=True),
+                b"LixySwarm work result receipt v1\x00" + _canonical_json(body),
+            )
+            return True
+        except (ValueError, InvalidSignature):
+            return False
+
+    def to_dict(self) -> dict:
+        return asdict(self)
+
+
+@dataclass(frozen=True)
 class WorkResult:
     job_id: str
     status: str
     output: dict = field(default_factory=dict)
     error: str = ""
     finished_at: float = field(default_factory=time.time)
+    receipt: dict = field(default_factory=dict)
 
     def validate(self):
         if not _HEX_64_RE.fullmatch(self.job_id):
             raise WorkProtocolError("Invalid result job ID")
         if self.status not in {"ok", "rejected", "error"}:
             raise WorkProtocolError("Invalid work result status")
-        if not isinstance(self.output, dict) or not isinstance(self.error, str):
+        if (
+            not isinstance(self.output, dict)
+            or not isinstance(self.error, str)
+            or not isinstance(self.receipt, dict)
+        ):
             raise WorkProtocolError("Invalid work result body")
+        if self.receipt:
+            ResultReceipt.from_dict(self.receipt)
         _canonical_json(asdict(self))
 
     def to_dict(self) -> dict:
@@ -370,9 +481,9 @@ class WorkCoordinator:
                 raise WorkProtocolError("Work origin does not match the signed peer")
         except WorkProtocolError as exc:
             if _HEX_64_RE.fullmatch(job_id):
-                self.node.send_work_result(from_node_id, WorkResult(
+                self._send_result(from_node_id, WorkResult(
                     job_id=job_id, status="rejected", error=str(exc)[:160]
-                ).to_dict())
+                ))
             return
 
         with self._lock:
@@ -384,7 +495,7 @@ class WorkCoordinator:
                 result = WorkResult(
                     job_id=work.job_id, status="rejected", error="already_running"
                 )
-                self.node.send_work_result(from_node_id, result.to_dict())
+                self._send_result(from_node_id, result)
                 return
             self._inflight.add(work.job_id)
 
@@ -418,6 +529,7 @@ class WorkCoordinator:
         self._finish(work.job_id, from_node_id, result)
 
     def _finish(self, job_id: str, peer_id: str, result: WorkResult):
+        result = self._signed_result(result, peer_id)
         with self._lock:
             self._inflight.discard(job_id)
             self._completed[job_id] = result
@@ -429,10 +541,33 @@ class WorkCoordinator:
         except Exception:
             pass
 
+    def _signed_result(self, result: WorkResult, requester_id: str) -> WorkResult:
+        receipt = ResultReceipt.create(
+            result, self.node.identity, requester_id
+        )
+        return replace(result, receipt=receipt.to_dict())
+
+    def _send_result(self, peer_id: str, result: WorkResult):
+        signed = self._signed_result(result, peer_id)
+        try:
+            self.node.send_work_result(peer_id, signed.to_dict())
+        except Exception:
+            pass
+
     def _on_result(self, value: dict, from_node_id: str):
         try:
             result = WorkResult.from_dict(value)
         except WorkProtocolError:
+            return
+        try:
+            receipt = ResultReceipt.from_dict(result.receipt)
+        except WorkProtocolError:
+            return
+        if not receipt.verify(
+            result,
+            expected_worker_id=from_node_id,
+            expected_requester_id=self.node.identity.node_id_hex,
+        ):
             return
         with self._lock:
             pending = self._pending.get(result.job_id)

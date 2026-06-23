@@ -105,6 +105,10 @@ class ArtifactStore:
             raise ArtifactError("invalid artifact ID")
         return self.objects / artifact_id[:2] / artifact_id[2:]
 
+    def object_path(self, artifact_id: str) -> Path:
+        """Return the validated local content-addressed object path."""
+        return self._object_path(artifact_id)
+
     def _manifest_path(self, artifact_id: str) -> Path:
         if not _HEX_64_RE.fullmatch(str(artifact_id)):
             raise ArtifactError("invalid artifact ID")

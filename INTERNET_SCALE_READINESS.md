@@ -24,7 +24,8 @@ LSP v3 provides the final topology foundation and an initial compute/data plane.
 - SHA-256 artifact manifests, resumable chunk transfer, per-chunk validation, atomic commit, and full-file verification.
 - Exact-model bounded gradient jobs over safe NumPy token artifacts; gradients are returned but never applied.
 - Three-to-31-identity gradient quorums with exact metadata/tensor validation, bounded ZIP inspection, and streaming coordinate-median output.
-- A complete local run of 161 tests on the assessment date.
+- Portable worker result receipts and a threshold-signed local model release registry with pinned genesis, revocation, monotonic activation, and explicit rollback.
+- A complete local run of 166 tests on the assessment date.
 
 ## Release blockers
 
@@ -71,10 +72,10 @@ LSP v3 provides the final topology foundation and an initial compute/data plane.
 
 ### Model and training distribution
 
-- Current artifact hashes prove bytes, not publisher authority. Add signed release manifests, model/dataset provenance, version promotion, revocation, and rollback. The public Git repository does not ship checkpoints.
+- Threshold signatures now prove authority according to each node's local trust policy. Publish independent official signer keys and a pinned genesis, add network manifest/artifact discovery, dataset provenance, key-rotation/recovery procedures, and collective promotion rules. The public Git repository does not ship checkpoints.
 - Current inference is replicated whole-request execution. Benchmark it, then add redundant candidate verification/expert routing only where measurements justify it.
 - Add scheduler fairness, hardware attestation/capability validation, process/container job isolation, quotas, cancellation, cost limits, and failure rescheduling.
-- Make quorum membership Sybil-independent, persist signed result receipts, quantify non-determinism, add poisoning/anomaly tests, and define an audited promotion threshold. Coordinate median exists, but cheap identities invalidate its honest-majority assumption on an open network.
+- Make quorum membership Sybil-independent, quantify non-determinism, add poisoning/anomaly tests, and connect receipt-backed aggregates to an audited threshold release proposal. Receipts exist, but cheap identities invalidate the median's honest-majority assumption on an open network.
 - Address gradient inversion and endpoint training-data leakage; encrypted transport does not make untrusted workers or requesters trustworthy.
 
 ### Operations

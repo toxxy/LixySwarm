@@ -95,6 +95,8 @@ HELLO may declare bounded scheduling metadata:
 
 `WorkUnit` hashes canonical JSON containing origin, operation, kind, resource requirements, payload, deadline, and nonce. The signed session identity must equal the claimed origin. Workers execute only locally registered handlers; peer-supplied code, scripts, commands, shells, and executables are forbidden. Completed IDs are cached for idempotency.
 
+Every `WorkResult` contains a second portable Ed25519 receipt over the job ID, worker, requester, output/error digest, and completion time. The requester verifies this receipt against the transport peer before accepting the result. Gradient quorum artifacts retain the receipts as provenance; a receipt proves what a pseudonymous identity asserted, not that the computation was honest or that identities are independent.
+
 Current operations are isolated inference, artifact describe/read-chunk, and gradient computation. Artifacts use full-file SHA-256 identities, bounded manifests, 96 KiB raw chunks, per-chunk SHA-256, atomic commit, and final full-file verification. Gradient results are candidates and are never applied by the protocol.
 
 ## Compatibility
@@ -108,5 +110,5 @@ LSP v2 remains available only through `SwarmNetwork(..., protocol="v2")`. LSP v3
 - Stronger autonomous-system/network diversity, feeler connections, and adversarial eclipse tests.
 - Capability/result reputation, hardware verification, and Sybil resistance beyond local misbehavior bans.
 - DHT discovery after persistent peer exchange is stable.
-- Publisher-signed model release manifests, replicated result verification, robust gradient aggregation, fair scheduling, cancellation, and job recovery.
+- Official threshold trust roots/genesis artifacts, network release announcement/discovery, replicated inference verification, fair scheduling, cancellation, and job recovery.
 - Fuzzing, load tests, mixed-version upgrades, and an external security audit.

@@ -117,6 +117,8 @@ def _find_best_checkpoint() -> str:
 @dataclass
 class OrchestratorConfig:
     checkpoint: str = "auto"       # "auto" = detectar mejor checkpoint
+    checkpoint_weights_only: bool = False
+    release_id: str = ""
     device: str = "cuda" if torch.cuda.is_available() else "cpu"
     temperature: float = 0.7
     top_k: int = 50
@@ -171,7 +173,11 @@ class LixyOrchestrator:
         print(f"🐜🐘🐬 LixyOrchestrator arrancando...")
         print(f"  Checkpoint: {ckpt_path.name}")
 
-        ckpt = torch.load(ckpt_path, map_location="cpu", weights_only=False)
+        ckpt = torch.load(
+            ckpt_path,
+            map_location="cpu",
+            weights_only=self.cfg.checkpoint_weights_only,
+        )
         ac = ckpt.get("agent_config", {})
         self.agent_cfg = AgentConfig(**{k: v for k, v in ac.items() if hasattr(AgentConfig, k)}) if ac else AgentConfig()
         self.agent_cfg.dropout = 0.0
@@ -270,6 +276,8 @@ class LixyOrchestrator:
             )
             if self.model_artifact_id:
                 contribution_profile["models"] = [self.model_artifact_id]
+            if self.cfg.release_id:
+                contribution_profile["releases"] = [self.cfg.release_id]
             self.net = SwarmNetwork.create(
                 swarm=self.swarm,
                 mode="lan" if self.cfg.allow_private_peers else "auto",
@@ -652,6 +660,7 @@ class LixyOrchestrator:
             artifact_id=gradient_id,
             peer_id=selected_peer,
             path=path,
+            receipt=result.receipt,
         ), {
             "loss": result.output.get("loss"),
             "gradient_norm": result.output.get("gradient_norm"),

@@ -1,9 +1,16 @@
 import pytest
+from dataclasses import replace
 
 from src.contribution import ContributionPolicy, ResourceGovernor, ResourceRequirements
 from src.network.lsp import LSPIdentity
 from src.network.lsp_v3 import LSPNodeV3
-from src.network.work_protocol import WorkCoordinator, WorkProtocolError, WorkUnit
+from src.network.work_protocol import (
+    ResultReceipt,
+    WorkCoordinator,
+    WorkProtocolError,
+    WorkResult,
+    WorkUnit,
+)
 from src.swarm.node_manager import HardwareProfile
 
 
@@ -64,6 +71,31 @@ def test_work_unit_is_content_addressed_and_rejects_code():
         )
 
 
+def test_result_receipt_binds_worker_requester_and_output():
+    worker = LSPIdentity.generate()
+    requester_id = "cd" * 32
+    result = WorkResult(
+        job_id="ab" * 32,
+        status="ok",
+        output={"text": "verified"},
+    )
+    receipt = ResultReceipt.create(result, worker, requester_id)
+    signed = replace(result, receipt=receipt.to_dict())
+    assert ResultReceipt.from_dict(signed.receipt).verify(
+        signed,
+        expected_worker_id=worker.node_id_hex,
+        expected_requester_id=requester_id,
+    )
+    assert not receipt.verify(
+        replace(result, output={"text": "tampered"}),
+        expected_worker_id=worker.node_id_hex,
+        expected_requester_id=requester_id,
+    )
+    assert not receipt.verify(
+        result,
+        expected_worker_id=worker.node_id_hex,
+        expected_requester_id="ef" * 32,
+    )
 def test_distributed_inference_executes_allowlisted_handler(tmp_path):
     requester_governor = _governor(tmp_path / "requester", "relay")
     worker_governor = _governor(tmp_path / "worker", "balanced")
@@ -88,6 +120,7 @@ def test_distributed_inference_executes_allowlisted_handler(tmp_path):
         )
         assert result.status == "ok"
         assert result.output == {"text": "DISTRIBUTED"}
+        assert result.receipt
         assert worker_governor.status()["active_cpu_jobs"] == 0
     finally:
         requester_coordinator.close()

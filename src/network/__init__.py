@@ -5,7 +5,7 @@ from .lsp_v2 import FeromonMergeBuffer, FeromonV2Payload, LSPNodeV2, PacketType
 from .lsp_v3 import LSPNodeV3, ReplayGuard, V3Packet
 from .node import NodeIdentity, Peer, PeerTable
 from .peer_manager import AddressBook, PeerManager, PeerReputation, network_group
-from .work_protocol import WorkCoordinator, WorkResult, WorkUnit
+from .work_protocol import ResultReceipt, WorkCoordinator, WorkResult, WorkUnit
 from .artifact_store import (
     ArtifactError,
     ArtifactManifest,
@@ -41,6 +41,7 @@ __all__ = [
     "network_group",
     "WorkCoordinator",
     "WorkResult",
+    "ResultReceipt",
     "WorkUnit",
     "ArtifactError",
     "ArtifactManifest",

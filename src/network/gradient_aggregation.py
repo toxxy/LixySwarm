@@ -24,6 +24,7 @@ class GradientCandidate:
     artifact_id: str
     peer_id: str
     path: str | Path
+    receipt: dict | None = None
 
 
 class GradientAggregator:
@@ -82,7 +83,11 @@ class GradientAggregator:
             "token_count": int(token_count),
             "quorum": len(candidates),
             "candidates": [
-                {"artifact_id": item.artifact_id, "peer_id": item.peer_id}
+                {
+                    "artifact_id": item.artifact_id,
+                    "peer_id": item.peer_id,
+                    "receipt": item.receipt,
+                }
                 for item in sorted(candidates, key=lambda item: item.peer_id)
             ],
             "applied": False,

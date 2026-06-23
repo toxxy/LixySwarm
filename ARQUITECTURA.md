@@ -81,6 +81,8 @@ Work units are canonical JSON identified by SHA-256 and tied to the signed origi
 
 `ArtifactStore` addresses objects by SHA-256, omits source filenames and paths from manifests, applies storage quotas, transfers 96 KiB chunks, verifies each chunk, and verifies the complete object before commit.
 
+`ReleaseManifest` separates model governance from peer transport. Nodes configure their own Ed25519 signer set and threshold, may pin a genesis release, reject revoked manifests, activate only a monotonic predecessor chain, and require explicit confirmation for rollback. The managed runtime uses weights-only loading for this path. No official trust roots or genesis are embedded yet.
+
 LSP v2, legacy JSON/HMAC, UDP, and mDNS modules remain for explicit compatibility only.
 
 ## Training and evaluation
