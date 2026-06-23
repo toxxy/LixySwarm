@@ -67,7 +67,8 @@
 - [ ] Add dataset provenance manifests, official key operations/recovery, and multi-provider/DHT content lookup.
 - [ ] Add content/provider discovery, replication, availability scoring, and garbage collection.
 - [x] Bound the in-memory inbound work queue and add per-identity concurrent/rate quotas with signed overload rejection.
-- [ ] Add cancellation, retry/failure rescheduling, durable queues where required, and full fair-share accounting.
+- [x] Add authenticated requester cancellation, deadline-aware handler context, and cooperative polling in built-in inference/training.
+- [ ] Add retry/failure rescheduling, killable process isolation, durable queues where required, and full fair-share accounting.
 - [ ] Move work into an OS/container sandbox with CPU/GPU/RAM/disk/network enforcement.
 - [x] Persist portable Ed25519 worker result receipts in gradient quorum provenance.
 - [x] Add exact-model deterministic replicated inference, coarse network-group selection, strict output majority, and supporting receipts.

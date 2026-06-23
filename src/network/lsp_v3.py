@@ -66,6 +66,7 @@ class PacketType:
     RELEASE_ANNOUNCE = 0x09
     USEFUL_WORK_CREDIT = 0x0A
     USEFUL_WORK_PROOFS = 0x0B
+    WORK_CANCEL = 0x0C
 
 
 _VALID_PACKET_TYPES = {
@@ -80,6 +81,7 @@ _VALID_PACKET_TYPES = {
     PacketType.RELEASE_ANNOUNCE,
     PacketType.USEFUL_WORK_CREDIT,
     PacketType.USEFUL_WORK_PROOFS,
+    PacketType.WORK_CANCEL,
 }
 
 
@@ -366,6 +368,7 @@ class LSPNodeV3:
         self._global_delta_callbacks: list[Callable] = []
         self._work_offer_callbacks: list[Callable] = []
         self._work_result_callbacks: list[Callable] = []
+        self._work_cancel_callbacks: list[Callable] = []
         self._release_callbacks: list[Callable] = []
         self._credit_callbacks: list[Callable] = []
         self._useful_work_proof_callbacks: list[Callable] = []
@@ -445,6 +448,11 @@ class LSPNodeV3:
 
     def send_work_result(self, node_id: str, result: dict) -> bool:
         return self._send_json_to_peer(PacketType.WORK_RESULT, node_id, result)
+
+    def send_work_cancel(self, node_id: str, cancellation: dict) -> bool:
+        return self._send_json_to_peer(
+            PacketType.WORK_CANCEL, node_id, cancellation
+        )
 
     def announce_release(self, manifest: dict) -> int:
         payload = json.dumps(
@@ -561,6 +569,10 @@ class LSPNodeV3:
 
     def on_work_result_received(self, callback: Callable):
         self._work_result_callbacks.append(callback)
+        return callback
+
+    def on_work_cancel_received(self, callback: Callable):
+        self._work_cancel_callbacks.append(callback)
         return callback
 
     def on_release_announced(self, callback: Callable):
@@ -918,6 +930,11 @@ class LSPNodeV3:
             result = self._parse_json(packet.payload, max_size=256 * 1024)
             for callback in self._work_result_callbacks:
                 callback(result, session.node_id)
+            return
+        if packet.packet_type == PacketType.WORK_CANCEL:
+            cancellation = self._parse_json(packet.payload, max_size=4 * 1024)
+            for callback in self._work_cancel_callbacks:
+                callback(cancellation, session.node_id)
             return
         if packet.packet_type == PacketType.RELEASE_ANNOUNCE:
             manifest = self._parse_json(packet.payload, max_size=64 * 1024)

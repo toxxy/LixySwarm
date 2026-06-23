@@ -142,6 +142,7 @@ class TrainingWorker:
         coordinator.register_handler(TRAINING_OPERATION, "training", self._handle)
 
     def _handle(self, payload: dict, work) -> dict:
+        work.raise_if_cancelled()
         request = self._validate(payload)
         if request["model_artifact_id"] != self.model_artifact_id:
             raise TrainingWorkError("worker model version does not match")
@@ -160,11 +161,13 @@ class TrainingWorker:
             raise TrainingWorkError("artifact quota cannot hold the gradient")
         dataset_id = request["dataset_artifact_id"]
         if not self.store.has(dataset_id):
+            work.raise_if_cancelled()
             self.artifact_service.fetch(
                 dataset_id,
                 peer_id=work.origin_node_id,
                 timeout_s=max(1.0, min(300.0, work.deadline - time.time())),
             )
+            work.raise_if_cancelled()
         dataset_manifest = self.store.manifest(dataset_id)
         if (
             dataset_manifest.kind != "dataset"
@@ -190,7 +193,10 @@ class TrainingWorker:
         x = torch.from_numpy(batch[:-1].copy()).long().unsqueeze(0).to(self.device)
         y = torch.from_numpy(batch[1:].copy()).long().unsqueeze(0).to(self.device)
         with self.execution_lock:
-            result = self._compute_gradient(x, y, dataset_id, start, count)
+            work.raise_if_cancelled()
+            result = self._compute_gradient(
+                x, y, dataset_id, start, count, work
+            )
         return result
 
     def _compute_gradient(
@@ -200,6 +206,7 @@ class TrainingWorker:
         dataset_id: str,
         start: int,
         count: int,
+        work,
     ) -> dict:
         was_training = self.model.training
         temporary = self.store.incoming / (
@@ -208,6 +215,7 @@ class TrainingWorker:
         self.model.train()
         self.model.zero_grad(set_to_none=True)
         try:
+            work.raise_if_cancelled()
             _, loss, _ = self.model(
                 x,
                 targets=y,
@@ -218,10 +226,13 @@ class TrainingWorker:
             )
             if not isinstance(loss, torch.Tensor) or not torch.isfinite(loss):
                 raise TrainingWorkError("model returned a non-finite loss")
+            work.raise_if_cancelled()
             loss.backward()
+            work.raise_if_cancelled()
             gradients = {}
             squared_norm = 0.0
             for name, parameter in self.model.named_parameters():
+                work.raise_if_cancelled()
                 if parameter.grad is None:
                     continue
                 gradient_tensor = parameter.grad.detach().float()
@@ -242,10 +253,12 @@ class TrainingWorker:
                 "token_count": count,
             }, sort_keys=True, separators=(",", ":")).encode("utf-8")
             gradients["__lixy_metadata__"] = np.frombuffer(metadata, dtype=np.uint8)
+            work.raise_if_cancelled()
             with temporary.open("xb") as destination:
                 np.savez_compressed(destination, **gradients)
                 destination.flush()
                 os.fsync(destination.fileno())
+            work.raise_if_cancelled()
             manifest = self.store.commit_generated(
                 temporary,
                 kind="gradient",

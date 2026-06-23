@@ -387,6 +387,7 @@ class LixyOrchestrator:
                 update_runtime_state=False,
                 use_memory=False,
                 greedy=request["deterministic"],
+                cancel_check=getattr(_work, "cancelled", None),
             )
         if len(response.encode("utf-8")) > MAX_REMOTE_OUTPUT_BYTES:
             raise ValueError("generated output exceeds 128 KiB")

@@ -49,13 +49,15 @@ When enabled, `SwarmNetwork` defaults to persistent LSP v3 sessions, supplies bl
 
 Remote inference uses a fresh non-persistent `RuntimeSession`, disables personal Matriarca retrieval and importance changes, records no history, does not read/update Dolphin sleep/acoustic state, and serializes model access with local inference. Distributed training requires an exact checkpoint file hash, a content-addressed `application/x-npy` token dataset, bounded token range, and declared RAM/disk sufficient for the estimated gradient. `compute_gradient_quorum()` requests matching distinct peers in parallel and emits a streaming coordinate-median artifact; every candidate and aggregate remains unapplied. Once aggregation succeeds, each included worker receives a locally persisted, duplicate-resistant useful-work credit signed by both the worker (result receipt) and requester (aggregation attestation). Direct peers present and verify a bounded credit set; scheduling prefers contributions previously accepted by the current requester, then capped issuer-diverse evidence, with one identity-aged newcomer exploration opportunity per five selections.
 
+Requester timeouts and explicit caller cancellation emit authenticated cancellation messages. Remote inference polls at token/agent boundaries; gradient work polls around fetch, forward, backward, parameter extraction, and artifact commit. The worker returns a signed `work_cancelled` or `work_deadline_exceeded` result when it reaches a cooperative boundary.
+
 `generate_distributed_verified()` sends a deterministic greedy request to an odd quorum of three-to-nine peers advertising the exact checkpoint hash. Candidate selection prefers different coarse network groups; acceptance requires a strict byte-identical text majority, and the returned record includes supporting Ed25519 receipts. This is replication, not proof against Sybil-controlled workers.
 
 `lixyswarm start --release` loads only the locally active manifest after rechecking its threshold signatures, trust policy, content-addressed artifacts, chain state, and `pytorch-weights-only-v1` format. Direct `--checkpoint` remains an explicit operator-trusted path and does not claim release governance.
 
 ## Known runtime gaps
 
-- The inbound executor queue is bounded with per-identity concurrency/rate quotas, but it is not durable; cancellation, full fair-share accounting beyond newcomer exploration, and process-level multi-tenant isolation remain missing.
+- The inbound executor queue is bounded with per-identity concurrency/rate quotas, but it is not durable. Cooperative cancellation exists; full fair-share accounting, forced termination of non-cooperative kernels/handlers, and process-level multi-tenant isolation remain missing.
 - Model loading is process-global and heavyweight.
 - API chat history is in memory and unauthenticated.
 - Dynamic topology changes are not integrated safely with a live optimizer.

@@ -39,6 +39,10 @@ class WorkProtocolError(ValueError):
     pass
 
 
+class WorkCancelledError(RuntimeError):
+    pass
+
+
 def _canonical_json(value: dict) -> bytes:
     try:
         encoded = json.dumps(
@@ -314,6 +318,34 @@ class _PendingWork:
     result: Optional[WorkResult] = None
 
 
+class WorkExecution(WorkUnit):
+    """WorkUnit-compatible view exposing cooperative cancellation to handlers."""
+
+    def __init__(self, work: WorkUnit, cancel_event: threading.Event):
+        for name in WorkUnit.__dataclass_fields__:
+            object.__setattr__(self, name, getattr(work, name))
+        object.__setattr__(self, "work", work)
+        object.__setattr__(self, "cancel_event", cancel_event)
+
+    def cancellation_reason(self) -> str:
+        if self.cancel_event.is_set():
+            return "work_cancelled"
+        if time.time() >= self.deadline:
+            return "work_deadline_exceeded"
+        return ""
+
+    def cancelled(self) -> bool:
+        return bool(self.cancellation_reason())
+
+    def raise_if_cancelled(self):
+        reason = self.cancellation_reason()
+        if reason:
+            raise WorkCancelledError(reason)
+
+    def remaining_s(self) -> float:
+        return max(0.0, self.deadline - time.time())
+
+
 class WorkCoordinator:
     """Submit and execute allowlisted inference/training operations."""
 
@@ -353,6 +385,8 @@ class WorkCoordinator:
         )
         self._peer_reserved_offers: dict[str, int] = {}
         self._peer_offer_times: dict[str, deque] = {}
+        self._job_cancel_events: dict[tuple[str, str], threading.Event] = {}
+        self._job_reservations: dict[tuple[str, str], int] = {}
         self.scheduler_history = SchedulerHistory(
             scheduler_state_path,
             exploration_interval=exploration_interval,
@@ -364,6 +398,9 @@ class WorkCoordinator:
         )
         node.on_work_offer_received(self._on_offer)
         node.on_work_result_received(self._on_result)
+        cancel_callback = getattr(node, "on_work_cancel_received", None)
+        if callable(cancel_callback):
+            cancel_callback(self._on_cancel)
 
     def register_handler(self, operation: str, kind: str, handler: Callable):
         if not _OPERATION_RE.fullmatch(operation):
@@ -382,6 +419,7 @@ class WorkCoordinator:
         *,
         peer_id: Optional[str] = None,
         timeout_s: float = 60.0,
+        cancel_event: Optional[threading.Event] = None,
     ) -> WorkResult:
         if not isinstance(payload, dict):
             raise WorkProtocolError("Work payload must be an object")
@@ -407,17 +445,51 @@ class WorkCoordinator:
             with self._lock:
                 self._pending.pop(work.job_id, None)
             raise ConnectionError("Failed to send work offer")
-        if not pending.event.wait(timeout=max(1.0, timeout_s)):
-            with self._lock:
-                self._pending.pop(work.job_id, None)
-            return WorkResult(job_id=work.job_id, status="error", error="work_timeout")
+        wait_deadline = time.monotonic() + max(1.0, float(timeout_s))
+        while not pending.event.is_set():
+            remaining = wait_deadline - time.monotonic()
+            if remaining <= 0:
+                with self._lock:
+                    self._pending.pop(work.job_id, None)
+                self._request_cancellation(
+                    selected, work.job_id, "requester_timeout"
+                )
+                return WorkResult(
+                    job_id=work.job_id, status="error", error="work_timeout"
+                )
+            if cancel_event is not None and cancel_event.is_set():
+                with self._lock:
+                    self._pending.pop(work.job_id, None)
+                self._request_cancellation(
+                    selected, work.job_id, "requester_cancelled"
+                )
+                return WorkResult(
+                    job_id=work.job_id, status="error", error="work_cancelled"
+                )
+            pending.event.wait(timeout=min(0.1, remaining))
         return pending.result or WorkResult(
             job_id=work.job_id, status="error", error="missing_work_result"
         )
 
+    def _request_cancellation(self, peer_id: str, job_id: str, reason: str):
+        send_cancel = getattr(self.node, "send_work_cancel", None)
+        if not callable(send_cancel):
+            return
+        try:
+            send_cancel(peer_id, {
+                "version": 1,
+                "job_id": job_id,
+                "requested_at": time.time(),
+                "reason": reason,
+            })
+        except Exception:
+            pass
+
     def close(self):
         with self._lock:
             self._closed = True
+            for cancel_event in self._job_cancel_events.values():
+                cancel_event.set()
         self._executor.shutdown(wait=True, cancel_futures=True)
         self.scheduler_history.close()
 
@@ -597,15 +669,17 @@ class WorkCoordinator:
         if rejection is not None:
             self._reject_offer(value, from_node_id, rejection)
             return
+        job_id = self._reserve_job_control(value, from_node_id)
         try:
             future = self._executor.submit(
                 self._execute_offer, value, from_node_id
             )
             future.add_done_callback(
-                lambda _future, peer_id=from_node_id: self._release_offer(peer_id)
+                lambda _future, peer_id=from_node_id, reserved_job=job_id:
+                self._release_offer(peer_id, reserved_job)
             )
         except RuntimeError:
-            self._release_offer(from_node_id)
+            self._release_offer(from_node_id, job_id)
             self._reject_offer(value, from_node_id, "worker_shutting_down")
 
     def _reserve_offer(self, from_node_id: str) -> Optional[str]:
@@ -637,7 +711,17 @@ class WorkCoordinator:
             )
             return None
 
-    def _release_offer(self, from_node_id: str):
+    def _reserve_job_control(self, value: dict, from_node_id: str) -> str:
+        job_id = str(value.get("job_id", "")) if isinstance(value, dict) else ""
+        if not _HEX_64_RE.fullmatch(job_id):
+            return ""
+        key = (from_node_id, job_id)
+        with self._lock:
+            self._job_cancel_events.setdefault(key, threading.Event())
+            self._job_reservations[key] = self._job_reservations.get(key, 0) + 1
+        return job_id
+
+    def _release_offer(self, from_node_id: str, job_id: str = ""):
         with self._lock:
             reserved = self._peer_reserved_offers.get(from_node_id, 0)
             if reserved <= 1:
@@ -646,6 +730,14 @@ class WorkCoordinator:
                 self._peer_reserved_offers[from_node_id] = reserved - 1
             if reserved > 0:
                 self._offer_slots.release()
+            if job_id:
+                key = (from_node_id, job_id)
+                job_reservations = self._job_reservations.get(key, 0)
+                if job_reservations <= 1:
+                    self._job_reservations.pop(key, None)
+                    self._job_cancel_events.pop(key, None)
+                else:
+                    self._job_reservations[key] = job_reservations - 1
 
     def _prune_offer_state(self, now: float):
         if len(self._peer_offer_times) <= MAX_TRACKED_OFFER_IDENTITIES:
@@ -667,8 +759,37 @@ class WorkCoordinator:
                 error=reason,
             ))
 
+    def _on_cancel(self, value: dict, from_node_id: str):
+        if not isinstance(value, dict) or set(value) != {
+            "version", "job_id", "requested_at", "reason"
+        }:
+            return
+        job_id = str(value.get("job_id", ""))
+        reason = str(value.get("reason", ""))
+        try:
+            requested_at = float(value.get("requested_at", 0))
+        except (TypeError, ValueError, OverflowError):
+            return
+        if (
+            value.get("version") != 1
+            or not _HEX_64_RE.fullmatch(job_id)
+            or reason not in {"requester_timeout", "requester_cancelled"}
+            or abs(time.time() - requested_at) > 300
+        ):
+            return
+        with self._lock:
+            cancel_event = self._job_cancel_events.get((from_node_id, job_id))
+            if cancel_event is not None:
+                cancel_event.set()
+
     def _execute_offer(self, value: dict, from_node_id: str):
         job_id = str(value.get("job_id", "")) if isinstance(value, dict) else ""
+        try:
+            if float(value.get("deadline", 0)) <= time.time():
+                self._reject_offer(value, from_node_id, "work_deadline_exceeded")
+                return
+        except (AttributeError, TypeError, ValueError, OverflowError):
+            pass
         try:
             work = WorkUnit.from_dict(value)
             job_id = work.job_id
@@ -682,6 +803,12 @@ class WorkCoordinator:
             return
 
         with self._lock:
+            cancel_event = self._job_cancel_events.get(
+                (from_node_id, work.job_id), threading.Event()
+            )
+        execution = WorkExecution(work, cancel_event)
+
+        with self._lock:
             cached = self._completed.get(work.job_id)
             if cached:
                 self.node.send_work_result(from_node_id, cached.to_dict())
@@ -693,6 +820,15 @@ class WorkCoordinator:
                 self._send_result(from_node_id, result)
                 return
             self._inflight.add(work.job_id)
+
+        cancellation_reason = execution.cancellation_reason()
+        if cancellation_reason:
+            self._finish(work.job_id, from_node_id, WorkResult(
+                job_id=work.job_id,
+                status="error",
+                error=cancellation_reason,
+            ))
+            return
 
         handler_entry = self._handlers.get(work.operation)
         if not handler_entry or handler_entry[0] != work.kind:
@@ -710,11 +846,19 @@ class WorkCoordinator:
 
         try:
             with lease:
-                output = handler_entry[1](dict(work.payload), work)
+                execution.raise_if_cancelled()
+                output = handler_entry[1](dict(work.payload), execution)
+                execution.raise_if_cancelled()
             if not isinstance(output, dict):
                 raise TypeError("handler output must be a JSON object")
             result = WorkResult(job_id=work.job_id, status="ok", output=output)
             result.validate()
+        except WorkCancelledError as exc:
+            result = WorkResult(
+                job_id=work.job_id,
+                status="error",
+                error=str(exc),
+            )
         except Exception as exc:
             result = WorkResult(
                 job_id=work.job_id,

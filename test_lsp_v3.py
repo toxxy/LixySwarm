@@ -285,6 +285,37 @@ def test_v3_can_send_immediate_result_from_transport_callback(tmp_path):
         worker.stop()
 
 
+def test_v3_delivers_work_cancellation_to_exact_worker(tmp_path):
+    requester = _node(tmp_path, "cancel-requester", target_outbound=0)
+    worker = _node(tmp_path, "cancel-worker", target_outbound=0)
+    received = []
+    event = threading.Event()
+
+    @worker.on_work_cancel_received
+    def capture(cancellation, node_id):
+        received.append((cancellation, node_id))
+        event.set()
+
+    requester.start()
+    worker.start()
+    cancellation = {
+        "version": 1,
+        "job_id": "17" * 32,
+        "requested_at": time.time(),
+        "reason": "requester_cancelled",
+    }
+    try:
+        assert requester.connect_peer("127.0.0.1", worker.port)
+        assert requester.send_work_cancel(
+            worker.identity.node_id_hex, cancellation
+        )
+        assert event.wait(3.0)
+        assert received == [(cancellation, requester.identity.node_id_hex)]
+    finally:
+        requester.stop()
+        worker.stop()
+
+
 def test_v3_exchanges_useful_work_proofs_after_encrypted_handshake(tmp_path):
     left = _node(tmp_path, "proof-left", target_outbound=0)
     right = _node(tmp_path, "proof-right", target_outbound=0)

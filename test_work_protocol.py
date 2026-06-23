@@ -11,7 +11,9 @@ from src.network.lsp_v3 import LSPNodeV3
 from src.network.identity_work import load_or_mine_identity_work
 from src.network.work_protocol import (
     ResultReceipt,
+    WorkCancelledError,
     WorkCoordinator,
+    WorkExecution,
     WorkProtocolError,
     WorkResult,
     WorkUnit,
@@ -572,3 +574,128 @@ def test_global_work_queue_and_offer_rate_are_bounded(tmp_path):
     finally:
         release.set()
         coordinator.close()
+
+
+def test_requester_cancellation_stops_cooperative_remote_work(tmp_path):
+    class LoopNode:
+        def __init__(self):
+            self.identity = LSPIdentity.generate()
+            self.peer = None
+
+        def on_work_offer_received(self, callback):
+            self.offer_callback = callback
+
+        def on_work_result_received(self, callback):
+            self.result_callback = callback
+
+        def on_work_cancel_received(self, callback):
+            self.cancel_callback = callback
+
+        def send_work_offer(self, peer_id, value):
+            assert peer_id == self.peer.identity.node_id_hex
+            self.peer.offer_callback(value, self.identity.node_id_hex)
+            return True
+
+        def send_work_result(self, peer_id, value):
+            assert peer_id == self.peer.identity.node_id_hex
+            self.peer.result_callback(value, self.identity.node_id_hex)
+            return True
+
+        def send_work_cancel(self, peer_id, value):
+            assert peer_id == self.peer.identity.node_id_hex
+            self.peer.cancel_callback(value, self.identity.node_id_hex)
+            return True
+
+        def peers(self):
+            return []
+
+    requester_node = LoopNode()
+    worker_node = LoopNode()
+    requester_node.peer = worker_node
+    worker_node.peer = requester_node
+    requester = WorkCoordinator(
+        requester_node, _governor(tmp_path / "cancel-requester", "relay")
+    )
+    worker = WorkCoordinator(
+        worker_node, _governor(tmp_path / "cancel-worker", "balanced")
+    )
+    started = threading.Event()
+    stopped = threading.Event()
+
+    def cancellable_handler(_payload, work):
+        started.set()
+        try:
+            while True:
+                work.raise_if_cancelled()
+                time.sleep(0.01)
+        except WorkCancelledError:
+            stopped.set()
+            raise
+
+    worker.register_handler("training.cancel.v1", "training", cancellable_handler)
+    caller_cancel = threading.Event()
+    returned = []
+
+    def submit():
+        returned.append(requester.submit(
+            "training.cancel.v1",
+            {"batch": 1},
+            ResourceRequirements(kind="training"),
+            peer_id=worker_node.identity.node_id_hex,
+            timeout_s=10,
+            cancel_event=caller_cancel,
+        ))
+
+    thread = threading.Thread(target=submit)
+    thread.start()
+    try:
+        assert started.wait(1.0)
+        with worker._lock:
+            active_job_id = next(iter(worker._job_cancel_events))[1]
+        worker._on_cancel({
+            "version": 1,
+            "job_id": active_job_id,
+            "requested_at": time.time(),
+            "reason": "requester_cancelled",
+        }, LSPIdentity.generate().node_id_hex)
+        time.sleep(0.05)
+        assert not stopped.is_set()
+        caller_cancel.set()
+        thread.join(timeout=2.0)
+        assert not thread.is_alive()
+        assert returned[0].error == "work_cancelled"
+        assert stopped.wait(1.0)
+        assert _wait_for(lambda: worker.queue_status()["active_or_queued"] == 0)
+        with worker._lock:
+            completed = next(iter(worker._completed.values()))
+        assert completed.status == "error"
+        assert completed.error == "work_cancelled"
+        receipt = ResultReceipt.from_dict(completed.receipt)
+        assert receipt.verify(
+            completed,
+            expected_worker_id=worker_node.identity.node_id_hex,
+            expected_requester_id=requester_node.identity.node_id_hex,
+        )
+    finally:
+        caller_cancel.set()
+        thread.join(timeout=2.0)
+        requester.close()
+        worker.close()
+
+
+def test_work_execution_enforces_deadline():
+    work = WorkUnit.create(
+        origin_node_id="ab" * 32,
+        operation="training.deadline.v1",
+        kind="training",
+        requirements=ResourceRequirements(kind="training"),
+        payload={},
+        timeout_s=1,
+    )
+    execution = WorkExecution(
+        replace(work, deadline=time.time() - 1), threading.Event()
+    )
+    assert execution.cancelled()
+    assert execution.cancellation_reason() == "work_deadline_exceeded"
+    with pytest.raises(WorkCancelledError, match="work_deadline_exceeded"):
+        execution.raise_if_cancelled()

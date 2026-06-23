@@ -28,7 +28,7 @@ from __future__ import annotations
 import time
 from contextlib import nullcontext
 from dataclasses import dataclass, field
-from typing import Optional
+from typing import Callable, Optional
 
 import torch
 import torch.nn.functional as F
@@ -402,6 +402,7 @@ class RuntimeSession:
         update_runtime_state: bool = True,
         use_memory: bool = True,
         greedy: bool = False,
+        cancel_check: Optional[Callable[[], bool]] = None,
     ) -> str:
         """
         Procesa un turno de conversación.
@@ -449,6 +450,9 @@ class RuntimeSession:
 
         infrasound_norms: list[float] = []
         feromon_norms: list[float] = []
+
+        if cancel_check is not None and cancel_check():
+            return ""
 
         with torch.no_grad(), ctx:
 
@@ -499,6 +503,8 @@ class RuntimeSession:
 
             # ── Generación token a token ──────────────────────────────────────
             for step_i in range(1, max_tokens):
+                if cancel_check is not None and cancel_check():
+                    break
                 x_cond = x if x.size(1) <= block_size else x[:, -block_size:]
 
                 # Refresh periódico con Matriarca activa
@@ -531,6 +537,8 @@ class RuntimeSession:
                 all_logits = []
                 all_conf = []
                 for agent, conf_head in zip(swarm.agents, swarm.confidence_heads):
+                    if cancel_check is not None and cancel_check():
+                        break
                     ag_logits, _, _ = agent(x_cond, feromon_in=cached_feromon)
                     rep = ag_logits.mean(dim=1)  # [B, vocab]
                     rep_proj = (
@@ -540,6 +548,9 @@ class RuntimeSession:
                     conf = conf_head(rep_proj)
                     all_logits.append(ag_logits)
                     all_conf.append(conf)
+
+                if len(all_logits) != len(swarm.agents):
+                    break
 
                 # Confianza base de los agentes
                 base_conf = F.softmax(torch.cat(all_conf, dim=-1), dim=-1)  # [B, n_agents]

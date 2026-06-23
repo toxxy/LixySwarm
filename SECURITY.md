@@ -27,6 +27,7 @@ If a secret or private datum has ever entered Git history, deleting it from the 
 - Compute is disabled until a persisted `balanced` or `maximum` contribution policy records explicit consent.
 - Peer work cannot contain executable code and can invoke only fixed local handlers. Recursive payload limits, deadlines, rate windows, and resource leases are enforced.
 - Remote work admission reserves from a fixed queue and enforces per-identity active/queued and minute-window quotas. Every parseable overload rejection is signed; the executor's internal queue cannot grow without the protocol reservation succeeding.
+- Work cancellation is bound to the authenticated requester identity and active job ID. Built-in inference/training poll cancellation and deadlines; outputs produced after cancellation are discarded and the final error receipt is signed.
 - Remote inference cannot read/write personal Matriarca memory or session/Dolphin state.
 - Artifact manifests expose hashes, sizes, types, and timestamps—not source filenames or paths. Chunk and full-object hashes are verified before commit.
 - Training workers never load peer checkpoints and never apply returned gradients; they require the exact locally loaded model hash and safe NumPy token arrays.
@@ -40,7 +41,7 @@ If a secret or private datum has ever entered Git history, deleting it from the 
 - Release announcements are signature-checked before download; referenced artifacts are hash-verified. Automatic activation is a persisted explicit opt-in and is off by default.
 - Outbound selection prefers distinct coarse network groups. Protocol violations accrue local decaying scores and persistent temporary bans keyed by hashes rather than raw identifiers.
 
-These controls are incomplete. HELLO/traffic metadata remains visible and long sessions do not rekey; resource claims and compute results remain self-reported/unattested; admitted work runs in-process and cannot be cancelled; identity quotas are not Sybil resistance; personal encryption is optional; gradients can leak training data at their endpoints; and most API endpoints are unauthenticated. Legacy v2 has weaker verification and must not be enabled on the public network.
+These controls are incomplete. HELLO/traffic metadata remains visible and long sessions do not rekey; resource claims and compute results remain self-reported/unattested; admitted work runs in-process, so cooperative cancellation cannot preempt a stuck handler or CUDA kernel; identity quotas are not Sybil resistance; personal encryption is optional; gradients can leak training data at their endpoints; and most API endpoints are unauthenticated. Legacy v2 has weaker verification and must not be enabled on the public network.
 
 ## Required production controls
 
