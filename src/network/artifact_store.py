@@ -316,24 +316,38 @@ class ArtifactService:
         *,
         peer_id: str,
         timeout_s: float = 60.0,
+        cancel_event: Optional[threading.Event] = None,
     ) -> Path:
         if not _HEX_64_RE.fullmatch(str(artifact_id)):
             raise ArtifactError("invalid artifact ID")
+        deadline = time.monotonic() + max(
+            1.0, min(float(timeout_s), 60.0 * 60.0)
+        )
         with self._fetch_locks_guard:
             fetch_lock = self._fetch_locks.setdefault(
                 artifact_id, threading.Lock()
             )
-        with fetch_lock:
+        while not fetch_lock.acquire(
+            timeout=min(0.1, self._remaining_timeout(deadline, cancel_event))
+        ):
+            pass
+        try:
             return self._fetch_locked(
-                artifact_id, peer_id=peer_id, timeout_s=timeout_s
+                artifact_id,
+                peer_id=peer_id,
+                deadline=deadline,
+                cancel_event=cancel_event,
             )
+        finally:
+            fetch_lock.release()
 
     def _fetch_locked(
         self,
         artifact_id: str,
         *,
         peer_id: str,
-        timeout_s: float,
+        deadline: float,
+        cancel_event: Optional[threading.Event],
     ) -> Path:
         if self.store.has(artifact_id):
             return self.store._object_path(artifact_id)
@@ -342,7 +356,8 @@ class ArtifactService:
             {"artifact_id": artifact_id},
             ResourceRequirements(kind="artifact"),
             peer_id=peer_id,
-            timeout_s=timeout_s,
+            timeout_s=self._remaining_timeout(deadline, cancel_event),
+            cancel_event=cancel_event,
         )
         if describe.status != "ok":
             raise ArtifactError(describe.error or "artifact manifest request failed")
@@ -364,7 +379,8 @@ class ArtifactService:
                     {"artifact_id": artifact_id, "offset": offset, "length": length},
                     ResourceRequirements(kind="artifact"),
                     peer_id=peer_id,
-                    timeout_s=timeout_s,
+                    timeout_s=self._remaining_timeout(deadline, cancel_event),
+                    cancel_event=cancel_event,
                 )
                 if result.status != "ok":
                     raise ArtifactError(result.error or "artifact chunk request failed")
@@ -385,3 +401,15 @@ class ArtifactService:
             destination.flush()
             os.fsync(destination.fileno())
         return self.store.finalize_receive(manifest, partial)
+
+    @staticmethod
+    def _remaining_timeout(
+        deadline: float,
+        cancel_event: Optional[threading.Event],
+    ) -> float:
+        if cancel_event is not None and cancel_event.is_set():
+            raise ArtifactError("artifact fetch cancelled")
+        remaining = deadline - time.monotonic()
+        if remaining <= 0:
+            raise ArtifactError("artifact fetch timed out")
+        return remaining

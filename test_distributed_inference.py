@@ -91,3 +91,53 @@ def test_inference_quorum_requires_exact_majority_and_distinct_peers():
             ("01" * 32, "same", {}),
             ("03" * 32, "same", {}),
         ])
+
+
+def test_verified_inference_replaces_failed_peer_without_weakening_quorum():
+    peers = [f"{index:02x}" * 32 for index in range(1, 5)]
+    model_id = "ab" * 32
+
+    class Coordinator:
+        def __init__(self):
+            self.selections = 0
+
+        def select_peers(self, _requirements, **kwargs):
+            self.selections += 1
+            if self.selections == 1:
+                return peers[:3]
+            assert kwargs["excluded_peer_ids"] == set(peers[:3])
+            return [peers[3]]
+
+    class Net:
+        work_coordinator = Coordinator()
+
+        def submit_work(self, _operation, _payload, _requirements, **kwargs):
+            peer_id = kwargs["peer_id"]
+            if peer_id == peers[0]:
+                raise ConnectionError("peer disconnected")
+            return SimpleNamespace(
+                status="ok",
+                error="",
+                output={
+                    "text": "stable",
+                    "model_artifact_id": model_id,
+                    "deterministic": True,
+                },
+                receipt={"worker_node_id": peer_id},
+            )
+
+    orchestrator = object.__new__(LixyOrchestrator)
+    orchestrator.net = Net()
+    orchestrator.model_artifact_id = model_id
+    result = orchestrator.generate_distributed_verified(
+        "hello",
+        replicas=3,
+        max_replacements=1,
+        max_tokens=8,
+        timeout_s=2,
+    )
+    assert result["text"] == "stable"
+    assert result["votes"] == 3
+    assert result["replicas"] == 3
+    assert result["worker_attempts"] == 4
+    assert result["replacements_used"] == 1

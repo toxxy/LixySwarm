@@ -31,6 +31,7 @@ MAX_COMPLETED_CACHE = 2048
 OFFER_RATE_WINDOW_S = 60.0
 MAX_TRACKED_OFFER_IDENTITIES = 1024
 TRANSIENT_WORK_ERRORS = {
+    "peer_disconnected",
     "work_queue_full",
     "peer_queue_limit",
     "peer_rate_limit",
@@ -415,6 +416,9 @@ class WorkCoordinator:
         cancel_callback = getattr(node, "on_work_cancel_received", None)
         if callable(cancel_callback):
             cancel_callback(self._on_cancel)
+        lost_callback = getattr(node, "on_peer_lost", None)
+        if callable(lost_callback):
+            lost_callback(self._on_peer_lost)
 
     def register_handler(self, operation: str, kind: str, handler: Callable):
         if not _OPERATION_RE.fullmatch(operation):
@@ -636,14 +640,41 @@ class WorkCoordinator:
         *,
         required_model_id: Optional[str] = None,
         limit: int = 3,
+        excluded_peer_ids: Optional[set[str]] = None,
+        distinct_from_peer_ids: Optional[set[str]] = None,
     ) -> list[str]:
         requirements.validate()
+        requested_limit = max(0, int(limit))
         with self._lock:
-            selected = self._choose_candidates(
-                self._eligible_peers(
+            excluded = set(excluded_peer_ids or ())
+            candidates = [
+                peer for peer in self._eligible_peers(
                     requirements, required_model_id=required_model_id
-                ),
-                limit=max(0, int(limit)),
+                )
+                if str(peer["node_id"]) not in excluded
+            ]
+            retained_ids = set(distinct_from_peer_ids or ())
+            retained_groups = {
+                network_group(str(peer.get("host", "unknown")))
+                for peer in self.node.peers()
+                if str(peer.get("node_id", "")) in retained_ids
+            }
+            if retained_groups:
+                diverse = [
+                    peer for peer in candidates
+                    if network_group(str(peer.get("host", "unknown")))
+                    not in retained_groups
+                ]
+                if diverse:
+                    repeated = [peer for peer in candidates if peer not in diverse]
+                    candidates = (
+                        diverse
+                        if len(diverse) >= requested_limit
+                        else diverse + repeated
+                    )
+            selected = self._choose_candidates(
+                candidates,
+                limit=requested_limit,
             )
         return [str(peer["node_id"]) for peer in selected]
 
@@ -1029,3 +1060,20 @@ class WorkCoordinator:
             pending.result = result
             self._pending.pop(result.job_id, None)
             pending.event.set()
+
+    def _on_peer_lost(self, node_id: str):
+        """Wake requests immediately so callers can select another worker."""
+        with self._lock:
+            disconnected = [
+                (job_id, pending)
+                for job_id, pending in self._pending.items()
+                if pending.expected_peer == node_id
+            ]
+            for job_id, pending in disconnected:
+                pending.result = WorkResult(
+                    job_id=job_id,
+                    status="error",
+                    error="peer_disconnected",
+                )
+                self._pending.pop(job_id, None)
+                pending.event.set()

@@ -28,7 +28,7 @@ The default swarm configuration contains:
 - Persistent requester-local scheduling history gives an identity-aged newcomer one exploration opportunity every five selections without reducing available quorum network-group diversity; only pseudonymous node IDs and counters are stored.
 - Inbound work admission has a fixed global queue, per-identity concurrent and per-minute quotas, and portable signed overload rejections; remote offers cannot grow the executor queue without bound.
 - Requester timeout or explicit local cancellation sends an authenticated `WORK_CANCEL`; compatible handlers receive a `WorkUnit` subclass with deadline/cancellation checks. Remote inference checks per generated token and gradient work checks between expensive phases and parameters.
-- Automatically scheduled single-peer work retries up to three distinct eligible peers within one total deadline, preserving the job ID and cancelling a timed-out attempt. Explicit peer choices and fixed quorum members are never replaced silently.
+- Automatically scheduled single-peer work retries up to three distinct eligible peers within one total deadline, preserving the job ID and cancelling a timed-out attempt. Verified inference and gradient quorums keep their configured cardinality under bounded worker replacement, preserve available path diversity, and report the accepted worker identities plus attempt/replacement counts.
 - Deterministic replicated inference across three-to-nine model-matched peers with coarse network-group diversity and an exact-output majority rule.
 - Optional persistent Hashcash-style identity-work stamps bound to Ed25519 keys; operators may configure a minimum with `LIXYSWARM_IDENTITY_WORK_BITS`, but the default is zero because useful validated training—not expendable hashing—is the intended reputation basis.
 - Threshold-signed model release manifests, local trust roots, pinned genesis support, monotonic activation, revocation lists, and explicit rollback.
@@ -68,7 +68,31 @@ python3 -m pip install -e . --no-deps
 pytest -q
 ```
 
-The full suite passed **190 tests** on 2026-06-23.
+The full suite passed **195 tests** on 2026-06-23.
+
+## Local language recovery
+
+Do not repair language coherence by training only on a small personal corpus; that can overwrite general language behavior. Keep the existing checkpoints untouched, evaluate the base agent on FineWeb first, then run a short low-learning-rate recovery into an isolated directory:
+
+```bash
+python3 train.py --mode pretrain --steps 0 --batch 8 --lr 1e-4 \
+  --checkpoint checkpoints/finetune_best.pt \
+  --checkpoint-dir checkpoints/language_recovery
+
+python3 train.py --mode pretrain --steps 500 --batch 8 --lr 1e-4 \
+  --checkpoint checkpoints/finetune_best.pt \
+  --checkpoint-dir checkpoints/language_recovery
+```
+
+Build a new swarm from the recovered agent instead of continuing an architecture-mismatched swarm checkpoint:
+
+```bash
+python3 train_swarm.py --steps 100 --batch 4 --lr 3e-5 --mixed \
+  --agent-checkpoint checkpoints/language_recovery/best.pt \
+  --checkpoint-dir checkpoints/swarm_language_recovery
+```
+
+Compare fixed prompts and validation loss before increasing the run length. These local checkpoint/data directories are ignored and must never be committed.
 
 Join as a connectivity/artifact node, or explicitly consent to compute:
 

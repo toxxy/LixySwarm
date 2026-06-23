@@ -1,4 +1,5 @@
 import hashlib
+import threading
 
 import pytest
 
@@ -111,3 +112,32 @@ def test_artifact_transfer_is_chunked_and_end_to_end_verified(tmp_path):
         requester_work.close()
         provider.stop()
         requester.stop()
+
+
+def test_artifact_fetch_wait_is_cancellable(tmp_path):
+    class Coordinator:
+        def register_handler(self, _operation, _kind, _handler):
+            pass
+
+        def submit(self, *_args, **_kwargs):
+            raise AssertionError("cancelled fetch must not submit work")
+
+    service = ArtifactService(
+        Coordinator(), ArtifactStore(tmp_path / "cancelled-store")
+    )
+    artifact_id = "ab" * 32
+    occupied = threading.Lock()
+    occupied.acquire()
+    service._fetch_locks[artifact_id] = occupied
+    cancelled = threading.Event()
+    cancelled.set()
+    try:
+        with pytest.raises(ArtifactError, match="cancelled"):
+            service.fetch(
+                artifact_id,
+                peer_id="cd" * 32,
+                timeout_s=5,
+                cancel_event=cancelled,
+            )
+    finally:
+        occupied.release()

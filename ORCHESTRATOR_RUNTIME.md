@@ -51,15 +51,15 @@ Remote inference uses a fresh non-persistent `RuntimeSession`, disables personal
 
 Requester timeouts and explicit caller cancellation emit authenticated cancellation messages. Remote inference polls at token/agent boundaries; gradient work polls around fetch, forward, backward, parameter extraction, and artifact commit. The worker returns a signed `work_cancelled` or `work_deadline_exceeded` result when it reaches a cooperative boundary.
 
-Non-explicit single-peer inference/training work may attempt three eligible peers under one deadline. Transient failure cancels the current attempt and advances; the job ID remains unchanged. For a fallback gradient, the orchestrator obtains the actual worker identity from the verified receipt before fetching its artifact. Replicated inference and gradient quorum members remain fixed to preserve independence accounting.
+Non-explicit single-peer inference/training work may attempt three eligible peers under one deadline. Transient failure or authenticated-session loss advances immediately; the job ID remains unchanged. For a fallback gradient, the orchestrator obtains the actual worker identity from the verified receipt before fetching its artifact. Artifact manifest/chunk transfer shares the caller's total deadline and cancellation signal.
 
-`generate_distributed_verified()` sends a deterministic greedy request to an odd quorum of three-to-nine peers advertising the exact checkpoint hash. Candidate selection prefers different coarse network groups; acceptance requires a strict byte-identical text majority, and the returned record includes supporting Ed25519 receipts. This is replication, not proof against Sybil-controlled workers.
+`generate_distributed_verified()` sends a deterministic greedy request to an odd quorum of three-to-nine peers advertising the exact checkpoint hash. `compute_gradient_quorum()` accepts three to 31 workers. Both operations may replace up to one configured quorum's worth of failed members under one total deadline while retaining the exact requested result count. Replacements exclude attempted identities and prefer network groups not used by retained results or active requests. Returned records expose accepted worker identities, total attempts, and replacements. Inference still requires a strict byte-identical majority and supporting Ed25519 receipts. This is replication, not proof against Sybil-controlled workers.
 
 `lixyswarm start --release` loads only the locally active manifest after rechecking its threshold signatures, trust policy, content-addressed artifacts, chain state, and `pytorch-weights-only-v1` format. Direct `--checkpoint` remains an explicit operator-trusted path and does not claim release governance.
 
 ## Known runtime gaps
 
-- The inbound executor queue is bounded with per-identity concurrency/rate quotas, but it is not durable. Cooperative cancellation and bounded single-job fallback exist; crash recovery, quorum-member replacement, full fair-share accounting, forced termination of non-cooperative kernels/handlers, and process-level multi-tenant isolation remain missing.
+- The inbound executor queue is bounded with per-identity concurrency/rate quotas, but it is not durable. Cooperative cancellation, bounded single-job fallback, and in-process quorum-member replacement exist; crash-persistent recovery, full fair-share accounting, forced termination of non-cooperative kernels/handlers, and process-level multi-tenant isolation remain missing.
 - Model loading is process-global and heavyweight.
 - API chat history is in memory and unauthenticated.
 - Dynamic topology changes are not integrated safely with a live optimizer.

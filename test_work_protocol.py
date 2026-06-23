@@ -430,6 +430,57 @@ def test_quorum_exploration_does_not_reduce_network_group_diversity(tmp_path):
         coordinator.close()
 
 
+def test_quorum_replacement_prefers_group_not_retained(tmp_path):
+    identities = [LSPIdentity.generate() for _ in range(3)]
+
+    class FakeNode:
+        identity = LSPIdentity.generate()
+
+        def on_work_offer_received(self, _callback):
+            return None
+
+        def on_work_result_received(self, _callback):
+            return None
+
+        def peers(self):
+            hosts = ["8.8.1.1", "8.8.2.2", "1.1.1.1"]
+            credits = [4, 10, 1]
+            return [{
+                "node_id": identity.node_id_hex,
+                "host": host,
+                "resources": {
+                    "work": {"training": True},
+                    "cpu_cores": 4,
+                    "ram_gb": 8,
+                    "disk_gb": 8,
+                    "has_gpu": True,
+                    "gpu_vram_gb": 8,
+                    "useful_work": {
+                        "verified": True,
+                        "firsthand_credits": credit_count,
+                    },
+                },
+            } for identity, host, credit_count in zip(
+                identities, hosts, credits
+            )]
+
+    coordinator = WorkCoordinator(
+        FakeNode(),
+        _governor(tmp_path / "replacement-diversity-governor", "relay"),
+        exploration_interval=0,
+    )
+    try:
+        selected = coordinator.select_peers(
+            ResourceRequirements(kind="training"),
+            limit=1,
+            excluded_peer_ids={identities[0].node_id_hex},
+            distinct_from_peer_ids={identities[0].node_id_hex},
+        )
+        assert selected == [identities[2].node_id_hex]
+    finally:
+        coordinator.close()
+
+
 def test_inbound_work_queue_is_bounded_per_identity(tmp_path):
     worker = LSPIdentity.generate()
     requester = LSPIdentity.generate()
@@ -846,5 +897,84 @@ def test_submit_cancels_timed_out_peer_before_retry(tmp_path):
         assert cancelled_peer == workers[0].node_id_hex
         assert cancellation["reason"] == "requester_timeout"
         assert cancellation["job_id"] == result.job_id
+    finally:
+        coordinator.close()
+
+
+def test_submit_retries_immediately_when_peer_disconnects(tmp_path):
+    requester_identity = LSPIdentity.generate()
+    workers = [LSPIdentity.generate() for _ in range(2)]
+
+    class DisconnectNode:
+        identity = requester_identity
+
+        def __init__(self):
+            self.attempts = []
+
+        def on_work_offer_received(self, callback):
+            self.offer_callback = callback
+
+        def on_work_result_received(self, callback):
+            self.result_callback = callback
+
+        def on_work_cancel_received(self, callback):
+            self.cancel_callback = callback
+
+        def on_peer_lost(self, callback):
+            self.lost_callback = callback
+
+        def peers(self):
+            resources = {
+                "work": {"inference": True}, "cpu_cores": 4,
+                "ram_gb": 4, "disk_gb": 4, "has_gpu": False,
+                "gpu_vram_gb": 0,
+            }
+            return [{
+                "node_id": workers[0].node_id_hex,
+                "host": "8.8.8.8",
+                "resources": resources,
+            }, {
+                "node_id": workers[1].node_id_hex,
+                "host": "1.1.1.1",
+                "resources": resources,
+            }]
+
+        def send_work_offer(self, peer_id, value):
+            self.attempts.append(peer_id)
+            if peer_id == workers[0].node_id_hex:
+                threading.Timer(
+                    0.05, self.lost_callback, args=(peer_id,)
+                ).start()
+                return True
+            result = WorkResult(
+                job_id=value["job_id"],
+                status="ok",
+                output={"text": "replacement"},
+            )
+            receipt = ResultReceipt.create(
+                result, workers[1], requester_identity.node_id_hex
+            )
+            self.result_callback(
+                replace(result, receipt=receipt.to_dict()).to_dict(), peer_id
+            )
+            return True
+
+    node = DisconnectNode()
+    coordinator = WorkCoordinator(
+        node, _governor(tmp_path / "disconnect-retry-governor", "relay")
+    )
+    started = time.monotonic()
+    try:
+        result = coordinator.submit(
+            "inference.retry-disconnect.v1",
+            {"prompt": "replacement"},
+            ResourceRequirements(kind="inference"),
+            timeout_s=4,
+            max_attempts=2,
+        )
+        assert time.monotonic() - started < 1.0
+        assert result.status == "ok"
+        assert result.output == {"text": "replacement"}
+        assert node.attempts == [worker.node_id_hex for worker in workers]
     finally:
         coordinator.close()

@@ -69,7 +69,8 @@
 - [x] Bound the in-memory inbound work queue and add per-identity concurrent/rate quotas with signed overload rejection.
 - [x] Add authenticated requester cancellation, deadline-aware handler context, and cooperative polling in built-in inference/training.
 - [x] Add bounded same-job fallback for automatically scheduled single-peer work and receipt-derived gradient artifact fetching.
-- [ ] Add quorum-member replacement, crash recovery, killable process isolation, durable queues where required, and full fair-share accounting.
+- [x] Add bounded failed-member replacement for exact-cardinality verified inference and gradient quorums under one caller deadline.
+- [ ] Add crash-persistent quorum/job recovery, killable process isolation, durable queues where required, and full fair-share accounting.
 - [ ] Move work into an OS/container sandbox with CPU/GPU/RAM/disk/network enforcement.
 - [x] Persist portable Ed25519 worker result receipts in gradient quorum provenance.
 - [x] Add exact-model deterministic replicated inference, coarse network-group selection, strict output majority, and supporting receipts.

@@ -345,6 +345,12 @@ if __name__ == "__main__":
     parser.add_argument("--batch", type=int, default=8)
     parser.add_argument("--lr", type=float, default=6e-4)
     parser.add_argument("--checkpoint", type=str, help="Cargar checkpoint existente")
+    parser.add_argument(
+        "--checkpoint-dir",
+        type=str,
+        default="checkpoints",
+        help="Directorio aislado para best.pt y final.pt",
+    )
     parser.add_argument("--no-compile", action="store_true", help="Desactivar torch.compile")
     parser.add_argument("--block-size", type=int, default=512)
     args = parser.parse_args()
@@ -356,6 +362,7 @@ if __name__ == "__main__":
         learning_rate=args.lr,
         compile=not args.no_compile,
         block_size=args.block_size,
+        checkpoint_dir=args.checkpoint_dir,
     )
     
     train(cfg, checkpoint_path=args.checkpoint)

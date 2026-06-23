@@ -34,7 +34,7 @@ import logging
 import threading
 import hashlib
 from collections import Counter
-from concurrent.futures import ThreadPoolExecutor, as_completed
+from concurrent.futures import FIRST_COMPLETED, ThreadPoolExecutor, wait
 from pathlib import Path
 from contextlib import nullcontext
 from dataclasses import dataclass
@@ -533,15 +533,24 @@ class LixyOrchestrator:
         prompt: str,
         *,
         replicas: int = 3,
+        max_replacements: int = None,
         max_tokens: int = None,
         timeout_s: float = 120.0,
     ) -> dict:
-        """Run deterministic inference on diverse peers and require a majority."""
+        """Run a churn-tolerant deterministic quorum and require a majority."""
         if self.net is None or self.net.work_coordinator is None:
             raise RuntimeError("Distributed inference is not available")
         replicas = int(replicas)
         if not 3 <= replicas <= 9 or replicas % 2 == 0:
             raise ValueError("replicas must be an odd number between 3 and 9")
+        max_replacements = (
+            replicas if max_replacements is None else int(max_replacements)
+        )
+        if not 0 <= max_replacements <= 9:
+            raise ValueError("max_replacements must be between 0 and 9")
+        timeout_s = float(timeout_s)
+        if not 1.0 <= timeout_s <= 60.0 * 60.0:
+            raise ValueError("timeout_s must be between 1 and 3600 seconds")
         requirements = ResourceRequirements(
             kind="inference", cpu_slots=1, ram_gb=0.5
         )
@@ -559,34 +568,41 @@ class LixyOrchestrator:
             "top_k": 1,
             "deterministic": True,
         })
-        results = []
-        with ThreadPoolExecutor(
-            max_workers=replicas, thread_name_prefix="lixy-inference-quorum"
-        ) as executor:
-            futures = {
-                executor.submit(
-                    self.net.submit_work,
-                    "inference.generate.v1",
-                    payload,
-                    requirements,
-                    peer_id=peer_id,
-                    timeout_s=timeout_s,
-                ): peer_id for peer_id in peers
-            }
-            for future in as_completed(futures):
-                peer_id = futures[future]
-                result = future.result()
-                if result.status != "ok":
-                    raise RuntimeError(result.error or "replicated inference failed")
-                if result.output.get("model_artifact_id") != self.model_artifact_id:
-                    raise RuntimeError("peer used a different model")
-                if result.output.get("deterministic") is not True:
-                    raise RuntimeError("peer did not honor deterministic inference")
-                text = result.output.get("text")
-                if not isinstance(text, str):
-                    raise RuntimeError("peer returned invalid inference text")
-                results.append((peer_id, text, result.receipt))
-        return _inference_majority(results)
+        def request(peer_id, remaining, cancellation):
+            result = self.net.submit_work(
+                "inference.generate.v1",
+                payload,
+                requirements,
+                peer_id=peer_id,
+                timeout_s=remaining,
+                cancel_event=cancellation,
+            )
+            if result.status != "ok":
+                raise RuntimeError(result.error or "replicated inference failed")
+            if result.output.get("model_artifact_id") != self.model_artifact_id:
+                raise RuntimeError("peer used a different model")
+            if result.output.get("deterministic") is not True:
+                raise RuntimeError("peer did not honor deterministic inference")
+            text = result.output.get("text")
+            if not isinstance(text, str):
+                raise RuntimeError("peer returned invalid inference text")
+            worker_id = str(result.receipt.get("worker_node_id", ""))
+            return worker_id, text, result.receipt
+
+        results, attempts, replacements = self._collect_peer_quorum(
+            peers,
+            quorum=replicas,
+            max_replacements=max_replacements,
+            requirements=requirements,
+            timeout_s=timeout_s,
+            request=request,
+            worker_id=lambda value: value[0],
+            label="Inference",
+        )
+        majority = _inference_majority(results)
+        majority["worker_attempts"] = attempts
+        majority["replacements_used"] = replacements
+        return majority
 
     def publish_artifact(
         self,
@@ -659,11 +675,12 @@ class LixyOrchestrator:
         start_token: int = 0,
         token_count: int = 512,
         quorum: int = 3,
+        max_replacements: int = None,
         timeout_s: float = 300.0,
         ram_gb: float = 2.0,
         disk_gb: float = 2.0,
     ) -> dict:
-        """Request distinct peers and produce an unapplied coordinate median."""
+        """Collect a churn-tolerant quorum and produce an unapplied median."""
         if self.net is None or self.net.work_coordinator is None:
             raise RuntimeError("Distributed training is not available")
         if not self.model_artifact_id:
@@ -673,6 +690,14 @@ class LixyOrchestrator:
         quorum = int(quorum)
         if not 3 <= quorum <= 31:
             raise ValueError("quorum must be between 3 and 31")
+        max_replacements = (
+            quorum if max_replacements is None else int(max_replacements)
+        )
+        if not 0 <= max_replacements <= 31:
+            raise ValueError("max_replacements must be between 0 and 31")
+        timeout_s = float(timeout_s)
+        if not 1.0 <= timeout_s <= 60.0 * 60.0:
+            raise ValueError("timeout_s must be between 1 and 3600 seconds")
         requirements = ResourceRequirements(
             kind="training", cpu_slots=1,
             ram_gb=float(ram_gb), disk_gb=float(disk_gb),
@@ -684,27 +709,16 @@ class LixyOrchestrator:
         )
         if len(peers) != quorum:
             raise RuntimeError(f"Gradient quorum requires {quorum} eligible peers")
-        candidates = []
-        details = []
-        with ThreadPoolExecutor(
-            max_workers=quorum, thread_name_prefix="lixy-gradient-quorum"
-        ) as executor:
-            futures = {
-                executor.submit(
-                    self._request_gradient_candidate,
-                    peer,
-                    dataset_artifact_id=dataset_artifact_id,
-                    start_token=int(start_token),
-                    token_count=int(token_count),
-                    requirements=requirements,
-                    timeout_s=timeout_s,
-                ): peer
-                for peer in peers
-            }
-            for future in as_completed(futures):
-                candidate, detail = future.result()
-                candidates.append(candidate)
-                details.append(detail)
+        candidates, details, attempts, replacements = self._collect_gradient_quorum(
+            peers,
+            quorum=quorum,
+            max_replacements=max_replacements,
+            dataset_artifact_id=dataset_artifact_id,
+            start_token=int(start_token),
+            token_count=int(token_count),
+            requirements=requirements,
+            timeout_s=timeout_s,
+        )
         manifest, aggregation = GradientAggregator(self.artifact_store).aggregate(
             candidates,
             self.swarm,
@@ -735,9 +749,160 @@ class LixyOrchestrator:
             "path": str(self.artifact_store._object_path(manifest.artifact_id)),
             "aggregation": aggregation,
             "candidate_metrics": details,
+            "worker_attempts": attempts,
+            "replacements_used": replacements,
             "useful_work_credits": credits,
             "applied": False,
         }
+
+    def _collect_gradient_quorum(
+        self,
+        initial_peers: list[str],
+        *,
+        quorum: int,
+        max_replacements: int,
+        dataset_artifact_id: str,
+        start_token: int,
+        token_count: int,
+        requirements: ResourceRequirements,
+        timeout_s: float,
+    ) -> tuple[list[GradientCandidate], list[dict], int, int]:
+        """Replace failed workers while preserving one total request deadline."""
+        def request(peer_id, remaining, cancellation):
+            return self._request_gradient_candidate(
+                peer_id,
+                dataset_artifact_id=dataset_artifact_id,
+                start_token=start_token,
+                token_count=token_count,
+                requirements=requirements,
+                timeout_s=remaining,
+                cancel_event=cancellation,
+            )
+
+        collected, attempts, replacements = self._collect_peer_quorum(
+            initial_peers,
+            quorum=quorum,
+            max_replacements=max_replacements,
+            requirements=requirements,
+            timeout_s=timeout_s,
+            request=request,
+            worker_id=lambda value: value[0].peer_id,
+            label="Gradient",
+        )
+        return (
+            [candidate for candidate, _detail in collected],
+            [detail for _candidate, detail in collected],
+            attempts,
+            replacements,
+        )
+
+    def _collect_peer_quorum(
+        self,
+        initial_peers: list[str],
+        *,
+        quorum: int,
+        max_replacements: int,
+        requirements: ResourceRequirements,
+        timeout_s: float,
+        request,
+        worker_id,
+        label: str,
+    ) -> tuple[list, int, int]:
+        """Collect exact distinct results, replacing failures under one deadline."""
+        deadline = time.monotonic() + timeout_s
+        attempted: set[str] = set()
+        results: list = []
+        result_workers: set[str] = set()
+        active = {}
+        replacements = 0
+        failures = 0
+        executor = ThreadPoolExecutor(
+            max_workers=quorum,
+            thread_name_prefix=f"lixy-{label.lower()}-quorum",
+        )
+
+        def launch(peer_id: str) -> bool:
+            remaining = deadline - time.monotonic()
+            if remaining <= 0 or peer_id in attempted:
+                return False
+            cancellation = threading.Event()
+            future = executor.submit(
+                request,
+                peer_id,
+                remaining,
+                cancellation,
+            )
+            attempted.add(peer_id)
+            active[future] = (peer_id, cancellation)
+            return True
+
+        try:
+            for peer_id in initial_peers:
+                launch(peer_id)
+
+            while len(results) < quorum and active:
+                remaining = deadline - time.monotonic()
+                if remaining <= 0:
+                    break
+                completed, _pending = wait(
+                    tuple(active),
+                    timeout=remaining,
+                    return_when=FIRST_COMPLETED,
+                )
+                if not completed:
+                    break
+                for future in completed:
+                    requested_peer, _cancellation = active.pop(future)
+                    try:
+                        result = future.result()
+                        actual_worker = str(worker_id(result))
+                        if actual_worker != requested_peer:
+                            raise RuntimeError(
+                                f"{label.lower()} result changed worker identity"
+                            )
+                        if actual_worker in result_workers:
+                            raise RuntimeError(
+                                f"{label.lower()} quorum returned a duplicate worker"
+                            )
+                        results.append(result)
+                        result_workers.add(actual_worker)
+                    except Exception as exc:
+                        failures += 1
+                        log.warning(
+                            "%s quorum worker failed (%s)",
+                            label,
+                            type(exc).__name__,
+                        )
+
+                missing_slots = quorum - len(results) - len(active)
+                for _ in range(max(0, missing_slots)):
+                    if replacements >= max_replacements:
+                        break
+                    retained = result_workers | {
+                        peer_id for peer_id, _cancel in active.values()
+                    }
+                    replacement = self.net.work_coordinator.select_peers(
+                        requirements,
+                        required_model_id=self.model_artifact_id,
+                        limit=1,
+                        excluded_peer_ids=attempted,
+                        distinct_from_peer_ids=retained,
+                    )
+                    if not replacement or not launch(replacement[0]):
+                        break
+                    replacements += 1
+        finally:
+            for _peer_id, cancellation in active.values():
+                cancellation.set()
+            executor.shutdown(wait=True, cancel_futures=True)
+
+        if len(results) != quorum:
+            raise RuntimeError(
+                f"{label} quorum completed "
+                f"{len(results)}/{quorum} results after "
+                f"{failures} worker failures"
+            )
+        return results, len(attempted), replacements
 
     def _request_gradient_candidate(
         self,
@@ -748,7 +913,18 @@ class LixyOrchestrator:
         token_count: int,
         requirements: ResourceRequirements,
         timeout_s: float,
+        cancel_event: threading.Event | None = None,
     ) -> tuple[GradientCandidate, dict]:
+        deadline = time.monotonic() + max(1.0, float(timeout_s))
+
+        def remaining() -> float:
+            if cancel_event is not None and cancel_event.is_set():
+                raise RuntimeError("gradient request cancelled")
+            value = deadline - time.monotonic()
+            if value <= 0:
+                raise RuntimeError("gradient request timed out")
+            return value
+
         result = self.net.submit_work(
             "training.gradient.v1",
             {
@@ -759,7 +935,8 @@ class LixyOrchestrator:
             },
             requirements,
             peer_id=selected_peer,
-            timeout_s=timeout_s,
+            timeout_s=remaining(),
+            cancel_event=cancel_event,
         )
         if result.status != "ok":
             raise RuntimeError(result.error or "distributed training failed")
@@ -779,7 +956,8 @@ class LixyOrchestrator:
         path = self.net.fetch_artifact(
             gradient_id,
             peer_id=actual_peer,
-            timeout_s=timeout_s,
+            timeout_s=remaining(),
+            cancel_event=cancel_event,
         )
         validation = validate_gradient_artifact(
             path,
