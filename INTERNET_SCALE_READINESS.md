@@ -28,9 +28,10 @@ LSP v3 provides the final topology foundation and an initial compute/data plane.
 - Three-to-nine-peer deterministic inference with model matching, coarse network-group diversity, strict exact-majority acceptance, and supporting receipts.
 - Dual-signed, replay-deduplicated useful-training credits issued to workers whose gradient candidates enter a validated quorum aggregate; local worker ledgers persist them.
 - Encrypted direct-peer presentation of up to 16 credits, local dual-signature verification, HELLO reputation stripping, and scheduling priority for firsthand then issuer-diverse evidence.
+- Private persistent selection counters plus one-in-five, 60-second continuity-aged newcomer exploration that preserves available quorum network-group diversity.
 - Optional Ed25519-bound identity work and requester-enforced compute difficulty; disabled by default and retained only as a configurable admission defense.
 - Encrypted P2P release announcement, trust-before-download validation, direct artifact acquisition, deduplicated relay, and persisted opt-in auto-activation.
-- A complete local run of 178 tests on the assessment date.
+- A complete local run of 182 tests on the assessment date.
 
 ## Release blockers
 
@@ -57,7 +58,7 @@ LSP v3 provides the final topology foundation and an initial compute/data plane.
 
 - Sign each global memory item or a verifiable batch manifest and persist origin/provenance.
 - Validate schemas, dimensions, numeric ranges, text size, and content policy before import.
-- Add reputation/stake/quorum rules, conflict resolution, poisoning detection, revocation, and rollback.
+- Add contribution-reputation/quorum rules without fees or stake, plus conflict resolution, poisoning detection, revocation, and rollback.
 - Separate untrusted candidate memory from trusted active memory.
 
 ## Scale architecture gaps
@@ -80,7 +81,7 @@ LSP v3 provides the final topology foundation and an initial compute/data plane.
 - Threshold signatures now prove authority according to each node's local trust policy, and trusted releases propagate peer-to-peer. Publish independent official signer keys and a pinned genesis, add multi-provider/DHT content lookup, dataset provenance, key-rotation/recovery procedures, and collective promotion rules. The public Git repository does not ship checkpoints.
 - Current inference is replicated whole-request execution. Benchmark it, then add redundant candidate verification/expert routing only where measurements justify it.
 - Add scheduler fairness, hardware attestation/capability validation, process/container job isolation, quotas, cancellation, cost limits, and failure rescheduling.
-- Extend direct-peer useful-work presentation into Sybil-independent issuer trust/identity aging and starvation-resistant exploration without turning any seed into an authority. Measure optional identity-work economics only as an abuse-control fallback. Quantify cross-hardware determinism, add poisoning/anomaly tests, and connect receipt-backed aggregates to an audited threshold release proposal. Neither credits nor work stamps prove independent control.
+- Extend direct-peer useful-work presentation into Sybil-independent issuer trust without turning any seed into an authority. Validate exploration fairness and abuse resistance under churn. Optional identity work remains only an off-by-default abuse-control fallback. Quantify cross-hardware determinism, add poisoning/anomaly tests, and connect receipt-backed aggregates to an audited threshold release proposal. Neither credits, continuity age, nor work stamps prove independent control.
 - Address gradient inversion and endpoint training-data leakage; encrypted transport does not make untrusted workers or requesters trustworthy.
 
 ### Operations

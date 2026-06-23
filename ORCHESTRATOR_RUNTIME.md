@@ -47,7 +47,7 @@ Do not enable global export for content that has not been explicitly stored in t
 
 When enabled, `SwarmNetwork` defaults to persistent LSP v3 sessions, supplies blended remote pheromones, exchanges global deltas, and enables typed work. Signed peer HELLO resource profiles are added to and removed from runtime `NodeManager`. The scheduler can assign inference, artifact, and gradient jobs, but declarations are self-reported and Dolphin/sect allocation is not automatically driven by unverified capacity.
 
-Remote inference uses a fresh non-persistent `RuntimeSession`, disables personal Matriarca retrieval and importance changes, records no history, does not read/update Dolphin sleep/acoustic state, and serializes model access with local inference. Distributed training requires an exact checkpoint file hash, a content-addressed `application/x-npy` token dataset, bounded token range, and declared RAM/disk sufficient for the estimated gradient. `compute_gradient_quorum()` requests matching distinct peers in parallel and emits a streaming coordinate-median artifact; every candidate and aggregate remains unapplied. Once aggregation succeeds, each included worker receives a locally persisted, duplicate-resistant useful-work credit signed by both the worker (result receipt) and requester (aggregation attestation). Direct peers present and verify a bounded credit set; scheduling prefers contributions previously accepted by the current requester, then capped issuer-diverse evidence.
+Remote inference uses a fresh non-persistent `RuntimeSession`, disables personal Matriarca retrieval and importance changes, records no history, does not read/update Dolphin sleep/acoustic state, and serializes model access with local inference. Distributed training requires an exact checkpoint file hash, a content-addressed `application/x-npy` token dataset, bounded token range, and declared RAM/disk sufficient for the estimated gradient. `compute_gradient_quorum()` requests matching distinct peers in parallel and emits a streaming coordinate-median artifact; every candidate and aggregate remains unapplied. Once aggregation succeeds, each included worker receives a locally persisted, duplicate-resistant useful-work credit signed by both the worker (result receipt) and requester (aggregation attestation). Direct peers present and verify a bounded credit set; scheduling prefers contributions previously accepted by the current requester, then capped issuer-diverse evidence, with one identity-aged newcomer exploration opportunity per five selections.
 
 `generate_distributed_verified()` sends a deterministic greedy request to an odd quorum of three-to-nine peers advertising the exact checkpoint hash. Candidate selection prefers different coarse network groups; acceptance requires a strict byte-identical text majority, and the returned record includes supporting Ed25519 receipts. This is replication, not proof against Sybil-controlled workers.
 
@@ -55,7 +55,7 @@ Remote inference uses a fresh non-persistent `RuntimeSession`, disables personal
 
 ## Known runtime gaps
 
-- No bounded persistent request queue, cancellation, fair scheduling, or process-level multi-tenant isolation.
+- No bounded persistent request queue, cancellation, fair-share accounting beyond newcomer exploration, or process-level multi-tenant isolation.
 - Model loading is process-global and heavyweight.
 - API chat history is in memory and unauthenticated.
 - Dynamic topology changes are not integrated safely with a live optimizer.

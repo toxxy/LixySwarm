@@ -26,6 +26,7 @@ from .useful_work import (
     UsefulWorkLedger,
     verify_useful_work_bundle,
 )
+from .scheduler_history import SchedulerHistory
 
 __all__ = [
     "LSPIdentity",
@@ -65,6 +66,7 @@ __all__ = [
     "UsefulWorkCredit",
     "UsefulWorkLedger",
     "verify_useful_work_bundle",
+    "SchedulerHistory",
 ]
 
 # Compatibilidad v1: requiere torch por FeromonMessage.

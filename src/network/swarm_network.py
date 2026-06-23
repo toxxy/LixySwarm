@@ -146,6 +146,15 @@ class SwarmNetwork:
                 governor,
                 max_workers=max_workers,
                 minimum_identity_work_bits=self.identity_work_bits,
+                scheduler_state_path=(
+                    self.checkpoint_dir / "scheduler_history_v1.json"
+                ),
+                exploration_interval=int(os.environ.get(
+                    "LIXYSWARM_EXPLORATION_INTERVAL", "5"
+                )),
+                exploration_minimum_age_s=float(os.environ.get(
+                    "LIXYSWARM_EXPLORATION_MIN_AGE_S", "60"
+                )),
             )
         return self.work_coordinator
 

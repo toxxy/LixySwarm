@@ -107,6 +107,8 @@ After a gradient candidate enters a validated quorum aggregate, the requester si
 
 A worker presents at most 16 credits, preferring recent credits from distinct issuers, after the encrypted handshake. Presentations received before the local ledger/verifier starts are retained only for the authenticated live session and replayed to the verifier, removing startup-order dependence. HELLO-provided `useful_work` values are discarded. The receiver validates both signatures and worker ownership, stores only privacy-safe counters in its peer snapshot, and identifies credits that it issued firsthand. Scheduling prefers firsthand evidence, then bounded issuer diversity and capacity. Multi-hop discovery, issuer trust/aging, and Sybil independence are not implemented.
 
+The requester persists a private bounded scheduler history containing only pseudonymous node IDs, first-seen/last-selected times, and counters. By default, every fifth scheduling event can replace the lowest-ranked selected slot with the least-selected identity known for at least 60 seconds. A quorum replacement is skipped if it would reduce the network-group diversity of the retained members. `LIXYSWARM_EXPLORATION_INTERVAL` and `LIXYSWARM_EXPLORATION_MIN_AGE_S` tune these local values; zero interval disables exploration. This is free admission and anti-starvation policy, not a fee, stake, reward token, or Sybil proof.
+
 Current operations are isolated inference, artifact describe/read-chunk, and gradient computation. Artifacts use full-file SHA-256 identities, bounded manifests, 96 KiB raw chunks, per-chunk SHA-256, atomic commit, and final full-file verification. Gradient results are candidates and are never applied by the protocol.
 
 Trusted release announcements are deduplicated and relayed only after the receiver's local threshold policy validates them. Acquisition runs outside the transport loop, pulls every referenced artifact from the announcing peer, verifies full hashes, and stores the accepted manifest. Activation remains manual unless the persisted trust policy explicitly enables auto-activation.
@@ -122,5 +124,5 @@ LSP v2 remains available only through `SwarmNetwork(..., protocol="v2")`. LSP v3
 - Stronger autonomous-system/network diversity, feeler connections, and adversarial eclipse tests.
 - Sybil-independent issuer/result reputation, identity aging, hardware verification, and eclipse resistance beyond local misbehavior bans and connected-peer useful-work evidence.
 - DHT discovery after persistent peer exchange is stable.
-- Official threshold trust roots/genesis artifacts, multi-provider content lookup beyond the announcing peer, cross-hardware validation of replicated inference, starvation-resistant fair scheduling, cancellation, and job recovery.
+- Official threshold trust roots/genesis artifacts, multi-provider content lookup beyond the announcing peer, cross-hardware validation of replicated inference, persistent fair-share queues, cancellation, and job recovery.
 - Fuzzing, load tests, mixed-version upgrades, and an external security audit.

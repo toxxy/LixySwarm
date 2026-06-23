@@ -25,6 +25,7 @@ The default swarm configuration contains:
 - Three-to-31-peer gradient quorums with exact-input validation and chunked coordinate-median aggregation; aggregate results remain unapplied candidates.
 - Ed25519 work-result receipts bound to worker, requester, job, output, and timestamp, retained in quorum provenance.
 - Validated gradient-quorum contributions produce dual-signed useful-work credits: the worker receipt proves the result and the requester attests that it entered an aggregate. Workers present a bounded set over encrypted sessions; requesters verify it locally and prioritize firsthand accepted work, while duplicate contributions cannot mint additional credit.
+- Persistent requester-local scheduling history gives an identity-aged newcomer one exploration opportunity every five selections without reducing available quorum network-group diversity; only pseudonymous node IDs and counters are stored.
 - Deterministic replicated inference across three-to-nine model-matched peers with coarse network-group diversity and an exact-output majority rule.
 - Optional persistent Hashcash-style identity-work stamps bound to Ed25519 keys; operators may configure a minimum with `LIXYSWARM_IDENTITY_WORK_BITS`, but the default is zero because useful validated training—not expendable hashing—is the intended reputation basis.
 - Threshold-signed model release manifests, local trust roots, pinned genesis support, monotonic activation, revocation lists, and explicit rollback.
@@ -33,7 +34,11 @@ The default swarm configuration contains:
 - FastAPI status/chat endpoints, a status publisher, and two static frontends.
 - Continuous training and an opt-in metabolic-hunger decision function.
 
-Some paper descriptions are only partially represented. In particular, the main forward pass does not implement the paper's exact `fitness × confidence × role_weight` equation. Useful-work credits are verifiable evidence issued by pseudonymous requesters, not proof that operators are independent or that a gradient is beneficial. The scheduler now prefers its own previously accepted contributors and bounded issuer-diverse evidence, but issuer trust/aging, hardware validation, fairness, cancellation, and network-wide promotion governance remain.
+Some paper descriptions are only partially represented. In particular, the main forward pass does not implement the paper's exact `fitness × confidence × role_weight` equation. Useful-work credits are verifiable evidence issued by pseudonymous requesters, not proof that operators are independent or that a gradient is beneficial. The scheduler now prefers its own previously accepted contributors, bounded issuer-diverse evidence, and periodic newcomer exploration, but Sybil-independent issuer trust, hardware validation, queue fairness, cancellation, and network-wide promotion governance remain.
+
+## Free participation model
+
+LixySwarm has no token, payment, fee, stake, or mandatory expendable proof of work. A useful-work credit is scheduling evidence, not money or a transferable asset. Connectivity starts immediately; consented compute is eligible immediately when capacity is needed, and a still-uncredited identity joins the explicit exploration rotation after one minute of continuity. Hashcash identity work is optional and disabled by default.
 
 ## Architecture
 
@@ -60,7 +65,7 @@ python3 -m pip install -e . --no-deps
 pytest -q
 ```
 
-The full suite passed **178 tests** on 2026-06-22.
+The full suite passed **182 tests** on 2026-06-22.
 
 Join as a connectivity/artifact node, or explicitly consent to compute:
 

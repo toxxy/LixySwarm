@@ -1,3 +1,5 @@
+import json
+
 import pytest
 from dataclasses import replace
 
@@ -300,5 +302,116 @@ def test_scheduler_prioritizes_verified_useful_work(tmp_path):
         assert coordinator.select_peer(
             ResourceRequirements(kind="training")
         ) == experienced.node_id_hex
+    finally:
+        coordinator.close()
+
+
+def test_scheduler_gives_aged_new_identity_bounded_exploration(tmp_path):
+    experienced = LSPIdentity.generate()
+    newcomer = LSPIdentity.generate()
+
+    class FakeNode:
+        identity = LSPIdentity.generate()
+
+        def on_work_offer_received(self, _callback):
+            return None
+
+        def on_work_result_received(self, _callback):
+            return None
+
+        def peers(self):
+            base = {
+                "work": {"training": True}, "cpu_cores": 4,
+                "ram_gb": 8, "disk_gb": 8, "has_gpu": True,
+                "gpu_vram_gb": 8,
+            }
+            return [
+                {
+                    "node_id": experienced.node_id_hex,
+                    "host": "8.8.8.8",
+                    "resources": {
+                        **base,
+                        "useful_work": {
+                            "verified": True,
+                            "firsthand_credits": 2,
+                            "firsthand_tokens": 1024,
+                        },
+                    },
+                },
+                {
+                    "node_id": newcomer.node_id_hex,
+                    "host": "1.1.1.1",
+                    "resources": base,
+                },
+            ]
+
+    state_path = tmp_path / "scheduler-state.json"
+    coordinator = WorkCoordinator(
+        FakeNode(),
+        _governor(tmp_path / "exploration-governor", "relay"),
+        scheduler_state_path=state_path,
+        exploration_interval=5,
+        exploration_minimum_age_s=0,
+    )
+    try:
+        selected = [
+            coordinator.select_peer(ResourceRequirements(kind="training"))
+            for _ in range(6)
+        ]
+        assert selected[:4] == [experienced.node_id_hex] * 4
+        assert selected[4] == newcomer.node_id_hex
+        assert selected[5] == experienced.node_id_hex
+    finally:
+        coordinator.close()
+
+    persisted = json.loads(state_path.read_text())
+    assert persisted["dispatch_count"] == 6
+    assert persisted["peers"][newcomer.node_id_hex]["selections"] == 1
+    assert "host" not in state_path.read_text()
+
+
+def test_quorum_exploration_does_not_reduce_network_group_diversity(tmp_path):
+    identities = [LSPIdentity.generate() for _ in range(4)]
+
+    class FakeNode:
+        identity = LSPIdentity.generate()
+
+        def on_work_offer_received(self, _callback):
+            return None
+
+        def on_work_result_received(self, _callback):
+            return None
+
+        def peers(self):
+            hosts = ["8.8.1.1", "1.1.1.1", "9.9.9.9", "8.8.2.2"]
+            credits = [4, 3, 2, 0]
+            return [{
+                "node_id": identity.node_id_hex,
+                "host": host,
+                "resources": {
+                    "work": {"training": True},
+                    "cpu_cores": 4,
+                    "ram_gb": 8,
+                    "disk_gb": 8,
+                    "has_gpu": True,
+                    "gpu_vram_gb": 8,
+                    "useful_work": {
+                        "verified": True,
+                        "firsthand_credits": credit_count,
+                    },
+                },
+            } for identity, host, credit_count in zip(identities, hosts, credits)]
+
+    coordinator = WorkCoordinator(
+        FakeNode(),
+        _governor(tmp_path / "diversity-governor", "relay"),
+        exploration_interval=1,
+        exploration_minimum_age_s=0,
+    )
+    try:
+        selected = coordinator.select_peers(
+            ResourceRequirements(kind="training"), limit=3
+        )
+        assert selected == [identity.node_id_hex for identity in identities[:3]]
     finally:
         coordinator.close()

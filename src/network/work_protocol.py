@@ -22,6 +22,7 @@ from typing import Callable, Optional
 from src.contribution import ResourceGovernor, ResourceRequirements
 from .peer_manager import network_group
 from .identity_work import verify_identity_work
+from .scheduler_history import SchedulerHistory
 
 
 MAX_WORK_JSON_SIZE = 256 * 1024
@@ -321,6 +322,9 @@ class WorkCoordinator:
         *,
         max_workers: int = 2,
         minimum_identity_work_bits: int = 0,
+        scheduler_state_path=None,
+        exploration_interval: int = 5,
+        exploration_minimum_age_s: float = 60.0,
     ):
         self.node = node
         self.governor = governor
@@ -332,6 +336,11 @@ class WorkCoordinator:
         self._inflight: set[str] = set()
         self._completed: OrderedDict[str, WorkResult] = OrderedDict()
         self._lock = threading.RLock()
+        self.scheduler_history = SchedulerHistory(
+            scheduler_state_path,
+            exploration_interval=exploration_interval,
+            minimum_age_s=exploration_minimum_age_s,
+        )
         self._executor = ThreadPoolExecutor(
             max_workers=max(1, min(int(max_workers), 64)),
             thread_name_prefix="lixy-work",
@@ -391,6 +400,7 @@ class WorkCoordinator:
 
     def close(self):
         self._executor.shutdown(wait=True, cancel_futures=True)
+        self.scheduler_history.close()
 
     def select_peer(
         self,
@@ -411,12 +421,14 @@ class WorkCoordinator:
         limit: int = 3,
     ) -> list[str]:
         requirements.validate()
-        return [
-            str(peer["node_id"])
-            for peer in self._eligible_peers(
-                requirements, required_model_id=required_model_id
-            )[:max(0, int(limit))]
-        ]
+        with self._lock:
+            selected = self._choose_candidates(
+                self._eligible_peers(
+                    requirements, required_model_id=required_model_id
+                ),
+                limit=max(0, int(limit)),
+            )
+        return [str(peer["node_id"]) for peer in selected]
 
     def _select_peer(
         self,
@@ -424,10 +436,48 @@ class WorkCoordinator:
         *,
         required_model_id: Optional[str] = None,
     ) -> Optional[str]:
-        candidates = self._eligible_peers(
-            requirements, required_model_id=required_model_id
-        )
+        with self._lock:
+            candidates = self._choose_candidates(
+                self._eligible_peers(
+                    requirements, required_model_id=required_model_id
+                ),
+                limit=1,
+            )
         return str(candidates[0]["node_id"]) if candidates else None
+
+    def _choose_candidates(self, candidates: list[dict], *, limit: int) -> list[dict]:
+        if limit <= 0 or not candidates:
+            return []
+        for peer in candidates:
+            self.scheduler_history.observe(
+                [str(peer["node_id"])], now=peer.get("connected_at")
+            )
+        selected = list(candidates[:limit])
+        if self.scheduler_history.exploration_due() and selected:
+            selected_ids = {str(peer["node_id"]) for peer in selected}
+            retained_groups = {
+                network_group(str(peer.get("host", "unknown")))
+                for peer in selected[:-1]
+            }
+            exploration_pool = [
+                peer for peer in candidates
+                if str(peer["node_id"]) not in selected_ids
+                and self.scheduler_history.is_aged(str(peer["node_id"]))
+                and network_group(str(peer.get("host", "unknown")))
+                not in retained_groups
+            ]
+            explorer_id = self.scheduler_history.least_selected([
+                str(peer["node_id"]) for peer in exploration_pool
+            ])
+            if explorer_id is not None:
+                selected[-1] = next(
+                    peer for peer in exploration_pool
+                    if str(peer["node_id"]) == explorer_id
+                )
+        self.scheduler_history.record_dispatch([
+            str(peer["node_id"]) for peer in selected
+        ])
+        return selected
 
     def _eligible_peers(
         self,

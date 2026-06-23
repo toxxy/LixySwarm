@@ -12,7 +12,12 @@ import time
 from pathlib import Path
 
 from src.contribution import ContributionPolicy, ResourceGovernor
-from src.network import ArtifactStore, SwarmNetwork, UsefulWorkLedger
+from src.network import (
+    ArtifactStore,
+    SchedulerHistory,
+    SwarmNetwork,
+    UsefulWorkLedger,
+)
 from src.network.lsp import LSPIdentity
 from src.release import ReleaseManifest, ReleaseRegistry, TrustPolicy
 
@@ -80,11 +85,13 @@ def show_status(args) -> int:
         useful_work = UsefulWorkLedger(
             home / "useful_work_credits.json", identity.node_id_hex
         ).summary()
+    scheduler = SchedulerHistory(home / "scheduler_history_v1.json").snapshot()
     print(json.dumps({
         "home": str(home),
         "profile": governor.advertised_profile(),
         "governor": governor.status(),
         "known_peers": known_peers,
+        "scheduler": scheduler,
         "useful_work": useful_work,
         "bootstrap_configured": bool(os.environ.get("LIXYSWARM_BOOTSTRAP_SEEDS")),
     }, indent=2, sort_keys=True))
