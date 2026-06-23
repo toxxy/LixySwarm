@@ -23,6 +23,7 @@ NODE_LOG       = BASE / "node.log"
 TRAINING_STATE = BASE / "checkpoints" / "training_state.json"
 LSP_IDENTITIES = [
     BASE / ".lixyswarm" / "identity.key",
+    BASE / "checkpoints" / "lsp_identity.pem",
 ] + sorted((BASE / "checkpoints").glob("lsp_identity_*.pem"))
 
 
@@ -144,7 +145,7 @@ def get_network_state() -> dict:
                 "node_id": vps_node_id[:16],
                 "host":    "0.0.0.0",
                 "port":    7338,
-                "role":    "vps-relay",
+                "role":    "seed",
                 "self":    True,
             })
 
@@ -229,38 +230,45 @@ def get_lsp_state() -> dict:
     s = _read_status()
     published = s.get("lsp", {}) if isinstance(s.get("lsp"), dict) else {}
     public_host = os.environ.get("LIXYSWARM_PUBLIC_HOST")
-    relay_host = os.environ.get("LIXYSWARM_API_URL") or os.environ.get("LIXYSWARM_VPS_HOST")
+    configured_seeds = os.environ.get("LIXYSWARM_BOOTSTRAP_SEEDS")
     published_internet = published.get("internet", {}) if isinstance(published.get("internet"), dict) else {}
     standalone_identity = BASE / ".lixyswarm" / "identity.key"
-    is_vps_relay = standalone_identity.exists()
-    wan_ready = bool(public_host or relay_host or published_internet.get("ready") or is_vps_relay)
+    is_seed = standalone_identity.exists()
+    wan_ready = bool(public_host or configured_seeds or published_internet.get("ready") or is_seed)
     wan_mode = (
-        "vps-relay"
-        if is_vps_relay
+        "seed"
+        if is_seed
         else published_internet.get("mode")
-        or ("relay/public-host" if wan_ready else "lan-only")
+        or ("public-peer" if public_host else "outbound-p2p" if configured_seeds else "unbootstrapped")
     )
 
     return {
-        "protocol": published.get("protocol", "LSP v2"),
-        "wire_format": published.get("wire_format", "LYSW"),
+        "protocol": published.get("protocol", "LSP v3"),
+        "wire_format": published.get("wire_format", "LYS3"),
         "identity": published.get("identity", "Ed25519"),
         "identity_persistent": any(path.exists() for path in LSP_IDENTITIES),
         "status": published.get("status", "available"),
         "float16": published.get("float16", True),
-        "merge_on_transit": published.get("merge_on_transit", True),
-        "discovery": "TCP handshake + API status publish",
-        "ports": {
-            "feromon_udp": 7337,
-            "gossip_tcp": 7338,
-        },
+        "transport": published.get("transport", "persistent-tcp"),
+        "signed_required": published.get("signed_required", True),
+        "anti_replay": published.get("anti_replay", True),
+        "encrypted_required": published.get("encrypted_required", True),
+        "key_agreement": published.get("key_agreement", "X25519-HKDF-SHA256"),
+        "aead": published.get("aead", "ChaCha20-Poly1305"),
+        "peer_exchange": published.get("peer_exchange", True),
+        "seed_independent": published.get("seed_independent", True),
+        "merge_on_transit": published.get("merge_on_transit", False),
+        "discovery": "DNS seeds + persistent peer exchange + saved address book",
+        "ports": published.get("ports", {
+            "session_tcp": 7338,
+            "legacy_feromon_udp": 7337,
+        }),
         "internet": {
             "ready": wan_ready,
             "mode": wan_mode,
             "requires": [] if wan_ready else [
-                "VPS relay o IP pública",
-                "puertos abiertos/reenviados",
-                "configuración explícita de peers",
+                "at least one DNS/bootstrap seed",
+                "outbound TCP connectivity",
             ],
         },
     }

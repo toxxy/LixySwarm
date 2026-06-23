@@ -58,7 +58,7 @@ Each dolphin produces five pings: topic, intent, need, context, and emotion. Top
 
 `HalfSleepState` maintains a bounded recent-context buffer and an accumulated state. Phase B can consolidate idle context using PCA/SVD. The check runs when the dolphin/runtime is invoked; it is not an independent durable background scheduler.
 
-The pool target is `min(1 + floor(n_nodes / 3), 4)`. Today, the runtime usually sees only its local `NodeManager` record because remote LSP peers are not automatically mapped to model capacity.
+The pool uses one Dolphin for one node, two for two-to-four nodes, three for five-to-nine nodes, and then grows by approximately one per three additional nodes without an artificial ceiling. LSP peer profiles are registered in `NodeManager`; automatically resizing a live model from unverified declarations remains unsafe and is not enabled.
 
 ## Lifecycle layer
 
@@ -71,15 +71,17 @@ These mechanisms are locally tested. Dynamic addition/removal of live model para
 
 ## Network layer
 
-`SwarmNetwork` defaults to `LSPNodeV2` unless run in local mode. The data path is:
+`SwarmNetwork` defaults to `LSPNodeV3`. It uses persistent TCP 7338 sessions for signed HELLO, encrypted peer exchange, binary float16 pheromones, Global Matriarca deltas, and work. Each node maintains a bounded persistent address book and a target number of outbound sessions. Configured DNS seeds only introduce peers; learned direct sessions survive seed shutdown.
 
-- UDP 7337: signed LSP envelope containing a binary float16 pheromone payload.
-- TCP 7338: signed handshake, peer list, and JSON global-memory delta inside the LSP envelope.
-- Saved peer cache plus `LIXYSWARM_BOOTSTRAP_SEEDS` for discovery.
+The v3 envelope requires Ed25519 signatures and includes network, session, message, sequence, timestamp, and bounded-length fields. Signed X25519 HELLO derives an HKDF-SHA256 key, and all later payloads require ChaCha20-Poly1305. Replay, stale, malformed, wrong-network, oversized, invalid-AEAD, and identity-changing frames are rejected. Public peer advertisements reject private/link-local/multicast/invalid addresses unless LAN/test mode is explicit.
 
-Legacy JSON/HMAC and mDNS modules remain for compatibility but are not the default v2 path.
+HELLO resource declarations are bounded and registered in runtime `NodeManager`. The typed scheduler uses them to select consenting peers for inference, artifact, and gradient work, but they remain self-reported. Worker-side policy, operation allowlists, fixed schemas, and leases limit execution; hardware attestation and process/container isolation do not yet exist.
 
-Current security limitations include acceptance of unsigned packets, no replay field, insufficient TCP/decompression bounds, self-asserted peer trust, and relay TTL reset. Do not expose these listeners to untrusted networks.
+Work units are canonical JSON identified by SHA-256 and tied to the signed origin session. They contain declarative inputs only; executable/script/command fields are rejected recursively. Inference runs without personal Matriarca retrieval, history writes, or Dolphin-state mutation. Training workers accept only a matching local model hash and a safe one-dimensional NumPy token artifact, return a verified NPZ gradient artifact, and never apply it.
+
+`ArtifactStore` addresses objects by SHA-256, omits source filenames and paths from manifests, applies storage quotas, transfers 96 KiB chunks, verifies each chunk, and verifies the complete object before commit.
+
+LSP v2, legacy JSON/HMAC, UDP, and mDNS modules remain for explicit compatibility only.
 
 ## Training and evaluation
 

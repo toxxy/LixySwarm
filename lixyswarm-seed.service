@@ -1,0 +1,30 @@
+[Unit]
+Description=LixySwarm LSP v3 Seed
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=lixyswarm
+Group=lixyswarm
+WorkingDirectory=/opt/lixyswarm/app
+Environment=PYTHONPATH=/opt/lixyswarm/app
+Environment=LIXYSWARM_IDENTITY_PATH=/var/lib/lixyswarm/identity.key
+Environment=LIXYSWARM_PEERS_PATH=/var/lib/lixyswarm/peers_v3.json
+EnvironmentFile=-/etc/lixyswarm/seed.env
+ExecStart=/opt/lixyswarm/venv/bin/python /opt/lixyswarm/app/node_daemon.py
+Restart=always
+RestartSec=5
+StateDirectory=lixyswarm
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+LockPersonality=true
+
+[Install]
+WantedBy=multi-user.target

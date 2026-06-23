@@ -633,7 +633,12 @@ class LixySwarm(nn.Module):
                     log.info(f"🐬 Delfín {e['dolphin_idx']} retirado (red={n_nodes} nodos)")
         return events
 
-    def _get_infrasound(self, feromon: torch.Tensor) -> Optional[torch.Tensor]:
+    def _get_infrasound(
+        self,
+        feromon: torch.Tensor,
+        *,
+        update_importance: bool = True,
+    ) -> Optional[torch.Tensor]:
         """Consulta a la Matriarca y obtiene infrasónidos."""
         if self.matriarca is None:
             return None
@@ -648,7 +653,7 @@ class LixySwarm(nn.Module):
             state,
             use_retrieval=True,
             top_k=32,
-            update_importance=True,
+            update_importance=update_importance,
             importance_delta=0.05,
         )
         return infrasound.to(feromon.device).unsqueeze(0).expand(feromon.shape[0], -1)
@@ -727,14 +732,24 @@ class LixySwarm(nn.Module):
         targets: Optional[torch.Tensor] = None,
         context_text: str = "",
         store_memory: bool = False,
+        update_runtime_state: bool = True,
+        update_memory_importance: bool = True,
+        use_memory: bool = True,
     ):
         B, T = idx.shape
 
         # ─── 1. Delfín 🐬 — Ecolocalización + Sueño unihemisférico ───
-        feromon, dolphin_info = self.dolphin(idx)  # [B, feromon_dim]
+        feromon, dolphin_info = self.dolphin(
+            idx, update_runtime_state=update_runtime_state
+        )  # [B, feromon_dim]
 
         # ─── 2. Infrasónidos 🐘 y mezcla ───
-        infrasound = self._get_infrasound(feromon)
+        infrasound = (
+            self._get_infrasound(
+                feromon, update_importance=update_memory_importance
+            )
+            if use_memory else None
+        )
         if infrasound is not None:
             feromon = self.infrasound_mixer(feromon, infrasound)
 

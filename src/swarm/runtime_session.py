@@ -397,6 +397,10 @@ class RuntimeSession:
         max_new_tokens: Optional[int] = None,
         temperature: Optional[float] = None,
         top_k: Optional[int] = None,
+        store_memory: bool = True,
+        record_history: bool = True,
+        update_runtime_state: bool = True,
+        use_memory: bool = True,
     ) -> str:
         """
         Procesa un turno de conversación.
@@ -423,9 +427,10 @@ class RuntimeSession:
 
         # Feedback explícito: detectar si el usuario valora la última respuesta
         # Se hace ANTES de clasificar la query para no contaminar el rol dinámico
-        explicit_feedback = self._detect_explicit_feedback(user_input)
-        if explicit_feedback != 0.0:
-            self._apply_explicit_feedback(explicit_feedback)
+        if store_memory:
+            explicit_feedback = self._detect_explicit_feedback(user_input)
+            if explicit_feedback != 0.0:
+                self._apply_explicit_feedback(explicit_feedback)
 
         # Clasificar query y adaptar temperatura + roles de agentes
         task_profile, role_weights = self._role_adapter.get_weights_for_query(
@@ -455,6 +460,9 @@ class RuntimeSession:
                 x_cond,
                 context_text=context_with_history[:200],
                 store_memory=False,    # no guardar aún — esperamos al final del turno
+                update_runtime_state=update_runtime_state,
+                update_memory_importance=store_memory,
+                use_memory=use_memory,
             )
 
             # Si hay feromon previo, mezclar (warm-start: 70% nuevo, 30% memoria)
@@ -477,12 +485,15 @@ class RuntimeSession:
             self._cached_feromon = cached_feromon
 
             # Stats warm-up
-            if swarm.matriarca is not None:
-                infra = swarm._get_infrasound(cached_feromon)
+            if use_memory and swarm.matriarca is not None:
+                infra = swarm._get_infrasound(
+                    cached_feromon, update_importance=store_memory
+                )
                 if infra is not None:
                     infrasound_norms.append(infra.norm().item())
                 # Registrar qué memorias se accedieron en este warm-up
-                self._track_accessed_memories()
+                if store_memory:
+                    self._track_accessed_memories()
             feromon_norms.append(cached_feromon.norm().item())
 
             # ── Generación token a token ──────────────────────────────────────
@@ -496,17 +507,23 @@ class RuntimeSession:
                         x_cond,
                         context_text=context_with_history[:100],
                         store_memory=False,
+                        update_runtime_state=update_runtime_state,
+                        update_memory_importance=store_memory,
+                        use_memory=use_memory,
                     )
                     # Blend: 60% nuevo contexto, 40% feromon acumulado
                     cached_feromon = 0.6 * new_feromon.detach() + 0.4 * cached_feromon
                     cached_feromon = F.normalize(cached_feromon, dim=-1)
                     self._cached_feromon = cached_feromon
 
-                    if swarm.matriarca is not None:
-                        infra = swarm._get_infrasound(cached_feromon)
+                    if use_memory and swarm.matriarca is not None:
+                        infra = swarm._get_infrasound(
+                            cached_feromon, update_importance=store_memory
+                        )
                         if infra is not None:
                             infrasound_norms.append(infra.norm().item())
-                        self._track_accessed_memories()
+                        if store_memory:
+                            self._track_accessed_memories()
                     feromon_norms.append(cached_feromon.norm().item())
 
                 # Forward de agentes base con feromon fijo
@@ -558,7 +575,7 @@ class RuntimeSession:
 
         # ── Feedback post-turno a la Matriarca 🐘 ────────────────────────────
         # Ahora que tenemos el output completo, lo almacenamos con contexto rico
-        if swarm.matriarca is not None:
+        if store_memory and swarm.matriarca is not None:
             self._store_turn_to_matriarca(
                 user_input=user_input,
                 response=response,
@@ -571,21 +588,22 @@ class RuntimeSession:
         avg_fero = sum(feromon_norms) / len(feromon_norms) if feromon_norms else 0.0
         n_new_tokens = x.size(1) - len(tokens)
 
-        record = TurnRecord(
-            user_input=user_input,
-            response=response,
-            timestamp=time.time(),
-            infrasound_norm=avg_infra,
-            feromon_norm=avg_fero,
-            n_tokens=n_new_tokens,
-            task_type=task_profile.task_type,
-        )
-        self.history.append(record)
-        self.stats.total_turns += 1
-        self.stats.total_tokens += n_new_tokens
+        if record_history:
+            record = TurnRecord(
+                user_input=user_input,
+                response=response,
+                timestamp=time.time(),
+                infrasound_norm=avg_infra,
+                feromon_norm=avg_fero,
+                n_tokens=n_new_tokens,
+                task_type=task_profile.task_type,
+            )
+            self.history.append(record)
+            self.stats.total_turns += 1
+            self.stats.total_tokens += n_new_tokens
 
-        # Persistir historial después de cada turno
-        self._save_history()
+            # Persistir historial después de cada turn.
+            self._save_history()
 
         if self.verbose:
             print(f"  [🐘 infra={avg_infra:.3f} | 🐜 feromon={avg_fero:.3f} | tokens={n_new_tokens} | 🧠 {task_profile.task_type}]")

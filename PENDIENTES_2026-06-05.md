@@ -4,11 +4,14 @@
 
 ## P0: block unsafe public deployment
 
-- [ ] Reject unsigned LSP packets.
-- [ ] Add message IDs, origin IDs, sequence/nonces, replay cache, and freshness rules.
-- [ ] Bound TCP frames, decompression, JSON, vectors, connections, and handler concurrency.
-- [ ] Preserve origin TTL/decay across relays and add loop/duplicate suppression.
-- [ ] Validate peer-advertised addresses and prevent SSRF/private-address abuse.
+- [x] Reject unsigned packets on the default LSP v3 path; v2 is explicit compatibility only.
+- [x] Add session/message IDs, sequences, replay cache, network ID, and freshness rules.
+- [x] Bound v3 frames, JSON, vectors, message rates, and byte rates; add global connection quotas and fuzzing next.
+- [x] Remove the relay dependency: v3 establishes direct persistent sessions and does not flood packets.
+- [x] Validate peer-advertised addresses and reject private/link-local abuse on the public path.
+- [x] Encrypt all post-HELLO LSP v3 payloads with signed X25519/HKDF/ChaCha20-Poly1305 sessions.
+- [x] Add coarse network-group selection plus hashed, decaying local misbehavior scores and persistent exponential temporary bans.
+- [ ] Add in-session key rotation, identity recovery/rotation, result/capability reputation, and adversarial eclipse/Sybil defenses.
 - [ ] Put the API behind TLS; authenticate chat/history/admin; add rate and size limits.
 - [ ] Replace wildcard production CORS with an explicit allowlist.
 - [ ] Make personal-memory encryption mandatory in production with key rotation.
@@ -22,7 +25,7 @@
 - [ ] Implement the paper's exact fitness/confidence/role aggregation or revise the equation.
 - [ ] Reconcile the five-factor importance weights and continuation/topic-shift feedback.
 - [ ] Unify the six paper roles, three runtime agent weights, and sect role taxonomy.
-- [ ] Wire authenticated LSP peer lifecycle into `NodeManager` and Dolphin/sect scaling.
+- [ ] Finish LSP v3 lifecycle integration: `NodeManager` registration and typed-job selection are implemented; verified-capacity-driven Dolphin/sect allocation remains.
 - [ ] Make Phase B consolidation a durable background lifecycle and measure its benefit.
 - [ ] Make Metabolic Hunger learn from recorded outcomes or describe it as deterministic.
 
@@ -42,26 +45,41 @@
 - [ ] Add paper-table regeneration and metric schema validation to CI.
 - [ ] Separate historical benchmark claims from current CI results.
 
-## P2: trusted multi-node validation
+## P2: final-topology multi-node validation
 
-- [ ] Run a 3-10 node, multi-region staging network for at least seven days.
+- [x] Add a three-node test proving discovery and direct communication after seed shutdown.
+- [ ] Run the same final v3 topology on 3-10 multi-region public nodes for at least seven days.
 - [ ] Measure latency, throughput, packet loss, partitions, churn, and recovery.
 - [ ] Implement a real merge window and benchmark its effect.
 - [ ] Exercise mixed protocol versions and rolling upgrades.
 - [ ] Add fuzzing and property tests for every wire decoder.
 
+## P1: distributed compute and artifacts
+
+- [x] Add persisted opt-in contribution policies and worker-side resource leases.
+- [x] Add signed-origin, content-addressed, declarative work with allowlisted handlers and no peer code execution.
+- [x] Add isolated distributed inference that cannot access personal runtime state.
+- [x] Add SHA-256 artifact manifests, resumable chunks, quotas, atomic commit, and complete verification.
+- [x] Add exact-model bounded gradient computation over safe NumPy token artifacts; never apply results automatically.
+- [ ] Add publisher-signed model/dataset release manifests, provenance, revocation, and rollback.
+- [ ] Add content/provider discovery, replication, availability scoring, and garbage collection.
+- [ ] Add persistent queues, cancellation, retry/failure rescheduling, fairness, and per-identity quotas.
+- [ ] Move work into an OS/container sandbox with CPU/GPU/RAM/disk/network enforcement.
+- [ ] Replicate inference/training jobs and validate results across independent identities.
+- [ ] Implement poisoning detection, gradient privacy defenses, and Byzantine-robust aggregation before model updates.
+
 ## P2: Internet topology and operations
 
-- [ ] Operate redundant DNS seeds/relays under separate failure domains.
+- [ ] Operate redundant DNS seeds under separate failure domains; multi-endpoint resolution exists in code.
 - [ ] Implement and test DHT discovery.
-- [ ] Add NAT traversal and IPv6 support.
-- [ ] Build unprivileged packages/containers, migrations, SBOM, and signed releases.
+- [ ] Validate outbound-only participation across common NATs and IPv6 networks.
+- [ ] Build unprivileged packages/containers, migrations, SBOM, and signed releases; the seed systemd unit is hardened and unprivileged.
 - [ ] Add structured telemetry, SLOs, alerts, backups, and disaster recovery.
 
 ## Long-term research
 
 - [ ] Reputation-weighted decentralized consensus.
-- [ ] Safe distributed training and model-version governance.
+- [ ] Safe distributed model promotion and decentralized version governance; gradient candidates alone are implemented.
 - [ ] GrowthGate with empirical promotion/rollback criteria.
 - [ ] Sandboxed self-modification with containment and human release authority.
 - [ ] Multimodal nodes after text/network behavior is reproducible and secure.

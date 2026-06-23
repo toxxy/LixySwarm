@@ -10,7 +10,7 @@
 - Confidence head and fixed whistle/identity vector.
 - Bounded half-sleep context buffer and persistent awake state.
 - Idle-triggered PCA/SVD consolidation checked during runtime invocation.
-- `DolphinPool` scaling from one to four instances based on supplied node count.
+- `DolphinPool` scaling without an artificial ceiling based on supplied node count.
 - Routing helpers for local sect records and adaptive sleep modes.
 
 ## Remaining work

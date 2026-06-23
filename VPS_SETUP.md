@@ -1,19 +1,10 @@
-# Private VPS Staging Setup
+# Public LSP v3 Seed Deployment
 
 **Updated:** 2026-06-22
 
-**Scope:** trusted staging only; not a public production deployment
+The VPS is a replaceable bootstrap seed. It accepts persistent LSP v3 sessions and shares learned peer addresses. It does not relay model traffic, coordinate decisions, or remain necessary after peers connect.
 
-Do not place real hostnames, IP addresses, usernames, tokens, home paths, or private keys in this file. Use a private inventory and environment file on the host.
-
-## Prerequisites
-
-- A dedicated unprivileged service account.
-- A private firewall/VPN or strict source allowlist.
-- Python 3.12 and a virtual environment.
-- TLS termination for the HTTP API.
-- Separate high-entropy publisher and API credentials.
-- Personal memory and model checkpoints kept off a relay-only host.
+Do not commit real addresses, credentials, private keys, or inventory details. Publish the seed through a stable DNS name.
 
 ## Install
 
@@ -22,52 +13,54 @@ sudo useradd --system --home /opt/lixyswarm --shell /usr/sbin/nologin lixyswarm
 sudo install -d -o lixyswarm -g lixyswarm /opt/lixyswarm
 sudo -u lixyswarm git clone https://github.com/OWNER/REPOSITORY.git /opt/lixyswarm/app
 sudo -u lixyswarm python3 -m venv /opt/lixyswarm/venv
-sudo -u lixyswarm /opt/lixyswarm/venv/bin/pip install -r /opt/lixyswarm/app/api/requirements_api.txt
+sudo -u lixyswarm /opt/lixyswarm/venv/bin/pip install -e /opt/lixyswarm/app
 ```
 
-Create a root-readable environment file outside Git, for example `/etc/lixyswarm/api.env`:
+Create `/etc/lixyswarm/seed.env` outside Git:
 
 ```text
-LIXYSWARM_PUBLISH_TOKEN=<random-secret>
-LIXYSWARM_BOOTSTRAP_SEEDS=<trusted-host>:7338
-LIXYSWARM_IDENTITY_PATH=/opt/lixyswarm/state/identity.key
+LIXYSWARM_PUBLIC_HOST=seed.example.net
+LIXYSWARM_GOSSIP_PORT=7338
+LIXYSWARM_TARGET_OUTBOUND=0
 ```
 
-Do not enable address publication flags unless the dashboard explicitly requires them and its access is restricted.
-
-## Firewall
-
-For early staging, expose no raw LSP port publicly. Allow UDP 7337 and TCP 7338 only over a VPN or from named trusted peer addresses. Expose the API only through a TLS reverse proxy with rate limits.
-
-## Run a relay node
+The checked-in `lixyswarm-seed.service` stores identity/address state under `/var/lib/lixyswarm`, runs without root, and applies systemd hardening.
 
 ```bash
-sudo -u lixyswarm \
-  LIXYSWARM_IDENTITY_PATH=/opt/lixyswarm/state/identity.key \
-  /opt/lixyswarm/venv/bin/python /opt/lixyswarm/app/node_daemon.py
+sudo cp /opt/lixyswarm/app/lixyswarm-seed.service /etc/systemd/system/
+sudo systemctl daemon-reload
+sudo systemctl enable --now lixyswarm-seed
+sudo systemctl status lixyswarm-seed
 ```
 
-Configure an explicit upstream only in the private host environment:
+## Firewall and DNS
 
-```text
-LIXYSWARM_PEER_HOST=<trusted-peer-host>
-LIXYSWARM_FEROMON_PORT=7337
-LIXYSWARM_GOSSIP_PORT=7338
+- Publish `seed.example.net` A and AAAA records.
+- Allow inbound TCP 7338 to the seed.
+- No UDP 7337 rule is required for LSP v3.
+- Keep the HTTP API on a separate TLS endpoint and policy.
+- Add at least one independently operated seed before a public release.
+
+Ordinary participants do not open ports or use a VPN. They initiate outbound TCP sessions to seeds/learned peers.
+
+## Client bootstrap
+
+Until official seed domains are compiled into a release:
+
+```bash
+export LIXYSWARM_BOOTSTRAP_SEEDS='seed.example.net:7338'
+lixyswarm start
 ```
 
-## Run the API
+The basic command contributes connectivity and explicitly imported artifacts only. A participant that has separately obtained and verified a trusted checkpoint can opt into model work with `lixyswarm init --mode balanced --yes` followed by `lixyswarm start --checkpoint /path/to/checkpoint`. The repository does not yet publish an official signed model release manifest, so checkpoint acquisition must not be automated from an untrusted peer.
 
-The checked-in service file is a development template and must be reviewed before installation. Run as the dedicated account, load secrets from `EnvironmentFile=`, bind Uvicorn to loopback, and let the TLS proxy serve external traffic.
+After peer exchange, stopping the seed must not interrupt existing direct sessions. `test_lsp_v3.py::test_v3_network_continues_after_seed_shutdown` enforces this property.
 
 ## Validation
 
 ```bash
-curl --fail http://127.0.0.1:8080/health
-pytest -q test_lsp.py test_lsp_v2.py test_network.py
+pytest -q test_lsp_v3.py
+journalctl -u lixyswarm-seed --since today
 ```
 
-Then verify firewall rules, TLS, authentication failures, log redaction, service restart, identity-file permissions, resource limits, and backup/restore.
-
-## Production warning
-
-This setup does not close the protocol, privacy, discovery, reputation, or scaling blockers in `INTERNET_SCALE_READINESS.md`. A reachable VPS is not evidence that the system is Internet-ready.
+Validate DNS rotation, IPv4/IPv6, restart identity persistence, address-book recovery, connection limits, seed shutdown continuity, and common NAT clients before advertising the seed publicly.

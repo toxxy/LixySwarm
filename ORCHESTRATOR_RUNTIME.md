@@ -45,11 +45,13 @@ Do not enable global export for content that has not been explicitly stored in t
 
 ## Network integration
 
-When enabled, `SwarmNetwork` can supply a blended remote pheromone and exchange global deltas. Remote network peers do not automatically become capacity records in the swarm's `NodeManager`, so Dolphin/sect scaling is not yet driven by real peer topology.
+When enabled, `SwarmNetwork` defaults to persistent LSP v3 sessions, supplies blended remote pheromones, exchanges global deltas, and enables typed work. Signed peer HELLO resource profiles are added to and removed from runtime `NodeManager`. The scheduler can assign inference, artifact, and gradient jobs, but declarations are self-reported and Dolphin/sect allocation is not automatically driven by unverified capacity.
+
+Remote inference uses a fresh non-persistent `RuntimeSession`, disables personal Matriarca retrieval and importance changes, records no history, does not update Dolphin sleep/acoustic state, and serializes model access with local inference. Distributed training requires an exact checkpoint file hash, a content-addressed `application/x-npy` token dataset, bounded token range, and declared RAM/disk sufficient for the estimated gradient. Returned gradients remain unapplied candidates.
 
 ## Known runtime gaps
 
-- No bounded request queue, cancellation, or multi-tenant isolation.
+- No bounded persistent request queue, cancellation, fair scheduling, or process-level multi-tenant isolation.
 - Model loading is process-global and heavyweight.
 - API chat history is in memory and unauthenticated.
 - Dynamic topology changes are not integrated safely with a live optimizer.

@@ -1,0 +1,29 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "lixyswarm"
+version = "0.3.0.dev0"
+description = "Bio-inspired distributed language intelligence"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+  "cryptography>=42.0.0",
+  "numpy>=1.26.0",
+  "torch>=2.8.0",
+  "tiktoken>=0.7.0",
+]
+
+[project.scripts]
+lixyswarm = "lixyswarm_cli:main"
+
+[tool.setuptools]
+py-modules = [
+  "lixy_orchestrator",
+  "lixyswarm_cli",
+]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["src*"]

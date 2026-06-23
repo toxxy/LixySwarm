@@ -276,13 +276,13 @@
     </div>
   </div>
 
-  <!-- Red P2P LSP v2 -->
-  <div class="section-title">🌐 Red P2P — <span class="badge-v2">LSP v2</span></div>
+  <!-- Red P2P LSP v3 -->
+  <div class="section-title">🌐 Red P2P — <span class="badge-v2">LSP v3</span></div>
   <div class="lsp-card">
     <div class="lsp-info">
       <div class="lsp-label">Protocolo</div>
-      <div class="lsp-value" id="lsp-protocol">LSP v2</div>
-      <div class="lsp-sub" id="lsp-wire">Wire format binario · 528B/feromon</div>
+      <div class="lsp-value" id="lsp-protocol">LSP v3</div>
+      <div class="lsp-sub" id="lsp-wire">Wire firmado · sesiones persistentes</div>
     </div>
     <div class="lsp-info">
       <div class="lsp-label">Identidad</div>
@@ -290,14 +290,14 @@
       <div class="lsp-sub" id="lsp-identity-sub">Persistente si existe cache</div>
     </div>
     <div class="lsp-info">
-      <div class="lsp-label">Merge-on-transit</div>
+      <div class="lsp-label">Seguridad de mensajes</div>
       <div class="lsp-value" id="lsp-merge">✅</div>
-      <div class="lsp-sub" id="lsp-merge-sub">fitness-weighted · TTL decay</div>
+      <div class="lsp-sub" id="lsp-merge-sub">firma · cifrado AEAD · anti-replay</div>
     </div>
     <div class="lsp-info">
       <div class="lsp-label">Feromonas recibidas</div>
       <div class="lsp-value" id="feromons-rx">—</div>
-      <div class="lsp-sub" id="feromons-sub">UDP 7337</div>
+      <div class="lsp-sub" id="feromons-sub">TCP persistente 7338</div>
     </div>
   </div>
   <div class="nodes-grid" id="network-grid"></div>
@@ -483,50 +483,49 @@
     }
 
     function updateLsp(lsp, net) {
-      const protocol = lsp.protocol || net.protocol || "LSP v2";
+      const protocol = lsp.protocol || net.protocol || "LSP v3";
       set("lsp-protocol", protocol);
-      set("lsp-wire", `${lsp.wire_format || "LYSW"} · ${lsp.float16 !== false ? "float16" : "float32"} · binario`);
+      set("lsp-wire", `${lsp.wire_format || "LYS3"} · ${lsp.transport || "persistent-tcp"} · ${lsp.float16 !== false ? "float16" : "float32"}`);
       set("lsp-identity", lsp.identity || "Ed25519");
       set("lsp-identity-sub", lsp.identity_persistent ? "Identidad persistente en checkpoints" : "Se creará al iniciar la red");
-      set("lsp-merge", lsp.merge_on_transit === false ? "—" : "✅");
-      set("lsp-merge-sub", lsp.merge_on_transit === false ? "No reportado" : "fitness-weighted · TTL decay");
+      set("lsp-merge", lsp.signed_required && lsp.encrypted_required && lsp.anti_replay ? "✅" : "⚠");
+      set("lsp-merge-sub", lsp.signed_required && lsp.encrypted_required && lsp.anti_replay ? "firma · cifrado AEAD · anti-replay" : "seguridad incompleta");
       const ports = lsp.ports || {};
-      set("feromons-sub", `UDP ${ports.feromon_udp || "7337"}`);
+      set("feromons-sub", `TCP persistente ${ports.session_tcp || "7338"}`);
     }
 
     function renderCapabilities(lsp, internet, net) {
       const grid = document.getElementById("capability-grid");
       if (!grid) return;
       const ports = lsp.ports || {};
-      const feromonPort = ports.feromon_udp || 7337;
-      const gossipPort = ports.gossip_tcp || 7338;
+      const sessionPort = ports.session_tcp || 7338;
       const connected = net.connected_count || 0;
       const knownPeers = net.known_peer_count ?? connected;
       const internetReady = !!internet.ready;
       set("internet-card", internetReady ? "WAN listo" : "LAN");
-      set("internet-card-sub", internetReady ? "Relay/IP pública configurado" : "Internet requiere relay/IP pública");
+      set("internet-card-sub", internetReady ? "Bootstrap P2P configurado" : "Falta DNS/bootstrap seed");
 
       const requires = (internet.requires || []).join(" · ");
       grid.innerHTML = `
         <div class="cap-item ok">
-          <div class="cap-title">Misma LAN</div>
-          <div class="cap-value">Sí, automático</div>
-          <div class="cap-sub">${escapeHtml(lsp.discovery || "mDNS LAN automático")} · nodos activos: ${connected} · peers conocidos: ${knownPeers}</div>
+          <div class="cap-title">Descubrimiento P2P</div>
+          <div class="cap-value">Sesiones persistentes</div>
+          <div class="cap-sub">${escapeHtml(lsp.discovery || "DNS seeds + peer exchange")} · nodos activos: ${connected} · peers conocidos: ${knownPeers}</div>
         </div>
         <div class="cap-item ${internetReady ? "ok" : "warn"}">
           <div class="cap-title">Internet / otra casa</div>
-          <div class="cap-value">${internetReady ? "Config detectable" : "No automático"}</div>
-          <div class="cap-sub">${internetReady ? "Hay relay o host público en entorno." : escapeHtml(requires || "Necesita VPS relay, IP pública o port-forwarding.")}</div>
+          <div class="cap-value">${internetReady ? "Bootstrap disponible" : "Sin bootstrap"}</div>
+          <div class="cap-sub">${internetReady ? "Los nodos NAT usan conexiones salientes y dejan de depender del seed." : escapeHtml(requires || "Necesita al menos un DNS seed.")}</div>
         </div>
         <div class="cap-item ok">
           <div class="cap-title">Puertos</div>
-          <div class="cap-value">LSP v2</div>
-          <div class="cap-sub">UDP ${feromonPort} feromonas · TCP ${gossipPort} gossip</div>
+          <div class="cap-value">LSP v3</div>
+          <div class="cap-sub">TCP ${sessionPort} · feromonas, peers y memoria global multiplexados</div>
         </div>
         <div class="cap-item warn">
-          <div class="cap-title">Pendiente WAN completo</div>
-          <div class="cap-value">Relay de feromonas</div>
-          <div class="cap-sub">El chat/status vía VPS existe; el descubrimiento P2P global aún requiere configuración explícita.</div>
+          <div class="cap-title">Independencia del seed</div>
+          <div class="cap-value">${lsp.seed_independent ? "Sí" : "Pendiente"}</div>
+          <div class="cap-sub">El seed presenta peers; las sesiones directas sobreviven a su desconexión.</div>
         </div>
       `;
     }
@@ -605,15 +604,15 @@
           </div>
           <div style="font-size:1.2rem;color:#4CAF50;font-weight:700">sin peers</div>
           <div style="font-size:0.8rem;color:#444;margin-top:4px">Arranca otra PC en la misma LAN para descubrir peers.</div>
-          <div style="font-size:0.75rem;color:#4FC3F7;margin-top:6px">${escapeHtml(protocol || "LSP v2")} <span class="badge-v2">v2</span></div>
+          <div style="font-size:0.75rem;color:#4FC3F7;margin-top:6px">${escapeHtml(protocol || "LSP v3")} <span class="badge-v2">v3</span></div>
         </div>`;
         return;
       }
       grid.innerHTML = nodes.map(n => {
-        const isVps = n.role === "vps-relay";
+        const isVps = n.role === "vps-relay" || n.role === "seed";
         const isActive = n.active !== false && !n.stale;
         const icon = isVps ? "🌐" : "💻";
-        const label = isVps ? "VPS Relay" : (n.self ? "Nodo actual" : "Nodo remoto");
+        const label = isVps ? "Seed público" : (n.self ? "Nodo actual" : "Nodo remoto");
         const id = (n.node_id || "?").slice(0,8) + "...";
         const step = n.step ? ` · step ${n.step.toLocaleString()}` : "";
         const mode = n.contribution_mode || "maximum";
@@ -632,7 +631,7 @@
           <div style="font-size:0.8rem;color:#444;margin-top:4px">${escapeHtml(n.host || "local")}${step}${age}</div>
           <div style="font-size:0.75rem;color:${statusColor};margin-top:4px">${status}</div>
           ${gpuFrac ? `<div style="font-size:0.75rem;color:#555;margin-top:4px">${gpuFrac} · ${n.effective_sect_capacity ?? "?"} sectas máx</div>` : ""}
-          <div style="font-size:0.75rem;color:#4FC3F7;margin-top:6px">${escapeHtml(protocol || "LSP v2")} <span class="badge-v2">v2</span></div>
+          <div style="font-size:0.75rem;color:#4FC3F7;margin-top:6px">${escapeHtml(protocol || "LSP v3")} <span class="badge-v2">v3</span></div>
         </div>`;
       }).join("");
     }

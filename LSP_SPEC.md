@@ -1,90 +1,112 @@
-# LixySwarm Protocol v2: Current Wire Specification
+# LixySwarm Protocol v3
 
 **Updated:** 2026-06-22
 
-**Maturity:** experimental; incompatible changes are still possible
+**Maturity:** implemented development protocol; public testnet hardening remains
 
-All multibyte fields in the LSP envelope and v2 payload are little-endian unless stated otherwise.
+LSP v3 replaces the default v2 UDP/short-TCP topology with persistent, bidirectional TCP sessions. Nodes behind NAT initiate outbound sessions, receive peer addresses over those sessions, and communicate directly without requiring the seed after bootstrap.
+
+## Transport
+
+- One persistent TCP listener, default port `7338`.
+- Four-byte unsigned big-endian frame length.
+- Maximum frame: 1 MiB encrypted payload plus the 164-byte signed header; encrypted plaintext is limited to 1 MiB minus the 16-byte AEAD tag.
+- Mandatory Ed25519 signature for every frame.
+- Signed plaintext HELLO negotiates X25519; all established-session payloads require ChaCha20-Poly1305 encryption with an HKDF-SHA256 key bound to both identities and process-session IDs.
+- No compression, preventing decompression bombs.
+- Per-session message and byte windows close abusive connections.
+- UDP `7337` is legacy LSP v2 compatibility only.
 
 ## Signed envelope
 
-| Offset | Size | Field | Current value/meaning |
-|---:|---:|---|---|
-| 0 | 4 | magic | ASCII `LYSW` |
-| 4 | 1 | version | `0x01` |
-| 5 | 1 | type | packet type |
-| 6 | 2 | flags | compressed `0x01`, signed `0x02`, urgent `0x04` |
-| 8 | 4 | payload length | number of transmitted payload bytes |
-| 12 | 32 | node ID | raw Ed25519 public key |
-| 44 | 64 | signature | Ed25519 signature over transmitted payload bytes |
-| 108 | N | payload | compressed when flag `0x01` is set |
+All integer fields use network byte order.
 
-The current sender signs every normal packet. The current verifier accepts unsigned packets, which is a known security defect. Receivers must not be exposed to untrusted traffic until unsigned packets are rejected.
+| Field | Size | Meaning |
+|---|---:|---|
+| Magic | 4 | `LYS3` |
+| Version | 1 | `3` |
+| Type | 1 | message type |
+| Flags | 1 | bit 0 must indicate signed |
+| TTL | 1 | reserved hop budget; direct sessions currently do not flood |
+| Payload length | 4 | maximum 1 MiB |
+| Timestamp | 8 | epoch milliseconds; maximum accepted skew is 5 minutes |
+| Sequence | 8 | monotonically increasing within a sender session |
+| Session ID | 16 | random process-session identifier |
+| Message ID | 16 | random duplicate-suppression identifier |
+| Sender ID | 32 | raw Ed25519 public key |
+| Network ID | 8 | `LIXYMAIN` for the current network |
+| Signature | 64 | signature over the preceding header fields and payload |
+| Payload | N | type-specific bytes |
 
-Packet types:
+The fixed header is 164 bytes. Flag bit 0 means signed and bit 1 means encrypted. HELLO is signed but intentionally plaintext so peers can negotiate; every later frame must set both bits. Packets from another network, stale packets, invalid signatures/AEAD tags, duplicate message IDs, and non-monotonic sequences are rejected.
 
-| Value | Name | Transport |
+## Session encryption
+
+Each process creates a non-persistent X25519 key and includes its raw public key in signed HELLO. Both peers derive the same 256-bit key with HKDF-SHA256 over the X25519 shared secret, network ID, ordered Ed25519 identities, and both process-session IDs. ChaCha20-Poly1305 authenticates the complete envelope prefix as associated data. The nonce combines four bytes of the sender session ID with its monotonically increasing 64-bit sequence.
+
+Captured application payloads cannot be decrypted after both process-ephemeral keys are gone. Long-lived processes do not yet rotate X25519 keys in place. HELLO metadata, peer IP addresses, frame sizes, timing, and traffic volume remain observable.
+
+## Message types
+
+| Value | Name | Payload |
 |---:|---|---|
-| `0x01` | legacy FEROMON | UDP |
-| `0x02` | legacy GOSSIP | TCP/compatibility |
-| `0x03` | HANDSHAKE | TCP |
-| `0x04` | PING | UDP |
-| `0x05` | PONG | UDP |
-| `0x10` | FEROMON_V2 | UDP |
-| `0x11` | GOSSIP_DELTA | TCP |
-| `0x12` | MERGE_HINT | reserved/not handled |
-| `0x13` | PEER_LIST | TCP |
+| `0x01` | HELLO | bounded JSON capabilities, resources, listen port, user agent |
+| `0x02` | PEERS | up to 100 validated addresses |
+| `0x03` | PHEROMONE | v2-compatible binary float16 tensor payload |
+| `0x04` | GLOBAL_DELTA | bounded Global Matriarca JSON delta |
+| `0x05` | PING | small JSON timestamp |
+| `0x06` | PONG | echoed ping payload |
+| `0x07` | WORK_OFFER | canonical, content-addressed declarative work JSON, maximum 256 KiB |
+| `0x08` | WORK_RESULT | bounded status/output JSON tied to a pending peer/job |
 
-## FEROMON_V2 payload
+The first frame in each direction must be a fresh HELLO. The sender public key in all subsequent frames must match the session peer identity.
 
-| Offset | Size | Field | Meaning |
-|---:|---:|---|---|
-| 0 | 1 | dimension type | 1 float16, 2 float32, 3 bfloat16 |
-| 1 | 2 | dimension count | default 256 |
-| 3 | 1 | TTL | sender default 3 |
-| 4 | 4 | training step | unsigned integer |
-| 8 | 4 | fitness | IEEE float32, sender-provided |
-| 12 | 4 | timestamp fragment | epoch milliseconds modulo 2^32 |
-| 16 | variable | vector | count × encoded element size |
+## Discovery
 
-The default payload is 528 bytes and the complete signed packet is 636 bytes.
+1. Load the persistent `peers_v3.json` address book.
+2. Add configured DNS/bootstrap endpoints.
+3. Resolve every A/AAAA record for redundancy.
+4. Maintain a target of eight outbound sessions by default.
+5. Exchange up to 100 peer addresses after every connection.
+6. Prefer successful learned peers over seeds.
+7. Retry failures with exponential backoff.
+8. Prefer candidates from distinct IPv4 `/16`, IPv6 `/32`, or DNS-suffix groups before filling from repeated groups.
 
-`timestamp fragment` cannot establish freshness by itself. The protocol has no sequence, nonce, message ID, or replay cache.
+The seed is not a relay or coordinator. A seed node runs the same protocol with `target_outbound=0`, accepts sessions, and shares its learned address book. Peers form direct sessions and continue after seed shutdown; this invariant has an automated three-node test.
 
-## Handshake
+Private, loopback, link-local, multicast, unspecified, invalid hostname, and invalid port advertisements are rejected on the public path. Private addresses require an explicit LAN/test setting.
 
-The handshake payload is JSON with node ID, advertised UDP/TCP ports, local step, and capability strings. The TCP frame is a four-byte little-endian packet length followed by the complete LSP packet. A response may include up to 50 peers.
+Malformed protocol behavior adds a decaying score to local hashed IP/identity keys. Repeated violations create persisted exponential temporary bans without storing the raw banned identifier in the reputation file. Successful sessions reduce pending scores. This is local abuse control, not global reputation and not Sybil resistance.
 
-The receiver derives the connection host from the socket but accepts advertised ports. Peer lists encode a four-byte count followed by repeated one-byte host length, host bytes, and two-byte port. The codec limits a list to 100 items; address safety and routability validation remain incomplete.
+## Resource declaration
 
-## GOSSIP_DELTA
+HELLO may declare bounded scheduling metadata:
 
-The payload is UTF-8 JSON, optionally zlib-compressed by the envelope. The current Matriarca delta includes:
+- contribution mode;
+- CPU cores;
+- RAM;
+- GPU presence and VRAM;
+- available disk.
+- available work kinds and, when applicable, locally loaded model hashes.
 
-- `kind = matriarca_global_delta`
-- `version = 1`
-- creation/source metadata
-- global-only memory metadata
-- embeddings represented as float16-compatible JSON lists
+`SwarmNetwork` registers these peers in its runtime `NodeManager` and removes them on disconnect. The scheduler filters candidates with these values, while workers enforce their own persisted consent and resource leases. Values remain self-reported and are not proof of capacity.
 
-The packet signature covers the compressed payload bytes. Imported memory stores source metadata, but there is no durable per-item signature or trust decision.
+## Typed work and artifacts
 
-## Current processing semantics
+`WorkUnit` hashes canonical JSON containing origin, operation, kind, resource requirements, payload, deadline, and nonce. The signed session identity must equal the claimed origin. Workers execute only locally registered handlers; peer-supplied code, scripts, commands, shells, and executables are forbidden. Completed IDs are cached for idempotency.
 
-- Invalid signed packets are rejected.
-- TTL zero pheromones are discarded.
-- A merge buffer supports fitness-weighted averaging, but normal receive processing flushes it immediately.
-- The standalone relay re-emits pheromones with a fresh TTL and its own identity.
-- Peer and global-delta callbacks run in listener-created threads.
+Current operations are isolated inference, artifact describe/read-chunk, and gradient computation. Artifacts use full-file SHA-256 identities, bounded manifests, 96 KiB raw chunks, per-chunk SHA-256, atomic commit, and final full-file verification. Gradient results are candidates and are never applied by the protocol.
 
-## Required v3/security changes
+## Compatibility
 
-1. Require signatures and bind a declared node ID to the envelope key.
-2. Add message ID, origin ID, sequence/nonce, absolute timestamp, and replay rules.
-3. Add preserved hop count/TTL and a relay signature chain or verifiable origin signature.
-4. Define maximum envelope, compressed, decompressed, JSON, vector, and peer-list sizes.
-5. Define error codes, version negotiation, capability negotiation, and graceful incompatibility.
-6. Define trust/admission/reputation separately from cryptographic identity.
-7. Publish language-neutral test vectors and fuzz every decoder.
+LSP v2 remains available only through `SwarmNetwork(..., protocol="v2")`. LSP v3 is the default. v2 and v3 do not share a socket or negotiate an in-place upgrade.
 
-Until these changes exist, this document is an implementation description, not a safe interoperability promise.
+## Remaining protocol work
+
+- In-session key rotation/rekeying and an external cryptographic review of the custom handshake.
+- Public DNS seed domains operated in independent failure domains.
+- Stronger autonomous-system/network diversity, feeler connections, and adversarial eclipse tests.
+- Capability/result reputation, hardware verification, and Sybil resistance beyond local misbehavior bans.
+- DHT discovery after persistent peer exchange is stable.
+- Publisher-signed model release manifests, replicated result verification, robust gradient aggregation, fair scheduling, cancellation, and job recovery.
+- Fuzzing, load tests, mixed-version upgrades, and an external security audit.

@@ -1,6 +1,6 @@
 # LixySwarm
 
-LixySwarm is a research prototype for bio-inspired distributed language intelligence. It combines transformer agents (ants), persistent memory (Matriarca/elephant), an echolocation router (dolphin), and an experimental peer protocol (LSP v2).
+LixySwarm is a research prototype for bio-inspired distributed language intelligence. It combines transformer agents (ants), persistent memory (Matriarca/elephant), an echolocation router (dolphin), and the persistent LSP v3 peer protocol.
 
 **Current status (2026-06-22):** local research prototype. The model, memory, runtime, LAN/explicit-peer transport, status publisher, and dashboard paths exist. The repository is not ready for untrusted Internet exposure or mass deployment.
 
@@ -20,11 +20,14 @@ The default swarm configuration contains:
 - Two swarm rounds followed by confidence aggregation with a 20% Matriarca bias.
 - `RuntimeSession` for cross-turn state, dynamic task profiles, sampling controls, and response-memory feedback.
 - Node, sect, and ant lifecycle managers exercised by local tests.
-- LSP v2 signed envelopes, float16 pheromone payloads, explicit-peer bootstrap, peer exchange, and global-memory deltas.
+- LSP v3 persistent sessions, mandatory signatures, anti-replay, DNS/bootstrap discovery, peer exchange, resource declaration, and global-memory deltas.
+- Consent-gated typed work for isolated peer inference and bounded gradient computation; peers never provide executable code.
+- SHA-256 content-addressed model, dataset, evaluation, and gradient artifacts with resumable chunk transfer and end-to-end verification.
+- A `lixyswarm` CLI for contribution policy, persistent node startup, and privacy-safe artifact import/listing.
 - FastAPI status/chat endpoints, a status publisher, and two static frontends.
 - Continuous training and an opt-in metabolic-hunger decision function.
 
-Some paper descriptions are only partially represented. In particular, the main forward pass does not implement the paper's exact `fitness × confidence × role_weight` equation, remote LSP peers are not automatically registered as runtime `NodeManager` capacity, and LSP relay TTL/merge semantics are not yet safe at Internet scale.
+Some paper descriptions are only partially represented. In particular, the main forward pass does not implement the paper's exact `fitness × confidence × role_weight` equation. Distributed work is an initial replicated-job implementation: inference and gradient candidates work, but robust aggregation, redundant result verification, hardware attestation, fairness, cancellation, and Byzantine defenses do not.
 
 ## Architecture
 
@@ -37,7 +40,7 @@ tokens
   -> repetition-penalized top-k/top-p sampling in RuntimeSession
 ```
 
-LSP v2 uses UDP `7337` for pheromones and TCP `7338` for handshake, peer lists, and global-memory deltas. There are no built-in public seeds in this public repository. Configure explicit seeds with `LIXYSWARM_BOOTSTRAP_SEEDS=host:7338[,host:7338]`.
+LSP v3 multiplexes pheromones, peer exchange, global-memory deltas, work offers, and work results over persistent TCP `7338` sessions. Large artifacts move as verified chunks through typed work. A node loads saved peers, bootstraps from multiple configured seeds, learns direct routes, and continues if a seed disappears. There are no built-in public DNS seed domains yet; configure endpoints with `LIXYSWARM_BOOTSTRAP_SEEDS=host:7338[,host:7338]`.
 
 ## Install and verify
 
@@ -47,10 +50,31 @@ Python 3.12 and a recent PyTorch installation are recommended.
 python3 -m venv .venv
 source .venv/bin/activate
 python3 -m pip install -r requirements.txt
+python3 -m pip install -e . --no-deps
 pytest -q
 ```
 
-The suite currently collects 121 tests. Test totals in old experiment reports refer to earlier scripts or revisions; they are not the current collection count.
+The full suite passed **159 tests** on 2026-06-22.
+
+Join as a connectivity/artifact node, or explicitly consent to compute:
+
+```bash
+lixyswarm init --mode relay --yes
+lixyswarm start  # connectivity and explicitly imported artifacts
+
+# Opt-in compute contribution with a trusted local checkpoint:
+lixyswarm init --mode balanced --yes
+lixyswarm start --checkpoint ./checkpoints/swarm_best.pt
+```
+
+Files are never shared automatically. Explicit artifact import publishes a hash-based manifest without the source filename:
+
+```bash
+lixyswarm artifact-add ./tokens.npy --kind dataset --media-type application/x-npy
+lixyswarm artifact-list
+```
+
+Run `pytest --collect-only -q` for the current collection count. Test totals in old experiment reports refer to earlier scripts or revisions.
 
 Useful entry points:
 
@@ -66,7 +90,7 @@ Large checkpoints and training datasets are intentionally excluded from Git. A f
 
 ## Network safety
 
-Do not bind LSP or the API directly to the public Internet. Current blockers include mandatory-signature enforcement, replay protection, bounded TCP/decompression, peer reputation, authenticated API access, rate limiting, NAT traversal, redundant bootstrap, and adversarial multi-node tests. See [INTERNET_SCALE_READINESS.md](INTERNET_SCALE_READINESS.md).
+LSP v3 closes the v2 signature, replay, framing, outbound-NAT, and application-payload confidentiality gaps and adds coarse path diversity/local bans, but the public network is not release-ready. Remaining blockers include key rotation/cryptographic review, Sybil-resistant result/capability reputation, authenticated API access, official redundant DNS seeds, adversarial load/fuzz testing, publisher-signed release manifests, process-level job isolation, and Byzantine-safe result validation/aggregation. See [INTERNET_SCALE_READINESS.md](INTERNET_SCALE_READINESS.md).
 
 Publisher authentication uses `LIXYSWARM_PUBLISH_TOKEN`. Personal Matriarca encryption is enabled only when `LIXYSWARM_MATRIARCA_KEY` is set. Network addresses are not published or exposed by default; enabling that requires explicit environment flags documented in [SECURITY.md](SECURITY.md).
 
@@ -82,7 +106,7 @@ Never commit checkpoints, corpora, session histories, identities, peer databases
 - [DISTRIBUTED_PROTOCOL.md](DISTRIBUTED_PROTOCOL.md): operator-facing network overview
 - [ORCHESTRATOR_RUNTIME.md](ORCHESTRATOR_RUNTIME.md): runtime behavior
 - [SECURITY.md](SECURITY.md): security and privacy policy
-- [VPS_SETUP.md](VPS_SETUP.md): private staging deployment, not public production
+- [VPS_SETUP.md](VPS_SETUP.md): LSP v3 public seed deployment
 - [PENDIENTES_2026-06-05.md](PENDIENTES_2026-06-05.md): current backlog retained under its historical filename
 
 Historical experiment notes are labeled as such and must not be read as current release status.

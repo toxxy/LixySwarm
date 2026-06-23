@@ -31,6 +31,7 @@ import json
 import os
 import time
 import logging
+import threading
 from pathlib import Path
 from contextlib import nullcontext
 from dataclasses import dataclass
@@ -47,10 +48,53 @@ from src.swarm.orchestrator import LixySwarm, SwarmConfig
 from src.agents.agent_base import AgentConfig
 from src.matriarca.matriarca import MatriarcaConfig
 from src.swarm.runtime_session import RuntimeSession
-from src.network import SwarmNetwork
+from src.network import (
+    ArtifactStore,
+    SwarmNetwork,
+    TrainingWorker,
+    digest_file,
+    validate_gradient_artifact,
+)
+from src.contribution import (
+    ContributionPolicy,
+    ResourceGovernor,
+    ResourceRequirements,
+)
 from src.utils.tokenizer import get_gpt2_encoding
 
 CHECKPOINT_DIR = Path("checkpoints")
+MAX_REMOTE_PROMPT_BYTES = 16 * 1024
+MAX_REMOTE_OUTPUT_BYTES = 128 * 1024
+MAX_REMOTE_TOKENS = 512
+
+
+def _validate_remote_inference_payload(payload: dict) -> dict:
+    """Validate the stable inference.generate.v1 network schema."""
+    if not isinstance(payload, dict):
+        raise ValueError("payload must be an object")
+    allowed = {"prompt", "max_tokens", "temperature", "top_k"}
+    if set(payload) - allowed:
+        raise ValueError("unsupported inference field")
+    prompt = payload.get("prompt")
+    if not isinstance(prompt, str) or not prompt.strip():
+        raise ValueError("prompt must be a non-empty string")
+    if len(prompt.encode("utf-8")) > MAX_REMOTE_PROMPT_BYTES:
+        raise ValueError("prompt exceeds 16 KiB")
+    max_tokens = int(payload.get("max_tokens", 200))
+    temperature = float(payload.get("temperature", 0.7))
+    top_k = int(payload.get("top_k", 50))
+    if not 1 <= max_tokens <= MAX_REMOTE_TOKENS:
+        raise ValueError("max_tokens is out of range")
+    if not 0.05 <= temperature <= 2.0:
+        raise ValueError("temperature is out of range")
+    if not 1 <= top_k <= 1000:
+        raise ValueError("top_k is out of range")
+    return {
+        "prompt": prompt,
+        "max_tokens": max_tokens,
+        "temperature": temperature,
+        "top_k": top_k,
+    }
 
 
 def _find_best_checkpoint() -> str:
@@ -76,10 +120,13 @@ class OrchestratorConfig:
     max_tokens: int = 200
     session_file: str = "checkpoints/lixy_session.json"
     eval_matriarca: bool = False   # imprimir diagnóstico de la Matriarca al cargar
-    # Red P2P (LSP v2, zero-config — auto-bootstrap)
+    verbose: bool = False
+    # Red P2P (LSP v3, zero-config once public DNS seeds are configured)
     network: bool = True                          # siempre ON, P2P automático
     feromon_port: int = 7337
     gossip_port: int = 7338
+    target_outbound: int = 8
+    allow_private_peers: bool = False
     network_remote_weight: float = 0.3
 
 
@@ -106,7 +153,12 @@ class LixyOrchestrator:
         self.agent_cfg: AgentConfig = None
         self.session_history = []
         self.net: SwarmNetwork = None
+        self.governor: ResourceGovernor = None
+        self.artifact_store: ArtifactStore = None
+        self.training_worker: TrainingWorker = None
+        self.model_artifact_id: str = None
         self._runtime_session: RuntimeSession = None
+        self._inference_lock = threading.RLock()
         self._load()
 
     def _load(self):
@@ -192,11 +244,39 @@ class LixyOrchestrator:
 
         # Arrancar red P2P si se pidió (zero-config — auto-bootstrap)
         if self.cfg.network:
+            contribution_home = Path(
+                os.environ.get("LIXYSWARM_HOME", "~/.lixyswarm")
+            ).expanduser()
+            policy = ContributionPolicy.load(
+                contribution_home / "contribution.json"
+            )
+            self.governor = ResourceGovernor(
+                policy,
+                storage_path=contribution_home,
+            )
+            self.artifact_store = ArtifactStore(
+                contribution_home / "artifacts",
+                max_total_bytes=max(1, int(policy.max_disk_gb * 1024 ** 3)),
+            )
+            self.model_artifact_id, _ = digest_file(ckpt_path)
+            available_work = {"artifact", "inference"}
+            if policy.mode in {"balanced", "maximum"}:
+                available_work.add("training")
+            contribution_profile = self.governor.advertised_profile(
+                available_work=available_work
+            )
+            if self.model_artifact_id:
+                contribution_profile["models"] = [self.model_artifact_id]
             self.net = SwarmNetwork.create(
                 swarm=self.swarm,
-                mode="auto",
+                mode="lan" if self.cfg.allow_private_peers else "auto",
                 feromon_port=self.cfg.feromon_port,
                 gossip_port=self.cfg.gossip_port,
+                checkpoint_dir=str(contribution_home),
+                protocol="v3",
+                target_outbound=self.cfg.target_outbound,
+                allow_private_peers=self.cfg.allow_private_peers,
+                contribution_profile=contribution_profile,
             )
 
             @self.net.on_peer_connected
@@ -204,7 +284,52 @@ class LixyOrchestrator:
                 log.info(f"Peer connected: {peer.node_id[:12]}...@{peer.host}")
 
             self.net.start()
+            if self.net._lsp_v3_node is not None:
+                self.net.enable_work(self.governor, max_workers=1)
+                self.net.enable_artifacts(self.artifact_store)
+                self.net.register_work_handler(
+                    "inference.generate.v1",
+                    "inference",
+                    self._handle_remote_inference,
+                )
+                if policy.mode in {"balanced", "maximum"}:
+                    self.training_worker = TrainingWorker(
+                        self.net.work_coordinator,
+                        self.net.artifact_service,
+                        self.swarm,
+                        model_artifact_id=self.model_artifact_id,
+                        device=self.cfg.device,
+                        execution_lock=self._inference_lock,
+                    )
             # Auto-bootstrap en background vía peers.json + seeds + peer exchange
+
+    def _handle_remote_inference(self, payload: dict, _work) -> dict:
+        """Run an isolated, non-persistent inference for a signed peer."""
+        request = _validate_remote_inference_payload(payload)
+        with self._inference_lock:
+            session = RuntimeSession(
+                self.swarm,
+                self.enc,
+                device=self.cfg.device,
+                max_new_tokens=request["max_tokens"],
+                temperature=request["temperature"],
+                top_k=request["top_k"],
+                session_file=None,
+                verbose=False,
+            )
+            response = session.turn(
+                request["prompt"],
+                max_new_tokens=request["max_tokens"],
+                temperature=request["temperature"],
+                top_k=request["top_k"],
+                store_memory=False,
+                record_history=False,
+                update_runtime_state=False,
+                use_memory=False,
+            )
+        if len(response.encode("utf-8")) > MAX_REMOTE_OUTPUT_BYTES:
+            raise ValueError("generated output exceeds 128 KiB")
+        return {"text": response}
 
     def _load_session(self):
         """Carga historial de sesión y estado del Delfín si existe."""
@@ -268,36 +393,172 @@ class LixyOrchestrator:
         - Refresh de feromona con Matriarca activa cada 32 tokens
         - Merge de feromonas remotas desde peers P2P
         """
-        # Inyectar feromonas remotas ANTES del turn (si hay peers activos)
-        # Esto hace el loop bidireccional: transmitimos Y escuchamos
-        if self.net and self.net.is_distributed:
-            merged = self.net.merge_remote_feromons(
-                local_feromon=self._runtime_session._cached_feromon
-                    if self._runtime_session._cached_feromon is not None
-                    else torch.zeros(self.swarm.config.feromon_dim,
-                                     device=self.cfg.device),
-                remote_weight=self.cfg.network_remote_weight,
-            )
-            if merged is not None:
-                self._runtime_session.inject_remote_feromon(
-                    merged, blend_weight=self.cfg.network_remote_weight
+        with self._inference_lock:
+            # Inyectar feromonas remotas ANTES del turn (si hay peers activos)
+            if self.net and self.net.is_distributed:
+                merged = self.net.merge_remote_feromons(
+                    local_feromon=self._runtime_session._cached_feromon
+                        if self._runtime_session._cached_feromon is not None
+                        else torch.zeros(self.swarm.config.feromon_dim,
+                                         device=self.cfg.device),
+                    remote_weight=self.cfg.network_remote_weight,
                 )
+                if merged is not None:
+                    self._runtime_session.inject_remote_feromon(
+                        merged, blend_weight=self.cfg.network_remote_weight
+                    )
 
-        # Propagar overrides temporales a la RuntimeSession
-        response = self._runtime_session.turn(
-            prompt,
-            max_new_tokens=max_tokens,
-            temperature=temperature,
-            top_k=top_k,
-        )
+            response = self._runtime_session.turn(
+                prompt,
+                max_new_tokens=max_tokens,
+                temperature=temperature,
+                top_k=top_k,
+                store_memory=store_memory,
+                record_history=store_memory,
+                update_runtime_state=store_memory,
+                use_memory=store_memory,
+            )
 
-        # Broadcast feromona a la red P2P post-generación
-        if self.net and self.net.is_distributed:
-            cached = self._runtime_session._cached_feromon
-            if cached is not None:
-                self.net.broadcast_feromon(cached.squeeze(0), agent_id=0)
+            # Broadcast only state from an explicitly stored local turn.
+            if store_memory and self.net and self.net.is_distributed:
+                cached = self._runtime_session._cached_feromon
+                if cached is not None:
+                    self.net.broadcast_feromon(cached.squeeze(0), agent_id=0)
 
         return response
+
+    def generate_distributed(
+        self,
+        prompt: str,
+        *,
+        max_tokens: int = None,
+        temperature: float = None,
+        top_k: int = None,
+        peer_id: str = None,
+        timeout_s: float = 120.0,
+    ) -> str:
+        """Request inference from a consenting peer; never silently falls back."""
+        if self.net is None or self.net.work_coordinator is None:
+            raise RuntimeError("Distributed inference is not available")
+        payload = _validate_remote_inference_payload({
+            "prompt": prompt,
+            "max_tokens": max_tokens if max_tokens is not None else self.cfg.max_tokens,
+            "temperature": temperature if temperature is not None else self.cfg.temperature,
+            "top_k": top_k if top_k is not None else self.cfg.top_k,
+        })
+        result = self.net.submit_work(
+            "inference.generate.v1",
+            payload,
+            ResourceRequirements(
+                kind="inference", cpu_slots=1, ram_gb=0.5
+            ),
+            peer_id=peer_id,
+            timeout_s=timeout_s,
+        )
+        if result.status != "ok":
+            raise RuntimeError(result.error or "distributed inference failed")
+        text = result.output.get("text")
+        if not isinstance(text, str):
+            raise RuntimeError("peer returned an invalid inference result")
+        return text
+
+    def publish_artifact(
+        self,
+        path: str,
+        *,
+        kind: str = "other",
+        media_type: str = "application/octet-stream",
+    ):
+        """Explicitly import a local file; source names are never advertised."""
+        if self.artifact_store is None:
+            raise RuntimeError("Artifact service is not available")
+        return self.artifact_store.import_file(
+            path, kind=kind, media_type=media_type
+        )
+
+    def fetch_artifact(
+        self,
+        artifact_id: str,
+        *,
+        peer_id: str,
+        timeout_s: float = 120.0,
+    ) -> Path:
+        if self.net is None:
+            raise RuntimeError("Artifact service is not available")
+        return self.net.fetch_artifact(
+            artifact_id, peer_id=peer_id, timeout_s=timeout_s
+        )
+
+    def compute_gradient_distributed(
+        self,
+        dataset_artifact_id: str,
+        *,
+        start_token: int = 0,
+        token_count: int = 512,
+        peer_id: str = None,
+        timeout_s: float = 300.0,
+        ram_gb: float = 2.0,
+        disk_gb: float = 2.0,
+    ) -> dict:
+        """Compute and retrieve a gradient candidate; never apply it automatically."""
+        if self.net is None or self.net.work_coordinator is None:
+            raise RuntimeError("Distributed training is not available")
+        if not self.model_artifact_id:
+            raise RuntimeError("This node has no versioned training model")
+        if self.artifact_store is None or not self.artifact_store.has(dataset_artifact_id):
+            raise ValueError("Dataset artifact must be published locally first")
+        requirements = ResourceRequirements(
+            kind="training", cpu_slots=1,
+            ram_gb=float(ram_gb), disk_gb=float(disk_gb),
+        )
+        selected_peer = peer_id or self.net.work_coordinator.select_peer(
+            requirements, required_model_id=self.model_artifact_id
+        )
+        if not selected_peer:
+            raise RuntimeError("No connected peer has the required training model")
+        result = self.net.submit_work(
+            "training.gradient.v1",
+            {
+                "model_artifact_id": self.model_artifact_id,
+                "dataset_artifact_id": dataset_artifact_id,
+                "start_token": int(start_token),
+                "token_count": int(token_count),
+            },
+            requirements,
+            peer_id=selected_peer,
+            timeout_s=timeout_s,
+        )
+        if result.status != "ok":
+            raise RuntimeError(result.error or "distributed training failed")
+        gradient = result.output.get("gradient", {})
+        gradient_id = gradient.get("artifact_id")
+        if not isinstance(gradient_id, str) or len(gradient_id) != 64:
+            raise RuntimeError("peer returned an invalid gradient manifest")
+        if result.output.get("model_artifact_id") != self.model_artifact_id:
+            raise RuntimeError("peer returned a gradient for another model")
+        if result.output.get("dataset_artifact_id") != dataset_artifact_id:
+            raise RuntimeError("peer returned a gradient for another dataset")
+        path = self.net.fetch_artifact(
+            gradient_id,
+            peer_id=selected_peer,
+            timeout_s=timeout_s,
+        )
+        validation = validate_gradient_artifact(
+            path,
+            self.swarm,
+            expected_model_id=self.model_artifact_id,
+            expected_dataset_id=dataset_artifact_id,
+            expected_start_token=int(start_token),
+            expected_token_count=int(token_count),
+        )
+        return {
+            "gradient_artifact_id": gradient_id,
+            "path": str(path),
+            "loss": result.output.get("loss"),
+            "gradient_norm": result.output.get("gradient_norm"),
+            "validation": validation,
+            "applied": False,
+        }
 
     def chat(self, message: str, store: bool = True) -> str:
         """
@@ -350,11 +611,11 @@ class LixyOrchestrator:
         - Guarda historial de sesión y estado del Delfín
         - Detiene la red P2P si está activa
         """
+        if self.net:
+            self.net.stop()
         if self._runtime_session:
             self._runtime_session.end_session(save_matriarca=True)
         self._save_session()
-        if self.net:
-            self.net.stop()
 
     def status(self) -> dict:
         """Retorna estado actual del orquestador."""

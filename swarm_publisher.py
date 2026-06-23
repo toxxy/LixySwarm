@@ -180,9 +180,8 @@ def collect_status() -> dict:
     # Leer identidad LSP local (node_id + puertos)
     import socket as _socket
     local_node_id = None
-    hostname = _socket.gethostname()
-    lsp_identity_file = CHECKPOINT_DIR / f"lsp_identity_{hostname}.pem"
-    # Fallback: buscar cualquier lsp_identity_*.pem
+    lsp_identity_file = CHECKPOINT_DIR / "lsp_identity.pem"
+    # Compatibility fallback for legacy per-machine filenames.
     if not lsp_identity_file.exists():
         candidates = sorted(CHECKPOINT_DIR.glob("lsp_identity_*.pem"))
         if candidates:
@@ -196,7 +195,7 @@ def collect_status() -> dict:
         except Exception:
             pass
 
-    # Puertos LSP v2 del nodo local
+    # LSP v3 uses one persistent TCP session port. UDP 7337 is legacy v2 only.
     local_feromon_port = int(os.environ.get("LIXYSWARM_FEROMON_PORT", "7337"))
     local_gossip_port  = int(os.environ.get("LIXYSWARM_GOSSIP_PORT", "7338"))
     local_lsp_listening = False
@@ -208,17 +207,36 @@ def collect_status() -> dict:
         local_lsp_listening = False
 
     status["lsp"] = {
-        "protocol": "LSP v2",
-        "wire_format": "LYSW",
+        "protocol": "LSP v3",
+        "wire_format": "LYS3",
         "identity": "Ed25519",
         "identity_persistent": lsp_identity_file.exists(),
         "status": "active" if local_lsp_listening else "identity-only",
         "local_listener": local_lsp_listening,
         "float16": True,
-        "merge_on_transit": True,
+        "transport": "persistent-tcp",
+        "signed_required": True,
+        "anti_replay": True,
+        "encrypted_required": True,
+        "key_agreement": "X25519-HKDF-SHA256",
+        "aead": "ChaCha20-Poly1305",
+        "peer_exchange": True,
+        "seed_independent": True,
+        "merge_on_transit": False,
+        "ports": {
+            "session_tcp": local_gossip_port,
+            "legacy_feromon_udp": local_feromon_port,
+        },
         "internet": {
-            "ready": bool(os.environ.get("LIXYSWARM_PUBLIC_HOST") or os.environ.get("LIXYSWARM_API_URL")),
-            "mode": "relay/public-host" if (os.environ.get("LIXYSWARM_PUBLIC_HOST") or os.environ.get("LIXYSWARM_API_URL")) else "lan-only",
+            "ready": bool(
+                os.environ.get("LIXYSWARM_PUBLIC_HOST")
+                or os.environ.get("LIXYSWARM_BOOTSTRAP_SEEDS")
+            ),
+            "mode": (
+                "public-peer" if os.environ.get("LIXYSWARM_PUBLIC_HOST")
+                else "outbound-p2p" if os.environ.get("LIXYSWARM_BOOTSTRAP_SEEDS")
+                else "unbootstrapped"
+            ),
         },
     }
 

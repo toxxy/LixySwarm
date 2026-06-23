@@ -2,7 +2,7 @@
 
 This filename is retained for history. It no longer represents the active implementation plan.
 
-The initial milestone established the base agent, early Matriarca concept, training scripts, and local generation flow. Since then the repository added Dolphin Phase A/B, dual memory, lifecycle managers, LSP v2, an API/dashboard, and auto-training controls.
+The initial milestone established the base agent, early Matriarca concept, training scripts, and local generation flow. Since then the repository added Dolphin Phase A/B, dual memory, lifecycle managers, LSP v2 compatibility, persistent LSP v3, typed distributed work, content-addressed artifacts, isolated inference, gradient candidates, an API/dashboard, and auto-training controls.
 
 Current sources of truth:
 

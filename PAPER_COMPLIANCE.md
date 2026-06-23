@@ -20,7 +20,7 @@ Status meanings:
 | Three 125.7M AntAgents | Implemented | `SwarmConfig.n_agents=3`; `AgentConfig` defines 12 layers, 12 heads, and width 768. The default 1,024-context test configuration reports 126.1M per agent and 453.6M for the `LixySwarm` module excluding external Matriarca; the manuscript's 568M total needs reconciliation. |
 | FeromonGate and immutable identity vector | Implemented | `src/agents/agent_base.py`; exercised indirectly by integration/training paths. |
 | Five Dolphin pings and cross-attention triangulation | Implemented | `Echolocation` has topic, intent, need, context, and emotion encoders plus multi-head attention. |
-| DolphinPool scales as `min(1 + floor(nodes/3), 4)` | Implemented | `src/swarm/dolphin_pool.py` and lifecycle tests. |
+| DolphinPool scales with supplied node count | Implemented with formula difference | One Dolphin at one node, two at two-to-four, three at five-to-nine, then approximately one additional Dolphin per three nodes without an artificial ceiling. This differs from the manuscript's capped formula. |
 | Phase B sleep consolidation after inactivity | Partial | PCA/SVD consolidation and idle detection exist. Consolidation occurs when the runtime is invoked/ticked, not in a durable independent background service. |
 | Matriarca infrasound retrieval | Implemented | Top-k retrieval, importance-weighted scores, and 256-dimensional output exist. |
 | Exact paper aggregation: fitness × confidence × role weight + Matriarca vote | Partial | The main forward pass aggregates confidence plus a 20% Matriarca bias. `RuntimeSession` separately applies task-role weights. Fitness is measured after aggregation and is not part of the current logit weights. |
@@ -38,23 +38,26 @@ Status meanings:
 | +15% continuation and -20% topic-shift feedback | Partial | Continuation reinforcement exists with an overlap-scaled delta; the exact +15% rule and topic-shift penalty are not implemented. |
 | Compression at 90% capacity | Implemented with algorithm difference | Compression triggers around 90%, but the selection/grouping behavior is not identical to the simplified paper description. |
 | Sect birth, death, bifurcation, and legacy transfer | Implemented locally | Managers and tests exist. Long-running distributed validation and optimizer-safe dynamic topology remain missing. |
-| Physical nodes drive runtime capacity | Partial | `NodeManager` models this, but LSP peer events are not wired into the model's `NodeManager` by default. |
+| Physical nodes drive runtime capacity | Partial | LSP v3 peer events add/remove bounded resource profiles in runtime `NodeManager`; the scheduler consumes advertised capabilities for inference/artifact/training selection. Claims are self-reported, and live Dolphin/sect/model topology is not changed from unverified capacity. |
 
 ## Network and shared memory
 
 | Paper requirement | Status | Current evidence and gap |
 |---|---|---|
-| Ed25519 identity and signed packets | Partial | Sending signs packets and verification exists, but unsigned packets are currently accepted by `LSPPacket.verify()`. No trust policy exists. |
+| Ed25519 identity and signed packets | Implemented in v3 | LSP v3 requires valid Ed25519 signatures for every frame. Legacy v2 remains explicitly selectable and retains its weaker verifier. Decaying local misbehavior bans exist, but no decentralized reputation/trust policy exists yet. |
 | 636-byte default pheromone packet | Implemented | 108-byte envelope plus 528-byte float16 payload for 256 dimensions. |
-| TTL decay and bounded forwarding | Partial | Payload decay exists. The standalone relay creates a new packet and resets TTL, so end-to-end hop bounds are not preserved. |
+| TTL decay and bounded forwarding | Superseded in v3 | Legacy v2 contains TTL/decay but its relay test resets origin semantics. Default v3 forms direct persistent sessions and does not flood/relay pheromone packets. |
 | Merge-on-transit | Partial | A merge buffer exists, but the receive path flushes immediately, preventing useful accumulation during normal traffic. |
-| TCP handshake and peer exchange | Implemented for trusted tests | Signed self-asserted identities and address exchange work. Authentication, address validation, limits, and Sybil resistance are missing. |
+| TCP handshake and peer exchange | Implemented in v3 | Persistent signed/encrypted sessions, X25519/HKDF/ChaCha20-Poly1305, bounded frames, validated addresses, saved peers, retry/backoff, and direct peer exchange are tested. Rekeying, independent cryptographic review, and Sybil/eclipsing resistance remain missing. |
 | Global Matriarca gossip delta | Partial | Export, filtering, transport signature, deduplication, and import exist. Per-memory provenance/signature validation, reputation, conflict handling, and poisoning defenses do not. |
-| LAN zero-configuration discovery | Partial | Legacy mDNS code exists, but the default LSP v2 `SwarmNetwork` path uses saved peers and configured seeds, not mDNS. Physical multi-host release validation is not automated. |
-| VPS relay path | Partial | A relay daemon and explicit-peer path exist. It is a trusted staging design, not a hardened public relay service. |
+| Internet bootstrap and seed independence | Implemented in v3 code | Saved peers plus multiple seed endpoints feed `PeerManager`; a three-node test proves direct communication continues after seed shutdown. Official DNS seed infrastructure is not configured yet. |
+| VPS seed path | Implemented in v3 code | `node_daemon.py` is a non-privileged seed service template. It introduces peers and is not a required relay. Deployment validation on the actual VPS remains. |
 | DHT/Kademlia discovery | Not implemented | Future work. |
 | Reputation-weighted consensus | Not implemented | Future work. |
-| Replay protection with sequence/nonce | Not implemented | Release blocker. |
+| Replay protection with sequence/message ID | Implemented in v3 | Per-session monotonic sequences, random message IDs, bounded replay cache, timestamps, and session IDs are verified by tests. |
+| Distributed inference contribution | Partial | Signed-origin typed work selects consenting peers and executes an allowlisted full-request inference handler. Remote prompts cannot access/write personal Matriarca, history, or Dolphin state. There is no redundant result verification, fairness, cancellation, or process sandbox. |
+| Content-addressed model/dataset artifacts | Partial | SHA-256 manifests, quotas, resumable chunks, per-chunk hashes, atomic commit, and full verification are implemented. Hashes prove content, not publisher authority; release signing, provenance, replication, and discovery by content are missing. |
+| Distributed training contribution | Partial | A worker fetches a safe NumPy token artifact, requires the exact locally loaded checkpoint hash, computes a bounded real gradient, and returns a verified NPZ artifact without applying it. Byzantine replication/aggregation, poisoning defenses, privacy controls, and promotion governance are missing. |
 
 ## Training, observability, and autonomy
 
@@ -82,4 +85,4 @@ Before the next paper/release revision:
 
 ## Compliance verdict
 
-The repository supports the paper's central prototype thesis: ant agents, Dolphin mapping, Matriarca memory, lifecycle logic, and LSP v2 artifacts are real. It does **not** yet satisfy the paper's target Internet-scale ecosystem. The correct current stage remains **Infant / research prototype**.
+The repository supports the paper's central prototype thesis and now includes a post-paper encrypted LSP v3 topology plus initial inference, artifact, gradient, diversity, and local-ban work. It does **not** yet satisfy the paper's target Internet-scale compute ecosystem because results are not redundantly verified or robustly aggregated, work lacks process isolation and attestation, and Sybil-resistant reputation, governance, key rotation/review, and public seed operations remain. The correct current stage remains **Infant / research prototype**.

@@ -71,6 +71,19 @@ def get_bootstrap_addresses() -> List[Tuple[str, int]]:
     return addresses
 
 
+def get_seed_endpoints() -> List[Tuple[str, int]]:
+    """Return configured hostnames without collapsing redundant DNS records.
+
+    LSP v3 resolves these endpoints periodically through PeerManager. Keeping
+    the hostname allows DNS rotation to continue working after process start.
+    """
+    endpoints: List[Tuple[str, int]] = []
+    for endpoint in [*_configured_seeds(), *DNS_SEEDS]:
+        if endpoint not in endpoints:
+            endpoints.append(endpoint)
+    return endpoints
+
+
 # ─── PeersDB — Cache persistente de peers (peers.json) ───────────────────────
 
 class PeersDB:

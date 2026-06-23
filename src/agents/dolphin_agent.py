@@ -520,6 +520,7 @@ class DolphinAgent(nn.Module):
         self,
         idx: torch.Tensor,                        # (B, T) tokens de input
         update_sleep: bool = True,                # actualizar estado de sueño
+        use_sleep_state: bool = True,              # leer contexto persistente
     ) -> Tuple[torch.Tensor, torch.Tensor, dict]:
         """
         Phase A forward: 5 pings + triangulación por atención.
@@ -534,7 +535,15 @@ class DolphinAgent(nn.Module):
         feromon_echo, confidence, echoes = self.echolocation(idx)
 
         # ─── 2. Integrar con sueño unihemisférico ───
-        sleep_ctx = self.sleep_state.get_state().to(idx.device, dtype=feromon_echo.dtype)
+        sleep_ctx = (
+            self.sleep_state.get_state()
+            if use_sleep_state
+            else torch.zeros(
+                self.cfg.sleep_dim,
+                device=idx.device,
+                dtype=feromon_echo.dtype,
+            )
+        ).to(idx.device, dtype=feromon_echo.dtype)
         sleep_ctx = sleep_ctx.unsqueeze(0).expand(idx.shape[0], -1)  # (B, sleep_dim)
 
         integrated = self.sleep_integrator(
@@ -605,20 +614,35 @@ class DolphinSwarmBridge(nn.Module):
         self.router = EcholocationRouter(acoustic_map_dim=cfg.echo_dim)
         self.sleep_controller = AdaptiveSleepController(buffer_size=64)
 
-    def forward(self, idx: torch.Tensor) -> Tuple[torch.Tensor, dict]:
+    def forward(
+        self,
+        idx: torch.Tensor,
+        update_runtime_state: bool = True,
+    ) -> Tuple[torch.Tensor, dict]:
         """
         Reemplaza EcholocationHead.forward().
         Returns: feromon (B, feromon_dim), info dict
         """
-        feromon, confidence, info = self.dolphin(idx)
+        feromon, confidence, info = self.dolphin(
+            idx,
+            update_sleep=update_runtime_state,
+            use_sleep_state=update_runtime_state,
+        )
 
         # Añadir estado de sueño proyectado para la Matriarca
-        sleep_ctx = self.dolphin.sleep_state.get_state().to(idx.device, dtype=next(self.sleep_to_matriarca.parameters()).dtype)
+        sleep_ctx = (
+            self.dolphin.sleep_state.get_state()
+            if update_runtime_state
+            else torch.zeros(
+                self.dolphin.cfg.sleep_dim,
+                device=idx.device,
+            )
+        ).to(idx.device, dtype=next(self.sleep_to_matriarca.parameters()).dtype)
         info["sleep_for_matriarca"] = self.sleep_to_matriarca(sleep_ctx)
         info["sleep_mode"] = self.sleep_controller.mode
 
         # Guardar acoustic_map en buffer circular del sleep controller
-        if "acoustic_map" in info:
+        if update_runtime_state and "acoustic_map" in info:
             self.sleep_controller.store_acoustic_map(info["acoustic_map"])
 
         return feromon, info

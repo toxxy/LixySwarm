@@ -1,16 +1,31 @@
-"""Network public API.
-
-LSP v2 es el camino principal. Los mensajes/transporte v1 quedan disponibles
-como compatibilidad legacy y se importan solo si sus dependencias existen.
-"""
+"""Network public API. LSP v3 is primary; v2 remains for migration."""
 from .bootstrap import PeersDB, bootstrap_network
 from .lsp import LSPIdentity
 from .lsp_v2 import FeromonMergeBuffer, FeromonV2Payload, LSPNodeV2, PacketType
+from .lsp_v3 import LSPNodeV3, ReplayGuard, V3Packet
 from .node import NodeIdentity, Peer, PeerTable
+from .peer_manager import AddressBook, PeerManager, PeerReputation, network_group
+from .work_protocol import WorkCoordinator, WorkResult, WorkUnit
+from .artifact_store import (
+    ArtifactError,
+    ArtifactManifest,
+    ArtifactService,
+    ArtifactStore,
+    digest_file,
+)
+from .training_worker import (
+    TRAINING_OPERATION,
+    TrainingWorker,
+    TrainingWorkError,
+    validate_gradient_artifact,
+)
 
 __all__ = [
     "LSPIdentity",
     "LSPNodeV2",
+    "LSPNodeV3",
+    "V3Packet",
+    "ReplayGuard",
     "PacketType",
     "FeromonV2Payload",
     "FeromonMergeBuffer",
@@ -19,6 +34,22 @@ __all__ = [
     "NodeIdentity",
     "Peer",
     "PeerTable",
+    "AddressBook",
+    "PeerManager",
+    "PeerReputation",
+    "network_group",
+    "WorkCoordinator",
+    "WorkResult",
+    "WorkUnit",
+    "ArtifactError",
+    "ArtifactManifest",
+    "ArtifactService",
+    "ArtifactStore",
+    "digest_file",
+    "TRAINING_OPERATION",
+    "TrainingWorker",
+    "TrainingWorkError",
+    "validate_gradient_artifact",
 ]
 
 # Compatibilidad v1: requiere torch por FeromonMessage.

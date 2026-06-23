@@ -2,50 +2,47 @@
 
 **Updated:** 2026-06-22
 
-**Status:** trusted prototype
+LSP v3 is the default network path. It uses persistent outbound-friendly TCP sessions for peer exchange, pheromones, Global Matriarca deltas, typed work, and verified artifact chunks.
 
-LSP v2 exchanges coordination signals and global-memory deltas. It does not distribute transformer layers, gradients, or full inference jobs.
+## Bootstrap without dependency
 
-## Current modes
-
-| Mode | Current behavior |
-|---|---|
-| Local | No network listener; inference and training continue normally. |
-| Explicit peers | Reads saved peers and `LIXYSWARM_BOOTSTRAP_SEEDS`; performs TCP handshakes and peer exchange. |
-| Trusted LAN | Works when peers are reachable and configured; the default v2 facade does not currently start legacy mDNS discovery. |
-| Staging relay | `node_daemon.py` listens on UDP/TCP and can connect to an explicit upstream peer. |
-| Open Internet | Unsupported and unsafe. |
-
-## Data flows
-
-### Pheromones
-
-The sender serializes a 256-dimensional float32 tensor as float16 in a signed LSP packet and sends it over UDP 7337. The receiver verifies signed packets, decodes the vector, and stores the latest signal in its peer table. `SwarmNetwork.get_combined_feromon()` can blend remote signals with local state.
-
-The protocol has a TTL and decay implementation, but relay forwarding currently creates a fresh packet. Therefore TTL is not an end-to-end loop bound. The merge buffer also flushes immediately in the normal receive path, so production batching/merge-on-transit is incomplete.
-
-### Global Matriarca
-
-Only `MatriarcaDual.global_` is exported. `GOSSIP_DELTA` carries metadata and float16-list embeddings over signed TCP LSP packets. The receiver filters, deduplicates, discounts importance, and writes accepted items to its global bank.
-
-Transport signatures authenticate the packet's self-asserted key. They do not establish trust in content. There is no per-memory signature, reputation, quorum, or poisoning defense.
-
-### Peer discovery
-
-Discovery order is saved peer cache, configured seeds, and peer exchange. Configure seeds without committing operator addresses:
-
-```bash
-export LIXYSWARM_BOOTSTRAP_SEEDS='relay-a.example.net:7338,relay-b.example.net:7338'
+```text
+new node
+  -> DNS/bootstrap seed
+  -> persistent signed session
+  -> receives peer addresses
+  -> connects directly to learned peers
+  -> seed can disappear
 ```
 
-No DHT, public DNS seed fleet, NAT traversal, or Sybil protection is implemented.
+Saved addresses and peer exchange are preferred after initial discovery. The VPS runs `node_daemon.py` as a seed, not as a required relay.
 
-## Privacy defaults
+Configure multiple endpoints until official DNS seeds are published:
 
-Status publishing does not include network addresses unless `LIXYSWARM_PUBLISH_NETWORK_ADDRESSES=true`. The API redacts peer hosts unless `LIXYSWARM_EXPOSE_PEER_HOSTS=true`, and it does not store publisher IPs unless `LIXYSWARM_STORE_PUBLISHER_IP=true`.
+```bash
+export LIXYSWARM_BOOTSTRAP_SEEDS='seed-a.example.net:7338,seed-b.example.net:7338'
+```
 
-These flags affect observability only. LSP peers necessarily see connection source addresses at the transport layer.
+## Current data flows
 
-## Operational warning
+- Pheromones: float16 binary payload over the persistent signed session.
+- Global memory: global-only filtered JSON delta over the same session.
+- Peer discovery: validated address lists, persistent address book, retry/backoff.
+- Resources: bounded capability declaration registered in `NodeManager`.
+- Work: canonical signed-origin offers with deadlines, idempotency, allowlisted local handlers, and consent/resource leases.
+- Inference: complete prompt jobs on a matching consenting peer; remote requests cannot access or mutate the operator's personal memory/session state.
+- Artifacts: SHA-256 manifests and resumable verified chunks without source filenames or paths.
+- Training: bounded token batches against an exact local model hash; results are NPZ gradient artifacts and are never applied automatically.
 
-Bind to loopback or a private firewall-controlled network. Do not port-forward 7337/7338 from an untrusted network. See `LSP_SPEC.md`, `SECURITY.md`, and `INTERNET_SCALE_READINESS.md`.
+Nodes behind NAT need only outbound TCP connectivity. Public nodes and seeds accept inbound sessions. No VPN or port forwarding is required for an outbound-only participant.
+
+## Current limits
+
+- Established-session payloads are signed and ChaCha20-Poly1305 encrypted after a signed X25519 HELLO. HELLO metadata, peer addresses, frame sizes, timing, and volume remain visible; in-session rekeying is not implemented.
+- No public built-in DNS seed domain is committed yet.
+- No DHT, Sybil defense, decentralized capability reputation, or verified hardware capacity. Local protocol misbehavior scores and temporary bans are implemented.
+- Scheduling declarations are self-reported; there is no result reputation, fairness, hardware attestation, redundant execution, or failure rescheduling.
+- Gradient correctness is not yet independently verified or Byzantine-aggregated.
+- Model release signing/version promotion and dataset governance remain external.
+
+See `LSP_SPEC.md` for the wire format and `INTERNET_SCALE_READINESS.md` for release gates.

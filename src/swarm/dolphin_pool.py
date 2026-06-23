@@ -114,7 +114,11 @@ class DolphinPool(nn.Module):
         self._on_scale_callbacks.append(fn)
         return fn
 
-    def forward(self, idx: torch.Tensor) -> tuple:
+    def forward(
+        self,
+        idx: torch.Tensor,
+        update_runtime_state: bool = True,
+    ) -> tuple:
         """
         Todos los delfines procesan en paralelo.
         El resultado es el promedio ponderado por confianza.
@@ -125,14 +129,18 @@ class DolphinPool(nn.Module):
         """
         if len(self.dolphins) == 1:
             # Fast path: un solo delfín, sin overhead
-            return self.dolphins[0](idx)
+            return self.dolphins[0](
+                idx, update_runtime_state=update_runtime_state
+            )
 
         feromons = []
         confidences = []
         all_info = []
 
         for dolphin in self.dolphins:
-            f, info = dolphin(idx)
+            f, info = dolphin(
+                idx, update_runtime_state=update_runtime_state
+            )
             conf = info.get("confidence", 0.5)
             if isinstance(conf, torch.Tensor):
                 conf = conf.mean().item()

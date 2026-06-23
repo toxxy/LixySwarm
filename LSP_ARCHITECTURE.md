@@ -2,45 +2,41 @@
 
 **Updated:** 2026-06-22
 
-**Status:** implemented core plus unimplemented Internet target
+## Non-negotiable topology
 
-## Scope
+- The VPS is a replaceable seed, never a required relay or coordinator.
+- Ordinary NAT nodes participate through persistent outbound sessions.
+- Learned peers replace seed dependency immediately after bootstrap.
+- Every message is signed, bounded, freshness-checked, and replay-protected.
+- Local resources are declared to the swarm but are not trusted without verification.
+- Personal memory remains local; only Global Matriarca deltas use the network.
 
-LSP is a coordination protocol for pheromones, peer metadata, and shareable Matriarca deltas. It is not a general distributed-compute scheduler and does not currently partition model execution across nodes.
+## Why persistent TCP first
 
-## Current decisions
+LSP v2 required inbound UDP reachability for pheromones and used short TCP connections for gossip. That model could not support mass participation behind consumer NAT. LSP v3 multiplexes the essential traffic over long-lived connections initiated by the participant. TCP was selected as the first universal transport because it crosses common networks reliably. Signed X25519 negotiation plus ChaCha20-Poly1305 now protects application payloads; QUIC remains an optional future transport, not a requirement for privacy.
 
-### Identity
+## Identity and trust
 
-Each node generates an Ed25519 key pair and uses the 32-byte public key as its node ID. Private identity files remain local with mode 0600. Public keys provide stable pseudonymous identity, not reputation or authorization.
+Ed25519 proves continuity of a pseudonymous node identity and message integrity. It does not prove that resource declarations, memories, gradients, or inference results are correct. Reputation and redundant verification must remain separate from cryptographic identity.
 
-Known limitation: `LSPPacket.verify()` currently accepts packets that do not set the signed flag. Mandatory signatures are a release blocker.
+## Discovery layers
 
-### Memory sovereignty
+1. Persistent address book.
+2. Multiple DNS/bootstrap seeds.
+3. Peer exchange.
+4. DHT after the first three layers are adversarially tested.
 
-Runtime conversation writes go to the Personal Matriarca. Export reads only the Global Matriarca. Personal encryption is enabled only when a key is configured. Shared global items are treated as untrusted input on an open network; current filters are not sufficient for that threat model.
+A DHT is not a substitute for safe sessions or verified peer data. It is deliberately later in the sequence.
 
-### Transport split
+## Compute architecture direction
 
-- UDP 7337 for low-latency, lossy pheromone packets.
-- TCP 7338 for handshake, peer lists, and global deltas.
+The first compute layer now distributes complete inference requests and bounded gradient jobs rather than latency-sensitive tensor operations per token. Training inputs/results use content-addressed dataset/model/gradient identifiers. This establishes transport and execution plumbing; critical work still needs replication, comparison, and robust aggregation before any gradient can affect a shared release.
 
-TCP is currently thread-per-connection and lacks strict pre-allocation frame bounds. The signed envelope has no sequence number or nonce.
+## Remaining decisions
 
-### Discovery
-
-The public source contains no operator IP. Explicit seeds come from `LIXYSWARM_BOOTSTRAP_SEEDS`; saved peers and peer exchange extend the list. Public DNS seeds and DHT discovery are target architecture, not current features.
-
-### Relay semantics
-
-The target design preserves original packet identity, remaining TTL, decay, and message ID across relay hops. The current standalone relay instead emits a new pheromone packet. This must be redesigned before cyclic topologies or untrusted relays.
-
-### Reputation and consensus
-
-Node reputation, weighted consensus, memory conflict resolution, and Byzantine/Sybil resistance are not implemented. Fitness in pheromone payloads is sender-provided and must not be trusted as a security weight.
-
-## Target topology
-
-The intended public network requires multiple interchangeable DNS seeds, a Kademlia-style routing layer, NAT traversal/relay selection, bounded anti-entropy, and independent operators. No single bootstrap or dashboard service may be required for continued operation.
-
-Progress toward that target is gated by `INTERNET_SCALE_READINESS.md` rather than by roadmap dates.
+- In-session key rotation and independent review of the implemented X25519/HKDF/ChaCha20-Poly1305 construction.
+- Seed domains and independent operators.
+- Network reputation and eclipse resistance.
+- Publisher-signed model registry/release manifests and rollback governance.
+- Process/container sandboxing beyond the implemented consent governor and allowlisted scheduler.
+- Replicated inference/training verification and Byzantine-robust gradient aggregation.
