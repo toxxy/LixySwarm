@@ -1,6 +1,6 @@
 # Distributed Protocol Overview
 
-**Updated:** 2026-06-22
+**Updated:** 2026-06-23
 
 LSP v3 is the default network path. It uses persistent outbound-friendly TCP sessions for peer exchange, pheromones, Global Matriarca deltas, typed work, and verified artifact chunks.
 
@@ -30,7 +30,7 @@ export LIXYSWARM_BOOTSTRAP_SEEDS='seed-a.example.net:7338,seed-b.example.net:733
 - Peer discovery: validated address lists, persistent address book, retry/backoff.
 - Resources: bounded capability declaration registered in `NodeManager`.
 - Optional identity cost: when configured, compute peers persist a key-bound SHA-256 work stamp and requesters enforce their own minimum. It is disabled by default and is not the network's useful-work reward.
-- Work: canonical signed-origin offers with deadlines, idempotency, allowlisted local handlers, and consent/resource leases.
+- Work: canonical signed-origin offers with deadlines, idempotency, allowlisted local handlers, consent/resource leases, a fixed inbound queue, and per-identity concurrency/rate quotas. Overload rejections carry the worker's portable signature.
 - Results: portable Ed25519 receipts bind worker/requester/job/output and are preserved in gradient quorum provenance.
 - Useful-work evidence: connected workers present up to 16 dual-signed credits over the encrypted session. The receiver rejects self-declared HELLO reputation, verifies every credit locally, and ranks firsthand accepted work before third-party evidence and raw hardware capacity.
 - Fair entry: requester-local private history persists pseudonymous IDs and counters. Every fifth selection may choose a worker identity known for at least 60 seconds; quorum replacement occurs only when it preserves the retained network-group diversity.
@@ -47,7 +47,7 @@ Nodes behind NAT need only outbound TCP connectivity. Public nodes and seeds acc
 - Established-session payloads are signed and ChaCha20-Poly1305 encrypted after a signed X25519 HELLO. HELLO metadata, peer addresses, frame sizes, timing, and volume remain visible; in-session rekeying is not implemented.
 - No public built-in DNS seed domain is committed yet.
 - No DHT, Sybil defense, decentralized capability reputation, or verified hardware capacity. Local protocol misbehavior scores and temporary bans are implemented.
-- Scheduling capacity declarations are self-reported. Verified useful-work evidence and bounded newcomer exploration affect ordering, but there is no Sybil-independent issuer reputation, persistent request queue/fair-share accounting, hardware attestation, general redundant execution beyond verified inference, or failure rescheduling.
+- Scheduling capacity declarations are self-reported. Verified useful-work evidence and bounded newcomer exploration affect ordering. Inbound admission is memory-bounded and identity-quotad, but there is no Sybil-independent issuer reputation, durable request queue/fair-share accounting, hardware attestation, general redundant execution beyond verified inference, cancellation, or failure rescheduling.
 - Replication reduces reliance on one worker but does not defeat coordinated Sybil identities. It also exposes the requested prompt to every selected worker.
 - Optional identity work can raise the cost of key creation but does not prove distinct ownership. It is a configurable abuse control, not the primary contribution system.
 - Useful-work credits bind a worker-signed result receipt to a requester-signed aggregation claim and deduplicate repeated use of one result. Direct peers exchange bounded presentations and the scheduler prioritizes credits it issued itself, then issuer diversity. Malicious or colluding pseudonymous issuers can still make false quality claims.

@@ -1,6 +1,6 @@
 # LSP Architecture Decisions
 
-**Updated:** 2026-06-22
+**Updated:** 2026-06-23
 
 ## Non-negotiable topology
 

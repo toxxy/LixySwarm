@@ -251,6 +251,40 @@ def test_v3_delivers_useful_work_credit_to_exact_peer(tmp_path):
         right.stop()
 
 
+def test_v3_can_send_immediate_result_from_transport_callback(tmp_path):
+    requester = _node(tmp_path, "callback-requester", target_outbound=0)
+    worker = _node(tmp_path, "callback-worker", target_outbound=0)
+    received = []
+    event = threading.Event()
+
+    @worker.on_work_offer_received
+    def reject_immediately(offer, node_id):
+        assert worker.send_work_result(node_id, {
+            "job_id": offer["job_id"],
+            "status": "rejected",
+            "error": "work_queue_full",
+        })
+
+    @requester.on_work_result_received
+    def capture(result, node_id):
+        received.append((result, node_id))
+        event.set()
+
+    requester.start()
+    worker.start()
+    try:
+        assert requester.connect_peer("127.0.0.1", worker.port)
+        assert requester.send_work_offer(worker.identity.node_id_hex, {
+            "job_id": "16" * 32,
+        })
+        assert event.wait(3.0)
+        assert received[0][0]["error"] == "work_queue_full"
+        assert received[0][1] == worker.identity.node_id_hex
+    finally:
+        requester.stop()
+        worker.stop()
+
+
 def test_v3_exchanges_useful_work_proofs_after_encrypted_handshake(tmp_path):
     left = _node(tmp_path, "proof-left", target_outbound=0)
     right = _node(tmp_path, "proof-right", target_outbound=0)

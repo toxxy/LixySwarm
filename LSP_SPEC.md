@@ -1,6 +1,6 @@
 # LixySwarm Protocol v3
 
-**Updated:** 2026-06-22
+**Updated:** 2026-06-23
 
 **Maturity:** implemented development protocol; public testnet hardening remains
 
@@ -101,6 +101,8 @@ Identity work is disabled by default. An operator can set `LIXYSWARM_IDENTITY_WO
 
 `WorkUnit` hashes canonical JSON containing origin, operation, kind, resource requirements, payload, deadline, and nonce. The signed session identity must equal the claimed origin. Workers execute only locally registered handlers; peer-supplied code, scripts, commands, shells, and executables are forbidden. Completed IDs are cached for idempotency.
 
+Admission reserves a slot before submitting to the executor. Defaults are one-to-64 active workers according to local configuration, 16 queued offers, two active-or-queued offers per remote identity, and 12 attempts per identity per minute. The identity-rate table is capped at 1,024 entries. `LIXYSWARM_MAX_QUEUED_OFFERS`, `LIXYSWARM_MAX_OFFERS_PER_PEER`, and `LIXYSWARM_MAX_OFFERS_PER_MINUTE` change local limits. A rejected offer receives a signed `WorkResult` with `work_queue_full`, `peer_queue_limit`, `peer_rate_limit`, `worker_identity_limit`, or `worker_shutting_down`. Sending from an LSP callback schedules onto the current event loop instead of synchronously waiting on itself.
+
 Every `WorkResult` contains a second portable Ed25519 receipt over the job ID, worker, requester, output/error digest, and completion time. The requester verifies this receipt against the transport peer before accepting the result. Gradient quorum artifacts retain the receipts as provenance; a receipt proves what a pseudonymous identity asserted, not that the computation was honest or that identities are independent.
 
 After a gradient candidate enters a validated quorum aggregate, the requester signs a useful-work credit containing the worker's signed result receipt and the exact model, dataset, candidate, aggregate, and token count. The stable credit ID prevents repeated aggregation of one job/result from increasing the worker's local count. Credits are delivered over the encrypted session and stored by the worker.
@@ -124,5 +126,5 @@ LSP v2 remains available only through `SwarmNetwork(..., protocol="v2")`. LSP v3
 - Stronger autonomous-system/network diversity, feeler connections, and adversarial eclipse tests.
 - Sybil-independent issuer/result reputation, identity aging, hardware verification, and eclipse resistance beyond local misbehavior bans and connected-peer useful-work evidence.
 - DHT discovery after persistent peer exchange is stable.
-- Official threshold trust roots/genesis artifacts, multi-provider content lookup beyond the announcing peer, cross-hardware validation of replicated inference, persistent fair-share queues, cancellation, and job recovery.
+- Official threshold trust roots/genesis artifacts, multi-provider content lookup beyond the announcing peer, cross-hardware validation of replicated inference, durable fair-share queues, cancellation, and job recovery.
 - Fuzzing, load tests, mixed-version upgrades, and an external security audit.

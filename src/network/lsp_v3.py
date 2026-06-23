@@ -1118,15 +1118,30 @@ class LSPNodeV3:
         return int(future.result(timeout=15.0))
 
     def _send_json_to_peer(self, packet_type: int, node_id: str, value: dict) -> bool:
-        if not self._loop or not isinstance(value, dict):
+        loop = self._loop
+        if (
+            loop is None
+            or loop.is_closed()
+            or not loop.is_running()
+            or not isinstance(value, dict)
+        ):
             return False
         payload = json.dumps(value, ensure_ascii=False, separators=(",", ":")).encode()
         if len(payload) > 256 * 1024:
             raise ProtocolError("Work payload exceeds 256 KiB")
-        future = asyncio.run_coroutine_threadsafe(
-            self._send_to_peer(packet_type, node_id, payload), self._loop
-        )
-        return bool(future.result(timeout=15.0))
+        coroutine = self._send_to_peer(packet_type, node_id, payload)
+        if threading.current_thread() is self._thread:
+            if node_id not in self._sessions:
+                coroutine.close()
+                return False
+            asyncio.create_task(coroutine)
+            return True
+        try:
+            future = asyncio.run_coroutine_threadsafe(coroutine, loop)
+            return bool(future.result(timeout=15.0))
+        except RuntimeError:
+            coroutine.close()
+            return False
 
     async def _send_to_peer(
         self, packet_type: int, node_id: str, payload: bytes

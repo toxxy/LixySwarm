@@ -155,6 +155,15 @@ class SwarmNetwork:
                 exploration_minimum_age_s=float(os.environ.get(
                     "LIXYSWARM_EXPLORATION_MIN_AGE_S", "60"
                 )),
+                max_queued_offers=int(os.environ.get(
+                    "LIXYSWARM_MAX_QUEUED_OFFERS", "16"
+                )),
+                max_offers_per_peer=int(os.environ.get(
+                    "LIXYSWARM_MAX_OFFERS_PER_PEER", "2"
+                )),
+                max_offers_per_minute=int(os.environ.get(
+                    "LIXYSWARM_MAX_OFFERS_PER_MINUTE", "12"
+                )),
             )
         return self.work_coordinator
 

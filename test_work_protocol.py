@@ -1,4 +1,6 @@
 import json
+import threading
+import time
 
 import pytest
 from dataclasses import replace
@@ -40,6 +42,15 @@ def _node(tmp_path, name, governor):
         allow_private=True,
         resource_profile=governor.advertised_profile(),
     )
+
+
+def _wait_for(predicate, timeout=3.0):
+    deadline = time.time() + timeout
+    while time.time() < deadline:
+        if predicate():
+            return True
+        time.sleep(0.01)
+    return False
 
 
 def test_work_unit_is_content_addressed_and_rejects_code():
@@ -414,4 +425,150 @@ def test_quorum_exploration_does_not_reduce_network_group_diversity(tmp_path):
         )
         assert selected == [identity.node_id_hex for identity in identities[:3]]
     finally:
+        coordinator.close()
+
+
+def test_inbound_work_queue_is_bounded_per_identity(tmp_path):
+    worker = LSPIdentity.generate()
+    requester = LSPIdentity.generate()
+
+    class FakeNode:
+        identity = worker
+
+        def __init__(self):
+            self.results = []
+
+        def on_work_offer_received(self, callback):
+            self.offer_callback = callback
+
+        def on_work_result_received(self, callback):
+            self.result_callback = callback
+
+        def send_work_result(self, peer_id, value):
+            self.results.append((peer_id, value))
+            return True
+
+    node = FakeNode()
+    started = threading.Event()
+    release = threading.Event()
+    coordinator = WorkCoordinator(
+        node,
+        _governor(tmp_path / "queue-governor", "balanced"),
+        max_workers=1,
+        max_queued_offers=1,
+        max_offers_per_peer=2,
+        max_offers_per_minute=10,
+    )
+    coordinator.register_handler(
+        "training.block.v1",
+        "training",
+        lambda _payload, _work: (
+            started.set(), release.wait(3), {"accepted": True}
+        )[-1],
+    )
+
+    def make_offer(index):
+        return WorkUnit.create(
+            origin_node_id=requester.node_id_hex,
+            operation="training.block.v1",
+            kind="training",
+            requirements=ResourceRequirements(kind="training"),
+            payload={"batch": index},
+        ).to_dict()
+
+    offers = [make_offer(index) for index in range(3)]
+    try:
+        node.offer_callback(offers[0], requester.node_id_hex)
+        assert started.wait(1.0)
+        node.offer_callback(offers[1], requester.node_id_hex)
+        node.offer_callback(offers[2], requester.node_id_hex)
+        assert _wait_for(lambda: any(
+            value["job_id"] == offers[2]["job_id"]
+            for _, value in node.results
+        ))
+        rejected = next(
+            WorkResult.from_dict(value) for _, value in node.results
+            if value["job_id"] == offers[2]["job_id"]
+        )
+        assert rejected.status == "rejected"
+        assert rejected.error == "peer_queue_limit"
+        receipt = ResultReceipt.from_dict(rejected.receipt)
+        assert receipt.verify(
+            rejected,
+            expected_worker_id=worker.node_id_hex,
+            expected_requester_id=requester.node_id_hex,
+        )
+        assert coordinator.queue_status()["active_or_queued"] == 2
+    finally:
+        release.set()
+        coordinator.close()
+    assert coordinator.queue_status()["active_or_queued"] == 0
+
+
+def test_global_work_queue_and_offer_rate_are_bounded(tmp_path):
+    worker = LSPIdentity.generate()
+    first_requester = LSPIdentity.generate()
+    second_requester = LSPIdentity.generate()
+
+    class FakeNode:
+        identity = worker
+
+        def __init__(self):
+            self.results = []
+
+        def on_work_offer_received(self, callback):
+            self.offer_callback = callback
+
+        def on_work_result_received(self, callback):
+            self.result_callback = callback
+
+        def send_work_result(self, peer_id, value):
+            self.results.append((peer_id, value))
+            return True
+
+    node = FakeNode()
+    started = threading.Event()
+    release = threading.Event()
+    coordinator = WorkCoordinator(
+        node,
+        _governor(tmp_path / "global-queue-governor", "balanced"),
+        max_workers=1,
+        max_queued_offers=0,
+        max_offers_per_peer=2,
+        max_offers_per_minute=1,
+    )
+    coordinator.register_handler(
+        "training.block.v1",
+        "training",
+        lambda _payload, _work: (
+            started.set(), release.wait(3), {"accepted": True}
+        )[-1],
+    )
+
+    def make_offer(identity, index):
+        return WorkUnit.create(
+            origin_node_id=identity.node_id_hex,
+            operation="training.block.v1",
+            kind="training",
+            requirements=ResourceRequirements(kind="training"),
+            payload={"batch": index},
+        ).to_dict()
+
+    first = make_offer(first_requester, 1)
+    rate_limited = make_offer(first_requester, 2)
+    queue_limited = make_offer(second_requester, 3)
+    try:
+        node.offer_callback(first, first_requester.node_id_hex)
+        assert started.wait(1.0)
+        node.offer_callback(rate_limited, first_requester.node_id_hex)
+        node.offer_callback(queue_limited, second_requester.node_id_hex)
+        assert _wait_for(lambda: len(node.results) >= 2)
+        errors = {
+            value["job_id"]: value["error"] for _, value in node.results
+        }
+        assert errors[rate_limited["job_id"]] == "peer_rate_limit"
+        assert errors[queue_limited["job_id"]] == "work_queue_full"
+        assert coordinator.queue_status()["capacity"] == 1
+    finally:
+        release.set()
         coordinator.close()

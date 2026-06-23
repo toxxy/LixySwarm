@@ -1,6 +1,6 @@
 # Security and Privacy
 
-**Updated:** 2026-06-22
+**Updated:** 2026-06-23
 
 **Security status:** trusted-development prototype, not approved for public exposure
 
@@ -26,6 +26,7 @@ If a secret or private datum has ever entered Git history, deleting it from the 
 - Exposing peer addresses through API status is off by default. Enable only with `LIXYSWARM_EXPOSE_PEER_HOSTS=true`.
 - Compute is disabled until a persisted `balanced` or `maximum` contribution policy records explicit consent.
 - Peer work cannot contain executable code and can invoke only fixed local handlers. Recursive payload limits, deadlines, rate windows, and resource leases are enforced.
+- Remote work admission reserves from a fixed queue and enforces per-identity active/queued and minute-window quotas. Every parseable overload rejection is signed; the executor's internal queue cannot grow without the protocol reservation succeeding.
 - Remote inference cannot read/write personal Matriarca memory or session/Dolphin state.
 - Artifact manifests expose hashes, sizes, types, and timestamps—not source filenames or paths. Chunk and full-object hashes are verified before commit.
 - Training workers never load peer checkpoints and never apply returned gradients; they require the exact locally loaded model hash and safe NumPy token arrays.
@@ -39,7 +40,7 @@ If a secret or private datum has ever entered Git history, deleting it from the 
 - Release announcements are signature-checked before download; referenced artifacts are hash-verified. Automatic activation is a persisted explicit opt-in and is off by default.
 - Outbound selection prefers distinct coarse network groups. Protocol violations accrue local decaying scores and persistent temporary bans keyed by hashes rather than raw identifiers.
 
-These controls are incomplete. HELLO/traffic metadata remains visible and long sessions do not rekey; resource claims and compute results remain self-reported/unattested; work runs in-process; local bans do not provide Sybil or global reputation defenses; personal encryption is optional; gradients can leak training data at their endpoints; and most API endpoints are unauthenticated. Legacy v2 has weaker verification and must not be enabled on the public network.
+These controls are incomplete. HELLO/traffic metadata remains visible and long sessions do not rekey; resource claims and compute results remain self-reported/unattested; admitted work runs in-process and cannot be cancelled; identity quotas are not Sybil resistance; personal encryption is optional; gradients can leak training data at their endpoints; and most API endpoints are unauthenticated. Legacy v2 has weaker verification and must not be enabled on the public network.
 
 ## Required production controls
 

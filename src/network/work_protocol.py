@@ -14,7 +14,7 @@ import os
 import re
 import threading
 import time
-from collections import OrderedDict
+from collections import OrderedDict, deque
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import asdict, dataclass, field, replace
 from typing import Callable, Optional
@@ -28,6 +28,8 @@ from .scheduler_history import SchedulerHistory
 MAX_WORK_JSON_SIZE = 256 * 1024
 MAX_WORK_LIFETIME_S = 60 * 60
 MAX_COMPLETED_CACHE = 2048
+OFFER_RATE_WINDOW_S = 60.0
+MAX_TRACKED_OFFER_IDENTITIES = 1024
 _OPERATION_RE = re.compile(r"^[a-z0-9][a-z0-9_.-]{2,127}$")
 _HEX_64_RE = re.compile(r"^[0-9a-f]{64}$")
 _FORBIDDEN_PAYLOAD_KEYS = {"code", "script", "command", "shell", "executable"}
@@ -325,6 +327,9 @@ class WorkCoordinator:
         scheduler_state_path=None,
         exploration_interval: int = 5,
         exploration_minimum_age_s: float = 60.0,
+        max_queued_offers: int = 16,
+        max_offers_per_peer: int = 2,
+        max_offers_per_minute: int = 12,
     ):
         self.node = node
         self.governor = governor
@@ -336,13 +341,25 @@ class WorkCoordinator:
         self._inflight: set[str] = set()
         self._completed: OrderedDict[str, WorkResult] = OrderedDict()
         self._lock = threading.RLock()
+        self._closed = False
+        self._max_workers = max(1, min(int(max_workers), 64))
+        self.max_queued_offers = max(0, min(int(max_queued_offers), 1024))
+        self.max_offers_per_peer = max(1, min(int(max_offers_per_peer), 64))
+        self.max_offers_per_minute = max(
+            1, min(int(max_offers_per_minute), 600)
+        )
+        self._offer_slots = threading.BoundedSemaphore(
+            self._max_workers + self.max_queued_offers
+        )
+        self._peer_reserved_offers: dict[str, int] = {}
+        self._peer_offer_times: dict[str, deque] = {}
         self.scheduler_history = SchedulerHistory(
             scheduler_state_path,
             exploration_interval=exploration_interval,
             minimum_age_s=exploration_minimum_age_s,
         )
         self._executor = ThreadPoolExecutor(
-            max_workers=max(1, min(int(max_workers), 64)),
+            max_workers=self._max_workers,
             thread_name_prefix="lixy-work",
         )
         node.on_work_offer_received(self._on_offer)
@@ -399,8 +416,22 @@ class WorkCoordinator:
         )
 
     def close(self):
+        with self._lock:
+            self._closed = True
         self._executor.shutdown(wait=True, cancel_futures=True)
         self.scheduler_history.close()
+
+    def queue_status(self) -> dict:
+        with self._lock:
+            reserved = sum(self._peer_reserved_offers.values())
+            return {
+                "active_or_queued": reserved,
+                "capacity": self._max_workers + self.max_queued_offers,
+                "reserved_identities": len(self._peer_reserved_offers),
+                "rate_tracked_identities": len(self._peer_offer_times),
+                "max_per_identity": self.max_offers_per_peer,
+                "max_offers_per_minute": self.max_offers_per_minute,
+            }
 
     def select_peer(
         self,
@@ -562,7 +593,79 @@ class WorkCoordinator:
         return diverse + repeated
 
     def _on_offer(self, value: dict, from_node_id: str):
-        self._executor.submit(self._execute_offer, value, from_node_id)
+        rejection = self._reserve_offer(from_node_id)
+        if rejection is not None:
+            self._reject_offer(value, from_node_id, rejection)
+            return
+        try:
+            future = self._executor.submit(
+                self._execute_offer, value, from_node_id
+            )
+            future.add_done_callback(
+                lambda _future, peer_id=from_node_id: self._release_offer(peer_id)
+            )
+        except RuntimeError:
+            self._release_offer(from_node_id)
+            self._reject_offer(value, from_node_id, "worker_shutting_down")
+
+    def _reserve_offer(self, from_node_id: str) -> Optional[str]:
+        now = time.monotonic()
+        with self._lock:
+            if self._closed:
+                return "worker_shutting_down"
+            self._prune_offer_state(now)
+            if (
+                from_node_id not in self._peer_offer_times
+                and len(self._peer_offer_times) >= MAX_TRACKED_OFFER_IDENTITIES
+            ):
+                return "worker_identity_limit"
+            offer_times = self._peer_offer_times.setdefault(
+                from_node_id, deque()
+            )
+            threshold = now - OFFER_RATE_WINDOW_S
+            while offer_times and offer_times[0] < threshold:
+                offer_times.popleft()
+            if len(offer_times) >= self.max_offers_per_minute:
+                return "peer_rate_limit"
+            offer_times.append(now)
+            if self._peer_reserved_offers.get(from_node_id, 0) >= self.max_offers_per_peer:
+                return "peer_queue_limit"
+            if not self._offer_slots.acquire(blocking=False):
+                return "work_queue_full"
+            self._peer_reserved_offers[from_node_id] = (
+                self._peer_reserved_offers.get(from_node_id, 0) + 1
+            )
+            return None
+
+    def _release_offer(self, from_node_id: str):
+        with self._lock:
+            reserved = self._peer_reserved_offers.get(from_node_id, 0)
+            if reserved <= 1:
+                self._peer_reserved_offers.pop(from_node_id, None)
+            else:
+                self._peer_reserved_offers[from_node_id] = reserved - 1
+            if reserved > 0:
+                self._offer_slots.release()
+
+    def _prune_offer_state(self, now: float):
+        if len(self._peer_offer_times) <= MAX_TRACKED_OFFER_IDENTITIES:
+            return
+        threshold = now - OFFER_RATE_WINDOW_S
+        for node_id in list(self._peer_offer_times):
+            times = self._peer_offer_times[node_id]
+            while times and times[0] < threshold:
+                times.popleft()
+            if not times and node_id not in self._peer_reserved_offers:
+                self._peer_offer_times.pop(node_id, None)
+
+    def _reject_offer(self, value: dict, peer_id: str, reason: str):
+        job_id = str(value.get("job_id", "")) if isinstance(value, dict) else ""
+        if _HEX_64_RE.fullmatch(job_id):
+            self._send_result(peer_id, WorkResult(
+                job_id=job_id,
+                status="rejected",
+                error=reason,
+            ))
 
     def _execute_offer(self, value: dict, from_node_id: str):
         job_id = str(value.get("job_id", "")) if isinstance(value, dict) else ""

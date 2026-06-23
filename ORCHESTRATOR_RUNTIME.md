@@ -1,6 +1,6 @@
 # Orchestrator Runtime
 
-**Updated:** 2026-06-22
+**Updated:** 2026-06-23
 
 ## Entry points
 
@@ -55,7 +55,7 @@ Remote inference uses a fresh non-persistent `RuntimeSession`, disables personal
 
 ## Known runtime gaps
 
-- No bounded persistent request queue, cancellation, fair-share accounting beyond newcomer exploration, or process-level multi-tenant isolation.
+- The inbound executor queue is bounded with per-identity concurrency/rate quotas, but it is not durable; cancellation, full fair-share accounting beyond newcomer exploration, and process-level multi-tenant isolation remain missing.
 - Model loading is process-global and heavyweight.
 - API chat history is in memory and unauthenticated.
 - Dynamic topology changes are not integrated safely with a live optimizer.

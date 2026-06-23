@@ -1,6 +1,6 @@
 # LixySwarm Implemented Architecture
 
-**Updated:** 2026-06-22
+**Updated:** 2026-06-23
 
 **Status:** research prototype; see `PAPER_COMPLIANCE.md` for gaps
 
@@ -78,6 +78,8 @@ The v3 envelope requires Ed25519 signatures and includes network, session, messa
 HELLO resource declarations are bounded and registered in runtime `NodeManager`. The typed scheduler uses them to select consenting peers for inference, artifact, and gradient work, but they remain self-reported. Worker-side policy, operation allowlists, fixed schemas, and leases limit execution; hardware attestation and process/container isolation do not yet exist.
 
 Work units are canonical JSON identified by SHA-256 and tied to the signed origin session. They contain declarative inputs only; executable/script/command fields are rejected recursively. Inference runs without personal Matriarca retrieval, history writes, or Dolphin-state mutation. Training workers accept only a matching local model hash and a safe one-dimensional NumPy token artifact, return a verified NPZ gradient artifact, and never apply it. The orchestrator can request three-to-31 distinct peer identities and stream a coordinate median into a new provenance-bearing artifact without loading complete model-sized candidate sets into RAM at once. Each included worker receives a stable useful-work credit containing its signed result receipt and the requester's signed aggregation claim. Connected peers present bounded credits over encryption; the scheduler prioritizes firsthand accepted work and then issuer-diverse evidence, while a persisted one-in-five exploration slot lets aged newcomers earn their first credit without reducing available quorum path diversity. None of this is treated as currency or Sybil-independent trust.
+
+Inbound offers reserve one of a fixed number of active/queued slots before reaching the executor. Per-identity concurrent and minute-window quotas prevent one connected identity from monopolizing that finite queue; overflow produces a signed rejection rather than allocating more pending futures. The queue remains in-memory and running handlers are not yet cancellable or process-isolated.
 
 `ArtifactStore` addresses objects by SHA-256, omits source filenames and paths from manifests, applies storage quotas, transfers 96 KiB chunks, verifies each chunk, and verifies the complete object before commit.
 
