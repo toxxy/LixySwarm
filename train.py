@@ -436,6 +436,10 @@ def train(
                 }
                 _save_checkpoint_atomic(ckpt, checkpoint_dir / "best.pt")
                 print(f"  ✓ Mejor checkpoint guardado (val_loss={val_loss:.4f})")
+            if device == "cuda":
+                # Evaluation logits and checkpoint serialization can leave
+                # large inactive segments before the next backward pass.
+                torch.cuda.empty_cache()
         
         if step == cfg.max_steps:
             break
