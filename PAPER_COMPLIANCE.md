@@ -50,7 +50,7 @@ Status meanings:
 | Merge-on-transit | Partial | A merge buffer exists, but the receive path flushes immediately, preventing useful accumulation during normal traffic. |
 | TCP handshake and peer exchange | Implemented in v3 | Persistent signed/encrypted sessions, X25519/HKDF/ChaCha20-Poly1305, bounded frames, validated addresses, saved peers, retry/backoff, and direct peer exchange are tested. Rekeying, independent cryptographic review, and Sybil/eclipsing resistance remain missing. |
 | Global Matriarca gossip delta | Partial | Export, filtering, transport signature, deduplication, and import exist. Per-memory provenance/signature validation, reputation, conflict handling, and poisoning defenses do not. |
-| Internet bootstrap and seed independence | Implemented in v3 code | Saved peers plus multiple seed endpoints feed `PeerManager`; a three-node test proves direct communication continues after seed shutdown. Official DNS seed infrastructure is not configured yet. |
+| Internet bootstrap and seed independence | Implemented in v3 code | Saved peers plus multiple seed endpoints feed `PeerManager`; both in-process and separate-interpreter three-node tests prove encrypted direct communication continues after graceful or abrupt seed shutdown. Official DNS seed infrastructure and public multi-region endurance evidence are not configured yet. |
 | VPS seed path | Implemented in v3 code | `node_daemon.py` is a non-privileged seed service template. It introduces peers and is not a required relay. Deployment validation on the actual VPS remains. |
 | DHT/Kademlia discovery | Not implemented | Future work. |
 | Reputation-weighted consensus | Not implemented | Future work. |

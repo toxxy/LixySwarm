@@ -76,7 +76,7 @@ The first frame in each direction must be a fresh HELLO. The sender public key i
 7. Retry failures with exponential backoff.
 8. Prefer candidates from distinct IPv4 `/16`, IPv6 `/32`, or DNS-suffix groups before filling from repeated groups.
 
-The seed is not a relay or coordinator. A seed node runs the same protocol with `target_outbound=0`, accepts sessions, and shares its learned address book. Peers form direct sessions and continue after seed shutdown; this invariant has an automated three-node test.
+The seed is not a relay or coordinator. A seed node runs the same protocol with `target_outbound=0`, accepts sessions, and shares its learned address book. Peers form direct sessions and continue after seed shutdown. This invariant has both an in-process three-node test and a spawn-based acceptance test that runs each node in a separate interpreter, abruptly terminates the seed process, verifies the surviving route remains encrypted, and delivers a signed Global Matriarca delta directly.
 
 Private, loopback, link-local, multicast, unspecified, invalid hostname, and invalid port advertisements are rejected on the public path. Private addresses require an explicit LAN/test setting.
 

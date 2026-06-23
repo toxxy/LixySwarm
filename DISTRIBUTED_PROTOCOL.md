@@ -15,7 +15,7 @@ new node
   -> seed can disappear
 ```
 
-Saved addresses and peer exchange are preferred after initial discovery. The VPS runs `node_daemon.py` as a seed, not as a required relay.
+Saved addresses and peer exchange are preferred after initial discovery. The VPS runs `node_daemon.py` as a seed, not as a required relay. An automated acceptance test starts all three nodes in separate interpreters, learns the direct client route only through peer exchange, kills the seed process, and verifies an encrypted signed delta still arrives directly.
 
 Configure multiple endpoints until official DNS seeds are published:
 

@@ -47,7 +47,7 @@
 
 ## P2: final-topology multi-node validation
 
-- [x] Add a three-node test proving discovery and direct communication after seed shutdown.
+- [x] Add in-process and separate-interpreter three-node tests proving discovery and encrypted direct communication after graceful/abrupt seed shutdown.
 - [ ] Run the same final v3 topology on 3-10 multi-region public nodes for at least seven days.
 - [ ] Measure latency, throughput, packet loss, partitions, churn, and recovery.
 - [ ] Implement a real merge window and benchmark its effect.

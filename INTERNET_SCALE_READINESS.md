@@ -14,7 +14,7 @@ LSP v3 provides the final topology foundation and an initial compute/data plane.
 - One-megabyte payload/frame bounds, no compressed frames, and per-session rate windows.
 - Asynchronous persistent TCP sessions suitable for outbound-only NAT participants.
 - Validated peer advertisements, persistent address book, retry/backoff, and peer exchange.
-- Seed-independent three-node communication proven by an automated test.
+- In-process and separate-interpreter three-node acceptance tests that establish direct encrypted routes through peer exchange and retain communication after graceful or abrupt seed shutdown.
 - Bounded resource profiles registered in runtime `NodeManager`.
 - Unprivileged systemd seed service template.
 - Persisted opt-in resource policy with CPU/GPU/RAM/disk/bandwidth declarations and leases.
@@ -35,7 +35,7 @@ LSP v3 provides the final topology foundation and an initial compute/data plane.
 - Same-job bounded fallback across distinct eligible peers for automatic single-peer work, including cancellation of timed-out attempts and receipt-derived artifact-provider selection.
 - Optional Ed25519-bound identity work and requester-enforced compute difficulty; disabled by default and retained only as a configurable admission defense.
 - Encrypted P2P release announcement, trust-before-download validation, direct artifact acquisition, deduplicated relay, and persisted opt-in auto-activation.
-- A complete local run of 195 tests on the assessment date.
+- A complete local run of 196 tests on the assessment date.
 
 ## Release blockers
 

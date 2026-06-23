@@ -54,7 +54,7 @@ tokens
   -> repetition-penalized top-k/top-p sampling in RuntimeSession
 ```
 
-LSP v3 multiplexes pheromones, peer exchange, global-memory deltas, work offers, and work results over persistent TCP `7338` sessions. Large artifacts move as verified chunks through typed work. A node loads saved peers, bootstraps from multiple configured seeds, learns direct routes, and continues if a seed disappears. There are no built-in public DNS seed domains yet; configure endpoints with `LIXYSWARM_BOOTSTRAP_SEEDS=host:7338[,host:7338]`.
+LSP v3 multiplexes pheromones, peer exchange, global-memory deltas, work offers, and work results over persistent TCP `7338` sessions. Large artifacts move as verified chunks through typed work. A node loads saved peers, bootstraps from multiple configured seeds, learns direct routes, and continues if a seed disappears. In-process and separate-process three-node acceptance tests verify encrypted direct communication after the seed process exits. There are no built-in public DNS seed domains yet; configure endpoints with `LIXYSWARM_BOOTSTRAP_SEEDS=host:7338[,host:7338]`.
 
 ## Install and verify
 
@@ -68,7 +68,7 @@ python3 -m pip install -e . --no-deps
 pytest -q
 ```
 
-The full suite passed **195 tests** on 2026-06-23.
+The full suite passed **196 tests** on 2026-06-23.
 
 ## Local language recovery
 

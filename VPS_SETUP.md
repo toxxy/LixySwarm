@@ -54,12 +54,12 @@ lixyswarm start
 
 The basic command contributes connectivity and explicitly imported artifacts only. A participant can use a separately verified local checkpoint with `--checkpoint`, or configure threshold trust, activate a signed local release, and use `lixyswarm start --release`. The repository does not publish official signer keys, a pinned genesis, or model weights yet, so acquisition must not be automated from an untrusted peer.
 
-After peer exchange, stopping the seed must not interrupt existing direct sessions. `test_lsp_v3.py::test_v3_network_continues_after_seed_shutdown` enforces this property.
+After peer exchange, stopping the seed must not interrupt existing direct sessions. `test_lsp_v3.py::test_v3_network_continues_after_seed_shutdown` covers graceful shutdown in one process; `test_lsp_v3_multiprocess.py` runs each node in a separate interpreter and abruptly terminates the seed process.
 
 ## Validation
 
 ```bash
-pytest -q test_lsp_v3.py
+pytest -q test_lsp_v3.py test_lsp_v3_multiprocess.py
 journalctl -u lixyswarm-seed --since today
 ```
 
