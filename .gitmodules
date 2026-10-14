@@ -1,0 +1,3 @@
+[submodule "references/nanoGPT"]
+	path = references/nanoGPT
+	url = https://github.com/karpathy/nanoGPT

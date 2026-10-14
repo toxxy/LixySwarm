@@ -10,6 +10,7 @@ on:
       - 'src/network/**'
       - 'src/contribution/**'
       - '.github/workflows/desktop.yml'
+      - '.gitmodules'
 
 permissions:
   contents: read
