@@ -246,7 +246,7 @@ def get_auto_loop_state() -> dict | None:
 def get_lsp_state() -> dict:
     """Describe capacidades de red reales sin prometer WAN automático."""
     s = _read_status()
-    published = s.get("lsp", {}) if isinstance(s.get("lsp"), dict) else {}
+    published = s.get("lsp", {}) if isinstance(s.get("lsp"), dict) and not s.get("_stale", True) else {}
     public_host = os.environ.get("LIXYSWARM_PUBLIC_HOST")
     seed_override = os.environ.get("LIXYSWARM_BOOTSTRAP_SEEDS")
     bootstrap_available = seed_override is None or bool(seed_override.strip())

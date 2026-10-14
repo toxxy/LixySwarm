@@ -132,11 +132,15 @@ def run():
 
     while not stopping.is_set():
         publish_self()
+        active_statuses = [value for value in status_store.nodes() if value["active"]]
         log.info(
-            "heartbeat connected=%s outbound=%s known=%s",
+            "heartbeat connected=%s outbound=%s known=%s fresh_nodes=%s participants=%s relayed_links=%s",
             node.peer_count,
             node.outbound_count,
             node.address_book.count,
+            len(active_statuses),
+            sum(value["role"] == "participant" for value in active_statuses),
+            sum(link["transport"] == "relay" for value in active_statuses for link in value["links"]),
         )
         stopping.wait(15)
 

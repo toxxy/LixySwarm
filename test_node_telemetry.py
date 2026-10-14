@@ -178,6 +178,7 @@ def test_expired_training_is_not_reported_as_current_activity(tmp_path, monkeypa
         "agents": [{"id": "old-agent"}], "training_active": True,
         "swarm_diversity": 0.75, "metrics": {"step": 123, "val_loss": 1.5},
         "matriarca": {"memory_count": 90}, "dolphin": {"active_pings": 5},
+        "lsp": {"protocol": "LSP v2", "wire_format": "LYSW", "merge_on_transit": True},
     }))
     os.utime(published, (time.time() - 120, time.time() - 120))
     monkeypatch.setattr(swarm_state, "STATUS_FILE", published)
@@ -190,6 +191,9 @@ def test_expired_training_is_not_reported_as_current_activity(tmp_path, monkeypa
     assert not status["metrics"]["training_active"]
     assert status["matriarca"]["memory_count"] is None
     assert status["dolphin"]["active_pings"] is None
+    assert status["lsp"]["protocol"] == "LSP v3"
+    assert status["lsp"]["wire_format"] == "LYS3"
+    assert not status["lsp"]["merge_on_transit"]
 
 
 def test_lsp_delivers_signed_status_and_rejects_another_identity(tmp_path):

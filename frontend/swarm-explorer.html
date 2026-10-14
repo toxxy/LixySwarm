@@ -504,6 +504,7 @@
       const connected = net.connected_count || 0;
       const knownPeers = net.known_peer_count ?? connected;
       const internetReady = !!internet.ready;
+      const hasRelayRoutes = (net.nodes || []).some(n => n.active && (n.links || []).some(l => l.transport === "relay"));
       set("internet-card", internetReady ? "WAN listo" : "LAN");
       set("internet-card-sub", internetReady ? "Bootstrap P2P configurado" : "Falta DNS/bootstrap seed");
 
@@ -517,7 +518,7 @@
         <div class="cap-item ${internetReady ? "ok" : "warn"}">
           <div class="cap-title">Internet / otra casa</div>
           <div class="cap-value">${internetReady ? "Bootstrap disponible" : "Sin bootstrap"}</div>
-          <div class="cap-sub">${internetReady ? "Los nodos NAT usan conexiones salientes y dejan de depender del seed." : escapeHtml(requires || "Necesita al menos un DNS seed.")}</div>
+          <div class="cap-sub">${internetReady ? "Conexiones salientes; acceso directo cuando es posible y relay cifrado para nodos detrás de NAT." : escapeHtml(requires || "Necesita al menos un DNS seed.")}</div>
         </div>
         <div class="cap-item ok">
           <div class="cap-title">Puertos</div>
@@ -525,9 +526,9 @@
           <div class="cap-sub">TCP ${sessionPort} · feromonas, peers y memoria global multiplexados</div>
         </div>
         <div class="cap-item warn">
-          <div class="cap-title">Independencia del seed</div>
-          <div class="cap-value">${lsp.seed_independent ? "Sí" : "Pendiente"}</div>
-          <div class="cap-sub">El seed presenta peers; las sesiones directas sobreviven a su desconexión.</div>
+          <div class="cap-title">Continuidad del transporte</div>
+          <div class="cap-value">${hasRelayRoutes ? "Relay en uso" : "Rutas directas"}</div>
+          <div class="cap-sub">Las sesiones directas sobreviven sin seed. Una ruta por relay necesita ese servicio o recuperación mediante otro relay conectado.</div>
         </div>
       `;
     }
