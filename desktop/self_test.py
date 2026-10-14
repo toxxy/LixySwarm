@@ -10,6 +10,9 @@ from pathlib import Path
 
 
 def main():
+    import faulthandler
+    if sys.stderr is not None:
+        faulthandler.enable(all_threads=True)
     parser = argparse.ArgumentParser()
     parser.add_argument("--self-test", action="store_true")
     parser.add_argument("--internet", action="store_true")
