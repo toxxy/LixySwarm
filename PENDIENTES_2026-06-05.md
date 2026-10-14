@@ -2,6 +2,8 @@
 
 **Filename retained for compatibility; backlog re-audited 2026-06-23.**
 
+The product delivery order is defined in [PLAN_VISION.md](PLAN_VISION.md): continuous Internet operation and real per-node observability, a simple installable app, a complete distributed learning cycle, shared persistent knowledge, adaptive contribution and measured autonomy. This file retains the detailed engineering and public-release requirements.
+
 ## P0: block unsafe public deployment
 
 - [x] Reject unsigned packets on the default LSP v3 path; v2 is explicit compatibility only.

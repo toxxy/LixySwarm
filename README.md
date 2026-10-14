@@ -10,6 +10,10 @@ The design reference is [LixySwarm: AntElephantDolphin](paper/LixySwarm_AntEleph
 
 The manuscript's experimental numbers are historical results for a specific checkpoint and evaluation setup. They are not guarantees for every checkout or checkpoint.
 
+## Plan for the complete vision
+
+[PLAN_VISION.md](PLAN_VISION.md) defines the delivery stages for continuous Internet operation, a simple desktop app, real distributed learning, persistent shared knowledge, hardware-adaptive contribution, useful biological layers and bounded autonomy. Each stage has a concrete acceptance test. The next milestone joins gradient computation, candidate evaluation, model publication and acquisition by another physical node.
+
 ## Implemented system
 
 The default swarm configuration contains:
