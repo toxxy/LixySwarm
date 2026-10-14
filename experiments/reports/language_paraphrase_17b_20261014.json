@@ -1,0 +1,501 @@
+{
+  "base_name": "qwen3-1.7b",
+  "base_hash": "dfff7c96c5ca45c3aa7e6b68fb0650e103ed2c39a7abc912f19b55fdba819cdc",
+  "adapter_id": "badef4394af180ab75ca25f0d9d47f2406b92809b53b5845ab65d451cf9c4b3c",
+  "private_inputs": false,
+  "results": {
+    "baseline": [
+      {
+        "case": "france_es_brief",
+        "prompt": "¿Cuál es la capital de Francia? Responde brevemente en español.",
+        "answer": "París.",
+        "passed": true
+      },
+      {
+        "case": "france_es_city",
+        "prompt": "Dime el nombre de la ciudad que es capital de Francia.",
+        "answer": "La ciudad que es capital de Francia es **París**.",
+        "passed": true
+      },
+      {
+        "case": "france_es_only",
+        "prompt": "Escribe únicamente la capital de Francia, sin explicación.",
+        "answer": "París",
+        "passed": true
+      },
+      {
+        "case": "france_es_question",
+        "prompt": "Necesito un dato geográfico: ¿qué ciudad es capital de Francia?",
+        "answer": "La ciudad que es capital de Francia es **París**.",
+        "passed": true
+      },
+      {
+        "case": "france_en_brief",
+        "prompt": "What is the capital of France? Answer briefly in English.",
+        "answer": "The capital of France is Paris.",
+        "passed": true
+      },
+      {
+        "case": "france_en_city",
+        "prompt": "Name the city that is the capital of France.",
+        "answer": "The capital of France is **Paris**.",
+        "passed": true
+      },
+      {
+        "case": "france_en_only",
+        "prompt": "Write only the capital of France, without explanation.",
+        "answer": "Paris",
+        "passed": true
+      },
+      {
+        "case": "france_en_question",
+        "prompt": "A geography question: which city is the capital of France?",
+        "answer": "The capital of France is **Paris**.",
+        "passed": true
+      },
+      {
+        "case": "germany_es_brief",
+        "prompt": "¿Cuál es la capital de Alemania? Responde brevemente en español.",
+        "answer": "Berlín.",
+        "passed": true
+      },
+      {
+        "case": "germany_es_city",
+        "prompt": "Dime el nombre de la ciudad que es capital de Alemania.",
+        "answer": "La ciudad que es capital de Alemania es **Berlín**.",
+        "passed": true
+      },
+      {
+        "case": "germany_es_only",
+        "prompt": "Escribe únicamente la capital de Alemania, sin explicación.",
+        "answer": "Berlín",
+        "passed": true
+      },
+      {
+        "case": "germany_es_question",
+        "prompt": "Necesito un dato geográfico: ¿qué ciudad es capital de Alemania?",
+        "answer": "La ciudad que es capital de Alemania es **Berlín**.",
+        "passed": true
+      },
+      {
+        "case": "germany_en_brief",
+        "prompt": "What is the capital of Germany? Answer briefly in English.",
+        "answer": "Berlin.",
+        "passed": true
+      },
+      {
+        "case": "germany_en_city",
+        "prompt": "Name the city that is the capital of Germany.",
+        "answer": "The capital of Germany is **Berlin**.",
+        "passed": true
+      },
+      {
+        "case": "germany_en_only",
+        "prompt": "Write only the capital of Germany, without explanation.",
+        "answer": "Bremen",
+        "passed": false
+      },
+      {
+        "case": "germany_en_question",
+        "prompt": "A geography question: which city is the capital of Germany?",
+        "answer": "The capital of Germany is **Berlin**.",
+        "passed": true
+      },
+      {
+        "case": "italy_es_brief",
+        "prompt": "¿Cuál es la capital de Italia? Responde brevemente en español.",
+        "answer": "Roma.",
+        "passed": true
+      },
+      {
+        "case": "italy_es_city",
+        "prompt": "Dime el nombre de la ciudad que es capital de Italia.",
+        "answer": "La ciudad que es capital de Italia es **Roma**.",
+        "passed": true
+      },
+      {
+        "case": "italy_es_only",
+        "prompt": "Escribe únicamente la capital de Italia, sin explicación.",
+        "answer": "Roma",
+        "passed": true
+      },
+      {
+        "case": "italy_es_question",
+        "prompt": "Necesito un dato geográfico: ¿qué ciudad es capital de Italia?",
+        "answer": "La ciudad que es capital de Italia es **Roma**.",
+        "passed": true
+      },
+      {
+        "case": "italy_en_brief",
+        "prompt": "What is the capital of Italy? Answer briefly in English.",
+        "answer": "Rome.",
+        "passed": true
+      },
+      {
+        "case": "italy_en_city",
+        "prompt": "Name the city that is the capital of Italy.",
+        "answer": "The capital of Italy is **Rome**.",
+        "passed": true
+      },
+      {
+        "case": "italy_en_only",
+        "prompt": "Write only the capital of Italy, without explanation.",
+        "answer": "Roma",
+        "passed": true
+      },
+      {
+        "case": "italy_en_question",
+        "prompt": "A geography question: which city is the capital of Italy?",
+        "answer": "The capital of Italy is **Rome**.",
+        "passed": true
+      },
+      {
+        "case": "spain_es_brief",
+        "prompt": "¿Cuál es la capital de España? Responde brevemente en español.",
+        "answer": "Madrid.",
+        "passed": true
+      },
+      {
+        "case": "spain_es_city",
+        "prompt": "Dime el nombre de la ciudad que es capital de España.",
+        "answer": "La ciudad que es capital de España es **Madrid**.",
+        "passed": true
+      },
+      {
+        "case": "spain_es_only",
+        "prompt": "Escribe únicamente la capital de España, sin explicación.",
+        "answer": "Madrid",
+        "passed": true
+      },
+      {
+        "case": "spain_es_question",
+        "prompt": "Necesito un dato geográfico: ¿qué ciudad es capital de España?",
+        "answer": "La ciudad que es capital de España es **Madrid**.",
+        "passed": true
+      },
+      {
+        "case": "spain_en_brief",
+        "prompt": "What is the capital of Spain? Answer briefly in English.",
+        "answer": "Madrid.",
+        "passed": true
+      },
+      {
+        "case": "spain_en_city",
+        "prompt": "Name the city that is the capital of Spain.",
+        "answer": "The capital of Spain is **Madrid**.",
+        "passed": true
+      },
+      {
+        "case": "spain_en_only",
+        "prompt": "Write only the capital of Spain, without explanation.",
+        "answer": "Madrid",
+        "passed": true
+      },
+      {
+        "case": "spain_en_question",
+        "prompt": "A geography question: which city is the capital of Spain?",
+        "answer": "The capital of Spain is **Madrid**.",
+        "passed": true
+      },
+      {
+        "case": "japan_es_brief",
+        "prompt": "¿Cuál es la capital de Japón? Responde brevemente en español.",
+        "answer": "Tokio.",
+        "passed": true
+      },
+      {
+        "case": "japan_es_city",
+        "prompt": "Dime el nombre de la ciudad que es capital de Japón.",
+        "answer": "La ciudad que es capital de Japón es **Tokio**.",
+        "passed": true
+      },
+      {
+        "case": "japan_es_only",
+        "prompt": "Escribe únicamente la capital de Japón, sin explicación.",
+        "answer": "Tokyo",
+        "passed": true
+      },
+      {
+        "case": "japan_es_question",
+        "prompt": "Necesito un dato geográfico: ¿qué ciudad es capital de Japón?",
+        "answer": "La ciudad que es capital de Japón es **Tokio**.",
+        "passed": true
+      },
+      {
+        "case": "japan_en_brief",
+        "prompt": "What is the capital of Japan? Answer briefly in English.",
+        "answer": "Tokyo.",
+        "passed": true
+      },
+      {
+        "case": "japan_en_city",
+        "prompt": "Name the city that is the capital of Japan.",
+        "answer": "The capital of Japan is **Tokyo**.",
+        "passed": true
+      },
+      {
+        "case": "japan_en_only",
+        "prompt": "Write only the capital of Japan, without explanation.",
+        "answer": "TOKYO",
+        "passed": true
+      },
+      {
+        "case": "japan_en_question",
+        "prompt": "A geography question: which city is the capital of Japan?",
+        "answer": "The capital of Japan is **Tokyo**.",
+        "passed": true
+      }
+    ],
+    "candidate": [
+      {
+        "case": "france_es_brief",
+        "prompt": "¿Cuál es la capital de Francia? Responde brevemente en español.",
+        "answer": "París",
+        "passed": true
+      },
+      {
+        "case": "france_es_city",
+        "prompt": "Dime el nombre de la ciudad que es capital de Francia.",
+        "answer": "París",
+        "passed": true
+      },
+      {
+        "case": "france_es_only",
+        "prompt": "Escribe únicamente la capital de Francia, sin explicación.",
+        "answer": "Paris",
+        "passed": true
+      },
+      {
+        "case": "france_es_question",
+        "prompt": "Necesito un dato geográfico: ¿qué ciudad es capital de Francia?",
+        "answer": "París",
+        "passed": true
+      },
+      {
+        "case": "france_en_brief",
+        "prompt": "What is the capital of France? Answer briefly in English.",
+        "answer": "Paris",
+        "passed": true
+      },
+      {
+        "case": "france_en_city",
+        "prompt": "Name the city that is the capital of France.",
+        "answer": "Paris",
+        "passed": true
+      },
+      {
+        "case": "france_en_only",
+        "prompt": "Write only the capital of France, without explanation.",
+        "answer": "Paris",
+        "passed": true
+      },
+      {
+        "case": "france_en_question",
+        "prompt": "A geography question: which city is the capital of France?",
+        "answer": "Paris",
+        "passed": true
+      },
+      {
+        "case": "germany_es_brief",
+        "prompt": "¿Cuál es la capital de Alemania? Responde brevemente en español.",
+        "answer": "Berlín",
+        "passed": true
+      },
+      {
+        "case": "germany_es_city",
+        "prompt": "Dime el nombre de la ciudad que es capital de Alemania.",
+        "answer": "Berlín",
+        "passed": true
+      },
+      {
+        "case": "germany_es_only",
+        "prompt": "Escribe únicamente la capital de Alemania, sin explicación.",
+        "answer": "Berlin",
+        "passed": true
+      },
+      {
+        "case": "germany_es_question",
+        "prompt": "Necesito un dato geográfico: ¿qué ciudad es capital de Alemania?",
+        "answer": "Berlín",
+        "passed": true
+      },
+      {
+        "case": "germany_en_brief",
+        "prompt": "What is the capital of Germany? Answer briefly in English.",
+        "answer": "Berlin",
+        "passed": true
+      },
+      {
+        "case": "germany_en_city",
+        "prompt": "Name the city that is the capital of Germany.",
+        "answer": "Berlin",
+        "passed": true
+      },
+      {
+        "case": "germany_en_only",
+        "prompt": "Write only the capital of Germany, without explanation.",
+        "answer": "Berlin",
+        "passed": true
+      },
+      {
+        "case": "germany_en_question",
+        "prompt": "A geography question: which city is the capital of Germany?",
+        "answer": "Berlin",
+        "passed": true
+      },
+      {
+        "case": "italy_es_brief",
+        "prompt": "¿Cuál es la capital de Italia? Responde brevemente en español.",
+        "answer": "Roma",
+        "passed": true
+      },
+      {
+        "case": "italy_es_city",
+        "prompt": "Dime el nombre de la ciudad que es capital de Italia.",
+        "answer": "La ciudad capital de Italia es Roma.",
+        "passed": true
+      },
+      {
+        "case": "italy_es_only",
+        "prompt": "Escribe únicamente la capital de Italia, sin explicación.",
+        "answer": "Roma",
+        "passed": true
+      },
+      {
+        "case": "italy_es_question",
+        "prompt": "Necesito un dato geográfico: ¿qué ciudad es capital de Italia?",
+        "answer": "Roma",
+        "passed": true
+      },
+      {
+        "case": "italy_en_brief",
+        "prompt": "What is the capital of Italy? Answer briefly in English.",
+        "answer": "Rome",
+        "passed": true
+      },
+      {
+        "case": "italy_en_city",
+        "prompt": "Name the city that is the capital of Italy.",
+        "answer": "Rome",
+        "passed": true
+      },
+      {
+        "case": "italy_en_only",
+        "prompt": "Write only the capital of Italy, without explanation.",
+        "answer": "Roma",
+        "passed": true
+      },
+      {
+        "case": "italy_en_question",
+        "prompt": "A geography question: which city is the capital of Italy?",
+        "answer": "Rome",
+        "passed": true
+      },
+      {
+        "case": "spain_es_brief",
+        "prompt": "¿Cuál es la capital de España? Responde brevemente en español.",
+        "answer": "Madrid",
+        "passed": true
+      },
+      {
+        "case": "spain_es_city",
+        "prompt": "Dime el nombre de la ciudad que es capital de España.",
+        "answer": "Madrid",
+        "passed": true
+      },
+      {
+        "case": "spain_es_only",
+        "prompt": "Escribe únicamente la capital de España, sin explicación.",
+        "answer": "Madrid",
+        "passed": true
+      },
+      {
+        "case": "spain_es_question",
+        "prompt": "Necesito un dato geográfico: ¿qué ciudad es capital de España?",
+        "answer": "Madrid",
+        "passed": true
+      },
+      {
+        "case": "spain_en_brief",
+        "prompt": "What is the capital of Spain? Answer briefly in English.",
+        "answer": "Madrid",
+        "passed": true
+      },
+      {
+        "case": "spain_en_city",
+        "prompt": "Name the city that is the capital of Spain.",
+        "answer": "Madrid",
+        "passed": true
+      },
+      {
+        "case": "spain_en_only",
+        "prompt": "Write only the capital of Spain, without explanation.",
+        "answer": "Madrid",
+        "passed": true
+      },
+      {
+        "case": "spain_en_question",
+        "prompt": "A geography question: which city is the capital of Spain?",
+        "answer": "Madrid",
+        "passed": true
+      },
+      {
+        "case": "japan_es_brief",
+        "prompt": "¿Cuál es la capital de Japón? Responde brevemente en español.",
+        "answer": "Tokio",
+        "passed": true
+      },
+      {
+        "case": "japan_es_city",
+        "prompt": "Dime el nombre de la ciudad que es capital de Japón.",
+        "answer": "Tokyo",
+        "passed": true
+      },
+      {
+        "case": "japan_es_only",
+        "prompt": "Escribe únicamente la capital de Japón, sin explicación.",
+        "answer": "Tokyo",
+        "passed": true
+      },
+      {
+        "case": "japan_es_question",
+        "prompt": "Necesito un dato geográfico: ¿qué ciudad es capital de Japón?",
+        "answer": "Tokio",
+        "passed": true
+      },
+      {
+        "case": "japan_en_brief",
+        "prompt": "What is the capital of Japan? Answer briefly in English.",
+        "answer": "Tokyo",
+        "passed": true
+      },
+      {
+        "case": "japan_en_city",
+        "prompt": "Name the city that is the capital of Japan.",
+        "answer": "Tokyo",
+        "passed": true
+      },
+      {
+        "case": "japan_en_only",
+        "prompt": "Write only the capital of Japan, without explanation.",
+        "answer": "Tokyo",
+        "passed": true
+      },
+      {
+        "case": "japan_en_question",
+        "prompt": "A geography question: which city is the capital of Japan?",
+        "answer": "Tokyo",
+        "passed": true
+      }
+    ]
+  },
+  "verdict": {
+    "case_digest": "5514ae9f1ca84f9afe7311eee76ae7adf694ddf2d2419e246f5bf931a3371c19",
+    "total": 40,
+    "baseline_passed": 39,
+    "candidate_passed": 40,
+    "regressions": [],
+    "eligible_for_promotion": true,
+    "scope": "Factual paraphrase preservation only; not a general conversation score"
+  }
+}

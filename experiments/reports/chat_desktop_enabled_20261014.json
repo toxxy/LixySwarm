@@ -1,0 +1,33 @@
+{
+  "result": {
+    "answer": "Una red descentralizada es una red de computadoras que no está controlada por un solo punto central.",
+    "context_sent": false,
+    "model_id": "badef4394af180ab75ca25f0d9d47f2406b92809b53b5845ab65d451cf9c4b3c",
+    "provider_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+    "receipt": {
+      "finished_at": 1792009588.3426416,
+      "job_id": "95cf43da4d31463e6ffd7ff46dbea41b3a83f3b3aef842e55d11ff0fd2b930e4",
+      "requester_node_id": "ea914d97caafef310e50385034abae9a50ba86496b0e9cbf4679e6070e4c25b0",
+      "result_digest": "f40ccb948c6e0e85dbd6d906bd3a47da7e4f4e9346ea7ecc9753b7bf3cb414d5",
+      "signature": "dHGfiu3Orh+2Gs2OMZJk4xMiE07l+unYky/Nb1p/0KBPwINyp8gZB8/3MkKvAzYTptE0lxE63dqnF2icTUYUCQ==",
+      "version": 1,
+      "worker_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255"
+    },
+    "route": "network"
+  },
+  "scope": "Production laptop chat API requesting desktop expert through public LSP; laptop limits preserved",
+  "seconds": 5.132,
+  "user_authorization": "Use full desktop compute; laptop is being used by its owner",
+  "desktop_compute": {
+    "cpu_percent": 100,
+    "gpu_percent": 100,
+    "gpu_slots": 1
+  },
+  "laptop_compute": {
+    "cpu_percent": 25,
+    "gpu_percent": 25,
+    "ram_gb": 2,
+    "changed": false
+  },
+  "web_chat_api_integrated": false
+}

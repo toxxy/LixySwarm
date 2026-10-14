@@ -1,0 +1,94 @@
+"""Obtain typed public LoRA contributions from explicit physical workers."""
+import argparse
+import ipaddress
+import time
+from pathlib import Path
+from types import SimpleNamespace
+
+from src.contribution import ContributionPolicy, ResourceGovernor, ResourceRequirements
+from src.learning.public_bases import base_hash
+from src.learning.public_conversation import public_corpus, corpus_digest
+from src.network.artifact_store import ArtifactService, ArtifactStore
+from src.network.bootstrap import get_seed_endpoints
+from src.network.language_training import OPERATION
+from src.network.lsp import LSPIdentity
+from src.network.lsp_v3 import LSPNodeV3
+from src.network.telemetry import atomic_json
+from src.network.work_protocol import ResultReceipt, WorkCoordinator
+from src.release.language_family import ADAPTERS
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--directory', type=Path, required=True)
+    parser.add_argument('--identity-key', type=Path, required=True)
+    parser.add_argument('--worker', action='append', required=True)
+    parser.add_argument('--count', type=int, default=4)
+    args = parser.parse_args()
+    repo = Path(__file__).resolve().parents[1]
+    if args.directory.resolve().is_relative_to(repo):
+        parser.error('Experiment state must be outside the checkout')
+    if len(set(args.worker)) != len(args.worker) or not 1 <= len(args.worker) <= 8 or not 1 <= args.count <= 8:
+        parser.error('Use distinct physical workers and bounded shard sizes')
+    identity = LSPIdentity.load(str(args.identity_key))
+    if identity is None:
+        parser.error('A locally authorized requester identity is required')
+    args.directory.mkdir(parents=True, exist_ok=True, mode=0o700)
+    node = LSPNodeV3(identity, host='0.0.0.0', port=0, seeds=get_seed_endpoints(),
+        address_book_path=args.directory/'peers.json', allow_private=False)
+    work = WorkCoordinator(node, ResourceGovernor(ContributionPolicy.for_mode('relay'),
+        hardware=SimpleNamespace(cpu_cores=1, ram_gb=1, disk_gb=1, has_gpu=False, gpu_vram_gb=0),
+        storage_path=args.directory))
+    store = ArtifactStore(args.directory/'gradients', max_artifact_bytes=32*1024**2, max_total_bytes=256*1024**2)
+    artifacts = ArtifactService(work, store, namespace='language.artifact', register_handlers=False)
+    report = {'schema_version': 1, 'scope': 'Explicit public-data gradient pilot; no model promoted',
+        'physical_workers': args.worker, 'requester_id': identity.node_id_hex,
+        'requester_is_extra_physical_worker': False, 'contributions': [], 'success': False,
+        'candidate_promoted': False, 'started_at': time.time()}
+    path = args.directory/'report.json'
+    atomic_json(path, report)
+    try:
+        node.start()
+        for index, worker in enumerate(args.worker):
+            until = time.monotonic()+90
+            while worker not in node.connected_node_ids:
+                if time.monotonic() >= until:
+                    raise TimeoutError('Physical worker discovery expired')
+                node.connect_node(worker, timeout=12)
+                time.sleep(.1)
+            route = next(p for p in node.peers() if p['node_id'] == worker)
+            if not route['encrypted'] or not ipaddress.ip_address(route.get('relay_host') or route['host']).is_global:
+                raise ValueError('Gradient pilot requires encrypted public Internet transport')
+            payload = {'adapter_id': ADAPTERS['qwen3-0.6b'], 'dataset_id': corpus_digest(public_corpus()),
+                'start': index*args.count, 'count': args.count}
+            started = time.monotonic()
+            result = work.submit(OPERATION, payload, ResourceRequirements(kind='training', gpu_required=True,
+                ram_gb=4, disk_gb=.01), peer_id=worker, timeout_s=240)
+            if result.status != 'ok':
+                raise RuntimeError(result.error)
+            if not ResultReceipt.from_dict(result.receipt).verify(result, expected_worker_id=worker,
+                    expected_requester_id=identity.node_id_hex):
+                raise ValueError('Language contribution receipt is invalid')
+            output = result.output
+            if output['base_hash'] != base_hash('qwen3-0.6b') or any(output[k] != v for k, v in payload.items()):
+                raise ValueError('Returned language contribution is from another version or shard')
+            gradient = artifacts.fetch(output['gradient_id'], peer_id=worker, timeout_s=60,
+                expected_size=output['gradient_bytes'])
+            report['contributions'].append({**output, 'path': str(gradient), 'worker_id': worker,
+                'seconds': round(time.monotonic()-started, 3), 'receipt': result.receipt,
+                'transport': route['transport'], 'encrypted': route['encrypted']})
+            atomic_json(path, report)
+        report.update(success=True, finished_at=time.time(), total_tokens=sum(c['tokens'] for c in report['contributions']))
+        atomic_json(path, report)
+        print(f"Verified {len(report['contributions'])} contributions; {report['total_tokens']} tokens; no promotion", flush=True)
+    except Exception as error:
+        report.update(error_type=type(error).__name__, finished_at=time.time())
+        atomic_json(path, report)
+        raise
+    finally:
+        work.close()
+        node.stop()
+
+
+if __name__ == '__main__':
+    main()
