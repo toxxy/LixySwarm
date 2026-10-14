@@ -44,6 +44,7 @@ def main():
                     return
                 time.sleep(0.05)
             raise RuntimeError("Packaged application did not reach the expected state")
+        window=None
         try:
             if not args.internet:
                 seed = LSPNodeV3(LSPIdentity.generate(), host="127.0.0.1", port=0,
@@ -111,6 +112,16 @@ def main():
             report["traceback"] = traceback.format_exc()
             report["node_log"] = controller.log_tail()
         finally:
+            if window is not None:
+                # Dispose QObject connections while QApplication and Python
+                # callbacks are still alive, before interpreter shutdown.
+                from PySide6.QtCore import QCoreApplication,QEvent
+                window.timer.stop()
+                window.close()
+                window.deleteLater()
+                QCoreApplication.sendPostedEvents(None,QEvent.DeferredDelete)
+                app.processEvents()
+                window=None
             if controller.process is not None:
                 controller.process.terminate()
                 try:

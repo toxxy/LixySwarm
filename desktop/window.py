@@ -281,6 +281,7 @@ class SwarmWindow(QMainWindow):
             self.personal_preparation.wait(2000)
             if self.personal_preparation.isRunning():
                 event.ignore(); return
+        self.timer.stop()
         event.accept()
 
 
