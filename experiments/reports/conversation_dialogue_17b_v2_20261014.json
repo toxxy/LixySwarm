@@ -1,0 +1,708 @@
+{
+  "schema_version": 1,
+  "scope": "Broader public/synthetic screening with all outputs available for review",
+  "model_size": "1.7b",
+  "base_model_hash": "dfff7c96c5ca45c3aa7e6b68fb0650e103ed2c39a7abc912f19b55fdba819cdc",
+  "adapter_hash": "badef4394af180ab75ca25f0d9d47f2406b92809b53b5845ab65d451cf9c4b3c",
+  "private_conversations_loaded": false,
+  "results": {
+    "baseline": {
+      "passed": 16,
+      "total": 28,
+      "cases": [
+        {
+          "case": "es_germany",
+          "messages": [
+            {
+              "role": "user",
+              "content": "¿Cuál es la capital de Alemania? Contesta brevemente."
+            }
+          ],
+          "answer": "Berlín.",
+          "passed": true
+        },
+        {
+          "case": "en_italy",
+          "messages": [
+            {
+              "role": "user",
+              "content": "What is the capital of Italy? Keep it brief."
+            }
+          ],
+          "answer": "Rome.",
+          "passed": true
+        },
+        {
+          "case": "es_spain",
+          "messages": [
+            {
+              "role": "user",
+              "content": "¿Cuál es la capital de España?"
+            }
+          ],
+          "answer": "La capital de España es **Madrid**.",
+          "passed": true
+        },
+        {
+          "case": "en_japan",
+          "messages": [
+            {
+              "role": "user",
+              "content": "What is the capital of Japan?"
+            }
+          ],
+          "answer": "The capital of Japan is Tokyo.",
+          "passed": true
+        },
+        {
+          "case": "es_week",
+          "messages": [
+            {
+              "role": "user",
+              "content": "¿Cuántos días tiene una semana? Responde con un número."
+            }
+          ],
+          "answer": "Una semana tiene **7 días**.",
+          "passed": false
+        },
+        {
+          "case": "en_triangle",
+          "messages": [
+            {
+              "role": "user",
+              "content": "How many sides does a triangle have? Reply with a number."
+            }
+          ],
+          "answer": "A triangle has 3 sides.",
+          "passed": false
+        },
+        {
+          "case": "es_subtraction",
+          "messages": [
+            {
+              "role": "user",
+              "content": "Da solo el resultado de 15 menos 6."
+            }
+          ],
+          "answer": "15 menos 6 es igual a **9**.",
+          "passed": false
+        },
+        {
+          "case": "en_division",
+          "messages": [
+            {
+              "role": "user",
+              "content": "Reply only with the result of 81 divided by 9."
+            }
+          ],
+          "answer": "81 divided by 9 is 9.",
+          "passed": false
+        },
+        {
+          "case": "es_translate",
+          "messages": [
+            {
+              "role": "user",
+              "content": "Traduce al inglés sin explicación: Gracias por ayudarme."
+            }
+          ],
+          "answer": "Thank you for helping me.",
+          "passed": true
+        },
+        {
+          "case": "en_translate",
+          "messages": [
+            {
+              "role": "user",
+              "content": "Translate into Spanish with no explanation: I like learning."
+            }
+          ],
+          "answer": "Me gusta aprender.",
+          "passed": true
+        },
+        {
+          "case": "es_definition",
+          "messages": [
+            {
+              "role": "user",
+              "content": "Explica en español y en una oración qué es una red descentralizada."
+            }
+          ],
+          "answer": "Una red descentralizada es una red de computadores o dispositivos que no están controlados por un solo punto central, sino que funcionan de forma independiente y distribuida.",
+          "passed": true
+        },
+        {
+          "case": "en_definition",
+          "messages": [
+            {
+              "role": "user",
+              "content": "Explain a decentralized network in one English sentence."
+            }
+          ],
+          "answer": "A decentralized network is a system where control and data are distributed among multiple participants, eliminating a central authority and enhancing security, transparency, and resilience.",
+          "passed": true
+        },
+        {
+          "case": "es_replicas",
+          "messages": [
+            {
+              "role": "user",
+              "content": "Una red tiene copias del mismo modelo en tres equipos. Si uno se apaga, ¿se pierde necesariamente el modelo? Responde y explica brevemente."
+            }
+          ],
+          "answer": "No se pierde necesariamente el modelo. Una red con copias del mismo modelo en tres equipos puede continuar funcionando incluso si uno se apaga, ya que los otros dos equipos mantienen la información y la operación. El modelo no se pierde, sino que se mantiene en los equipos funcionales.",
+          "passed": true
+        },
+        {
+          "case": "en_replicas",
+          "messages": [
+            {
+              "role": "user",
+              "content": "Three computers have copies of a model. If one shuts down, is the model necessarily lost? Give a short explanation."
+            }
+          ],
+          "answer": "No, the model is not necessarily lost if one computer shuts down. The model is stored in the other two computers, so even if one shuts down, the model remains intact and accessible on the remaining two computers.",
+          "passed": true
+        },
+        {
+          "case": "es_privacy",
+          "messages": [
+            {
+              "role": "user",
+              "content": "Datos: la memoria personal se guarda solo en el equipo del usuario. ¿Debe enviarse automáticamente a otros nodos? Responde sí o no."
+            }
+          ],
+          "answer": "**Respuesta:** No.\n\nLa memoria personal se guarda **solo en el equipo del usuario**, lo que significa que no se envía automáticamente a otros nodos. La decisión de enviar la memoria a otros nodos depende de las configuraciones del usuario o de un sistema que esté controlando la distribución de la información. En el contexto de la memoria personal, como en un entorno de trabajo o en un sistema de almacenamiento distribuido, el usuario tiene la libertad de decidir si desea compartir o no la información. Por lo tanto, **no se envía automáticamente**.",
+          "passed": false
+        },
+        {
+          "case": "en_privacy",
+          "messages": [
+            {
+              "role": "user",
+              "content": "Facts: personal memory stays on the user's own computer. Should it automatically be sent to other nodes? Answer yes or no."
+            }
+          ],
+          "answer": "No.\n\nPersonal memory stays on the user's own computer and should not be automatically sent to other nodes unless explicitly instructed or required by a specific system or protocol.",
+          "passed": false
+        },
+        {
+          "case": "es_role",
+          "messages": [
+            {
+              "role": "user",
+              "content": "Datos: Aurora solo transporta mensajes; Boreal calcula gradientes. ¿Cuál calcula gradientes? Escribe solo su nombre."
+            }
+          ],
+          "answer": "Boreal",
+          "passed": true
+        },
+        {
+          "case": "en_role",
+          "messages": [
+            {
+              "role": "user",
+              "content": "Facts: Aurora only forwards messages; Boreal computes gradients. Which computes gradients? Write only its name."
+            }
+          ],
+          "answer": "Boreal",
+          "passed": true
+        },
+        {
+          "case": "es_json",
+          "messages": [
+            {
+              "role": "user",
+              "content": "Extrae solo el valor de active del JSON {\"active\": false, \"count\": 12}."
+            }
+          ],
+          "answer": "false",
+          "passed": true
+        },
+        {
+          "case": "en_json",
+          "messages": [
+            {
+              "role": "user",
+              "content": "Extract only the value of count from JSON {\"active\": false, \"count\": 12}."
+            }
+          ],
+          "answer": "The value of `count` from the JSON object is:\n\n**12**",
+          "passed": false
+        },
+        {
+          "case": "es_homogeneous",
+          "messages": [
+            {
+              "role": "user",
+              "content": "Dos modelos tienen matrices de tamaños diferentes. ¿Es correcto sumar sus gradientes directamente? Responde sí o no."
+            }
+          ],
+          "answer": "No, es incorrecto sumar los gradientes directamente cuando los modelos tienen matrices de tamaños diferentes.\n\n**Razones:**\n\n1. **Tamaños de las matrices diferentes:**  \n   Los gradientes se calculan en el contexto de una función de pérdida que depende de las entradas de un modelo. Si los modelos tienen matrices de tamaños diferentes, las operaciones matemáticas que se realizan (como la multiplicación matricial, la suma, etc.) no se pueden realizar de forma directa.\n\n2. **Gradientes en modelos diferentes:**  \n   Si los modelos tienen diferentes dimension",
+          "passed": false
+        },
+        {
+          "case": "en_homogeneous",
+          "messages": [
+            {
+              "role": "user",
+              "content": "Two models have differently shaped parameter matrices. Is it correct to directly add their gradients? Answer yes or no."
+            }
+          ],
+          "answer": "**Answer: No.**\n\n**Reason:**  \nAdding gradients of two models with differently shaped parameter matrices is **not** correct. Gradients must be computed with respect to **the same parameter space** (i.e., the same dimensions and structure) for them to be added or combined meaningfully. If the parameter matrices have different shapes, the gradients are not compatible, and adding them would lead to incorrect or undefined results.\n\nIn practice, this would typically happen when the models are trained on different data distributions or have different architectures, and the gradients would not align in a meaningful way.",
+          "passed": false
+        },
+        {
+          "case": "es_compare",
+          "messages": [
+            {
+              "role": "user",
+              "content": "Datos: A procesa 20 fragmentos por minuto y B procesa 8. ¿Cuál procesa más por minuto? Responde A o B."
+            }
+          ],
+          "answer": "A procesa 20 fragmentos por minuto, y B procesa 8 fragmentos por minuto.  \n\nPor lo tanto, **A procesa más por minuto**.\n\nRespuesta: **A**.",
+          "passed": false
+        },
+        {
+          "case": "en_compare",
+          "messages": [
+            {
+              "role": "user",
+              "content": "Facts: A processes 20 shards per minute and B processes 8. Which processes more per minute? Reply A or B."
+            }
+          ],
+          "answer": "A processes 20 shards per minute, and B processes 8 shards per minute. Since 20 is greater than 8, **A processes more shards per minute**.\n\n**Answer: A**",
+          "passed": false
+        },
+        {
+          "case": "es_context",
+          "messages": [
+            {
+              "role": "user",
+              "content": "En este ejemplo ficticio, la clave de la tarea es lavanda."
+            },
+            {
+              "role": "assistant",
+              "content": "La clave de esta tarea es lavanda."
+            },
+            {
+              "role": "user",
+              "content": "¿Cuál es la clave? Responde solo la palabra."
+            }
+          ],
+          "answer": "lavanda",
+          "passed": true
+        },
+        {
+          "case": "en_context",
+          "messages": [
+            {
+              "role": "user",
+              "content": "In this fictional example, the task label is amber."
+            },
+            {
+              "role": "assistant",
+              "content": "The task label is amber."
+            },
+            {
+              "role": "user",
+              "content": "What is the label? Reply with only the word."
+            }
+          ],
+          "answer": "amber",
+          "passed": true
+        },
+        {
+          "case": "es_correction",
+          "messages": [
+            {
+              "role": "user",
+              "content": "En este ejemplo, el equipo de interés se llama Azul."
+            },
+            {
+              "role": "assistant",
+              "content": "El equipo se llama Azul."
+            },
+            {
+              "role": "user",
+              "content": "Corrijo el ejemplo: se llama Coral. ¿Cómo se llama ahora? Solo el nombre."
+            }
+          ],
+          "answer": "El equipo se llama **Coral**.",
+          "passed": false
+        },
+        {
+          "case": "en_correction",
+          "messages": [
+            {
+              "role": "user",
+              "content": "The example node is called Blue."
+            },
+            {
+              "role": "assistant",
+              "content": "The node is Blue."
+            },
+            {
+              "role": "user",
+              "content": "Correction: it is called Coral. What is its name now? Just the name."
+            }
+          ],
+          "answer": "Coral",
+          "passed": true
+        }
+      ]
+    },
+    "candidate": {
+      "passed": 26,
+      "total": 28,
+      "cases": [
+        {
+          "case": "es_germany",
+          "messages": [
+            {
+              "role": "user",
+              "content": "¿Cuál es la capital de Alemania? Contesta brevemente."
+            }
+          ],
+          "answer": "Berlín",
+          "passed": true
+        },
+        {
+          "case": "en_italy",
+          "messages": [
+            {
+              "role": "user",
+              "content": "What is the capital of Italy? Keep it brief."
+            }
+          ],
+          "answer": "Rome",
+          "passed": true
+        },
+        {
+          "case": "es_spain",
+          "messages": [
+            {
+              "role": "user",
+              "content": "¿Cuál es la capital de España?"
+            }
+          ],
+          "answer": "Madrid",
+          "passed": true
+        },
+        {
+          "case": "en_japan",
+          "messages": [
+            {
+              "role": "user",
+              "content": "What is the capital of Japan?"
+            }
+          ],
+          "answer": "Tokyo",
+          "passed": true
+        },
+        {
+          "case": "es_week",
+          "messages": [
+            {
+              "role": "user",
+              "content": "¿Cuántos días tiene una semana? Responde con un número."
+            }
+          ],
+          "answer": "7",
+          "passed": true
+        },
+        {
+          "case": "en_triangle",
+          "messages": [
+            {
+              "role": "user",
+              "content": "How many sides does a triangle have? Reply with a number."
+            }
+          ],
+          "answer": "3",
+          "passed": true
+        },
+        {
+          "case": "es_subtraction",
+          "messages": [
+            {
+              "role": "user",
+              "content": "Da solo el resultado de 15 menos 6."
+            }
+          ],
+          "answer": "9",
+          "passed": true
+        },
+        {
+          "case": "en_division",
+          "messages": [
+            {
+              "role": "user",
+              "content": "Reply only with the result of 81 divided by 9."
+            }
+          ],
+          "answer": "9",
+          "passed": true
+        },
+        {
+          "case": "es_translate",
+          "messages": [
+            {
+              "role": "user",
+              "content": "Traduce al inglés sin explicación: Gracias por ayudarme."
+            }
+          ],
+          "answer": "Thank you for helping me.",
+          "passed": true
+        },
+        {
+          "case": "en_translate",
+          "messages": [
+            {
+              "role": "user",
+              "content": "Translate into Spanish with no explanation: I like learning."
+            }
+          ],
+          "answer": "Me gusta aprender.",
+          "passed": true
+        },
+        {
+          "case": "es_definition",
+          "messages": [
+            {
+              "role": "user",
+              "content": "Explica en español y en una oración qué es una red descentralizada."
+            }
+          ],
+          "answer": "Una red descentralizada es una red de computadoras que no depende de un único nodo central.",
+          "passed": true
+        },
+        {
+          "case": "en_definition",
+          "messages": [
+            {
+              "role": "user",
+              "content": "Explain a decentralized network in one English sentence."
+            }
+          ],
+          "answer": "A decentralized network is a system where control and data are distributed among many participants, eliminating a central authority.",
+          "passed": true
+        },
+        {
+          "case": "es_replicas",
+          "messages": [
+            {
+              "role": "user",
+              "content": "Una red tiene copias del mismo modelo en tres equipos. Si uno se apaga, ¿se pierde necesariamente el modelo? Responde y explica brevemente."
+            }
+          ],
+          "answer": "No, no se pierde el modelo. La red sigue funcionando con el otro equipo.",
+          "passed": true
+        },
+        {
+          "case": "en_replicas",
+          "messages": [
+            {
+              "role": "user",
+              "content": "Three computers have copies of a model. If one shuts down, is the model necessarily lost? Give a short explanation."
+            }
+          ],
+          "answer": "No, the model is not necessarily lost. The model is still present in the other two computers.",
+          "passed": true
+        },
+        {
+          "case": "es_privacy",
+          "messages": [
+            {
+              "role": "user",
+              "content": "Datos: la memoria personal se guarda solo en el equipo del usuario. ¿Debe enviarse automáticamente a otros nodos? Responde sí o no."
+            }
+          ],
+          "answer": "no",
+          "passed": true
+        },
+        {
+          "case": "en_privacy",
+          "messages": [
+            {
+              "role": "user",
+              "content": "Facts: personal memory stays on the user's own computer. Should it automatically be sent to other nodes? Answer yes or no."
+            }
+          ],
+          "answer": "no",
+          "passed": true
+        },
+        {
+          "case": "es_role",
+          "messages": [
+            {
+              "role": "user",
+              "content": "Datos: Aurora solo transporta mensajes; Boreal calcula gradientes. ¿Cuál calcula gradientes? Escribe solo su nombre."
+            }
+          ],
+          "answer": "Boreal",
+          "passed": true
+        },
+        {
+          "case": "en_role",
+          "messages": [
+            {
+              "role": "user",
+              "content": "Facts: Aurora only forwards messages; Boreal computes gradients. Which computes gradients? Write only its name."
+            }
+          ],
+          "answer": "Boreal",
+          "passed": true
+        },
+        {
+          "case": "es_json",
+          "messages": [
+            {
+              "role": "user",
+              "content": "Extrae solo el valor de active del JSON {\"active\": false, \"count\": 12}."
+            }
+          ],
+          "answer": "false",
+          "passed": true
+        },
+        {
+          "case": "en_json",
+          "messages": [
+            {
+              "role": "user",
+              "content": "Extract only the value of count from JSON {\"active\": false, \"count\": 12}."
+            }
+          ],
+          "answer": "12",
+          "passed": true
+        },
+        {
+          "case": "es_homogeneous",
+          "messages": [
+            {
+              "role": "user",
+              "content": "Dos modelos tienen matrices de tamaños diferentes. ¿Es correcto sumar sus gradientes directamente? Responde sí o no."
+            }
+          ],
+          "answer": "no\n\nExplicación: La suma de los gradientes no es correcta si los modelos tienen matrices de tamaños diferentes.",
+          "passed": false
+        },
+        {
+          "case": "en_homogeneous",
+          "messages": [
+            {
+              "role": "user",
+              "content": "Two models have differently shaped parameter matrices. Is it correct to directly add their gradients? Answer yes or no."
+            }
+          ],
+          "answer": "no\n\nThe answer is no.",
+          "passed": false
+        },
+        {
+          "case": "es_compare",
+          "messages": [
+            {
+              "role": "user",
+              "content": "Datos: A procesa 20 fragmentos por minuto y B procesa 8. ¿Cuál procesa más por minuto? Responde A o B."
+            }
+          ],
+          "answer": "A",
+          "passed": true
+        },
+        {
+          "case": "en_compare",
+          "messages": [
+            {
+              "role": "user",
+              "content": "Facts: A processes 20 shards per minute and B processes 8. Which processes more per minute? Reply A or B."
+            }
+          ],
+          "answer": "A",
+          "passed": true
+        },
+        {
+          "case": "es_context",
+          "messages": [
+            {
+              "role": "user",
+              "content": "En este ejemplo ficticio, la clave de la tarea es lavanda."
+            },
+            {
+              "role": "assistant",
+              "content": "La clave de esta tarea es lavanda."
+            },
+            {
+              "role": "user",
+              "content": "¿Cuál es la clave? Responde solo la palabra."
+            }
+          ],
+          "answer": "lavanda",
+          "passed": true
+        },
+        {
+          "case": "en_context",
+          "messages": [
+            {
+              "role": "user",
+              "content": "In this fictional example, the task label is amber."
+            },
+            {
+              "role": "assistant",
+              "content": "The task label is amber."
+            },
+            {
+              "role": "user",
+              "content": "What is the label? Reply with only the word."
+            }
+          ],
+          "answer": "amber",
+          "passed": true
+        },
+        {
+          "case": "es_correction",
+          "messages": [
+            {
+              "role": "user",
+              "content": "En este ejemplo, el equipo de interés se llama Azul."
+            },
+            {
+              "role": "assistant",
+              "content": "El equipo se llama Azul."
+            },
+            {
+              "role": "user",
+              "content": "Corrijo el ejemplo: se llama Coral. ¿Cómo se llama ahora? Solo el nombre."
+            }
+          ],
+          "answer": "Coral",
+          "passed": true
+        },
+        {
+          "case": "en_correction",
+          "messages": [
+            {
+              "role": "user",
+              "content": "The example node is called Blue."
+            },
+            {
+              "role": "assistant",
+              "content": "The node is Blue."
+            },
+            {
+              "role": "user",
+              "content": "Correction: it is called Coral. What is its name now? Just the name."
+            }
+          ],
+          "answer": "Coral",
+          "passed": true
+        }
+      ]
+    }
+  },
+  "regressions": [],
+  "limitations": [
+    "Keyword checks do not prove explanation correctness or fluent conversation",
+    "Synthetic context only; no persistent Matriarca tested",
+    "No network inference or training in this assessment"
+  ]
+}

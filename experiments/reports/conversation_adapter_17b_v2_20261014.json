@@ -1,0 +1,226 @@
+{
+  "schema_version": 1,
+  "scope": "local public SFT research; not network promotion",
+  "base_repository": "Qwen/Qwen3-1.7B",
+  "base_revision": "70d244cc86ccca08cf5af4e1e306ecf908b1ad5e",
+  "base_model_hash": "dfff7c96c5ca45c3aa7e6b68fb0650e103ed2c39a7abc912f19b55fdba819cdc",
+  "dataset_hash": "24eb8b9e9c268021ededa84a171a4b6804cbe58263edbb2b2944f49dd4de64a5",
+  "private_inputs": false,
+  "training_examples": 200,
+  "evaluation_examples": 72,
+  "steps": 60,
+  "gradient_accumulation": 4,
+  "learning_rate": 0.0002,
+  "trainable_parameters": 1605632,
+  "retention_weight": 1.0,
+  "regressions": [],
+  "adapter_sha256": "badef4394af180ab75ca25f0d9d47f2406b92809b53b5845ab65d451cf9c4b3c",
+  "adapter_bytes": 6434736,
+  "baseline": {
+    "heldout_nll": 1.2134909309604252,
+    "heldout_tokens": 258,
+    "instruction_passed": 8,
+    "cases": [
+      {
+        "case": "es_addition",
+        "answer": "4",
+        "passed": true
+      },
+      {
+        "case": "en_multiplication",
+        "answer": "56",
+        "passed": true
+      },
+      {
+        "case": "es_translation",
+        "answer": "The cat is in the house.",
+        "passed": true
+      },
+      {
+        "case": "en_translation",
+        "answer": "Buenos días.",
+        "passed": true
+      },
+      {
+        "case": "es_instruction",
+        "answer": "conectada",
+        "passed": true
+      },
+      {
+        "case": "en_instruction",
+        "answer": "ready",
+        "passed": true
+      },
+      {
+        "case": "es_fact",
+        "answer": "La capital de Francia es París.",
+        "passed": true
+      },
+      {
+        "case": "en_fact",
+        "answer": "H₂O",
+        "passed": true
+      },
+      {
+        "case": "es_order",
+        "answer": "[2, 5, 9]",
+        "passed": false
+      },
+      {
+        "case": "en_extract",
+        "answer": "\"online\"",
+        "passed": false
+      },
+      {
+        "case": "es_public_context",
+        "answer": "No. El VPS de LixySwarm no entrena modelos. El VPS sirve de relay y descubrimiento, y no se utiliza para entrenar modelos.",
+        "passed": false
+      },
+      {
+        "case": "en_public_context",
+        "answer": "Yes.\n\n**Explanation:**\n\n- An ant is described as a \"physical computer,\" which implies it has the capacity to host or run models (in this case, \"experts\").\n- The statement says \"experts are models hosted on it,\" which suggests that an ant can host one or more models (experts).\n- Therefore, it is reasonable to conclude that **one ant can host two experts**, based on the given analogy.\n\n**Answer: Yes.**",
+        "passed": false
+      }
+    ]
+  },
+  "candidate": {
+    "heldout_nll": 0.00044267299511969305,
+    "heldout_tokens": 258,
+    "instruction_passed": 12,
+    "cases": [
+      {
+        "case": "es_addition",
+        "answer": "4",
+        "passed": true
+      },
+      {
+        "case": "en_multiplication",
+        "answer": "56",
+        "passed": true
+      },
+      {
+        "case": "es_translation",
+        "answer": "The cat is in the house.",
+        "passed": true
+      },
+      {
+        "case": "en_translation",
+        "answer": "Buenos días.",
+        "passed": true
+      },
+      {
+        "case": "es_instruction",
+        "answer": "conectada",
+        "passed": true
+      },
+      {
+        "case": "en_instruction",
+        "answer": "ready",
+        "passed": true
+      },
+      {
+        "case": "es_fact",
+        "answer": "París",
+        "passed": true
+      },
+      {
+        "case": "en_fact",
+        "answer": "H2O",
+        "passed": true
+      },
+      {
+        "case": "es_order",
+        "answer": "2, 5, 9",
+        "passed": true
+      },
+      {
+        "case": "en_extract",
+        "answer": "online",
+        "passed": true
+      },
+      {
+        "case": "es_public_context",
+        "answer": "no",
+        "passed": true
+      },
+      {
+        "case": "en_public_context",
+        "answer": "yes",
+        "passed": true
+      }
+    ]
+  },
+  "minimum_nll_improvement": 0.001,
+  "minimum_instruction_passed": 11,
+  "eligible_for_integration": true,
+  "peak_gpu_allocated_bytes": 3684225536,
+  "peak_observed_rss_bytes": 2419093504,
+  "training_seconds": 20.765727425925434,
+  "losses": [
+    0.019644190662074835,
+    0.6371653574001118,
+    0.002512631323318266,
+    0.02062280323959633,
+    0.17383788515607276,
+    1.6008915665890147,
+    0.3874218698574623,
+    0.2786862108235558,
+    0.02109943138327708,
+    0.00675526351880918,
+    3.737655659511941,
+    2.9889977065943605e-06,
+    6.5814258265573615,
+    0.00018828674025428427,
+    0.00010196617076019265,
+    2.3591679905621277e-05,
+    0.03609242534898693,
+    1.2504798178269994e-05,
+    4.991940163552814,
+    3.1204361915564047,
+    0.00042330388044739753,
+    0.13244238524275717,
+    0.04874512194478484,
+    1.1038480744218758e-05,
+    0.004406161508597961,
+    4.7026996945476185e-06,
+    0.02259863414906249,
+    5.566375589296512e-05,
+    6.007970499410931e-06,
+    2.9349269304444356,
+    1.257902807151966e-05,
+    3.405806308943614e-05,
+    7.381694943503065e-06,
+    3.937831181133333e-06,
+    3.014594800664451e-05,
+    2.871181092551093e-05,
+    2.71307373312071e-05,
+    2.89327778233428e-05,
+    1.0758102041563688e-05,
+    4.179983761787298e-05,
+    2.9568088604061353,
+    0.00026427576340129884,
+    1.1920866464160334e-06,
+    0.028536511086826973,
+    1.979707549131555e-06,
+    4.657690988096874e-05,
+    1.1502025243599575e-06,
+    3.7832447014807256e-05,
+    0.00012266850824909687,
+    1.347278114220681,
+    0.0001344622200804224,
+    0.0003793197686383409,
+    1.4021646601230189e-05,
+    5.531258464295454e-05,
+    0.001552570005680371,
+    4.6980004032990875e-05,
+    0.0003163665910506097,
+    6.094854717275666e-05,
+    2.034396860040033e-05,
+    6.612757554074434e-06
+  ],
+  "limitations": [
+    "Same templates with disjoint values in the 72-example NLL evaluation",
+    "Only an elementary 12-case instruction gate",
+    "No distributed-learning, privacy-isolation or broad-conversation claim"
+  ]
+}

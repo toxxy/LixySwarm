@@ -1,0 +1,11 @@
+{
+  "peak_rss_bytes": 4371484672,
+  "gpu_allocated_bytes": 4064542720,
+  "schema_version": 1,
+  "scope": "Supervised public large-expert inference startup and answer",
+  "failed_ram_lease_gib": 3,
+  "measured_peak_from_os": true,
+  "minimum_language_ram_gib": 5,
+  "base_name": "qwen3-1.7b",
+  "adapter_id": "badef4394af180ab75ca25f0d9d47f2406b92809b53b5845ab65d451cf9c4b3c"
+}

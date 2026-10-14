@@ -1,0 +1,80 @@
+{
+  "schema_version": 1,
+  "scope": "Public test questions from a requester; no extra physical worker is counted",
+  "worker_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+  "model_id": "badef4394af180ab75ca25f0d9d47f2406b92809b53b5845ab65d451cf9c4b3c",
+  "results": [
+    {
+      "messages": [
+        {
+          "role": "user",
+          "content": "¿Qué es una red descentralizada? Contesta en español y brevemente."
+        }
+      ],
+      "answer": "Red descentralizada es una red que no tiene un nodo central.",
+      "output_tokens": 15,
+      "seconds": 4.97150985999906,
+      "receipt": {
+        "version": 1,
+        "job_id": "48624700eb4081cb7883884ffcb8e6faf4a8e72026cf1e093602dc718dccc3ce",
+        "worker_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+        "requester_node_id": "a6c10a77745a30efdd0b69318b6c99076360e1cddae9e282e561dc234f2330e3",
+        "result_digest": "e71fe66c3d9057adec8a8c64d90889a985bddade5c6b410001c328e6523eaab3",
+        "finished_at": 1791998677.4400551,
+        "signature": "0UzFbRwScOLgfG4eST3ulkQV7yK9/hLLxxqkVI7wzlyJm4FFJpd7B3nFH/MXGL3FCUTc7bTyX4BTqaxezNlzCg=="
+      }
+    },
+    {
+      "messages": [
+        {
+          "role": "user",
+          "content": "Three computers hold the same learned model. If one disconnects, is the model necessarily lost? Explain briefly."
+        }
+      ],
+      "answer": "No, the model is not necessarily lost. The model is stored in the computers, but if one disconnects, the model is still present in the other computers.",
+      "output_tokens": 34,
+      "seconds": 5.071929387995624,
+      "receipt": {
+        "version": 1,
+        "job_id": "d6c93190dcde17acbc96f644032ec7eacbbce5345a1dfe5e8ee9a4a8a285b770",
+        "worker_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+        "requester_node_id": "a6c10a77745a30efdd0b69318b6c99076360e1cddae9e282e561dc234f2330e3",
+        "result_digest": "ae5288aff9a1cb5e879086ee14aa4cab5fe9eb0400e24e36b567977e435160b4",
+        "finished_at": 1791998682.5096257,
+        "signature": "DhyRGhQoN2PZ1ieFij39iWOAVdQJIbyHF3IF//tMjgd3M1vg/nNXFJi8El5L29YL/H4/9xivEX2tnEcEWV7ODw=="
+      }
+    },
+    {
+      "messages": [
+        {
+          "role": "user",
+          "content": "In this fictional example, the expert is named Amber."
+        },
+        {
+          "role": "assistant",
+          "content": "The expert is Amber."
+        },
+        {
+          "role": "user",
+          "content": "What is the expert called? Reply only with its name."
+        }
+      ],
+      "answer": "Amber",
+      "output_tokens": 3,
+      "seconds": 4.867038590004086,
+      "receipt": {
+        "version": 1,
+        "job_id": "c1c68d718bbb49e9b786b770325b23c553d7e33c305494b48e139a713b311124",
+        "worker_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+        "requester_node_id": "a6c10a77745a30efdd0b69318b6c99076360e1cddae9e282e561dc234f2330e3",
+        "result_digest": "e36f415e5376e684e7c47544415d7fd67e3454411ca2d5c9d2db3b0606c2246c",
+        "finished_at": 1791998687.3801568,
+        "signature": "olrwxpudbQgr8PvF9/sQ+U5QRz4/C/dNP315ejPmpSVMPuewcDP/TZ4wcr/cAhJhcNAzm98k/ms6FjVuGumWCA=="
+      }
+    }
+  ],
+  "requester_loaded_tensors": false,
+  "success": true,
+  "transport": "relay",
+  "encrypted": true
+}

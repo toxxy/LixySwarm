@@ -25,6 +25,7 @@ from src.network.client_state import ClientSettings, NodeStateLock, state_direct
 from src.network.public_knowledge import KnowledgeSettings, PublicKnowledgeService
 from src.network.reference_compute import ReferenceComputeService
 from src.network.learning_coordinator import LearningCoordinator
+from src.network.language_compute import LanguageComputeService
 
 log = logging.getLogger("lixy.client")
 
@@ -116,6 +117,7 @@ def run(directory: Path, *, host="0.0.0.0", port=7338, interval=15, allow_privat
         )
         knowledge = PublicKnowledgeService(node, directory, resources)
         compute = ReferenceComputeService(knowledge,directory,resources)
+        language = LanguageComputeService(knowledge,directory,resources)
         learning = LearningCoordinator(knowledge,compute,directory)
         stop = threading.Event()
         for signum in (signal.SIGINT, signal.SIGTERM):
@@ -134,7 +136,8 @@ def run(directory: Path, *, host="0.0.0.0", port=7338, interval=15, allow_privat
             status = build_status(node, sequence=sequence, role="participant", state=state,
                                   uptime_s=time.monotonic() - started, resources=resources)
             computation=compute.snapshot()
-            status["jobs"]={"active":computation["active"],"completed":computation["completed"]}
+            conversation=language.snapshot()
+            status["jobs"]={"active":computation["active"]+conversation["active"],"completed":computation["completed"]+conversation["completed"]}
             envelope = sign_status(identity, status)
             # Persist sequence before sending, so restart cannot reuse it.
             atomic_json(status_path, envelope)
@@ -143,10 +146,11 @@ def run(directory: Path, *, host="0.0.0.0", port=7338, interval=15, allow_privat
             atomic_json(directory / "diagnostics.json", {
                 "node_id": identity.node_id_hex, "timestamp_ms": status["timestamp_ms"],
                 "port": node.port, "peers": peers,
-                "pid": os.getpid(), "runtime_version": "0.4.0a2", "controls_version": 1,
-                "settings": asdict(settings), "worker_ready": computation["ready"], "control_error": error,
+                "pid": os.getpid(), "runtime_version": "0.4.0a3", "controls_version": 1,
+                "settings": asdict(settings), "worker_ready": computation["ready"] or conversation["ready"], "control_error": error,
                 "knowledge": public_knowledge,
                 "compute":computation,
+                "language":conversation,
                 "learning":learning.snapshot(),
             })
             eligible = time.monotonic() - last_sent >= 2
@@ -194,34 +198,38 @@ def run(directory: Path, *, host="0.0.0.0", port=7338, interval=15, allow_privat
                     sharing = KnowledgeSettings()
                 knowledge.update(settings, sharing)
                 compute.update(settings)
+                language.update(settings)
                 learning.update()
                 current_state = "disconnected" if not running else "paused" if settings.paused else "connected" if node.peer_count else "connecting"
                 public_state = knowledge.snapshot()
                 available={"artifact"} if public_state["sharing"] else set()
-                if compute.ready: available.add("inference")
+                if compute.ready or language.ready: available.add("inference")
                 if compute.ready and compute.engine.training_requesters: available.add("training")
                 node.resource_profile.update(knowledge.governor.advertised_profile(available_work=available))
-                if "cuda" not in compute.engine.devices:
+                if "cuda" not in compute.engine.devices and not language.ready:
                     node.resource_profile.update(has_gpu=False,gpu_percent=0,gpu_vram_gb=0)
                 node.resource_profile["work"] = {"connectivity":running, "artifact":public_state["sharing"],
-                    "inference":compute.ready, "training":compute.ready and bool(compute.engine.training_requesters), "memory":False}
-                node.resource_profile["worker_ready"]=compute.ready
-                node.resource_profile["model_artifact_id"]=public_state["model_id"] if compute.ready else ""
-                node.resource_profile["models"]=[public_state["model_id"]] if compute.ready else []
-                node.capabilities["inference"]=compute.ready
+                    "inference":compute.ready or language.ready, "training":compute.ready and bool(compute.engine.training_requesters), "memory":False}
+                node.resource_profile["worker_ready"]=compute.ready or language.ready
+                node.resource_profile["model_artifact_id"]=public_state["model_id"] if compute.ready else language.engine.adapter_id if language.ready else ""
+                node.resource_profile["models"]=([public_state["model_id"]] if compute.ready else [])+([language.engine.adapter_id] if language.ready else [])
+                node.capabilities["inference"]=compute.ready or language.ready
+                node.capabilities["language_inference_v1"]=language.ready
                 node.capabilities["training"]=compute.ready and bool(compute.engine.training_requesters)
-                node.capabilities["worker_ready"]=compute.ready
+                node.capabilities["worker_ready"]=compute.ready or language.ready
                 node.resource_profile["public_releases"] = [public_state["release_id"]] if public_state["sharing"] and public_state["release_id"] else []
                 knowledge_change = (public_state["state"], public_state["release_id"],
                                     public_state["versions_done"], public_state["sharing"])
                 if running and current_state == "connected" and public_state["state"] == "downloading":
                     current_state = "preparing"
-                if running and not settings.paused and compute.snapshot()["active"]:
+                if running and not settings.paused and (compute.snapshot()["active"] or language.snapshot()["active"]):
                     current_state="working"
                 if knowledge_change != last_knowledge:
                     refresh.set(); last_knowledge = knowledge_change
                 if compute.changed.is_set():
                     compute.changed.clear(); refresh.set()
+                if language.changed.is_set():
+                    language.changed.clear();refresh.set()
                 if learning.changed.is_set():
                     learning.changed.clear(); refresh.set()
                 if changed or refresh.is_set() or time.monotonic() >= next_publish:
@@ -234,6 +242,7 @@ def run(directory: Path, *, host="0.0.0.0", port=7338, interval=15, allow_privat
         finally:
             learning.close()
             compute.ready=False
+            language.ready=False
             knowledge.close()
             node.stop()
             log.info("Node stopped cleanly")

@@ -8,6 +8,9 @@ import tarfile
 import zipfile
 from pathlib import Path
 
+sys.path.insert(0,str(Path(__file__).resolve().parents[1]))
+from desktop.install import VERSION
+
 
 def main():
     dist=Path(sys.argv[1]);output=Path(sys.argv[2]);output.mkdir(parents=True,exist_ok=True)
@@ -18,7 +21,7 @@ def main():
             raise ValueError("A package symlink escaped its bundle")
     machine={"AMD64":"x86_64","aarch64":"arm64"}.get(platform.machine(),platform.machine())
     extension="zip" if sys.platform=="win32" else "tar.gz"
-    archive=output/f"LixySwarm-0.4.0a2-{sys.platform}-{machine}.{extension}"
+    archive=output/f"LixySwarm-{VERSION}-{sys.platform}-{machine}.{extension}"
     if sys.platform=="win32":
         with zipfile.ZipFile(archive,"w",compression=zipfile.ZIP_DEFLATED,compresslevel=6) as zipped:
             for path in sorted(bundle.rglob("*")):

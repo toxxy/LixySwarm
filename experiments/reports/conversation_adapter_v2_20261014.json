@@ -1,0 +1,226 @@
+{
+  "schema_version": 1,
+  "scope": "local public SFT research; not network promotion",
+  "base_repository": "Qwen/Qwen3-0.6B",
+  "base_revision": "c1899de289a04d12100db370d81485cdf75e47ca",
+  "base_model_hash": "f47f71177f32bcd101b7573ec9171e6a57f4f4d31148d38e382306f42996874b",
+  "dataset_hash": "24eb8b9e9c268021ededa84a171a4b6804cbe58263edbb2b2944f49dd4de64a5",
+  "private_inputs": false,
+  "training_examples": 200,
+  "evaluation_examples": 72,
+  "steps": 60,
+  "gradient_accumulation": 4,
+  "learning_rate": 0.0002,
+  "trainable_parameters": 1146880,
+  "retention_weight": 1.0,
+  "regressions": [],
+  "adapter_sha256": "3ff34a673bc4d8d83c0ba33286acfd2a1ee318c8ffbafce16caba345beb0b67f",
+  "adapter_bytes": 4599712,
+  "baseline": {
+    "heldout_nll": 1.316654439203129,
+    "heldout_tokens": 258,
+    "instruction_passed": 7,
+    "cases": [
+      {
+        "case": "es_addition",
+        "answer": "2 + 2 = 4",
+        "passed": false
+      },
+      {
+        "case": "en_multiplication",
+        "answer": "7 × 8 = 56.",
+        "passed": false
+      },
+      {
+        "case": "es_translation",
+        "answer": "The cat is in the house.",
+        "passed": true
+      },
+      {
+        "case": "en_translation",
+        "answer": "Buenos días.",
+        "passed": true
+      },
+      {
+        "case": "es_instruction",
+        "answer": "conectada",
+        "passed": true
+      },
+      {
+        "case": "en_instruction",
+        "answer": "ready",
+        "passed": true
+      },
+      {
+        "case": "es_fact",
+        "answer": "La capital de Francia es París.",
+        "passed": true
+      },
+      {
+        "case": "en_fact",
+        "answer": "H₂O",
+        "passed": true
+      },
+      {
+        "case": "es_order",
+        "answer": "[2, 5, 9]",
+        "passed": false
+      },
+      {
+        "case": "en_extract",
+        "answer": "status",
+        "passed": false
+      },
+      {
+        "case": "es_public_context",
+        "answer": "Sí.",
+        "passed": false
+      },
+      {
+        "case": "en_public_context",
+        "answer": "Yes.",
+        "passed": true
+      }
+    ]
+  },
+  "candidate": {
+    "heldout_nll": 0.003992695790919492,
+    "heldout_tokens": 258,
+    "instruction_passed": 12,
+    "cases": [
+      {
+        "case": "es_addition",
+        "answer": "4",
+        "passed": true
+      },
+      {
+        "case": "en_multiplication",
+        "answer": "56",
+        "passed": true
+      },
+      {
+        "case": "es_translation",
+        "answer": "The cat is in the house.",
+        "passed": true
+      },
+      {
+        "case": "en_translation",
+        "answer": "Buenos días.",
+        "passed": true
+      },
+      {
+        "case": "es_instruction",
+        "answer": "conectada",
+        "passed": true
+      },
+      {
+        "case": "en_instruction",
+        "answer": "ready",
+        "passed": true
+      },
+      {
+        "case": "es_fact",
+        "answer": "La capital de Francia es París.",
+        "passed": true
+      },
+      {
+        "case": "en_fact",
+        "answer": "H₂O",
+        "passed": true
+      },
+      {
+        "case": "es_order",
+        "answer": "2, 5, 9",
+        "passed": true
+      },
+      {
+        "case": "en_extract",
+        "answer": "online",
+        "passed": true
+      },
+      {
+        "case": "es_public_context",
+        "answer": "no",
+        "passed": true
+      },
+      {
+        "case": "en_public_context",
+        "answer": "yes",
+        "passed": true
+      }
+    ]
+  },
+  "minimum_nll_improvement": 0.001,
+  "minimum_instruction_passed": 11,
+  "eligible_for_integration": true,
+  "peak_gpu_allocated_bytes": 1424601088,
+  "peak_observed_rss_bytes": 2456965120,
+  "training_seconds": 20.435956613044254,
+  "losses": [
+    1.694924246519804,
+    0.9534689705622823,
+    0.776460129958363,
+    0.3738870987224139,
+    0.23079821941527454,
+    0.5915625066026176,
+    0.5976293574785814,
+    0.014801416178266259,
+    0.02351757828728296,
+    0.0030289862357006456,
+    2.2962891056019243,
+    0.08243304642814178,
+    2.8204157717437655,
+    0.005605404774541967,
+    0.016998521163259284,
+    0.045237343560074805,
+    0.006729560255297218,
+    0.2260634248828865,
+    2.83053837915381,
+    2.343935668530564,
+    0.0036573361240488547,
+    0.10466192895546556,
+    0.001084407846792601,
+    0.014957101817708464,
+    0.011893698334461078,
+    0.0006173581386974547,
+    0.0018156650548917241,
+    0.001282449599239044,
+    0.00010758429070847341,
+    2.414041812913403,
+    0.015773419918045158,
+    0.0007309225713305007,
+    0.0002693946544940655,
+    3.271964428206737e-05,
+    0.0005434697073228149,
+    4.1227745944189864e-05,
+    3.6686132362875564e-05,
+    0.018188074671050866,
+    4.8025803380369325e-05,
+    0.00037668979666705127,
+    1.8074369239834946,
+    0.007403184138833499,
+    7.638298528170844e-05,
+    0.05254371260682753,
+    2.830937347653162e-05,
+    0.0003455706664681202,
+    0.00021982020834420343,
+    0.0007210192095953971,
+    0.0005447222038955343,
+    1.0604066170412074,
+    0.050587914317452486,
+    0.027856212035418906,
+    0.00015343597914053183,
+    0.00023492536010135981,
+    0.0004406711278451522,
+    0.0001779626601139745,
+    0.0031648030371798086,
+    0.00010403342553723228,
+    0.0001579001582285855,
+    6.562770012782206e-05
+  ],
+  "limitations": [
+    "Same templates with disjoint values in the 72-example NLL evaluation",
+    "Only an elementary 12-case instruction gate",
+    "No distributed-learning, privacy-isolation or broad-conversation claim"
+  ]
+}
