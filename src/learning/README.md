@@ -36,3 +36,15 @@ El catálogo inicial `src/release/language_catalog.py` fija dos releases firmada
 Los paquetes públicos, motores y archivos parciales consumen la misma cuota de disco del participante. Reducirla por debajo del contenido conservado pausa el servicio público. El presupuesto de conexión y la pausa también se aplican a las transferencias de familia. La caché de respuestas de trabajo tiene un límite de 32 MiB, además del límite por cantidad de trabajos.
 
 La primera réplica completa está en curso entre las PCs por Internet. La publicación inicial y una transferencia parcial no prueban disponibilidad independiente ni aprendizaje distribuido de lenguaje. Continúan pendientes la preparación del motor de lenguaje desde la app, la carga de una réplica adquirida, el entrenamiento distribuido de estas adaptaciones, la transferencia evaluada entre tamaños y la selección de especialistas.
+
+## Versiones de adaptaciones y evaluación del piloto
+
+`src/release/language_versions.py` conserva el genesis inmutable y descendientes con firma del publicador conocido, hash de pesos, dependencias upstream cerradas y evaluación por contenido. La cadena y sus archivos completos se verifican antes de cambiar la cabeza conservada. No se cambia el experto activo ni sus permisos al obtener una versión.
+
+El gate fija por hash el corpus público y sus reglas: mejora de NLL, cuarenta paráfrasis factuales sin regresiones y cuarenta comprobaciones de instrucciones/contexto sin perder respuestas correctas. El segundo grupo exige al menos 37/40 y las instrucciones/contextos obligatorios del piloto. Los recibos deben corresponder a las dos PCs físicas conocidas, con versiones/datos compatibles, rangos distintos y trabajos sin duplicar. Una sola PC o repetir el mismo fragmento no acredita entrenamiento distribuido.
+
+`experiments/publish_language_update.py` inspecciona una instantánea safetensors acotada sin importar PyTorch: nombres, formas, float32, rangos contiguos, metadatos del modelo público y valores finitos. La evaluación pasa antes de firmar o incorporar candidata/informe al espacio público. Requiere archivos fuera del checkout y la clave local del publicador existente; no genera ni distribuye autoridad nueva.
+
+Los RPC `language.version-head.v1` y `language.version-history.v1` usan la identidad del nodo físico y su permiso de almacenamiento/conexión. El receptor obtiene toda la historia y las dependencias por LSP, verifica recibos, firmas y evaluaciones, y conserva el cambio de cabeza al reiniciar. Se rechazan forks y regresiones de secuencia. Las familias iniciales permanecen disponibles por el protocolo anterior.
+
+Estas reglas corresponden al piloto de operadores conocidos y a evaluaciones elementales. No constituyen consenso abierto, pruebas contra publicadores maliciosos, calidad general del lenguaje ni un nuevo ciclo físico promovido. La coordinación de gradientes de lenguaje, su agregación real evaluada y la transferencia entre tamaños conservan sus gates pendientes.

@@ -18,6 +18,9 @@ class LanguageFamilies:
                                   ("language.artifact.read-chunk.v1",self._chunk),
                                   ("language.family.v1",self._family)]:
             knowledge.work.register_handler(operation,"artifact",self._guard(handler),permit_cached=self._permit_cached)
+        from .language_version_service import LanguageVersionService
+        self.versions=LanguageVersionService(self)
+        knowledge.work.node.capabilities['language_versions_v1']=True
 
     def _guard(self,handler):
         def guarded(payload,execution):
@@ -35,6 +38,9 @@ class LanguageFamilies:
         if not self.knowledge.allowed:return False
         if execution.operation=="language.artifact.read-chunk.v1":
             self.knowledge.budget.wait(len(output["data"])+2048,cancel_event=self.knowledge.cancel,deadline=execution.deadline)
+        elif execution.operation.startswith('language.version-'):
+            from src.release.language_family import canonical
+            self.knowledge.budget.wait(len(canonical(output))+2048,cancel_event=self.knowledge.cancel,deadline=execution.deadline)
         return self.knowledge.allowed
 
     def _family(self,payload,execution):

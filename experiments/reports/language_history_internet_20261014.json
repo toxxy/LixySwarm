@@ -1,0 +1,13 @@
+{
+  "base_name": "qwen3-1.7b",
+  "encrypted": true,
+  "head_id": "3095364a8aed7e74e4b55a954d531246fd1494e4ababaec408a68ce777a63301",
+  "new_language_update_promoted": false,
+  "provider_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+  "scope": "Version metadata on two existing PCs; visitor adds no physical worker",
+  "seconds": 0.30569250899134204,
+  "sequence": 0,
+  "success": true,
+  "transport": "relay",
+  "versions": 1
+}

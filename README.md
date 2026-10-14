@@ -1,8 +1,8 @@
 # LixySwarm
 
-LixySwarm is a research prototype for bio-inspired distributed language intelligence. It combines transformer agents (ants), persistent memory (Matriarca/elephant), an echolocation router (dolphin), and the persistent LSP v3 peer protocol.
+LixySwarm is a research prototype for bio-inspired distributed language intelligence. Each physical computer is an ant; it can host expert models. The research components include transformer experts, persistent memory (Matriarca/elephant), an echolocation router (dolphin), and the persistent LSP v3 peer protocol.
 
-**Current status (2026-10-13):** research prototype with controlled public-Internet NAT communication and signed synthetic CPU work verified on two physical computers and a public relay. Model, memory, runtime, transport, publisher and dashboard paths exist. Untrusted public compute and mass deployment remain future work.
+**Current status (2026-10-14):** controlled pilot on two physical computers and a public relay, with evaluated distributed learning of a byte reference model, signed model replication, a desktop app and language chat over public Internet. Broad language learning, biological-layer integration, untrusted public compute and mass deployment remain in progress.
 
 ## Paper
 
@@ -14,15 +14,15 @@ The manuscript's experimental numbers are historical results for a specific chec
 
 [PLAN_VISION.md](PLAN_VISION.md) defines the delivery stages for continuous Internet operation, a simple desktop app, real distributed learning, persistent shared knowledge, hardware-adaptive contribution, useful biological layers and bounded autonomy. Each stage has a concrete acceptance test. The next milestone joins gradient computation, candidate evaluation, model publication and acquisition by another physical node.
 
-[VISION_PROGRESS.md](VISION_PROGRESS.md) tracks the active goal and includes the Linux reference participant service. Its network core connects without importing PyTorch, keeps machine-local identity outside the checkout and publishes signed per-node status over LSP. Calculation workers and the remaining desktop acceptance gates are pending.
+[VISION_PROGRESS.md](VISION_PROGRESS.md) tracks the active goal and its remaining acceptance gates. The Linux participant service connects without importing PyTorch, keeps machine-local identity outside the checkout and publishes signed per-node status over LSP. Separate supervised workers perform computation within local resource permissions.
 
-The [desktop app](desktop/README.md) includes connection controls, persistent contribution settings and per-user installation. Its current code connects the chat to the known pilot expert over public Internet and stores conversation history encrypted locally. The public download remains the earlier preview; automatic language-model distribution, open collaboration and the remaining platform gates are still pending.
+The [desktop app](desktop/README.md) includes connection controls, persistent contribution settings and per-user installation. The [public A7 preview](https://github.com/toxxy/LixySwarm/releases/tag/v0.4.0a7) connects chat to the known pilot expert over public Internet, stores conversation history encrypted locally and adds guided expert preparation. Complete clean-machine GPU preparation, open collaboration and the remaining platform gates are still pending.
 
 ## Implemented system
 
-The default swarm configuration contains:
+The local biological runtime contains the following components. Its integration into the public participant service and measured benefit remain separate acceptance gates:
 
-- Three GPT-style `AgentBase` instances with `FeromonGate`, fixed identity vectors, pheromone outputs, and confidence heads.
+- Three local GPT-style `AgentBase` expert instances with `FeromonGate`, fixed identity vectors, pheromone outputs, and confidence heads.
 - A `DolphinPool` whose primary dolphin creates five learned pings and an attention-based acoustic map.
 - A dual `Matriarca` runtime with separate personal and global banks, retrieval, importance updates, compression, and sect legacy storage.
 - Two swarm rounds followed by confidence aggregation with a 20% Matriarca bias.
@@ -62,7 +62,7 @@ tokens
   -> repetition-penalized top-k/top-p sampling in RuntimeSession
 ```
 
-LSP v3 multiplexes pheromones, peer exchange, global-memory deltas, work offers, and work results over persistent TCP `7338` sessions. Large artifacts move as verified chunks through typed work. A fresh node includes the project's first public bootstrap seed, learns routes and persists peers. Direct sessions continue after seed loss; a relayed NAT path needs its relay or another compatible reachable relay. `LIXYSWARM_BOOTSTRAP_SEEDS=host:7338[,host:7338]` replaces the defaults; an explicitly empty value disables bootstrap. Separate-process tests verify direct seed independence, and relay tests verify alternate-relay recovery. A second independently operated public seed/relay remains required before public release.
+LSP v3 multiplexes pheromones, peer exchange, global-memory deltas, work offers, and work results over persistent TCP `7338` sessions. Large artifacts move as verified chunks through typed work. A fresh node includes the project's first public bootstrap seed, learns routes and persists peers. Direct sessions continue after seed loss; a relayed NAT path needs its relay or another compatible reachable relay. `LIXYSWARM_BOOTSTRAP_SEEDS=host:7338[,host:7338]` replaces the defaults; an explicitly empty value disables bootstrap. Separate-process tests verify direct seed independence, and relay tests verify alternate-relay recovery. A second independently operated public seed/relay remains required for resilient open deployment.
 
 ## Install and verify
 
@@ -192,6 +192,6 @@ Historical experiment notes are labeled as such and must not be read as current 
 
 ## Vista previa instalable por Internet
 
-[Descargar LixySwarm 0.4.0a2](https://github.com/toxxy/LixySwarm/releases/tag/v0.4.0a2) para Linux x86_64, Windows x86_64 o macOS arm64. Descomprime el archivo, abre LixySwarm y usa **Instalar en este equipo** para añadir el acceso al menú. Elige tus recursos y conecta. No necesitas instalar Python, usar una VPN ni configurar puertos del router.
+[Descargar LixySwarm 0.4.0a7](https://github.com/toxxy/LixySwarm/releases/tag/v0.4.0a7) para Linux x86_64, Windows x86_64 o macOS arm64. Descomprime el archivo, abre LixySwarm y usa **Instalar en este equipo** para añadir el acceso al menú. Elige tus recursos y conecta. No necesitas instalar Python, usar una VPN ni configurar puertos del router.
 
-Autorizar CPU con al menos 2 GB de RAM prepara automáticamente un motor público verificado y el modelo de referencia. La conexión comienza antes de esas descargas. La vista previa permite conservar conocimiento y aportar inferencia tipada de bytes; el chat conversacional y el entrenamiento abierto de desconocidos siguen pendientes. Los paquetes no tienen todavía firma pública de distribución; la instalación física de Windows y macOS conserva su gate, aunque sus ejecutables y descarga del motor pasaron CI. Consulta [la app](desktop/README.md) y [el avance completo de la visión](VISION_PROGRESS.md).
+Autorizar CPU con al menos 2 GB de RAM prepara automáticamente un motor público verificado y el modelo de referencia. La conexión y las consultas al experto remoto pueden comenzar antes de descargar modelos locales. Recursos permite preparar el experto GPU compatible respetando RAM, GPU y disco autorizados. El chat usa el experto conocido del piloto; el entrenamiento abierto de desconocidos sigue pendiente. Los paquetes no tienen todavía firma pública de distribución; la instalación física de Windows y macOS conserva su gate, aunque sus ejecutables y descarga del motor pasaron CI. Consulta [la app](desktop/README.md) y [el avance completo de la visión](VISION_PROGRESS.md).

@@ -18,11 +18,13 @@
       padding: 14px 24px;
       display: flex;
       align-items: center;
+      flex-wrap: wrap;
       gap: 12px;
     }
     header .logo { font-size: 1.4rem; font-weight: 700; color: #4CAF50; }
     header .subtitle { font-size: 0.8rem; color: #666; }
     header .updated { margin-left: auto; font-size: 0.75rem; color: #444; }
+    header .download { color: #8de6a0; border: 1px solid #285b34; border-radius: 6px; padding: 8px 12px; font-size: 0.8rem; text-decoration: none; }
     .grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
@@ -161,6 +163,7 @@
     </div>
     <span class="readonly-badge">👁️ Solo lectura</span>
     <span class="fresh-badge" id="freshness">Estado: —</span>
+    <a class="download" href="https://github.com/toxxy/LixySwarm/releases/tag/v0.4.0a7" target="_blank" rel="noopener noreferrer">Descargar app</a>
     <div class="updated" id="updated">Actualizando...</div>
   </header>
 

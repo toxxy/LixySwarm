@@ -83,7 +83,7 @@ export LIXYSWARM_BOOTSTRAP_SEEDS='seed.example.net:7338'
 lixyswarm start
 ```
 
-An explicitly empty `LIXYSWARM_BOOTSTRAP_SEEDS` disables public bootstrap. The built-in endpoint is only an introduction service; it is not a relay, coordinator, trust root, model host, or required dependency after peer discovery.
+An explicitly empty `LIXYSWARM_BOOTSTRAP_SEEDS` disables public bootstrap. The current built-in endpoint provides introduction and an enabled relay for the pilot. It is not a coordinator, trust root or model host. Direct peers can continue after seed loss; a relayed path needs its relay or another reachable independent relay.
 
 The basic command contributes connectivity and explicitly imported artifacts only. A participant can use a separately verified local checkpoint with `--checkpoint`, or configure threshold trust, activate a signed local release, and use `lixyswarm start --release`. The repository does not publish official signer keys, a pinned genesis, or model weights yet, so acquisition must not be automated from an untrusted peer.
 

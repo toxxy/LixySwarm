@@ -1,0 +1,25 @@
+{
+  "success": true,
+  "internet": true,
+  "language_preparation_permission_gate": true,
+  "chat_first_answer": "Una red descentralizada es una red de computadoras que no está controlada por un solo punto central.",
+  "chat_ui_verified": true,
+  "chat_remote_context_opt_in": true,
+  "chat_history_survives_reopen": true,
+  "chat_history_encrypted": true,
+  "chat_receipt": {
+    "version": 1,
+    "job_id": "c7cd2ceb4c52bf711eaf35db1647eacb819393672c8d535e65aa3ec6e881e3ac",
+    "worker_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+    "requester_node_id": "78512cacf07c70a0882c540920e650eca03f0658de668b1cc9c00950b16ebcb0",
+    "result_digest": "26f4134e0bfc82cdd578382f579333b90d594ea8fc55fce3b03cefea12ab5637",
+    "finished_at": 1792014364.5095491,
+    "signature": "gcr/d3To6rViK/iL+ZrSMJ3MToPV3xiZonOpKgeDcaTveNg1gK9n8DNRU6Dvk8I3UYoLXu6sjrI3pdMKfGszAQ=="
+  },
+  "chat_cancellation_verified": true,
+  "connection_s": 0.72,
+  "controls_confirmed": true,
+  "pause_keeps_connection": true,
+  "reconnect_keeps_identity": true,
+  "calculation_engines_loaded": false
+}
