@@ -125,6 +125,19 @@ Los participantes con esta app pueden obtener y conservar la referencia sin term
 - Esta separación permite detener un cálculo sin perder la identidad o la versión aceptada. Es supervisión de procesos y permisos; el aislamiento completo del sistema de archivos y los límites generales de utilización GPU conservan su etapa de endurecimiento pendiente.
 - Las capacidades cambian con los permisos y los motores disponibles. Un anuncio acotado en los pings cifrados refresca capacidades, modelos y presupuestos sin reiniciar sesiones; conserva compatibilidad con pares anteriores. La evidencia de trabajo verificada localmente se mantiene separada y no puede sobrescribirse con ese anuncio.
 - La primera prueba CUDA detuvo un gradiente que superó la reserva declarada de 1,5 GiB. Solicitar 2 GiB, dentro del perfil equilibrado de prueba, completó el trabajo. El requisito incluye el runtime de CUDA, además del pequeño modelo; no se eliminó la comprobación de RAM para lograr el ensayo.
+- Un reintento de un trabajo completado vuelve a comprobar consentimiento y permisos de la operación. Las respuestas de chunks guardadas también consumen presupuesto de transferencia. Se conserva deduplicación sin usar la caché para continuar un aporte retirado.
+
+### Verificación de cálculo en los nodos persistentes
+
+El [ensayo por Internet](experiments/reports/persistent_compute_20261014.json) ejecutó inferencia y cálculo real de gradientes en las GPUs de ambas PCs, bajo `c45094…` y `ea914d…`, sus identidades persistentes. El solicitante temporal desempeñó el papel de prueba y no se contó como otro trabajador físico.
+
+- Cada trabajador procesó un fragmento diferente del corpus público. Se verificaron recibos, hashes, esquema NPZ, parámetros, formas y valores finitos antes de aceptar sus resultados de cálculo. Los gradientes quedaron como artefactos; este ensayo no promovió una nueva versión.
+- Los tiempos observados en el último ensayo fueron 1,277/1,419 segundos para inferencia/gradiente en la RTX 5090 y 1,881/1,982 en la RTX 2000 Ada. Estas medidas incluyen arranque del motor y transporte; no demuestran todavía escalado del aprendizaje.
+- Los logits de ambas GPUs difirieron como máximo en 2,98 × 10⁻⁸. La referencia conserva su evaluación de predicción de bytes y no se presenta como calidad conversacional.
+- Durante otra petición, pausar el aporte terminó un motor CUDA confirmado vivo. El proceso del nodo, las conexiones, la identidad y los pesos se conservaron. Los límites iniciales de las PCs se restauraron al terminar: conectividad y GPU cero. Los motores locales quedaron preparados y el solicitante de prueba fue retirado de sus coordinadores autorizados.
+- El servicio permaneció sin PyTorch. Tras servir transferencias y trabajos, la primera PC usó aproximadamente 80 MiB de RAM; la caché de resultados está acotada. Los contadores conservan solamente cálculos completados y la API sigue distinguiendo estos reportes de aportes validados o promovidos.
+
+Pendiente para el siguiente recorrido completo: coordinación desde el nodo persistente, trabajos recuperables, evaluación y promoción que actualicen el catálogo; instalación automática de motores y modelo conversacional. El cálculo de referencia preparado en las dos PCs utiliza sus entornos existentes fuera del paquete ligero, y no da por cumplida la instalación limpia de motores en una PC nueva.
 
 Desde el checkout y su entorno Python con `cryptography`:
 

@@ -117,9 +117,9 @@ class PublicKnowledgeService:
                         "model_id":None, "sequence":None, "error":None, "versions_done":0}
         self.budget = BandwidthBudget(lambda: self.policy.max_bandwidth_mbps if self.allowed else 0)
         self.artifacts.receive_budget = self.budget
-        self.work.register_handler("artifact.describe.v1", "artifact", self._guard(self.artifacts._describe))
-        self.work.register_handler("artifact.read-chunk.v1", "artifact", self._guard(self._chunk))
-        self.work.register_handler("release.history.v1", "artifact", self._guard(history._page))
+        self.work.register_handler("artifact.describe.v1", "artifact", self._guard(self.artifacts._describe),permit_cached=self._permit_cached)
+        self.work.register_handler("artifact.read-chunk.v1", "artifact", self._guard(self._chunk),permit_cached=self._permit_cached)
+        self.work.register_handler("release.history.v1", "artifact", self._guard(history._page),permit_cached=self._permit_cached)
         node.capabilities["public_artifacts_v1"] = True
         self.restore()
 
@@ -140,6 +140,12 @@ class PublicKnowledgeService:
         self.budget.wait(len(value["data"])+2048, cancel_event=self.cancel, deadline=execution.deadline)
         execution.raise_if_cancelled()
         return value
+
+    def _permit_cached(self, execution, output):
+        if not self.allowed: return False
+        if execution.operation=="artifact.read-chunk.v1":
+            self.budget.wait(len(output["data"])+2048,cancel_event=self.cancel,deadline=execution.deadline)
+        return self.allowed
 
     def restore(self):
         try:

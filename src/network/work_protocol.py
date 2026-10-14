@@ -384,6 +384,7 @@ class WorkCoordinator:
             0, min(int(minimum_identity_work_bits), 28)
         )
         self._handlers: dict[str, tuple[str, Callable]] = {}
+        self._cached_permissions: dict[str, Callable] = {}
         self._pending: dict[str, _PendingWork] = {}
         self._inflight: set[str] = set()
         self._completed: OrderedDict[str, WorkResult] = OrderedDict()
@@ -420,14 +421,20 @@ class WorkCoordinator:
         if callable(lost_callback):
             lost_callback(self._on_peer_lost)
 
-    def register_handler(self, operation: str, kind: str, handler: Callable):
+    def register_handler(self, operation: str, kind: str, handler: Callable, *, permit_cached=None):
         if not _OPERATION_RE.fullmatch(operation):
             raise ValueError("Invalid work operation")
         if kind not in {"inference", "training", "memory", "artifact"}:
             raise ValueError("Invalid handler kind")
         if not callable(handler):
             raise TypeError("Work handler must be callable")
+        if permit_cached is not None and not callable(permit_cached):
+            raise TypeError("Cached result permission must be callable")
         self._handlers[operation] = (kind, handler)
+        if permit_cached is None:
+            self._cached_permissions.pop(operation,None)
+        else:
+            self._cached_permissions[operation]=permit_cached
 
     def submit(
         self,
@@ -955,16 +962,30 @@ class WorkCoordinator:
 
         with self._lock:
             cached = self._completed.get(work.job_id)
-            if cached:
-                self.node.send_work_result(from_node_id, cached.to_dict())
-                return
-            if work.job_id in self._inflight:
-                result = WorkResult(
-                    job_id=work.job_id, status="rejected", error="already_running"
-                )
-                self._send_result(from_node_id, result)
-                return
-            self._inflight.add(work.job_id)
+            duplicate = not cached and work.job_id in self._inflight
+            if not cached and not duplicate:
+                self._inflight.add(work.job_id)
+        if cached:
+            allowed,reason=self.governor.can_accept(work.resource_requirements())
+            gate=self._cached_permissions.get(work.operation)
+            try:
+                execution.raise_if_cancelled()
+                if allowed and gate is not None:
+                    allowed=bool(gate(execution,cached.output))
+                    if not allowed: reason="cached_permission_withdrawn"
+            except Exception:
+                allowed=False; reason="cached_permission_withdrawn"
+            if allowed:
+                self.node.send_work_result(from_node_id,cached.to_dict())
+            else:
+                self._send_result(from_node_id,WorkResult(job_id=work.job_id,status="rejected",error=reason))
+            return
+        if duplicate:
+            result = WorkResult(
+                job_id=work.job_id, status="rejected", error="already_running"
+            )
+            self._send_result(from_node_id, result)
+            return
 
         cancellation_reason = execution.cancellation_reason()
         if cancellation_reason:

@@ -15,6 +15,7 @@ from src.network.public_knowledge import (
 )
 from src.release import ReleaseManifest, ReleaseRegistry, TrustPolicy
 from src.release.reference_catalog import CatalogEntry
+from src.network.work_protocol import WorkUnit
 
 RESOURCES = {"cpu_cores":4,"ram_gb":8,"gpu_vram_gb":0,"has_gpu":False}
 
@@ -140,5 +141,30 @@ def test_lowering_disk_quota_preserves_data_and_disables_sharing(tmp_path):
         service.update(settings,KnowledgeSettings(enabled=True,consented_at=time.time()))
         assert not service.snapshot()["sharing"]
         assert service.store.has(chain[-1].model_artifact_id)
+    finally:
+        service.close()
+
+
+def test_cached_results_cannot_bypass_withdrawn_consent(tmp_path):
+    source=tmp_path/"source"; source.mkdir(); catalog,_=run_fixture(source)
+    service=PublicKnowledgeService(node(tmp_path/"node"),tmp_path/"node",RESOURCES,catalog=catalog)
+    try:
+        settings=ClientSettings(); service.update(settings,KnowledgeSettings(enabled=True,consented_at=time.time()))
+        calls=[]; outputs=[]; enabled=True
+        service.node.send_work_result=lambda peer,value:outputs.append(value) or True
+        service.work.register_handler("artifact.cached-test.v1","artifact",lambda payload,execution:calls.append(1) or {"value":42},
+            permit_cached=lambda execution,output:enabled)
+        peer=LSPIdentity.generate()
+        work=WorkUnit.create(origin_node_id=peer.node_id_hex,operation="artifact.cached-test.v1",kind="artifact",
+            requirements=ResourceRequirements(kind="artifact"),payload={},timeout_s=30)
+        service.work._execute_offer(work.to_dict(),peer.node_id_hex)
+        service.work._execute_offer(work.to_dict(),peer.node_id_hex)
+        assert len(calls)==1 and outputs[-1]["status"]=="ok"
+        enabled=False
+        service.work._execute_offer(work.to_dict(),peer.node_id_hex)
+        assert outputs[-1]["status"]=="rejected" and len(calls)==1
+        enabled=True; service.governor.policy=ContributionPolicy.for_mode("disabled")
+        service.work._execute_offer(work.to_dict(),peer.node_id_hex)
+        assert outputs[-1]["status"]=="rejected" and len(calls)==1
     finally:
         service.close()

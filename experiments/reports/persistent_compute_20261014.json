@@ -1,0 +1,108 @@
+{
+  "success": true,
+  "model_id": "f2e3556f06a392291157b75c6adc44378cc15e1b10ddb9f633a2da19d30c66c2",
+  "requester": "90109b283a8363ce042b36e5fb3090cba08973242ded3a126971108c9b772014",
+  "inference": [
+    {
+      "worker_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+      "seconds": 1.277,
+      "receipt": {
+        "version": 1,
+        "job_id": "cb14b9201e64e4cd48256947f52345330b8dddebff8167b68b3bd431c24b5053",
+        "worker_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+        "requester_node_id": "90109b283a8363ce042b36e5fb3090cba08973242ded3a126971108c9b772014",
+        "result_digest": "ff0f4bc68a5c3712d074377181e612211acf36344eff2c80705a7fcb55c8abe7",
+        "finished_at": 1791984015.0679874,
+        "signature": "uX+XaSFb1RvHr1pvK+/MssIwk8Wh41/gWIPhjO1mK1AFdBxDJ7vx5d99es04A4n5hZj8xlfntjllUPI8gSnYDw=="
+      }
+    },
+    {
+      "worker_id": "ea914d97caafef310e50385034abae9a50ba86496b0e9cbf4679e6070e4c25b0",
+      "seconds": 1.881,
+      "receipt": {
+        "version": 1,
+        "job_id": "b418a7b0450b2b13a721ef16a9cd4a8d6516898d84d156fa1a2ca9e43345431d",
+        "worker_node_id": "ea914d97caafef310e50385034abae9a50ba86496b0e9cbf4679e6070e4c25b0",
+        "requester_node_id": "90109b283a8363ce042b36e5fb3090cba08973242ded3a126971108c9b772014",
+        "result_digest": "54d6fd6e4015a6d5e07c32e542d8db1ba99b2d29ed6149ef955f90e975d3aa85",
+        "finished_at": 1791984018.3714058,
+        "signature": "F6zY5Wxuw2xg1fDWW8URYgGL30dkU5e5H6BdRtjfKqC9M80AjpizgGnuoOTCBea3s5wHHk3bInwxCsdHEywaAQ=="
+      }
+    }
+  ],
+  "training": [
+    {
+      "worker_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+      "seconds": 1.419,
+      "receipt": {
+        "version": 1,
+        "job_id": "3fecd2b14d39e7f5e4c7a753f66ab4923bb69421b03b1c03d4bbe71a64625a67",
+        "worker_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+        "requester_node_id": "90109b283a8363ce042b36e5fb3090cba08973242ded3a126971108c9b772014",
+        "result_digest": "b0b8043297fe3650fef530b79f0416a99bb92a9e1b636101df5285419fef6189",
+        "finished_at": 1791984016.4934003,
+        "signature": "g4dSu1vRx1Ia2iuGVa61MEPj2J7XX/WQVfevzXbCmCQE8krcqrl61e887+kRRqG9uG/3OjAAOdZHaviY3ONuAg=="
+      },
+      "gradient_id": "c0e324bb0a4c626e3deaa806318529429e846f138bfb4f61a75d0507a77a8917",
+      "loss": 6.738329887390137,
+      "start_token": 0
+    },
+    {
+      "worker_id": "ea914d97caafef310e50385034abae9a50ba86496b0e9cbf4679e6070e4c25b0",
+      "seconds": 1.982,
+      "receipt": {
+        "version": 1,
+        "job_id": "2a0f98340b75a4996904c71fc46762f59ce747bbbc642333dc04aca3e1578b84",
+        "worker_node_id": "ea914d97caafef310e50385034abae9a50ba86496b0e9cbf4679e6070e4c25b0",
+        "requester_node_id": "90109b283a8363ce042b36e5fb3090cba08973242ded3a126971108c9b772014",
+        "result_digest": "e717a80f313f99989d0d8c6b0dfc0209e120f325a5009e4c293893ba7a2d49c7",
+        "finished_at": 1791984020.350243,
+        "signature": "PG/B6kaF7GzGN/Dokm1q7aFmTVXbKLqjmK6csHQMXmKOSFEd40oycg1rSjlFjw6sfnA2zsmGgYK08wgqRiaaCA=="
+      },
+      "gradient_id": "21658857da67325015a551d6d6b50a66a9fec25d3591e712a406eeb12d29166f",
+      "loss": 6.738329887390137,
+      "start_token": 7200
+    }
+  ],
+  "inference_max_difference": 2.9802322387695312e-08,
+  "routes": [
+    {
+      "node_id": "28c218f34cd6b90e99955346711921d94b54852e4b8f29fb840207388f73444e",
+      "transport": "direct",
+      "encrypted": true,
+      "route": {
+        "public": true,
+        "interface": "enp5s0",
+        "vpn": false
+      }
+    },
+    {
+      "node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+      "transport": "relay",
+      "encrypted": true,
+      "route": {
+        "public": true,
+        "interface": "enp5s0",
+        "vpn": false
+      }
+    },
+    {
+      "node_id": "ea914d97caafef310e50385034abae9a50ba86496b0e9cbf4679e6070e4c25b0",
+      "transport": "relay",
+      "encrypted": true,
+      "route": {
+        "public": true,
+        "interface": "enp5s0",
+        "vpn": false
+      }
+    }
+  ],
+  "pause": {
+    "cancelled_live_engine": true,
+    "same_node_process": true,
+    "connections_preserved": true,
+    "model_preserved": true
+  },
+  "code_revision": "76aa4ff",
+  "scope": "Supervised reference CUDA inference and validated gradient artifacts on the two persistent physical node identities; no new model promotion or conversational quality claim."
+}

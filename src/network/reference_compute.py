@@ -66,8 +66,9 @@ class ReferenceComputeService:
                 self.completed=count
             except (OSError,ValueError,TypeError):
                 self.completed=0
-        knowledge.work.register_handler(INFERENCE_OPERATION,"inference",self.inference)
-        knowledge.work.register_handler(TRAINING_OPERATION,"training",self.training)
+        knowledge.work.register_handler(INFERENCE_OPERATION,"inference",self.inference,permit_cached=lambda execution,_:self.ready)
+        knowledge.work.register_handler(TRAINING_OPERATION,"training",self.training,
+            permit_cached=lambda execution,_:self.ready and execution.origin_node_id in self.engine.training_requesters)
 
     def update(self,settings):
         self.settings=settings
