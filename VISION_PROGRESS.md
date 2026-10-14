@@ -232,8 +232,12 @@ Pasaron 165 pruebas de regresión. Los servicios y lanzadores de ambas PCs usan 
 
 Esta integración comprueba consulta remota y persistencia de conversación; no completa Matriarca, Dolphin o la preparación automática de lenguaje. La descarga pública sigue en 0.4.0a2. Faltan base y adaptación replicadas por LSP, motor de lenguaje instalable, entrenamiento distribuido de esa familia y transferencia evaluada entre tamaños. El goal mantiene las ocho etapas y sus condiciones de aceptación.
 
+El [CI del chat/app 526ca83](https://github.com/toxxy/LixySwarm/actions/runs/38612544786) completó Linux, Windows y macOS: controles, cifrado con fixture, autenticación y cancelación del puente local, empaquetado y ejecutable con preparación del motor CPU público. Las consultas reales al experto GPU y el almacén protegido real pertenecen al ensayo Linux de las PCs. El VPS adquirió el código por Git y mantuvo relay/API activos, sin incorporar bases, adaptaciones ni motores de lenguaje.
+
 ### Registro de continuidad
 
 `experiments/observe_internet.py` observa la API pública del Explorer cada 20 segundos para las tres identidades físicas explícitas. Conserva muestras y resumen fuera de Dropbox. Solo acumula una ventana saludable cuando todas tienen telemetría firmada, activa y reciente, con secuencia y tiempo sin retrocesos. Un intervalo sin observación mayor de 60 segundos, una identidad duplicada o un estado inválido reinician la ventana. Dos pruebas verifican esos rechazos y el requisito de duración completa.
 
 El objetivo del registro es reunir una ventana de 24 horas; la ejecución tiene un límite de 48 horas. No sustituye la prueba del segundo relay independiente ni mide calidad del modelo. La condición de continuidad permanece pendiente hasta revisar las muestras completas y el resumen final.
+
+Tras la comprobación corta del CLI sobre la API pública, se inició el registro largo el 2026-10-14 como servicio de usuario separado del participante. Su revisión de origen es `c08321c`; conserva evidencia fuera del repositorio y no altera los controles de aportación. La observación inicial vio las tres máquinas saludables. Ese inicio no acredita todavía las 24 horas.
