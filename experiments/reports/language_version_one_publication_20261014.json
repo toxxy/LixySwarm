@@ -1,0 +1,17 @@
+{
+  "release_id": "4e478620e27f3e28041a23d8e942d5fa45ca8c04ab04c8f7d5aae83db6fba594",
+  "sequence": 1,
+  "model_id": "8e526788ef461c8ac20f2c1e9c510258b1862d8520b83d84e8ca2cce73a38e8d",
+  "scope": "Accepted sequence-one language update from two known physical workers; physical replica/use evidence is recorded separately",
+  "selected": {
+    "release_id": "4e478620e27f3e28041a23d8e942d5fa45ca8c04ab04c8f7d5aae83db6fba594",
+    "previous_adapter_id": "badef4394af180ab75ca25f0d9d47f2406b92809b53b5845ab65d451cf9c4b3c",
+    "adapter_id": "8e526788ef461c8ac20f2c1e9c510258b1862d8520b83d84e8ca2cce73a38e8d",
+    "selected": true,
+    "compute_enabled_before": true,
+    "resource_permissions_changed": false
+  },
+  "source_candidate_job": "5e8630941ff679d1a0ca5237dd5f52d9af24dfa0ea1224ad1d5c6e7a626c5e6f",
+  "producer_physical_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+  "physical_replica_verified": false
+}

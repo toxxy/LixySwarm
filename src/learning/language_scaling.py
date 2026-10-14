@@ -46,13 +46,15 @@ def compare_runs(baseline,distributed):
             or not set(before['physical_workers']).issubset(after['physical_workers'])):
         raise ValueError('Compare one physical worker with the same worker plus another')
     if (baseline['base_name']!=distributed['base_name'] or baseline['head']!=distributed['head']
-            or first_shards!=second_shards):
+            or first_shards!=second_shards
+            or baseline.get('receive_bandwidth_mbps')!=distributed.get('receive_bandwidth_mbps')):
         raise ValueError('Scaling trials must use identical model, data, ranges and token counts')
     ratio=first_seconds/second_seconds
     return {'scope':'One observed Internet training comparison; excludes initial model download and candidate evaluation; no general scaling or model promotion claim',
         'base_name':baseline['base_name'],'release_id':baseline['head']['release']['release_id'],
         'model_id':baseline['head']['release']['model_artifact_id'],'dataset_id':corpus_digest(public_corpus()),
-        'tokens':before['tokens'],'shards':[{'start':start,'count':count,'tokens':tokens} for start,count,tokens in first_shards],
+        'tokens':before['tokens'],'receive_bandwidth_mbps':baseline.get('receive_bandwidth_mbps'),
+        'shards':[{'start':start,'count':count,'tokens':tokens} for start,count,tokens in first_shards],
         'one_pc':{'workers':before['physical_workers'],'seconds':first_seconds,'verified_tokens_per_second':before['tokens']/first_seconds},
         'multiple_pcs':{'workers':after['physical_workers'],'seconds':second_seconds,'verified_tokens_per_second':after['tokens']/second_seconds},
         'observed_speedup':ratio,'training_throughput_improved':ratio>1,'new_model_promoted':False}

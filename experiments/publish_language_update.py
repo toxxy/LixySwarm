@@ -51,11 +51,11 @@ def main():
         evaluation=ArtifactManifest(hashlib.sha256(encoded).hexdigest(),len(encoded),'evaluation','application/json',time.time())
         # Gate before committing any candidate/report to the public namespace.
         bundle=build_update(chain,model,evaluation,report,identity)
-        store.commit_generated(snapshot,kind='model',media_type='application/octet-stream')
+        store.import_file(snapshot,kind='model',media_type='application/octet-stream')
         evaluation_path=Path(temporary)/'evaluation.json';evaluation_path.write_bytes(encoded)
-        store.commit_generated(evaluation_path,kind='evaluation',media_type='application/json')
+        store.import_file(evaluation_path,kind='evaluation',media_type='application/json')
         descriptor=Path(temporary)/'descriptor.json';descriptor.write_bytes(canonical(bundle['descriptor']))
-        store.commit_generated(descriptor,kind='other',media_type='application/json')
+        store.import_file(descriptor,kind='other',media_type='application/json')
         release=registry.install(chain+[bundle],store)
     print(json.dumps({'release_id':release.release_id,'sequence':release.sequence,'model_id':release.model_artifact_id,
         'scope':'Known-operator public language pilot; active expert permissions unchanged'}))

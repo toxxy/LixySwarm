@@ -13,7 +13,8 @@ from src.learning.public_bases import base_hash
 from src.learning.public_conversation import public_corpus, corpus_digest
 from src.network.artifact_store import ArtifactService, ArtifactStore
 from src.network.bootstrap import get_seed_endpoints
-from src.network.client_state import NodeStateLock,state_directory
+from src.network.client_state import NodeStateLock,state_directory,ClientSettings
+from src.network.public_knowledge import BandwidthBudget
 from src.network.language_training import OPERATION,VERSIONED_OPERATION
 from src.network.language_version_service import fetch_history
 from src.network.lsp import LSPIdentity
@@ -86,14 +87,18 @@ def run(args,identity):
         hardware=SimpleNamespace(cpu_cores=1, ram_gb=1, disk_gb=1, has_gpu=False, gpu_vram_gb=0),
         storage_path=args.directory))
     store = ArtifactStore(args.directory/'gradients', max_artifact_bytes=32*1024**2, max_total_bytes=256*1024**2)
-    artifacts = ArtifactService(work, store, namespace='language.artifact', register_handlers=False)
+    def receive_rate():
+        controls=ClientSettings.load(state_directory())
+        return min(2.5,controls.policy.max_bandwidth_mbps/2) if controls.connected and not controls.paused else 0
+    artifacts = ArtifactService(work, store, namespace='language.artifact', register_handlers=False,
+        receive_budget=BandwidthBudget(receive_rate))
     report = {'schema_version': 1, 'scope': 'Explicit public-data gradient pilot; no model promoted',
         'physical_workers': args.worker, 'requester_id': identity.node_id_hex,
         'requester_is_extra_physical_worker': False, 'contributions': [], 'success': False,
         'candidate_promoted': False, 'started_at': time.time()}
     report.update(base_name=args.base_name,operation=OPERATION if args.legacy else VERSIONED_OPERATION,
         signed_results=[],shard_plan=[{'worker_id':worker,'start':index*args.count,'count':args.count} for index,worker in plan],
-        parallel_jobs=parallel_jobs)
+        parallel_jobs=parallel_jobs,receive_bandwidth_mbps=receive_rate())
     path = args.directory/'report.json'
     atomic_json(path, report)
     try:
@@ -139,8 +144,20 @@ def run(args,identity):
             output = result.output
             if output['base_hash'] != base_hash(args.base_name) or any(output[k] != payload[k] for k in ['adapter_id','dataset_id','start','count']):
                 raise ValueError('Returned language contribution is from another version or shard')
-            gradient = artifacts.fetch(output['gradient_id'], peer_id=worker, timeout_s=60,
-                expected_size=output['gradient_bytes'],cancel_event=cancelled)
+            # Preserve the signed calculation before acquiring its bytes. A
+            # transport failure must not erase the proof of completed work.
+            atomic_json(args.directory/f'signed-contribution-{index}.json',{
+                'result':result.to_dict(),'worker_id':worker,'base_name':args.base_name,
+                'release_id':None if args.legacy else report['head']['release']['release_id'],
+                'compute_seconds':compute_seconds,'request_started_at':began_at})
+            for attempt in range(3):
+                try:
+                    gradient = artifacts.fetch(output['gradient_id'], peer_id=worker, timeout_s=120,
+                        expected_size=output['gradient_bytes'],cancel_event=cancelled)
+                    break
+                except (OSError,ValueError,RuntimeError,TimeoutError):
+                    if attempt==2 or cancelled.is_set():raise
+                    route=connect(worker)
             row={**output, 'path': str(gradient), 'worker_id': worker,
                 'seconds': round(time.monotonic()-started, 3), 'receipt': result.receipt,
                 'compute_seconds':compute_seconds,'request_started_at':began_at,'received_at':time.time(),

@@ -1,6 +1,7 @@
 """Request a public language expert across Internet, without loading tensors."""
 from __future__ import annotations
 import argparse
+import ipaddress
 import json
 import sys
 import time
@@ -34,6 +35,9 @@ def main():
         while args.worker not in node.connected_node_ids:
             if time.monotonic()>until:raise RuntimeError("Public expert connection deadline exceeded")
             node.connect_node(args.worker,timeout=12);time.sleep(0.1)
+        route=next(item for item in node.peers() if item['node_id']==args.worker)
+        if not route['encrypted'] or not ipaddress.ip_address(route.get('relay_host') or route['host']).is_global:
+            raise ValueError('Language probe requires encrypted public Internet transport')
         for messages in [[{"role":"user","content":"¿Qué es una red descentralizada? Contesta en español y brevemente."}],
                          [{"role":"user","content":"Three computers hold the same learned model. If one disconnects, is the model necessarily lost? Explain briefly."}],
                          [{"role":"user","content":"In this fictional example, the expert is named Amber."},{"role":"assistant","content":"The expert is Amber."},
@@ -48,7 +52,7 @@ def main():
                                      "seconds":time.monotonic()-started,"receipt":result.receipt})
             print(json.dumps({"answer":result.output["answer"],"seconds":report["results"][-1]["seconds"]},ensure_ascii=False),flush=True)
         route=next(item for item in node.peers() if item["node_id"]==args.worker)
-        report.update(success=True,transport=route["transport"],encrypted=route["encrypted"])
+        report.update(success=True,transport=route["transport"],encrypted=route["encrypted"],public_internet=True)
         args.report.parent.mkdir(parents=True,exist_ok=True);args.report.write_text(json.dumps(report,ensure_ascii=False,indent=2)+"\n")
     finally:work.close();node.stop()
 
