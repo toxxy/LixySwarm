@@ -164,6 +164,8 @@ La evaluación sigue siendo predicción de bytes sobre hechos sintéticos conoci
 
 El [CI f806197](https://github.com/toxxy/LixySwarm/actions/runs/38579619373) completó los tres paquetes después de la corrección del cierre. Las pruebas de ambos ejecutables por Internet adquirieron la versión 6 y terminaron limpiamente. Una observación adicional detectó demora al recorrer direcciones antiguas de ensayos: el catálogo inicial añade dos identidades de proveedores operados como pistas de conexión directa por identidad, antes de continuar la búsqueda general. Estas pistas no otorgan autoridad sobre modelos ni sustituyen la validación de firmas. El reporte del ejecutable registra ahora el tiempo de adquisición además del tiempo de conexión.
 
+La verificación final pasó 128 pruebas y el [CI b4e8bfd](https://github.com/toxxy/LixySwarm/actions/runs/38580594941) completó los tres paquetes. Los ejecutables Linux se conectaron en 0,72 y 0,76 segundos, y adquirieron 13.092.926 bytes de la cadena de la versión 6 en 58,58 y 66,34 segundos durante dos descargas concurrentes con presupuesto. La adquisición permaneció independiente de la conexión inicial. Conservación, pausa, reconexión y cierre pasaron; ambos lanzadores se actualizaron. Los servicios mantienen la versión 6, dos rondas terminadas en la primera PC y GPU cero al finalizar.
+
 Desde el checkout y su entorno Python con `cryptography`:
 
 ```bash
