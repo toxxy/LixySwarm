@@ -1,0 +1,23 @@
+{
+  "success": true,
+  "internet": true,
+  "public_knowledge_ready": true,
+  "public_release_id": "977603e7a2c2070d6cd1c705e53f763d7e31057d5980f36cc02aefb2bb7ce25c",
+  "public_model_id": "23e44d2c2f0834f798c4309b7f0360cae0b9d4769bb84a452498e95d322524a9",
+  "public_bytes": 13092926,
+  "model_acquisition_s": 42.03,
+  "engine_downloaded_and_verified": true,
+  "engine_frozen": true,
+  "engine_candidate_evaluated": true,
+  "engine_devices": [
+    "cpu"
+  ],
+  "pause_preserves_public_weights": true,
+  "connection_s": 0.72,
+  "controls_confirmed": true,
+  "pause_keeps_connection": true,
+  "reconnect_keeps_identity": true,
+  "calculation_engines_loaded": false,
+  "scope": "Frozen Linux app: Internet model acquisition plus public CPU engine download and standalone checks",
+  "engine_release": "https://github.com/toxxy/LixySwarm/releases/tag/cpu-engine-0.4.0a1"
+}

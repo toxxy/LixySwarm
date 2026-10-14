@@ -26,6 +26,7 @@ class EngineSettings:
     command:list[str]=field(default_factory=list)
     training_requesters:list[str]=field(default_factory=list)
     devices:list[str]=field(default_factory=lambda:["cpu","cuda"])
+    cpu_command:list[str]=field(default_factory=list)
 
     def validate(self):
         if type(self.version) is not int or self.version!=1 or type(self.enabled) is not bool:
@@ -38,6 +39,12 @@ class EngineSettings:
             raise ValueError("Invalid known pilot requesters")
         if not isinstance(self.devices,list) or not 1<=len(self.devices)<=2 or len(set(self.devices))!=len(self.devices) or any(x not in {"cpu","cuda"} for x in self.devices):
             raise ValueError("Invalid locally installed engine devices")
+        if not isinstance(self.cpu_command,list) or len(self.cpu_command)>4 or any(not isinstance(x,str) or not x or len(x)>4096 for x in self.cpu_command) or (self.cpu_command and not Path(self.cpu_command[0]).is_absolute()):
+            raise ValueError("Invalid locally installed CPU engine command")
+
+    def command_for(self,device):
+        if device=="cpu" and self.cpu_command: return self.cpu_command
+        return self.command if device in self.devices else []
 
     def save(self,directory):
         self.validate(); atomic_json(Path(directory)/"compute-engine.json",asdict(self))
@@ -49,7 +56,7 @@ class EngineSettings:
         if path.stat().st_size>20*1024: raise ValueError("Engine settings exceed their bound")
         value=json.loads(path.read_text())
         base={"version","enabled","command","training_requesters"}
-        if set(value) not in (base,base|{"devices"}):
+        if not base<=set(value) or set(value)-base-{"devices","cpu_command"}:
             raise ValueError("Invalid engine settings schema")
         result=cls(**value); result.validate(); return result
 
@@ -81,11 +88,15 @@ class ReferenceComputeService:
         self.ready=bool(self.engine.enabled and settings.connected and not settings.paused
             and settings.policy.mode in {"balanced","maximum"} and settings.policy.cpu_percent>0
             and settings.policy.max_cpu_jobs>0 and settings.policy.max_ram_gb>=1
-            and self.knowledge.complete and all(Path(arg).is_file() for arg in self.engine.command))
+            and self.knowledge.complete and self._installed())
+
+    def _installed(self):
+        command=self.engine.command_for("cpu")
+        return bool(command) and all(Path(arg).is_file() for arg in command)
 
     def snapshot(self):
         with self.lock:
-            installed=self.engine.enabled and bool(self.engine.command) and all(Path(arg).is_file() for arg in self.engine.command)
+            installed=self.engine.enabled and self._installed()
             return {"installed":installed,"ready":self.ready,"active":self.active,"completed":self.completed,
                     "devices":list(self.engine.devices) if installed else []}
 
@@ -116,7 +127,8 @@ class ReferenceComputeService:
         policy=self.settings.policy
         permission=asdict(policy); engine_permission=asdict(self.engine)
         gpu=execution.resource_requirements().gpu_required
-        if ("cuda" if gpu else "cpu") not in self.engine.devices:
+        command=self.engine.command_for("cuda" if gpu else "cpu")
+        if not command or not all(Path(arg).is_file() for arg in command):
             raise ComputeProcessError("The locally installed engine does not support this device")
         if gpu and (not self.resources["has_gpu"] or policy.gpu_percent<=0):
             raise ComputeProcessError("GPU work is not available within current permission")
@@ -133,7 +145,7 @@ class ReferenceComputeService:
         with self.lock: self.active+=1
         self.changed.set()
         try:
-            result=self.supervisor.run(self.engine.command,request,execution,
+            result=self.supervisor.run(command,request,execution,
                 allowed=lambda:self.ready and asdict(self.settings.policy)==permission and asdict(self.engine)==engine_permission,
                                       ram_gb=execution.resource_requirements().ram_gb)
             if action=="training":

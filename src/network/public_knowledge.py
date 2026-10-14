@@ -124,7 +124,7 @@ class PublicKnowledgeService:
             self.desired_release_id=head.release_id; self.desired_sequence=head.sequence
         self._status = {"state":"disabled", "family":catalog.family, "release_id":None,
                         "model_id":None, "sequence":None, "error":None, "versions_done":0}
-        self.budget = BandwidthBudget(lambda: self.policy.max_bandwidth_mbps if self.allowed else 0)
+        self.budget = BandwidthBudget(self._artifact_rate)
         self.artifacts.receive_budget = self.budget
         self.work.register_handler("artifact.describe.v1", "artifact", self._guard(self.artifacts._describe),permit_cached=self._permit_cached)
         self.work.register_handler("artifact.read-chunk.v1", "artifact", self._guard(self._chunk),permit_cached=self._permit_cached)
@@ -133,6 +133,19 @@ class PublicKnowledgeService:
         node.on_release_announced(self._on_release)
         node.on_peer_connected(self._announce_current)
         self.restore()
+
+    def _artifact_rate(self):
+        if not self.allowed: return 0
+        rate=self.policy.max_bandwidth_mbps
+        path=self.directory/"engine-preparation.json"
+        try:
+            if path.stat().st_size>1024: return rate
+            value=json.loads(path.read_text())
+            if not isinstance(value,dict): return rate
+            if value.get("state")=="downloading" and 0<=time.time()-value["updated_at"]<=5:
+                return rate/2
+        except (OSError,ValueError,TypeError,KeyError): pass
+        return rate
 
     def _announce_current(self,peer_id,*_):
         if not self.allowed or not self.complete: return

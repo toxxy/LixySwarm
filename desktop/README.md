@@ -1,6 +1,6 @@
 # App de LixySwarm
 
-Vista previa `0.4.0a1` del participante instalable. Incluye Estado, Chat, Recursos y Actividad. La conexión, los permisos locales, la pausa y la reconexión tienen un proceso de red separado de la interfaz. El chat permanece en preparación hasta integrar el modelo y la inferencia distribuida.
+Vista previa `0.4.0a2` del participante instalable. Incluye Estado, Chat, Recursos y Actividad. La conexión, los permisos locales, la pausa y la reconexión tienen un proceso de red separado de la interfaz. El chat permanece en preparación hasta integrar el modelo y la inferencia distribuida.
 
 El ejecutable incluye Python y los componentes de interfaz y transporte. La instalación por usuario conserva la identidad y el estado fuera del paquete. En Linux crea una entrada en el menú de aplicaciones; Windows y macOS tienen sus propios adaptadores de instalación.
 
@@ -32,3 +32,11 @@ Una reducción de cuota por debajo de los archivos conservados pausa su servicio
 La clave de cifrado personal se genera en el almacén protegido del sistema. Si falta o está bloqueado, la memoria personal conserva estado pendiente. No hay clave alternativa en archivo plano. La pérdida de una clave existente no genera una sustituta que inutilice el contenido cifrado. La integración de Matriarca y conversación persistente continúa en las etapas de aprendizaje y memoria.
 
 La instalación por usuario guarda cada versión del paquete identificada por su contenido y actualiza el lanzador. Conserva las versiones previas y mantiene el estado personal fuera de ellas. El arranque automático se integra con el servicio de referencia de Linux; la configuración equivalente por plataforma sigue pendiente.
+
+## Preparación automática del motor CPU
+
+Al guardar un perfil con CPU y al menos 2 GB de RAM, la app prepara el motor dentro del permiso de almacenamiento y conexión. En una entrada nueva también habilita el modelo público; respeta una retirada previa del permiso de compartir. La conexión a la red empieza antes de estas descargas. Recursos muestra progreso y permite reanudar; pausar o desconectar conserva el archivo parcial.
+
+Los [motores CPU públicos](https://github.com/toxxy/LixySwarm/releases/tag/cpu-engine-0.4.0a1) se descargan por HTTPS sin cuenta. El catálogo incluido en la app fija plataforma, arquitectura, tamaño, SHA-256 del ZIP y SHA-256 del manifiesto. Se verifica todo antes de seleccionar el ejecutable. El ZIP se extrae con límites y rechazo de rutas que escapen o archivos adicionales. La preparación reserva la mitad del presupuesto de conexión y deja la otra mitad para conocimiento público.
+
+El motor incluye su intérprete y PyTorch CPU; la app y el nodo permanecen ligeros. Una instalación CPU conserva el motor CUDA local anterior si sigue disponible. Las operaciones son las del modelo de bytes de referencia: esto no habilita conversación ni entrenamiento abierto de desconocidos. La distribución automática CUDA, la calidad conversacional y la instalación física de Windows/macOS conservan sus gates.

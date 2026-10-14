@@ -68,6 +68,23 @@ def test_shared_storage_requires_separate_consent_and_rejects_unknown_fields(tmp
         KnowledgeSettings.load(tmp_path)
 
 
+def test_engine_preparation_reserves_half_bandwidth_and_stale_state_releases_it(tmp_path):
+    catalog,_=run_fixture(tmp_path/"run")
+    participant=node(tmp_path/"participant")
+    service=PublicKnowledgeService(participant,tmp_path/"participant",RESOURCES,catalog=catalog)
+    try:
+        service.update(ClientSettings(),KnowledgeSettings(enabled=True,consented_at=time.time()))
+        original=service.budget.rate()
+        marker=tmp_path/"participant/engine-preparation.json"
+        marker.write_text(json.dumps({"state":"downloading","updated_at":time.time()}))
+        assert service.budget.rate()==original/2
+        marker.write_text(json.dumps({"state":"downloading","updated_at":time.time()-30}))
+        assert service.budget.rate()==original
+        marker.write_text("[]")
+        assert service.budget.rate()==original
+    finally:service.close()
+
+
 def test_import_only_copies_signed_release_objects_and_never_other_banks(tmp_path):
     source = tmp_path/"old-run"; source.mkdir()
     catalog, chain = run_fixture(source)

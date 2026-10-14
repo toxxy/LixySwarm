@@ -40,7 +40,7 @@ def safe_relative(value):
     return path
 
 
-def verify_package(directory, trusted_manifest_sha256):
+def verify_package(directory, trusted_manifest_sha256, *, target_platform=None, target_machine=None):
     root = Path(directory).resolve()
     if not isinstance(trusted_manifest_sha256, str) or not HEX.fullmatch(trusted_manifest_sha256):
         raise ValueError("Engine installation requires a locally trusted manifest digest")
@@ -52,11 +52,11 @@ def verify_package(directory, trusted_manifest_sha256):
     manifest = json.loads(manifest_path.read_text())
     if not isinstance(manifest, dict) or set(manifest) != {"version", "name", "platform", "machine", "torch", "operations", "entrypoint", "files"}:
         raise ValueError("Invalid engine package schema")
-    if manifest["version"] != 1 or manifest["name"] != "LixySwarmEngineCPU" or manifest["platform"] != sys.platform or manifest["machine"] != platform.machine():
+    if manifest["version"] != 1 or manifest["name"] != "LixySwarmEngineCPU" or manifest["platform"] != (target_platform or sys.platform) or manifest["machine"] != (target_machine or platform.machine()):
         raise ValueError("Engine package is incompatible with this machine")
     if manifest["operations"] != ["reference.inference.v1", "training.gradient.v1", "reference.candidate.v1"]:
         raise ValueError("Unsupported engine operations")
-    expected_entry = "LixySwarmEngineCPU.exe" if sys.platform == "win32" else "LixySwarmEngineCPU"
+    expected_entry = "LixySwarmEngineCPU.exe" if (target_platform or sys.platform) == "win32" else "LixySwarmEngineCPU"
     if manifest["entrypoint"] != expected_entry:
         raise ValueError("Invalid engine entry point")
     files = manifest["files"]
@@ -111,12 +111,18 @@ def install_package(directory, trusted_manifest_sha256, state_directory):
                 verify_package(destination, trusted_manifest_sha256)
     manifest = verify_package(destination, trusted_manifest_sha256)
     if sys.platform != "win32":
-        # Artifact ZIPs do not preserve executable bits. Apply this only after
+        # Archive extraction can lose executable bits. Apply this only after
         # the locally trusted digest and every installed file were verified.
         (destination / manifest["entrypoint"]).chmod(0o755)
     settings = EngineSettings.load(state_directory)
-    settings.command = [str((destination / manifest["entrypoint"]).resolve())]
+    command = [str((destination / manifest["entrypoint"]).resolve())]
+    if settings.enabled and "cuda" in settings.devices and settings.command and all(Path(arg).is_file() for arg in settings.command):
+        settings.cpu_command = command
+        if "cpu" not in settings.devices: settings.devices.append("cpu")
+    else:
+        settings.command = command
+        settings.cpu_command = []
+        settings.devices = ["cpu"]
     settings.enabled = True
-    settings.devices = ["cpu"]
     settings.save(state_directory)
-    return settings.command[0]
+    return command[0]

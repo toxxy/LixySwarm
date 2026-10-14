@@ -192,7 +192,7 @@ class LearningCoordinator:
                 "dataset_id":PUBLIC_DATASET_ID,"contributions":contributions}
             try:
                 with lease:
-                    evaluated=self.compute.supervisor.run(self.compute.engine.command,request,Execution(),
+                    evaluated=self.compute.supervisor.run(self.compute.engine.command_for("cpu"),request,Execution(),
                         allowed=lambda:self._authorized(cancel,configuration),ram_gb=2)
             finally:
                 shutil.rmtree(job)

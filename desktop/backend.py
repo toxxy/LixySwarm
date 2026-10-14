@@ -14,6 +14,8 @@ from src.network.client_state import ClientSettings
 from src.network.telemetry import verify_status
 from src.network.public_knowledge import KnowledgeSettings
 from src.network.learning_coordinator import LearningSettings
+from src.network.engine_catalog import cpu_engine
+from src.network.engine_download import prepare_engine
 
 
 class NodeController:
@@ -112,6 +114,41 @@ class NodeController:
 
     def stop_learning(self):
         settings=self.learning_settings(); settings.enabled=False; settings.save(self.directory)
+
+    def prepare_cpu_engine(self, *, progress=lambda *_:None, cancel_event=None):
+        entry=cpu_engine()
+        if entry is None: raise ValueError("Aún no hay un motor CPU publicado para esta plataforma")
+        settings=self.settings(); policy=settings.policy
+        if not settings.connected or settings.paused or policy.mode not in {"balanced","maximum"} or policy.cpu_percent<=0 or policy.max_cpu_jobs<=0 or policy.max_ram_gb<2:
+            raise ValueError("Elige recursos de CPU y al menos 2 GB de RAM antes de preparar el motor")
+        from src.network.artifact_store import ArtifactStore
+        public_bytes=ArtifactStore(self.directory/"public/artifacts").total_bytes()
+        engine_bytes=sum(p.stat().st_size for p in (self.directory/"engines").rglob("*") if p.is_file())
+        required=entry.bytes+2*entry.installed_bytes
+        if public_bytes+engine_bytes+required>policy.max_disk_gb*1024**3:
+            raise ValueError("El permiso de almacenamiento no alcanza para preparar este motor")
+        import shutil
+        if shutil.disk_usage(self.directory).free<required:
+            raise ValueError("No hay suficiente espacio libre para preparar el motor")
+        permission=asdict(policy)
+        def allowed():
+            current=self.settings()
+            return current.connected and not current.paused and asdict(current.policy)==permission
+        return prepare_engine(entry,self.directory,allowed=allowed,
+                              rate_mbps=lambda:self.settings().policy.max_bandwidth_mbps/2,
+                              progress=progress,cancel_event=cancel_event)
+
+    def cpu_engine_prepared(self):
+        entry=cpu_engine()
+        if entry is None: return False
+        from src.network.reference_compute import EngineSettings
+        try:
+            settings=EngineSettings.load(self.directory)
+            command=settings.command_for("cpu")
+            folder=(self.directory/"engines"/entry.manifest_sha256).resolve()
+            return bool(settings.enabled and command and Path(command[0]).is_file()
+                        and Path(command[0]).resolve().parent==folder)
+        except (OSError,ValueError,TypeError): return False
 
     def confirmed_settings(self):
         snapshot = self.snapshot()

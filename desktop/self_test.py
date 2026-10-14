@@ -17,6 +17,7 @@ def main():
     parser.add_argument("--self-test", action="store_true")
     parser.add_argument("--internet", action="store_true")
     parser.add_argument("--knowledge", action="store_true")
+    parser.add_argument("--prepare-engine", action="store_true")
     parser.add_argument("--report", type=Path)
     parser.add_argument("--screenshot", type=Path)
     args = parser.parse_args()
@@ -51,7 +52,7 @@ def main():
                                  address_book_path=root / "seed-peers.json", target_outbound=0, allow_private=True)
                 seed.start()
                 os.environ["LIXYSWARM_BOOTSTRAP_SEEDS"] = f"127.0.0.1:{seed.port}"
-            window = SwarmWindow(controller, initialize_personal=False); window.show(); app.processEvents()
+            window = SwarmWindow(controller, initialize_personal=False,auto_prepare=args.prepare_engine); window.show(); app.processEvents()
             assert window.tabs.count() == 4
             started = time.monotonic()
             window.connect_button.click()
@@ -80,8 +81,22 @@ def main():
                               public_model_id=release.model_artifact_id, public_bytes=store.total_bytes(),
                               model_acquisition_s=round(time.monotonic()-acquiring_started,2))
             window.profile.setCurrentIndex(0); window.cpu.setValue(17); window.gpu.setValue(12)
+            if args.prepare_engine: window.bandwidth.setValue(100)
+            engine_started=time.monotonic()
             window.save_resources()
             wait(lambda: controller.confirmed_settings() and controller.snapshot()["diagnostics"]["settings"]["policy"]["cpu_percent"] == 17)
+            if args.prepare_engine:
+                wait(lambda: window.engine_preparation is not None and not window.engine_preparation.isRunning(), timeout=600)
+                assert controller.cpu_engine_prepared(), window.engine_label.text()
+                from src.network.reference_compute import EngineSettings
+                import subprocess
+                engine=EngineSettings.load(controller.directory)
+                engine_result=subprocess.run([*engine.command_for("cpu"),"--self-test"],capture_output=True,text=True,timeout=60,check=True)
+                checked=json.loads(engine_result.stdout)
+                assert checked["success"] and checked["candidate_evaluated"] and not checked["candidate_signed_or_promoted"]
+                report.update(engine_downloaded_and_verified=True,engine_frozen=checked["frozen"],
+                              engine_candidate_evaluated=checked["candidate_evaluated"],engine_devices=engine.devices,
+                              engine_preparation_s=round(time.monotonic()-engine_started,2))
             window.pause_button.click()
             wait(lambda: controller.snapshot()["status"].get("state") == "paused")
             assert len(controller.snapshot()["diagnostics"]["peers"]) > 0
@@ -118,6 +133,9 @@ def main():
                 # Dispose QObject connections while QApplication and Python
                 # callbacks are still alive, before interpreter shutdown.
                 from PySide6.QtCore import QCoreApplication,QEvent
+                if window.engine_preparation is not None and window.engine_preparation.isRunning():
+                    window.engine_preparation.cancel.set()
+                    window.engine_preparation.wait(15000)
                 window.timer.stop()
                 window.close()
                 window.deleteLater()

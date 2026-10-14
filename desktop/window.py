@@ -3,6 +3,8 @@ from __future__ import annotations
 from dataclasses import asdict
 from pathlib import Path
 import sys
+import threading
+import time
 
 from PySide6.QtCore import QTimer, QThread, Signal
 from PySide6.QtGui import QDesktopServices
@@ -10,12 +12,14 @@ from PySide6.QtCore import QUrl
 from PySide6.QtWidgets import (
     QApplication, QCheckBox, QComboBox, QDoubleSpinBox, QFormLayout,
     QHBoxLayout, QLabel, QMainWindow, QMessageBox, QPushButton, QSpinBox,
-    QTabWidget, QTextEdit, QVBoxLayout, QWidget,
+    QTabWidget, QTextEdit, QVBoxLayout, QWidget, QProgressBar,
 )
 
 from src.contribution.policy import ContributionPolicy
 from src.network.client_state import ClientSettings, state_directory
 from desktop.backend import NodeController
+from src.network.engine_catalog import cpu_engine
+from src.network.telemetry import atomic_json
 
 STYLE = """
 QWidget { background: #101713; color: #e9f1ec; font: 14px 'Noto Sans'; }
@@ -60,10 +64,26 @@ class Installation(QThread):
             self.finished_install.emit("No se pudo instalar. La app puede seguir usándose desde esta carpeta.")
 
 
+class EnginePreparation(QThread):
+    advanced=Signal(str,int,int)
+    completed=Signal(bool,str)
+
+    def __init__(self,controller,parent=None):
+        super().__init__(parent); self.controller=controller; self.cancel=threading.Event()
+
+    def run(self):
+        try:
+            self.controller.prepare_cpu_engine(progress=self.advanced.emit,cancel_event=self.cancel)
+            self.completed.emit(True,"Motor CPU preparado; el cálculo respeta tus permisos")
+        except Exception as error:
+            self.completed.emit(False,str(error))
+
+
 class SwarmWindow(QMainWindow):
-    def __init__(self, controller=None, *, initialize_personal=True):
+    def __init__(self, controller=None, *, initialize_personal=True, auto_prepare=True):
         super().__init__()
         self.controller = controller or NodeController(state_directory())
+        self.auto_prepare=auto_prepare; self.engine_preparation=None; self.engine_phase=""
         self.setWindowTitle("LixySwarm")
         self.resize(900, 760)
         self.setMinimumSize(720, 680)
@@ -117,10 +137,16 @@ class SwarmWindow(QMainWindow):
         self.bandwidth = QDoubleSpinBox(); self.bandwidth.setRange(0, 10000); self.bandwidth.setSuffix(" Mbps"); form.addRow("Presupuesto de conexión", self.bandwidth)
         self.battery = QCheckBox("Pausar cálculo cuando esté usando batería"); form.addRow(self.battery)
         resources.addLayout(form)
-        note = QLabel("Estos permisos quedan guardados en tu equipo. El cálculo comienza cuando hay trabajo compatible y un motor preparado.")
+        note = QLabel("Al autorizar CPU se preparan el motor y el modelo público para colaborar. El cálculo respeta tus límites. La preparación reserva la mitad del presupuesto de conexión.")
         note.setWordWrap(True); note.setObjectName("muted"); resources.addWidget(note)
         save = QPushButton("Guardar límites"); save.clicked.connect(self.save_resources); resources.addWidget(save)
-        self.applied = QLabel(); resources.addWidget(self.applied); resources.addStretch()
+        self.applied = QLabel(); resources.addWidget(self.applied)
+        self.engine_label=QLabel("Motor CPU: pendiente de preparación")
+        self.engine_label.setWordWrap(True); resources.addWidget(self.engine_label)
+        self.engine_progress=QProgressBar(); self.engine_progress.setRange(0,100); self.engine_progress.setVisible(False)
+        resources.addWidget(self.engine_progress)
+        self.engine_button=QPushButton("Preparar motor CPU")
+        self.engine_button.clicked.connect(self.prepare_engine); resources.addWidget(self.engine_button); resources.addStretch()
 
         activity = self._page("Actividad")
         self.learning_label=QLabel("Aprendizaje distribuido: preparando coordinación")
@@ -200,6 +226,7 @@ class SwarmWindow(QMainWindow):
             settings.policy = self.chosen_policy(); settings.paused = False
             self.controller.start(settings)
         self._action(action)
+        self.maybe_prepare_engine()
 
     def pause_node(self):
         self._action(lambda: self.controller.pause(not self.controller.settings().paused))
@@ -209,11 +236,56 @@ class SwarmWindow(QMainWindow):
 
     def save_resources(self):
         self._action(lambda: self.controller.save_policy(self.chosen_policy()))
+        self.maybe_prepare_engine()
+
+    def maybe_prepare_engine(self):
+        try: settings=self.controller.settings()
+        except (OSError,ValueError,TypeError): return
+        policy=settings.policy
+        if self.auto_prepare and settings.connected and not settings.paused and policy.mode in {"balanced","maximum"} and policy.cpu_percent>0 and policy.max_ram_gb>=2 and not self.controller.cpu_engine_prepared() and cpu_engine() is not None:
+            if not (self.controller.directory/"public-knowledge.json").exists():
+                self.controller.share_knowledge(True)
+            self.prepare_engine()
 
     def toggle_knowledge(self):
         self._action(lambda: self.controller.share_knowledge(not self.controller.knowledge_settings().enabled))
 
+    def prepare_engine(self):
+        if self.engine_preparation is not None and self.engine_preparation.isRunning(): return
+        self.engine_phase="preparing"; self.engine_progress.setValue(0); self.engine_progress.setVisible(True)
+        self.engine_preparation=EnginePreparation(self.controller,self)
+        self.engine_preparation.advanced.connect(self.engine_advanced)
+        self.engine_preparation.completed.connect(self.engine_completed)
+        self.engine_preparation.start(); self.refresh()
+
+    def engine_advanced(self,phase,done,total):
+        self.engine_phase=phase
+        labels={"downloading":"Descargando motor CPU", "verifying":"Verificando descarga",
+                "extracting":"Preparando archivos", "installing":"Verificando instalación", "complete":"Motor CPU preparado"}
+        self.engine_label.setText(labels.get(phase,"Preparando motor CPU")
+                                  +(f" · {done/1024**2:.1f} de {total/1024**2:.1f} MB" if total else ""))
+        self.engine_progress.setValue(int(100*done/max(1,total)))
+        self.engine_heartbeat()
+
+    def engine_heartbeat(self):
+        atomic_json(self.controller.directory/"engine-preparation.json",
+                    {"state":self.engine_phase,"updated_at":time.time()})
+
+    def engine_completed(self,success,message):
+        self.engine_phase="complete" if success else "stopped"; self.engine_heartbeat()
+        self.engine_label.setText(message); self.engine_progress.setVisible(False)
+        self.refresh()
+
     def refresh(self):
+        preparing=self.engine_preparation is not None and self.engine_preparation.isRunning()
+        if preparing: self.engine_heartbeat()
+        entry=cpu_engine()
+        try: policy=self.controller.settings().policy
+        except (OSError,ValueError,TypeError): policy=ClientSettings().policy
+        prepared=self.controller.cpu_engine_prepared()
+        self.engine_button.setEnabled(not preparing and not prepared and entry is not None
+            and policy.mode in {"balanced","maximum"} and policy.cpu_percent>0 and policy.max_ram_gb>=2)
+        self.engine_button.setText("Motor CPU preparado" if prepared else "Reanudar preparación" if self.engine_phase=="stopped" else "Preparar motor CPU")
         snapshot = self.controller.snapshot(); status = snapshot["status"]
         diagnostic = snapshot["diagnostics"]
         state = status.get("state") if snapshot["fresh"] else "stopped"
@@ -274,6 +346,9 @@ class SwarmWindow(QMainWindow):
         self.installation.start()
 
     def closeEvent(self, event):
+        if self.engine_preparation is not None and self.engine_preparation.isRunning():
+            self.engine_preparation.cancel.set(); self.engine_preparation.wait(100)
+            if self.engine_preparation.isRunning(): event.ignore(); return
         if self.installation is not None and self.installation.isRunning():
             event.ignore(); return
         if self.personal_preparation is not None and self.personal_preparation.isRunning():
