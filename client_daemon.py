@@ -196,7 +196,11 @@ def main():
     parser.add_argument("--install-user-service", action="store_true")
     parser.add_argument("--allow-private", action="store_true", help=argparse.SUPPRESS)
     args = parser.parse_args()
-    logging.basicConfig(level=logging.INFO, format="%(asctime)s %(name)s %(message)s")
+    handlers = None
+    if sys.stderr is None:
+        args.state_dir.mkdir(parents=True, exist_ok=True, mode=0o700)
+        handlers = [logging.FileHandler(args.state_dir / "client.log")]
+    logging.basicConfig(level=logging.INFO, format="%(asctime)s %(name)s %(message)s", handlers=handlers)
     if args.install_user_service:
         install_user_service(args.state_dir, host=args.host, port=args.port)
     else:
