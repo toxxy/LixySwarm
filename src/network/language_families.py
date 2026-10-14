@@ -54,7 +54,7 @@ class LanguageFamilies:
         return {"available":available,"stored_bytes":self.store.total_bytes(),"sharing":bool(self.knowledge.allowed)}
 
 
-def fetch_family(work,store,root,name,provider,*,cancel_event=None,progress=lambda *_:None,receive_budget=None,preflight=lambda *_:None):
+def fetch_family(work,store,root,name,provider,*,cancel_event=None,progress=lambda *_:None,receive_budget=None,preflight=lambda *_:None,chunk_progress=lambda *_:None,observer=None):
     """Resume immutable dependencies, then make the complete family discoverable."""
     result=work.submit("language.family.v1",{"base_name":name},ResourceRequirements(kind="artifact"),
                        peer_id=provider,timeout_s=30,cancel_event=cancel_event)
@@ -64,7 +64,9 @@ def fetch_family(work,store,root,name,provider,*,cancel_event=None,progress=lamb
     preflight(bundle)
     service=ArtifactService(work,store,namespace="language.artifact",receive_budget=receive_budget,register_handlers=False)
     for identifier,size in dependencies(bundle):
-        service.fetch(identifier,peer_id=provider,timeout_s=3600,cancel_event=cancel_event,expected_size=size)
+        service.fetch(identifier,peer_id=provider,timeout_s=3600,cancel_event=cancel_event,expected_size=size,
+            progress=lambda done,total:chunk_progress(identifier,done,total),
+            observer=(lambda stats:observer(identifier,stats)) if observer is not None else None)
         manifest=store.manifest(identifier)
         if size is not None and manifest.size!=size:raise ArtifactError("Public dependency has the wrong size")
         progress(identifier,manifest.size)

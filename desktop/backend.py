@@ -12,7 +12,7 @@ from pathlib import Path
 import psutil
 
 from client_daemon import node_command
-from src.network.client_state import ClientSettings
+from src.network.client_state import ClientSettings,NodeStateLock
 from src.network.telemetry import verify_status
 from src.network.public_knowledge import KnowledgeSettings
 from src.network.learning_coordinator import LearningSettings
@@ -118,16 +118,18 @@ class NodeController:
         settings=self.learning_settings(); settings.enabled=False; settings.save(self.directory)
 
     def prepare_cpu_engine(self, *, progress=lambda *_:None, cancel_event=None):
+        with NodeStateLock(self.directory/'preparation-lock'):
+            return self._prepare_cpu_engine(progress=progress,cancel_event=cancel_event)
+
+    def _prepare_cpu_engine(self, *, progress=lambda *_:None, cancel_event=None):
         entry=cpu_engine()
         if entry is None: raise ValueError("Aún no hay un motor CPU publicado para esta plataforma")
         settings=self.settings(); policy=settings.policy
         if not settings.connected or settings.paused or policy.mode not in {"balanced","maximum"} or policy.cpu_percent<=0 or policy.max_cpu_jobs<=0 or policy.max_ram_gb<2:
             raise ValueError("Elige recursos de CPU y al menos 2 GB de RAM antes de preparar el motor")
-        from src.network.artifact_store import ArtifactStore
-        public_bytes=ArtifactStore(self.directory/"public/artifacts").total_bytes()
-        engine_bytes=sum(p.stat().st_size for p in (self.directory/"engines").rglob("*") if p.is_file())
+        from src.network.public_knowledge import managed_public_bytes
         required=entry.bytes+2*entry.installed_bytes
-        if public_bytes+engine_bytes+required>policy.max_disk_gb*1024**3:
+        if managed_public_bytes(self.directory)+required>policy.max_disk_gb*1024**3:
             raise ValueError("El permiso de almacenamiento no alcanza para preparar este motor")
         import shutil
         if shutil.disk_usage(self.directory).free<required:
@@ -182,6 +184,12 @@ class NodeController:
 
     def cancel_chat(self,request_id):
         return self._chat_call("/cancel",{"request_id":request_id})
+
+    def prepare_language(self):
+        return self._chat_call('/preparation/start',{},timeout=10)
+
+    def stop_language_preparation(self):
+        return self._chat_call('/preparation/stop',{})
 
     def confirmed_settings(self):
         snapshot = self.snapshot()

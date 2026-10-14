@@ -1,0 +1,22 @@
+{
+  "scope": "Production laptop requests physical desktop through public LSP; desktop uses app-pinned native CUDA worker and materialized public CAS",
+  "seconds": 6.0108966379921185,
+  "result": {
+    "answer": "París",
+    "provider_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+    "model_id": "badef4394af180ab75ca25f0d9d47f2406b92809b53b5845ab65d451cf9c4b3c",
+    "route": "network",
+    "context_sent": false,
+    "receipt": {
+      "version": 1,
+      "job_id": "3e0c8fc99462db7043b22e3fda634f6cfd9814dfa0eaa68f15aa064f24d03905",
+      "worker_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+      "requester_node_id": "ea914d97caafef310e50385034abae9a50ba86496b0e9cbf4679e6070e4c25b0",
+      "result_digest": "e497e65bd6fc09048a2935f5937da22f31a4e7794524631ff10b43649388e591",
+      "finished_at": 1792012096.0223112,
+      "signature": "3Mt+x5velfg89D4y13wYgsecEAzY9bXe0huEDcbLbSPFH5np1pCbY9F7O7PN2FqoONplt+qLwH48d0sWxD59CA=="
+    }
+  },
+  "uses_developer_python_for_inference": false,
+  "expert_files_newly_copied_by_vpn": false
+}

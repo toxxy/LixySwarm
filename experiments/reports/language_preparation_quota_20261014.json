@@ -1,0 +1,12 @@
+{
+  "scope": "Production A7 private API; quota rejection without changing controls or preparation intent",
+  "status": {
+    "state": "idle",
+    "done": 0,
+    "total": 0,
+    "message": "",
+    "updated_at": 1792012564.9468796
+  },
+  "quota_guard_verified": true,
+  "message": "Autoriza al menos 23.7 GB de almacenamiento para esta preparación"
+}

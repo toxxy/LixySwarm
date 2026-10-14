@@ -39,6 +39,12 @@ def main():
     work=WorkCoordinator(node,ResourceGovernor(policy,hardware=hardware,storage_path=requester))
     store=ArtifactStore(root/'artifacts',max_artifact_bytes=4*1024**3,max_total_bytes=8*1024**3)
     stop=threading.Event();report=requester/'progress.json';last_error=None
+    trace=requester/f'transfer-{time.time_ns()}.jsonl';last_trace=0
+    def timing(identifier,stats):
+        nonlocal last_trace
+        if time.monotonic()-last_trace>=10:
+            with trace.open('a') as output:output.write(json.dumps({'timestamp':time.time(),'artifact_id':identifier,**stats})+'\n')
+            last_trace=time.monotonic()
     def allowed():
         current=ClientSettings.load(directory)
         return current.connected and not current.paused and current.policy.mode!='disabled' and current.policy.max_bandwidth_mbps>0 and managed_public_bytes(directory)<=current.policy.max_disk_gb*1024**3
@@ -78,7 +84,7 @@ def main():
                 assert all(ipaddress.ip_address(p.get('relay_host') or p['host']).is_global for p in node.peers())
                 if not allowed():raise ValueError('Public contribution permission withdrawn')
                 bundle=fetch_family(work,store,root,args.base_name,args.provider,cancel_event=stop,
-                    receive_budget=budget,progress=lambda *_:status('downloading'),preflight=preflight)
+                    receive_budget=budget,progress=lambda *_:status('downloading'),preflight=preflight,observer=timing)
                 stop.set();watcher.join(timeout=1)
                 status('available');value=json.loads(report.read_text());value.update(release_id=bundle['release']['release_id'],
                     adapter_id=bundle['descriptor']['adapter_id'],success=True)

@@ -29,6 +29,7 @@ from src.network.language_compute import LanguageComputeService
 from src.network.chat_service import ChatBroker,LocalChatAPI
 from src.network.language_families import LanguageFamilies
 from src.network.language_training import LanguageTraining
+from src.network.language_preparation import LanguagePreparation
 
 log = logging.getLogger("lixy.client")
 
@@ -123,7 +124,8 @@ def run(directory: Path, *, host="0.0.0.0", port=7338, interval=15, allow_privat
         language = LanguageComputeService(knowledge,directory,resources)
         families=LanguageFamilies(knowledge,directory)
         language_training=LanguageTraining(knowledge,families,directory,resources)
-        chat=ChatBroker(node,knowledge.work,language);chat_api=LocalChatAPI(chat,directory);chat_api.start()
+        preparation=LanguagePreparation(node,knowledge,families,directory,resources)
+        chat=ChatBroker(node,knowledge.work,language);chat_api=LocalChatAPI(chat,directory,preparation);chat_api.start()
         learning = LearningCoordinator(knowledge,compute,directory)
         stop = threading.Event()
         for signum in (signal.SIGINT, signal.SIGTERM):
@@ -144,7 +146,8 @@ def run(directory: Path, *, host="0.0.0.0", port=7338, interval=15, allow_privat
             computation=compute.snapshot()
             conversation=language.snapshot()
             training=language_training.snapshot()
-            status["jobs"]={"active":computation["active"]+conversation["active"]+training["active"],"completed":computation["completed"]+conversation["completed"]+training["completed"]}
+            preparing=preparation.snapshot()
+            status["jobs"]={"active":computation["active"]+conversation["active"]+training["active"]+int(preparing['state']=='testing'),"completed":computation["completed"]+conversation["completed"]+training["completed"]}
             envelope = sign_status(identity, status)
             # Persist sequence before sending, so restart cannot reuse it.
             atomic_json(status_path, envelope)
@@ -153,13 +156,14 @@ def run(directory: Path, *, host="0.0.0.0", port=7338, interval=15, allow_privat
             atomic_json(directory / "diagnostics.json", {
                 "node_id": identity.node_id_hex, "timestamp_ms": status["timestamp_ms"],
                 "port": node.port, "peers": peers,
-                "pid": os.getpid(), "runtime_version": "0.4.0a6", "controls_version": 1,
+                "pid": os.getpid(), "runtime_version": "0.4.0a7", "controls_version": 1,
                 "settings": asdict(settings), "worker_ready": computation["ready"] or conversation["ready"] or training["ready"], "control_error": error,
                 "knowledge": public_knowledge,
                 "compute":computation,
                 "language":conversation,
                 "language_families":families.snapshot(),
                 "language_training":training,
+                "language_preparation":preparing,
                 "chat":chat.snapshot(),
                 "learning":learning.snapshot(),
             })
@@ -210,6 +214,7 @@ def run(directory: Path, *, host="0.0.0.0", port=7338, interval=15, allow_privat
                 compute.update(settings)
                 language.update(settings)
                 language_training.update(settings)
+                preparation.update()
                 chat.update(settings)
                 learning.update()
                 current_state = "disconnected" if not running else "paused" if settings.paused else "connected" if node.peer_count else "connecting"
@@ -236,6 +241,9 @@ def run(directory: Path, *, host="0.0.0.0", port=7338, interval=15, allow_privat
                                     public_state["versions_done"], public_state["sharing"])
                 if running and current_state == "connected" and public_state["state"] == "downloading":
                     current_state = "preparing"
+                preparing=preparation.snapshot()['state']
+                if running and not settings.paused and preparing not in {'idle','waiting','stopped','complete'}:
+                    current_state='working' if preparing=='testing' else 'preparing'
                 if running and not settings.paused and (compute.snapshot()["active"] or language.snapshot()["active"] or language_training.snapshot()['active']):
                     current_state="working"
                 if knowledge_change != last_knowledge:
@@ -256,6 +264,7 @@ def run(directory: Path, *, host="0.0.0.0", port=7338, interval=15, allow_privat
                 stop.wait(0.5)
             publish("disconnected", settings)
         finally:
+            preparation.close()
             chat_api.close()
             learning.close()
             compute.ready=False

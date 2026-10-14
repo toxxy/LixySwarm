@@ -81,7 +81,7 @@ class LanguageComputeService:
         self.ready=bool(self.engine.enabled and settings.connected and not settings.paused and settings.policy.mode in {"balanced","maximum"}
             and settings.policy.cpu_percent>0 and settings.policy.max_cpu_jobs>0 and settings.policy.max_ram_gb>=self.required_ram()
             and settings.policy.gpu_percent>0 and settings.policy.max_gpu_jobs>0 and self.resources["has_gpu"]
-            and self.resources["gpu_vram_gb"]*settings.policy.gpu_percent/100>= (4 if self.engine.base_name=="qwen3-1.7b" else 2)
+            and self.resources["gpu_vram_gb"]*settings.policy.gpu_percent/100/max(1,settings.policy.max_gpu_jobs)>= (4 if self.engine.base_name=="qwen3-1.7b" else 2)
             and all(Path(arg).is_file() for arg in self.engine.command)
             and Path(self.engine.base_directory).is_dir() and Path(self.engine.adapter_file).is_file())
 

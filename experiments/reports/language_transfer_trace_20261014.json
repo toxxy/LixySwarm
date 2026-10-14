@@ -1,0 +1,96 @@
+{
+  "scope": "Receiver timing and controlled resume; two existing PCs, not an extra physical worker",
+  "restart": {
+    "before": "MainPID=347382\nActiveState=active\n",
+    "before_bytes": 67141632,
+    "reason": "Controlled restart to measure confirmed slow receiver; not an observation timeout",
+    "timestamp": 1792011682.1224678,
+    "after": "MainPID=369543\nActiveState=active\n",
+    "after_bytes": 93978624
+  },
+  "samples": [
+    {
+      "timestamp": 1792011863.6464067,
+      "artifact_id": "169ad53ec313c3a34b06c0809216e4fc072cce444a5d4ff2b59690d064130ed5",
+      "offset": 99581952,
+      "bytes": 98304,
+      "rpc_seconds": 0.19243697100318968,
+      "receive_and_write_seconds": 0.019985000995802693
+    },
+    {
+      "timestamp": 1792011873.6580548,
+      "artifact_id": "169ad53ec313c3a34b06c0809216e4fc072cce444a5d4ff2b59690d064130ed5",
+      "offset": 104202240,
+      "bytes": 98304,
+      "rpc_seconds": 0.19438584899762645,
+      "receive_and_write_seconds": 0.021001717992476188
+    },
+    {
+      "timestamp": 1792011883.6648426,
+      "artifact_id": "169ad53ec313c3a34b06c0809216e4fc072cce444a5d4ff2b59690d064130ed5",
+      "offset": 108822528,
+      "bytes": 98304,
+      "rpc_seconds": 0.20443923299899325,
+      "receive_and_write_seconds": 0.004016303006210364
+    },
+    {
+      "timestamp": 1792011893.6776679,
+      "artifact_id": "169ad53ec313c3a34b06c0809216e4fc072cce444a5d4ff2b59690d064130ed5",
+      "offset": 113442816,
+      "bytes": 98304,
+      "rpc_seconds": 0.193723914999282,
+      "receive_and_write_seconds": 0.020410791999893263
+    },
+    {
+      "timestamp": 1792011903.7298148,
+      "artifact_id": "169ad53ec313c3a34b06c0809216e4fc072cce444a5d4ff2b59690d064130ed5",
+      "offset": 118063104,
+      "bytes": 98304,
+      "rpc_seconds": 0.19916829500289168,
+      "receive_and_write_seconds": 0.0021453259978443384
+    },
+    {
+      "timestamp": 1792011913.9323037,
+      "artifact_id": "169ad53ec313c3a34b06c0809216e4fc072cce444a5d4ff2b59690d064130ed5",
+      "offset": 122781696,
+      "bytes": 98304,
+      "rpc_seconds": 0.20243318600114435,
+      "receive_and_write_seconds": 0.011569351001526229
+    },
+    {
+      "timestamp": 1792011923.9424841,
+      "artifact_id": "169ad53ec313c3a34b06c0809216e4fc072cce444a5d4ff2b59690d064130ed5",
+      "offset": 127401984,
+      "bytes": 98304,
+      "rpc_seconds": 0.20120756000687834,
+      "receive_and_write_seconds": 0.012044987000990659
+    },
+    {
+      "timestamp": 1792011933.9500403,
+      "artifact_id": "169ad53ec313c3a34b06c0809216e4fc072cce444a5d4ff2b59690d064130ed5",
+      "offset": 132022272,
+      "bytes": 98304,
+      "rpc_seconds": 0.190621881003608,
+      "receive_and_write_seconds": 0.01784670099732466
+    },
+    {
+      "timestamp": 1792011943.9635031,
+      "artifact_id": "169ad53ec313c3a34b06c0809216e4fc072cce444a5d4ff2b59690d064130ed5",
+      "offset": 136642560,
+      "bytes": 98304,
+      "rpc_seconds": 0.19769343700318132,
+      "receive_and_write_seconds": 0.015414613008033484
+    },
+    {
+      "timestamp": 1792011954.1370313,
+      "artifact_id": "169ad53ec313c3a34b06c0809216e4fc072cce444a5d4ff2b59690d064130ed5",
+      "offset": 141164544,
+      "bytes": 98304,
+      "rpc_seconds": 0.20036703000369016,
+      "receive_and_write_seconds": 0.013978185001178645
+    }
+  ],
+  "sampled_bytes_per_second": 460414.62527331925,
+  "complete": false,
+  "trace": "transfer-1792011762544266724.jsonl"
+}

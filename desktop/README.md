@@ -1,6 +1,6 @@
 # App de LixySwarm
 
-El código `0.4.0a5` del participante instalable incluye Estado, Chat, Recursos y Actividad. La conexión, los permisos locales, la pausa y la reconexión tienen un proceso de red separado de la interfaz. El chat integra consultas al experto del piloto y conversación cifrada local. La descarga pública sigue siendo `0.4.0a2`; la preparación automática y réplica del experto de lenguaje conservan sus condiciones pendientes.
+El código `0.4.0a7` del participante instalable incluye Estado, Chat, Recursos y Actividad. La conexión, los permisos locales, la pausa y la reconexión tienen un proceso de red separado de la interfaz. El chat integra consultas al experto del piloto y conversación cifrada local. Recursos incorpora preparación y reanudación del experto GPU compatible. La descarga pública sigue siendo `0.4.0a2`; las instalaciones limpias de lenguaje y su publicación actualizada conservan sus condiciones pendientes.
 
 El ejecutable incluye Python y los componentes de interfaz y transporte. La instalación por usuario conserva la identidad y el estado fuera del paquete. En Linux crea una entrada en el menú de aplicaciones; Windows y macOS tienen sus propios adaptadores de instalación.
 
@@ -23,7 +23,7 @@ Las licencias incluidas por las dependencias se copian al paquete junto a [THIRD
 
 La interfaz escribe `controls.json` en el directorio local del nodo. El proceso valida esquema, presupuesto y consentimiento, confirma lo recibido en sus diagnósticos y publica solo el estado público permitido. Pausar conserva conectividad; desconectar cierra las sesiones. Una configuración inválida desactiva la conexión hasta corregirla.
 
-Los presupuestos se aplican a trabajadores separados del nodo. El motor CPU público ejecuta inferencia tipada del modelo de bytes. El entrenamiento de referencia se limita a las identidades conocidas del piloto. El experto de lenguaje necesita una instalación local verificada y recursos suficientes; los motores CUDA públicos y la aceptación de desconocidos siguen pendientes.
+Los presupuestos se aplican a trabajadores separados del nodo. El motor CPU público ejecuta inferencia tipada del modelo de bytes. El entrenamiento de referencia se limita a las identidades conocidas del piloto. El experto de lenguaje necesita una instalación local verificada y recursos suficientes. El primer motor CUDA público admite Linux x86_64 con glibc 2.39 o posterior; las demás plataformas usan el chat remoto mientras se verifica su motor local. La aceptación de aportes de desconocidos sigue pendiente.
 
 El botón **Conservar conocimiento público** habilita adquisición, verificación y servicio de versiones del catálogo público dentro del permiso de almacenamiento y conexión. El catálogo inicial contiene el enjambre de referencia de bytes que superó el piloto distribuido; aún no es el modelo conversacional. El servicio descarga la cadena desde un participante disponible, comprueba firmas, genesis y hashes, y conserva los pesos al pausar, desconectar o reiniciar. Usa la identidad del equipo y un almacén `public/` separado de la memoria personal. No carga PyTorch ni ejecuta un modelo al compartir archivos.
 
@@ -49,4 +49,12 @@ Al guardar un perfil con CPU y al menos 2 GB de RAM, la app prepara el motor den
 
 Los [motores CPU públicos](https://github.com/toxxy/LixySwarm/releases/tag/cpu-engine-0.4.0a1) se descargan por HTTPS sin cuenta. El catálogo incluido en la app fija plataforma, arquitectura, tamaño, SHA-256 del ZIP y SHA-256 del manifiesto. Se verifica todo antes de seleccionar el ejecutable. El ZIP se extrae con límites y rechazo de rutas que escapen o archivos adicionales. La preparación reserva la mitad del presupuesto de conexión y deja la otra mitad para conocimiento público.
 
-El motor incluye su intérprete y PyTorch CPU; la app y el nodo permanecen ligeros. Una instalación CPU conserva el motor CUDA local anterior si sigue disponible. Las operaciones son las del modelo de bytes de referencia: esto no habilita conversación ni entrenamiento abierto de desconocidos. La distribución automática CUDA, la calidad conversacional y la instalación física de Windows/macOS conservan sus gates.
+El motor incluye su intérprete y PyTorch CPU; la app y el nodo permanecen ligeros. Una instalación CPU conserva el motor CUDA local anterior si sigue disponible. Las operaciones son las del modelo de bytes de referencia: esto no habilita conversación ni entrenamiento abierto de desconocidos. La calidad conversacional amplia y la instalación física de Windows/macOS conservan sus gates.
+
+## Preparación del experto de lenguaje
+
+La app puede preparar el experto aprobado del piloto al terminar el motor CPU, cuando el perfil permite CPU, 5 GiB de RAM y al menos 4 GiB de GPU por trabajo, con almacenamiento público autorizado. El botón **Preparar experto de lenguaje** permite iniciar o reanudar expresamente. Consultar al experto remoto no requiere preparar estos archivos ni conceder GPU local.
+
+El nodo descarga las dependencias firmadas por LSP usando su identidad física. El motor se obtiene del catálogo HTTPS fijado en la app; un peer no puede elegir programas, rutas ni modelos. El experto pequeño que perdió respuestas correctas en la evaluación de preservación no se activa automáticamente. La primera preparación completa necesita alrededor de 27 GiB, incluyendo archivos temporales conservadores; el cálculo descuenta descargas parciales y paquetes ya preparados al reanudar. Archivos de modelo, motores y descargas comparten la cuota elegida, sin incluir el historial privado.
+
+Preparar no aumenta permisos. La activación exige verificar todos los hashes y una respuesta sintética bajo una reserva real de RAM y GPU. Pausar, desconectar, cambiar límites o seleccionar otro experto impide la activación pendiente. Detener conserva los archivos verificados y cancela la intención de reanudar. Una intención guardada se recupera después de reiniciar el nodo, dentro de los permisos actuales. Las preparaciones CPU y GPU se serializan para evitar competir por la reserva de disco.

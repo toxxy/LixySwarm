@@ -93,6 +93,21 @@ def main():
             engine_started=time.monotonic()
             window.save_resources()
             wait(lambda: controller.confirmed_settings() and controller.snapshot()["diagnostics"]["settings"]["policy"]["cpu_percent"] == 17)
+            # The packaged local API must reject expert preparation outside
+            # these deliberately small RAM/GPU permissions, without changing
+            # the policy or writing a preparation intent.
+            previous_policy=controller.settings().policy
+            preparation_status=controller._chat_call('/preparation/status')
+            assert preparation_status['state']=='idle'
+            try:
+                controller.prepare_language()
+            except RuntimeError as error:
+                assert str(error)!='Ruta desconocida'
+                assert controller.settings().policy==previous_policy
+                assert not (controller.directory/'language-preparation-intent.json').exists()
+                report['language_preparation_permission_gate']=True
+            else:
+                raise AssertionError('Packaged expert preparation ignored resource limits')
             if args.prepare_engine:
                 wait(lambda: window.engine_preparation is not None and not window.engine_preparation.isRunning(), timeout=600)
                 assert controller.cpu_engine_prepared(), window.engine_label.text()

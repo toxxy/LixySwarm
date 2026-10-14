@@ -115,8 +115,9 @@ class ChatBroker:
 
 
 class LocalChatAPI:
-    def __init__(self,broker,directory):
+    def __init__(self,broker,directory,preparation=None):
         self.broker=broker;self.path=Path(directory)/"local-api.json";self.token=secrets.token_hex(32)
+        self.preparation=preparation
         owner=self
         class Handler(BaseHTTPRequestHandler):
             protocol_version="HTTP/1.0"
@@ -135,6 +136,7 @@ class LocalChatAPI:
                         and secrets.compare_digest(self.headers.get("Authorization",""),"Bearer "+owner.token))
             def do_GET(self):
                 if not self.authenticated():return self.reply(403,{"error":"Acceso local no autorizado"})
+                if self.path=='/preparation/status' and owner.preparation is not None:return self.reply(200,owner.preparation.snapshot())
                 if self.path!="/status":return self.reply(404,{"error":"Ruta desconocida"})
                 self.reply(200,owner.broker.snapshot())
             def do_POST(self):
@@ -147,6 +149,10 @@ class LocalChatAPI:
                     raw=self.rfile.read(length)
                     if len(raw)!=length:raise ValueError()
                     value=json.loads(raw)
+                    if self.path in {'/preparation/start','/preparation/stop'} and owner.preparation is not None:
+                        if value!={}:raise ValueError('Preparation does not accept peer-selected paths or programs')
+                        try:return self.reply(200,owner.preparation.start() if self.path.endswith('/start') else owner.preparation.stop())
+                        except (ValueError,RuntimeError) as error:return self.reply(409,{'error':str(error)})
                     if self.path=="/ask":return self.reply(200,owner.broker.ask(value))
                     if self.path=="/cancel" and isinstance(value,dict) and set(value)=={"request_id"}:
                         return self.reply(200,{"cancelled":owner.broker.cancel(value["request_id"])})

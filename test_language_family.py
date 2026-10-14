@@ -90,6 +90,6 @@ def test_language_namespace_transfers_verified_content_without_claiming_a_physic
 
 
 def test_disk_accounting_includes_all_families_engines_and_partial_downloads(tmp_path):
-    for name,size in [('public/artifacts/file',3),('public/language/artifacts/incoming/file.part',7),('engines/motor',11),('language-models/base/weights',13),('personal.enc',17)]:
+    for name,size in [('public/artifacts/file',3),('public/language/artifacts/incoming/file.part',7),('engines/motor',11),('language-models/base/weights',13),('engine-downloads/cached.piece',23),('personal.enc',17)]:
         path=tmp_path/name;path.parent.mkdir(parents=True,exist_ok=True);path.write_bytes(b'x'*size)
-    assert managed_public_bytes(tmp_path)==34
+    assert managed_public_bytes(tmp_path)==57

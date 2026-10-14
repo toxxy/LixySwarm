@@ -319,6 +319,8 @@ class ArtifactService:
         timeout_s: float = 60.0,
         cancel_event: Optional[threading.Event] = None,
         expected_size: Optional[int] = None,
+        progress=lambda *_:None,
+        observer=None,
     ) -> Path:
         if not _HEX_64_RE.fullmatch(str(artifact_id)):
             raise ArtifactError("invalid artifact ID")
@@ -340,6 +342,8 @@ class ArtifactService:
                 deadline=deadline,
                 cancel_event=cancel_event,
                 expected_size=expected_size,
+                progress=progress,
+                observer=observer,
             )
         finally:
             fetch_lock.release()
@@ -352,6 +356,8 @@ class ArtifactService:
         deadline: float,
         cancel_event: Optional[threading.Event],
         expected_size: Optional[int] = None,
+        progress=lambda *_:None,
+        observer=None,
     ) -> Path:
         if self.store.has(artifact_id):
             if expected_size is not None and self.store.manifest(artifact_id).size!=expected_size:
@@ -380,8 +386,10 @@ class ArtifactService:
             return self.store.finalize_receive(manifest, partial)
         mode = "ab" if offset else "wb"
         with partial.open(mode) as destination:
+            progress(offset,manifest.size)
             while offset < manifest.size:
                 length = min(ARTIFACT_CHUNK_BYTES, manifest.size - offset)
+                began=time.monotonic()
                 result = self.coordinator.submit(
                     f"{self.namespace}.read-chunk.v1",
                     {"artifact_id": artifact_id, "offset": offset, "length": length},
@@ -404,11 +412,16 @@ class ArtifactService:
                     raise ArtifactError("peer returned an invalid chunk length")
                 if hashlib.sha256(chunk).hexdigest() != result.output.get("chunk_sha256"):
                     raise ArtifactError("artifact chunk hash does not match")
+                received=time.monotonic()
                 if self.receive_budget is not None:
                     self.receive_budget.wait(len(result.output["data"])+2048,
                         cancel_event=cancel_event, deadline=time.time()+max(0, deadline-time.monotonic()))
                 destination.write(chunk)
                 offset += len(chunk)
+                progress(offset,manifest.size)
+                if observer is not None:
+                    observer({'offset':offset,'bytes':len(chunk),'rpc_seconds':received-began,
+                        'receive_and_write_seconds':time.monotonic()-received})
             destination.flush()
             os.fsync(destination.fileno())
         return self.store.finalize_receive(manifest, partial)

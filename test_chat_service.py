@@ -58,6 +58,23 @@ def test_current_question_only_is_sent_by_default_and_ipc_writes_no_plaintext(mo
     assert not (tmp_path/"local-api.json").exists()
 
 
+def test_expert_preparation_ipc_requires_auth_and_accepts_no_programs_or_paths(monkeypatch,tmp_path):
+    broker,_=broker_fixture(monkeypatch);started=[]
+    preparation=SimpleNamespace(snapshot=lambda:{'state':'idle'},start=lambda:started.append(True) or {'state':'starting'},stop=lambda:{'state':'stopped'})
+    api=LocalChatAPI(broker,tmp_path,preparation);api.start()
+    try:
+        assert call(api,'/preparation/status')=={'state':'idle'}
+        for kwargs in [{'token':'wrong'},{'origin':'https://untrusted.example'}]:
+            with pytest.raises(urllib.error.HTTPError) as error:call(api,'/preparation/start',{},**kwargs)
+            assert error.value.code==403
+        with pytest.raises(urllib.error.HTTPError) as error:
+            call(api,'/preparation/start',{'command':['peer-code'],'base_directory':'private'})
+        assert error.value.code==400 and not started
+        assert call(api,'/preparation/start',{})=={'state':'starting'}
+        assert call(api,'/preparation/stop',{})=={'state':'stopped'}
+    finally:api.close()
+
+
 def test_browser_origin_bad_auth_and_unknown_chat_fields_are_rejected(monkeypatch,tmp_path):
     broker,sent=broker_fixture(monkeypatch);api=LocalChatAPI(broker,tmp_path);api.start()
     try:

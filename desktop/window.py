@@ -13,13 +13,13 @@ from PySide6.QtCore import QUrl
 from PySide6.QtWidgets import (
     QApplication, QCheckBox, QComboBox, QDoubleSpinBox, QFormLayout,
     QHBoxLayout, QLabel, QMainWindow, QMessageBox, QPushButton, QSpinBox,
-    QTabWidget, QTextEdit, QVBoxLayout, QWidget, QProgressBar,
+    QTabWidget, QTextEdit, QVBoxLayout, QWidget, QProgressBar, QScrollArea,
 )
 
 from src.contribution.policy import ContributionPolicy
 from src.network.client_state import ClientSettings, state_directory
 from desktop.backend import NodeController
-from src.network.engine_catalog import cpu_engine
+from src.network.engine_catalog import cpu_engine,language_engine
 from src.network.telemetry import atomic_json
 from desktop.chat_history import ChatHistory,bounded_context
 
@@ -151,7 +151,7 @@ class SwarmWindow(QMainWindow):
         self.chat_cancel=QPushButton("Cancelar consulta");self.chat_cancel.clicked.connect(self.cancel_chat);self.chat_cancel.setEnabled(False);chat_actions.addWidget(self.chat_cancel)
         chat.addLayout(chat_actions)
 
-        resources = self._page("Recursos"); form = QFormLayout()
+        resources = self._page("Recursos",scrollable=True); form = QFormLayout()
         self.profile = QComboBox(); self.profile.addItems(["Equilibrado", "Máximo", "Solo con equipo disponible", "Solo conectividad"])
         self.profile.currentIndexChanged.connect(self.select_profile); form.addRow("Cómo colaborar", self.profile)
         self.cpu = QSpinBox(); self.cpu.setRange(0, 100); self.cpu.setSuffix(" %"); form.addRow("Presupuesto de CPU", self.cpu)
@@ -170,7 +170,16 @@ class SwarmWindow(QMainWindow):
         self.engine_progress=QProgressBar(); self.engine_progress.setRange(0,100); self.engine_progress.setVisible(False)
         resources.addWidget(self.engine_progress)
         self.engine_button=QPushButton("Preparar motor CPU")
-        self.engine_button.clicked.connect(self.prepare_engine); resources.addWidget(self.engine_button); resources.addStretch()
+        self.engine_button.clicked.connect(self.prepare_engine); resources.addWidget(self.engine_button)
+        self.language_label=QLabel('Puedes usar el chat de la red sin cargar un modelo en este equipo.')
+        self.language_label.setWordWrap(True);resources.addWidget(self.language_label)
+        self.language_progress=QProgressBar();self.language_progress.setVisible(False);resources.addWidget(self.language_progress)
+        language_actions=QHBoxLayout()
+        self.language_button=QPushButton('Preparar experto de lenguaje')
+        self.language_button.clicked.connect(lambda:self._action(self.controller.prepare_language));language_actions.addWidget(self.language_button)
+        self.language_stop=QPushButton('Detener preparación')
+        self.language_stop.clicked.connect(lambda:self._action(self.controller.stop_language_preparation));language_actions.addWidget(self.language_stop)
+        resources.addLayout(language_actions);resources.addStretch()
 
         activity = self._page("Actividad")
         self.learning_label=QLabel("Aprendizaje distribuido: preparando coordinación")
@@ -198,8 +207,11 @@ class SwarmWindow(QMainWindow):
             self.personal_label.setText("El contenido personal permanece en tu equipo")
             self.chat_privacy.setText("Esta prueba usa una conversación temporal en memoria")
 
-    def _page(self, name):
-        page = QWidget(); layout = QVBoxLayout(page); layout.setSpacing(16); self.tabs.addTab(page, name)
+    def _page(self, name,scrollable=False):
+        page = QWidget(); layout = QVBoxLayout(page); layout.setSpacing(16)
+        if scrollable:
+            scroll=QScrollArea();scroll.setWidgetResizable(True);scroll.setWidget(page);self.tabs.addTab(scroll,name)
+        else:self.tabs.addTab(page, name)
         return layout
 
     def select_profile(self, index):
@@ -272,6 +284,18 @@ class SwarmWindow(QMainWindow):
             if not (self.controller.directory/"public-knowledge.json").exists():
                 self.controller.share_knowledge(True)
             self.prepare_engine()
+        self.maybe_prepare_language()
+
+    def maybe_prepare_language(self):
+        if not self.auto_prepare or self.engine_preparation is not None and self.engine_preparation.isRunning():return
+        diagnostic=self.controller.snapshot()['diagnostics']
+        preparation=diagnostic.get('language_preparation',{})
+        policy=self.controller.settings().policy
+        if (diagnostic.get('language',{}).get('installed') or preparation.get('state') not in {None,'idle'}
+                or policy.mode not in {'balanced','maximum'} or policy.max_ram_gb<5 or policy.gpu_percent<=0
+                or language_engine('cuda') is None or not self.controller.knowledge_settings().enabled):return
+        try:self.controller.prepare_language()
+        except (OSError,ValueError,RuntimeError):pass
 
     def toggle_knowledge(self):
         self._action(lambda: self.controller.share_knowledge(not self.controller.knowledge_settings().enabled))
@@ -350,6 +374,7 @@ class SwarmWindow(QMainWindow):
         self.engine_phase="complete" if success else "stopped"; self.engine_heartbeat()
         self.engine_label.setText(message); self.engine_progress.setVisible(False)
         self.refresh()
+        self.maybe_prepare_language()
 
     def refresh(self):
         preparing=self.engine_preparation is not None and self.engine_preparation.isRunning()
@@ -365,6 +390,17 @@ class SwarmWindow(QMainWindow):
         self.engine_button.setText("Motor CPU preparado" if prepared else "Reanudar preparación" if self.engine_phase=="stopped" else "Preparar motor CPU")
         snapshot = self.controller.snapshot(); status = snapshot["status"]
         diagnostic = snapshot["diagnostics"]
+        preparation=diagnostic.get('language_preparation',{}) if snapshot['fresh'] else {}
+        phase=preparation.get('state','idle')
+        language_busy=phase not in {'idle','waiting','stopped','complete'}
+        installed=diagnostic.get('language',{}).get('installed',False)
+        self.language_label.setText(preparation.get('message') or ('Experto de lenguaje preparado en este equipo' if installed else 'Puedes usar el chat de la red. Para alojar un experto se necesitan 5 GB de RAM y 4 GB de GPU dentro de tus límites.'))
+        self.language_progress.setVisible(language_busy and preparation.get('total',0)>0)
+        self.language_progress.setValue(int(100*preparation.get('done',0)/max(1,preparation.get('total',0))))
+        self.language_button.setEnabled(snapshot['fresh'] and not preparing and not language_busy and language_engine('cuda') is not None
+            and policy.mode in {'balanced','maximum'} and policy.max_ram_gb>=5 and policy.gpu_percent>0)
+        self.language_button.setText('Reanudar preparación del experto' if phase in {'waiting','stopped'} else 'Preparar experto de lenguaje')
+        self.language_stop.setEnabled(language_busy or phase=='waiting')
         chat=diagnostic.get("chat",{}) if snapshot["fresh"] else {}
         asking=self.chat_pending or self.chat_worker is not None and self.chat_worker.isRunning()
         self.chat_send.setEnabled(bool(chat.get("available")) and not asking)
