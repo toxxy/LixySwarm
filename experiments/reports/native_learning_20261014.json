@@ -1,0 +1,204 @@
+{
+  "success": true,
+  "scope": "Two known physical workers; native persistent coordinator, evaluated signed promotions, and recovery after interruption. Synthetic byte prediction, not conversational quality.",
+  "coordinator_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+  "rounds": [
+    {
+      "release": {
+        "version": 1,
+        "release_id": "a901f89ce0479bcff213bda6b648a0e90616245c0c7ba15a8f4e5ea326d31626",
+        "network_id": "LIXYMAIN",
+        "sequence": 5,
+        "previous_release_id": "59f68cdc1e6985fd539c1299e42bd200a4a24c42959d368fc3748780bcea98a3",
+        "model_artifact_id": "0343792fe1f623b567481388f3723c4938958e05ec1120a41a00c73da3e2d94c",
+        "model_format": "pytorch-weights-only-v1",
+        "config_artifact_id": "ec15138dd4fa06dacf20936f7160d0c529c7d5a477a5f37b59fd5b0e5f4f0cd3",
+        "tokenizer_artifact_id": "",
+        "created_at": 1791986963.0872936,
+        "minimum_client_version": "0.3.0",
+        "signatures": [
+          {
+            "signature": "V3ERhPW6kokTih+ptbbYBu1TjgRd8hVHEaAdA82Vdh7YTwpXR9Sc8cNdqSzDgLXqT2sCo5E0f7zAgZXRhTZjCg==",
+            "signer_id": "53cea6456aced3a5a31ad24505aaa47d88e1827d1e7976592c91b54fc0e8980f"
+          }
+        ]
+      },
+      "evaluation": {
+        "accepted": true,
+        "after_loss": 5.422007857195449,
+        "aggregation": "prediction-token-weighted-mean",
+        "base_release_id": "59f68cdc1e6985fd539c1299e42bd200a4a24c42959d368fc3748780bcea98a3",
+        "before_loss": 5.454853945290042,
+        "contributions": [
+          {
+            "gradient_id": "8e284769970a12755f3b66fbeafea6b8e88fc7d08cb71127fa2fe8d5a34ed397",
+            "job_id": "4e97f956b6fd9d515b39eae64208044326434919f0a095f253130386084debcf",
+            "peer_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+            "receipt": {
+              "finished_at": 1791986959.6322927,
+              "job_id": "4e97f956b6fd9d515b39eae64208044326434919f0a095f253130386084debcf",
+              "requester_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+              "result_digest": "a4bc97a710f89c3485e61cb3af6b4fe167b9a0580bea032b4bd9777670c46f80",
+              "signature": "Frr4Lp+Md45Eo8oLdFSq3lpFZm1/iwtDYVw5JXd09eTaK+6cYrpeZRtjGV9/oi3YkfbvAsZcnNcnX08W31SABQ==",
+              "version": 1,
+              "worker_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255"
+            },
+            "start_token": 260,
+            "token_count": 65
+          },
+          {
+            "gradient_id": "965e866780bb8df8bfd624bc45813eebc89985d767a9741a078eb173da6a5c10",
+            "job_id": "c7a8e9b3bd8d25a525193dc35bde48718f9354260804e191f782f46f8c510e22",
+            "peer_id": "ea914d97caafef310e50385034abae9a50ba86496b0e9cbf4679e6070e4c25b0",
+            "receipt": {
+              "finished_at": 1791986960.5940156,
+              "job_id": "c7a8e9b3bd8d25a525193dc35bde48718f9354260804e191f782f46f8c510e22",
+              "requester_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+              "result_digest": "9e9794a7505cc188b34a39f28d1fe4162cf3a9c3ea2f16a3eb58485ad9f0d174",
+              "signature": "BBWW3rPdEwEkyfV3XJksNOi36ZIh5NS7ICGd27QSPsniUWhpfwMSTPunRTsh93MI+2nsIh9Alyay6weJW3e4Aw==",
+              "version": 1,
+              "worker_node_id": "ea914d97caafef310e50385034abae9a50ba86496b0e9cbf4679e6070e4c25b0"
+            },
+            "start_token": 7460,
+            "token_count": 65
+          }
+        ],
+        "dataset_id": "df3c694642f2eacef9e0734e1e958a14d1052d3d6927457e311e87a90f93c97b",
+        "evaluation_id": "2830626cf91612a1f1028815c9905d4c631f7be07669e82784ff6ce373a4c0d9",
+        "minimum_improvement": 0.001,
+        "predicted_tokens": 128
+      }
+    },
+    {
+      "release": {
+        "version": 1,
+        "release_id": "977603e7a2c2070d6cd1c705e53f763d7e31057d5980f36cc02aefb2bb7ce25c",
+        "network_id": "LIXYMAIN",
+        "sequence": 6,
+        "previous_release_id": "a901f89ce0479bcff213bda6b648a0e90616245c0c7ba15a8f4e5ea326d31626",
+        "model_artifact_id": "23e44d2c2f0834f798c4309b7f0360cae0b9d4769bb84a452498e95d322524a9",
+        "model_format": "pytorch-weights-only-v1",
+        "config_artifact_id": "1ac4368b600e8c4476b5a2733faef340cf63d87c4e9daef7bd0115148bce6780",
+        "tokenizer_artifact_id": "",
+        "created_at": 1791987100.9517014,
+        "minimum_client_version": "0.3.0",
+        "signatures": [
+          {
+            "signature": "xOy5tTU2trALM7gYrX5AWr6K8CrcDuxiTvknuKmih+8FbdINBws80GZG1xYQPbVkOdsnQSI4Sne3jkcKOjh+Dg==",
+            "signer_id": "53cea6456aced3a5a31ad24505aaa47d88e1827d1e7976592c91b54fc0e8980f"
+          }
+        ]
+      },
+      "evaluation": {
+        "accepted": true,
+        "after_loss": 5.386593859986065,
+        "aggregation": "prediction-token-weighted-mean",
+        "base_release_id": "a901f89ce0479bcff213bda6b648a0e90616245c0c7ba15a8f4e5ea326d31626",
+        "before_loss": 5.422007857195449,
+        "contributions": [
+          {
+            "gradient_id": "c30c9f938b9d9a8a99b6e32b12072e9038207e4a61558b664253d39e2b4bed8a",
+            "job_id": "2067c7db9a0f74511249b2d7e7bc16d7a54c885f19bbe5ba62e3063ebeb97e20",
+            "peer_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+            "receipt": {
+              "finished_at": 1791987061.333127,
+              "job_id": "2067c7db9a0f74511249b2d7e7bc16d7a54c885f19bbe5ba62e3063ebeb97e20",
+              "requester_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+              "result_digest": "c7968d65bc644663b1f3ac07c398d53edc1288e32929807c136848ee78221957",
+              "signature": "nto8UQac6FKQfd6CSdthi73jC6RioUdaNXY9RX+kORkmIJJ8aCHWmEst7g0o9/em4f3Ci/dUoBtknTIr6UDMCg==",
+              "version": 1,
+              "worker_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255"
+            },
+            "start_token": 325,
+            "token_count": 65
+          },
+          {
+            "gradient_id": "7803783edab6182408836a19d7f685a708d073c548b2157651d4deca15529825",
+            "job_id": "e375e1717d83e35d2042aa7a993c1fa5700e197a673656e88d84e869959d4e5e",
+            "peer_id": "ea914d97caafef310e50385034abae9a50ba86496b0e9cbf4679e6070e4c25b0",
+            "receipt": {
+              "finished_at": 1791987098.4672973,
+              "job_id": "e375e1717d83e35d2042aa7a993c1fa5700e197a673656e88d84e869959d4e5e",
+              "requester_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+              "result_digest": "e804e4728e7ec5da5d204f84b1c52d0ab1983db27063dc11bd547107100719ce",
+              "signature": "reemf+Ct4swVNh8QOi1Q+29hOizkzSy06bx6ZKZiFgcKdK9SPq7LB94EnqDlabSGBXCQAO2nxxvCNHMrvf/WCw==",
+              "version": 1,
+              "worker_node_id": "ea914d97caafef310e50385034abae9a50ba86496b0e9cbf4679e6070e4c25b0"
+            },
+            "start_token": 7525,
+            "token_count": 65
+          }
+        ],
+        "dataset_id": "df3c694642f2eacef9e0734e1e958a14d1052d3d6927457e311e87a90f93c97b",
+        "evaluation_id": "2830626cf91612a1f1028815c9905d4c631f7be07669e82784ff6ce373a4c0d9",
+        "minimum_improvement": 0.001,
+        "predicted_tokens": 128
+      }
+    }
+  ],
+  "recovery": {
+    "partial_job_id": "2067c7db9a0f74511249b2d7e7bc16d7a54c885f19bbe5ba62e3063ebeb97e20",
+    "base_release_id": "a901f89ce0479bcff213bda6b648a0e90616245c0c7ba15a8f4e5ea326d31626",
+    "round": 1,
+    "cursor": 325,
+    "recovered_without_recomputing": true,
+    "accepted_sequence": 6,
+    "evaluation": {
+      "accepted": true,
+      "after_loss": 5.386593859986065,
+      "aggregation": "prediction-token-weighted-mean",
+      "base_release_id": "a901f89ce0479bcff213bda6b648a0e90616245c0c7ba15a8f4e5ea326d31626",
+      "before_loss": 5.422007857195449,
+      "contributions": [
+        {
+          "gradient_id": "c30c9f938b9d9a8a99b6e32b12072e9038207e4a61558b664253d39e2b4bed8a",
+          "job_id": "2067c7db9a0f74511249b2d7e7bc16d7a54c885f19bbe5ba62e3063ebeb97e20",
+          "peer_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+          "receipt": {
+            "finished_at": 1791987061.333127,
+            "job_id": "2067c7db9a0f74511249b2d7e7bc16d7a54c885f19bbe5ba62e3063ebeb97e20",
+            "requester_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+            "result_digest": "c7968d65bc644663b1f3ac07c398d53edc1288e32929807c136848ee78221957",
+            "signature": "nto8UQac6FKQfd6CSdthi73jC6RioUdaNXY9RX+kORkmIJJ8aCHWmEst7g0o9/em4f3Ci/dUoBtknTIr6UDMCg==",
+            "version": 1,
+            "worker_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255"
+          },
+          "start_token": 325,
+          "token_count": 65
+        },
+        {
+          "gradient_id": "7803783edab6182408836a19d7f685a708d073c548b2157651d4deca15529825",
+          "job_id": "e375e1717d83e35d2042aa7a993c1fa5700e197a673656e88d84e869959d4e5e",
+          "peer_id": "ea914d97caafef310e50385034abae9a50ba86496b0e9cbf4679e6070e4c25b0",
+          "receipt": {
+            "finished_at": 1791987098.4672973,
+            "job_id": "e375e1717d83e35d2042aa7a993c1fa5700e197a673656e88d84e869959d4e5e",
+            "requester_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+            "result_digest": "e804e4728e7ec5da5d204f84b1c52d0ab1983db27063dc11bd547107100719ce",
+            "signature": "reemf+Ct4swVNh8QOi1Q+29hOizkzSy06bx6ZKZiFgcKdK9SPq7LB94EnqDlabSGBXCQAO2nxxvCNHMrvf/WCw==",
+            "version": 1,
+            "worker_node_id": "ea914d97caafef310e50385034abae9a50ba86496b0e9cbf4679e6070e4c25b0"
+          },
+          "start_token": 7525,
+          "token_count": 65
+        }
+      ],
+      "dataset_id": "df3c694642f2eacef9e0734e1e958a14d1052d3d6927457e311e87a90f93c97b",
+      "evaluation_id": "2830626cf91612a1f1028815c9905d4c631f7be07669e82784ff6ce373a4c0d9",
+      "minimum_improvement": 0.001,
+      "predicted_tokens": 128
+    }
+  },
+  "routes": [
+    {
+      "node_id": "28c218f34cd6b90e99955346711921d94b54852e4b8f29fb840207388f73444e",
+      "transport": "direct",
+      "encrypted": true
+    },
+    {
+      "node_id": "ea914d97caafef310e50385034abae9a50ba86496b0e9cbf4679e6070e4c25b0",
+      "transport": "relay",
+      "encrypted": true
+    }
+  ]
+}

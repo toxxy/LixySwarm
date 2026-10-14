@@ -7,7 +7,7 @@ Las etapas se completan por sus pruebas de aceptación; una implementación parc
 |---|---|---|
 | 1. Red continua | En observación | Servicios desplegados en dos PCs y VPS, estado por identidad en el Explorer y recuperación tras reinicio comprobados. Faltan operación de 24 horas y recuperación con otro relay público independiente. |
 | 2. App sencilla | En implementación | Cuatro pantallas, controles confirmados, catálogo y adquisición de la referencia pública desde el ejecutable; paquetes verificados en tres sistemas y app instalada en ambas PCs. Faltan motores de cálculo, modelo conversacional, arranque automático por plataforma y gate completo de instalación limpia. |
-| 3. Aprendizaje distribuido | Piloto verificado; integración pendiente | Dos GPUs procesaron ocho fragmentos por Internet: cuatro promociones y pérdida 5,56086 → 5,45485. Ambas adquirieron y usaron el modelo final. Faltan recuperación de trabajo incompleto, modelo conversacional e integración con la app. |
+| 3. Aprendizaje distribuido | Ciclo de referencia integrado y verificado | Dos GPUs, coordinación desde la app y nodos persistentes, actualización candidata evaluada, publicación y recuperación de fragmentos tras reinicio. La referencia llegó a versión 6 y pérdida 5,38659. Faltan modelo conversacional, evaluación de calidad más amplia e instalación automática de motores. |
 | 4. Conocimiento persistente | Piloto verificado parcialmente | Ambos trabajadores replicaron el modelo; un cliente vacío lo recuperó desde la otra PC con los procesos productores detenidos y reprodujo la evaluación. Faltan apagado físico, descubrimiento y reparación automáticos, memoria global y tres réplicas independientes. |
 | 5. Capacidad heterogénea | Pendiente | Falta medir beneficio de dos PCs y transferencia entre agentes de tamaños distintos. |
 | 6. Organismo funcional | Pendiente | Faltan integración persistente y comparaciones que demuestren utilidad de memoria, Dolphin y sectas. |
@@ -148,6 +148,19 @@ La comprobación posterior pasó 122 pruebas. El [CI dbfc2a0](https://github.com
 - La evaluación corre en un proceso supervisado sin clave de publicación. Devuelve una candidata sin firmar; el servicio verifica el criterio prefijado y firma con la clave local del publicador autorizado. Esa autoridad de la familia se mantiene separada de las identidades de transporte y cálculo. El piloto conserva una sola autoridad conocida; el consenso entre operadores sigue pendiente.
 - El catálogo puede seguir descendientes firmados del genesis fijado. Los peers anuncian su versión actual al conectar y verifican la cadena antes de activar una actualización. Se conserva activación monótona y se rechazan publicadores desconocidos. Las actualizaciones no alteran los permisos de almacenamiento ni cálculo.
 - La app incorpora el control de una ronda acotada, detención y estado del aprendizaje. La ventana inicial admite hasta diez rondas. La programación autónoma por utilidad y GrowthGate conservan sus etapas pendientes.
+
+### Ensayo nativo y recuperación del 2026-10-14
+
+El [informe de aprendizaje nativo](experiments/reports/native_learning_20261014.json) conserva versiones, evaluaciones y recibos de los trabajadores físicos.
+
+- Una ronda iniciada desde el control de la app repartió rangos 260 y 7460. El coordinador persistente recibió los gradientes local y remoto, evaluó y firmó la versión 5. La pérdida fija pasó de 5,4548539453 a 5,4220078572. La otra PC adquirió y activó esa versión por LSP.
+- En la siguiente ronda se detuvo el servicio de la segunda PC. La primera terminó y guardó su contribución. Se reinició el coordinador, se comprobó que conservaba el mismo recibo y se reanudó la segunda PC. La ronda recuperada utilizó ese recibo sin repetir el fragmento completado y promovió la versión 6: pérdida 5,3865938600.
+- La versión 6 es `977603e7a2c2070d6cd1c705e53f763d7e31057d5980f36cc02aefb2bb7ce25c`; sus pesos y optimizador tienen hash `23e44d2c2f0834f798c4309b7f0360cae0b9d4769bb84a452498e95d322524a9`. Ambas PCs la conservaron. El cursor quedó en 390 y las dos rondas terminadas se mantuvieron en el ledger.
+- El ensayo se realizó en los nodos físicos existentes, con las rutas públicas cifradas. La clave de publicación permaneció en la PC coordinadora; el evaluador no la recibió y el VPS no coordinó ni entrenó.
+- Se restauraron los perfiles originales de conectividad y GPU cero y se detuvo la programación de rondas. La configuración del coordinador y los motores permanece preparada para la elección explícita de recursos y aprendizaje en la app.
+- Pasaron 127 pruebas del proyecto. Un fallo nativo al cerrar el ejecutable Linux se reprodujo después de escribir el informe funcional. Se añadió diagnóstico y se corrigió el ciclo de vida de temporizadores y widgets Qt antes de terminar la aplicación. Los ejecutables corregidos volvieron a adquirir la versión 6 por Internet y terminaron con código cero en ambas PCs.
+
+La evaluación sigue siendo predicción de bytes sobre hechos sintéticos conocidos. Estas promociones comprueban continuidad y aprendizaje distribuido; la calidad conversacional, el beneficio de escalar nodos y las comparaciones de memoria y especialización mantienen sus propios gates.
 
 Desde el checkout y su entorno Python con `cryptography`:
 

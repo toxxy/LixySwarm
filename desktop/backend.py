@@ -127,9 +127,19 @@ class NodeController:
             snapshot = self.snapshot()
             if snapshot["fresh"]:
                 status = snapshot["status"]
-                return (f"Nodo {status['node_id'][:16]}\n"
-                        f"Estado: {status['state']}\n"
-                        f"Conexiones: {len(snapshot['diagnostics'].get('peers', []))}\n"
-                        f"Secuencia de estado: {status['sequence']}\n\n"
-                        "La preparación de modelos y las contribuciones aparecerán aquí cuando los trabajadores estén disponibles.")
+                diagnostics=snapshot["diagnostics"]
+                knowledge=diagnostics.get("knowledge",{}); compute=diagnostics.get("compute",{}); learning=diagnostics.get("learning",{})
+                states={"connected":"Conectado","preparing":"Preparando modelo","working":"Calculando","paused":"Pausado","connecting":"Conectando","disconnected":"Desconectado"}
+                lines=[f"Nodo {status['node_id'][:16]}",f"Estado: {states.get(status['state'],status['state'])}",
+                    f"Conexiones cifradas: {len(diagnostics.get('peers',[]))}"]
+                if knowledge.get("sequence") is not None:
+                    lines.append(f"Modelo público conservado: versión {knowledge['sequence']} · {knowledge.get('stored_bytes',0)/1024**2:.1f} MiB")
+                lines.append(f"Cálculos completados: {compute.get('completed',0)} · activos: {compute.get('active',0)}")
+                if learning.get("round"):
+                    lines.append(f"Rondas de aprendizaje terminadas: {learning['round']}")
+                if learning.get("accepted_sequence") is not None:
+                    lines.append(f"Última versión aceptada: {learning['accepted_sequence']}")
+                if learning.get("error"):
+                    lines.append(f"Trabajo pendiente de recuperar: {learning['error']}")
+                return "\n".join(lines)
             return "El nodo guardará aquí su actividad cuando se conecte."
