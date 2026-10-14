@@ -12,7 +12,21 @@ def materialize_family(directory,name,*,allowed=lambda:True):
     directory=Path(directory);root=directory/'public/language'
     store=ArtifactStore(root/'artifacts',max_artifact_bytes=4*1024**3,max_total_bytes=8*1024**3)
     bundle=load_bundle(root,name);release,descriptor=verify_bundle(bundle)
-    for identifier,size in dependencies(bundle):
+    return _materialize(directory,store,bundle,release,descriptor,dependencies(bundle),allowed)
+
+
+def materialize_version(directory,name,release_id,*,allowed=lambda:True):
+    from src.release.language_versions import LanguageVersionRegistry,validate_bundle,dependencies as version_dependencies
+    directory=Path(directory);root=directory/'public/language'
+    registry=LanguageVersionRegistry(root,name);bundle=registry.head()
+    if bundle['release']['release_id']!=release_id:raise ValueError('Only the current verified language head may train')
+    release,descriptor=validate_bundle(bundle)
+    store=ArtifactStore(root/'artifacts',max_artifact_bytes=4*1024**3,max_total_bytes=8*1024**3)
+    return _materialize(directory,store,bundle,release,descriptor,version_dependencies(bundle),allowed)
+
+
+def _materialize(directory,store,bundle,release,descriptor,required,allowed):
+    for identifier,size in required:
         if not allowed():raise RuntimeError('Preparación de lenguaje detenida')
         if not store.has(identifier) or store.manifest(identifier).size!=size:
             raise ValueError('La familia pública aún no está completa o verificada')

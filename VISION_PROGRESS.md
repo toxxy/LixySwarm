@@ -321,3 +321,11 @@ Pasaron 222 pruebas pertinentes del proyecto. La réplica mayor y la observació
 
 
 El [ensayo A8 del escritorio](experiments/reports/chat_app_a8_desktop_20261014.json) y el de la laptop conservaron chat, historial cifrado, contexto voluntario y cancelación. La consulta de historia por Internet tardó 0,306 segundos y devolvió el mismo genesis, sin anunciar una actualización inexistente. El publicador y el receptor inspeccionan las adaptaciones con el mismo verificador sin PyTorch; la aceptación serializa transacciones para impedir que dos candidatas concurrentes reemplacen mutuamente la cabeza. La descarga A7 está enlazada en README y Explorer para permitir entrada desde la página pública.
+
+### Aportes vinculados a la versión vigente y prioridad Linux
+
+El código incorpora `language.gradient.v2` para las dos familias públicas. Vincula el aporte a la cabeza verificada, materializa archivos locales por hash y exige la reserva GPU/RAM de la familia. Un cambio de cabeza durante el cálculo impide incorporar el resultado o reutilizarlo desde caché. La migración de controles anteriores conserva permisos y familia menor; el anuncio de capacidad distingue el protocolo anterior del nuevo. El programa de lenguaje despacha inferencia y gradientes, sin identidad de red ni clave del publicador. Los paquetes públicos de inferencia existentes no adquieren por ello una capacidad nueva.
+
+Pasaron 228 pruebas pertinentes, incluidas versión obsoleta, rechazo de rutas remotas, reserva insuficiente para el experto mayor, cambio de cabeza durante el cálculo y materialización verificada. Son pruebas de protocolo y fixtures, sin declarar un nuevo ciclo físico de aprendizaje. La contribución de ambas PCs, la agregación evaluada y la promoción de una adaptación nueva siguen pendientes. La laptop mantiene sus límites mientras la usa el operador.
+
+Por instrucción del operador, Windows y macOS quedan para el tramo final. Los workflows ejecutan Linux por defecto y conservan una opción manual para todas las plataformas. El CI previo `4d9165f` pasó el paquete Linux y macOS; Windows falló cuatro pruebas de evaluación de instrucciones/contexto. Ese fallo queda registrado para la validación final, sin presentar Windows como validado en esa revisión.

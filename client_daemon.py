@@ -234,7 +234,8 @@ def run(directory: Path, *, host="0.0.0.0", port=7338, interval=15, allow_privat
                 node.capabilities["language_inference_v1"]=language.ready
                 node.resource_profile["language_families_v1"]=families.snapshot()["available"]
                 node.capabilities["training"]=compute.ready and bool(compute.engine.training_requesters) or language_training.ready
-                node.capabilities["language_training_v1"]=language_training.ready
+                node.capabilities["language_training_v1"]=language_training.ready and language_training.engine.base_name=='qwen3-0.6b'
+                node.capabilities["language_training_v2"]=language_training.ready
                 node.capabilities["worker_ready"]=compute.ready or language.ready or language_training.ready
                 node.resource_profile["public_releases"] = [public_state["release_id"]] if public_state["sharing"] and public_state["release_id"] else []
                 knowledge_change = (public_state["state"], public_state["release_id"],

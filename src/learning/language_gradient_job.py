@@ -10,7 +10,7 @@ sys.path.insert(0,str(Path(__file__).resolve().parents[2]))
 def run(request):
     from src.learning.public_bases import BASES,base_hash
     from src.learning.public_conversation import public_corpus,corpus_digest
-    from src.network.artifact_store import digest_file
+    from src.learning.weights_io import digest_file
     corpus=public_corpus();start=request['start'];count=request['count']
     if type(start) is not int or type(count) is not int or not 1<=count<=8 or not 0<=start<len(corpus['train']) or start+count>len(corpus['train']):
         raise ValueError('Invalid public language shard')

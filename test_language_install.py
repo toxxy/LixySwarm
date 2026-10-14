@@ -42,3 +42,20 @@ def test_incomplete_corrupt_or_cancelled_family_is_not_exposed(monkeypatch,tmp_p
     store.object_path(objects[1][1]).write_bytes(b'corrupted-model')
     with pytest.raises(ValueError,match='verificada'):installation.materialize_family(tmp_path,'fixture')
     assert not (tmp_path/'language-models'/('a'*64)).exists()
+
+
+def test_only_current_verified_version_materializes(monkeypatch,tmp_path):
+    from src.release import language_versions
+    store,objects=fixture(monkeypatch,tmp_path)
+    release,descriptor=installation.verify_bundle({})
+    head={'release':{'release_id':release.release_id}}
+    monkeypatch.setattr(language_versions,'LanguageVersionRegistry',lambda *_:SimpleNamespace(head=lambda:head))
+    monkeypatch.setattr(language_versions,'validate_bundle',lambda *_:(release,descriptor))
+    monkeypatch.setattr(language_versions,'dependencies',lambda *_:[(identifier,size) for _,identifier,size in objects])
+    with pytest.raises(ValueError,match='current verified'):
+        installation.materialize_version(tmp_path,'fixture','b'*64)
+    assert not (tmp_path/'language-models').exists()
+    target=installation.materialize_version(tmp_path,'fixture',release.release_id)
+    assert (target/'adapter.safetensors').read_bytes()==b'public-adapter'
+    with pytest.raises(RuntimeError,match='detenida'):
+        installation.materialize_version(tmp_path,'fixture',release.release_id,allowed=lambda:False)
