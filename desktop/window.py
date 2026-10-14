@@ -283,6 +283,8 @@ class SwarmWindow(QMainWindow):
         try: policy=self.controller.settings().policy
         except (OSError,ValueError,TypeError): policy=ClientSettings().policy
         prepared=self.controller.cpu_engine_prepared()
+        if prepared and not preparing:
+            self.engine_label.setText("Motor CPU preparado; el cálculo respeta tus permisos")
         self.engine_button.setEnabled(not preparing and not prepared and entry is not None
             and policy.mode in {"balanced","maximum"} and policy.cpu_percent>0 and policy.max_ram_gb>=2)
         self.engine_button.setText("Motor CPU preparado" if prepared else "Reanudar preparación" if self.engine_phase=="stopped" else "Preparar motor CPU")

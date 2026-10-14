@@ -59,6 +59,8 @@ jobs:
           python -c 'import json; assert json.load(open("package/report.json"))["success"]'
       - name: Record package checksums
         run: python desktop/checksums.py package/dist package/SHA256SUMS.txt
+      - name: Preserve native bundles in public release archives
+        run: python desktop/package_release.py package/dist package/release
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         if: always()
         with:
@@ -68,4 +70,5 @@ jobs:
             package/report.json
             package/preview.png
             package/SHA256SUMS.txt
+            package/release/
           retention-days: 1

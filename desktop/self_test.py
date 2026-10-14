@@ -97,6 +97,34 @@ def main():
                 report.update(engine_downloaded_and_verified=True,engine_frozen=checked["frozen"],
                               engine_candidate_evaluated=checked["candidate_evaluated"],engine_devices=engine.devices,
                               engine_preparation_s=round(time.monotonic()-engine_started,2))
+                if args.knowledge:
+                    wait(lambda: controller.snapshot()["diagnostics"].get("compute",{}).get("ready"))
+                    from src.network.work_protocol import WorkCoordinator,ResultReceipt
+                    from src.contribution import ContributionPolicy,ResourceGovernor,ResourceRequirements
+                    from src.network.reference_compute import INFERENCE_OPERATION
+                    from types import SimpleNamespace
+                    visitor=LSPNodeV3(LSPIdentity.generate(),host="0.0.0.0",port=0,
+                                      address_book_path=root/"visitor-peers.json",allow_private=False)
+                    requests=WorkCoordinator(visitor,ResourceGovernor(ContributionPolicy.for_mode("relay"),
+                        hardware=SimpleNamespace(cpu_cores=1,ram_gb=1,has_gpu=False,gpu_vram_gb=0,disk_gb=1),
+                        storage_path=root/"visitor"))
+                    try:
+                        visitor.start()
+                        until=time.monotonic()+60
+                        while identity not in visitor.connected_node_ids:
+                            if time.monotonic()>until: raise RuntimeError("The app worker was not reachable over Internet")
+                            visitor.connect_node(identity,timeout=12)
+                        response=requests.submit(INFERENCE_OPERATION,
+                            {"model_artifact_id":release.model_artifact_id,"prompt":"La memoria personal "},
+                            ResourceRequirements(kind="inference",ram_gb=2),peer_id=identity,timeout_s=60)
+                        assert response.status=="ok",response.error
+                        assert ResultReceipt.from_dict(response.receipt).verify(response,expected_worker_id=identity,
+                                                                             expected_requester_id=visitor.identity.node_id_hex)
+                        assert response.output["model_id"]==release.model_artifact_id and len(response.output["next_byte_logits"])==256
+                        report.update(app_worker_cpu_inference_verified=True,app_worker_receipt=response.receipt,
+                                      app_worker_model_id=response.output["model_id"])
+                    finally:
+                        requests.close();visitor.stop()
             window.pause_button.click()
             wait(lambda: controller.snapshot()["status"].get("state") == "paused")
             assert len(controller.snapshot()["diagnostics"]["peers"]) > 0
