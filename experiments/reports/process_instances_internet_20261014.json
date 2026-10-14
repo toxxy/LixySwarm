@@ -1,0 +1,35 @@
+{
+  "scope": "Three expected physical pilot identities with fresh signed process instances; not a 24-hour claim",
+  "source_revision": "713ae1dc9aec71d6b6fb5a75a7f47e903f869d2c",
+  "success": true,
+  "timestamp": 1792018218.6001515,
+  "nodes": [
+    {
+      "node_id": "28c218f34cd6b90e99955346711921d94b54852e4b8f29fb840207388f73444e",
+      "process_instance_id": "1603244b137babc5e9082930db014f79",
+      "sequence": 4613,
+      "timestamp_ms": 1792018209356,
+      "uptime_s": 15.0,
+      "active": true,
+      "signature_verified": true
+    },
+    {
+      "node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+      "process_instance_id": "0be4df97abc26f7ffb6bda9699f02210",
+      "sequence": 4894,
+      "timestamp_ms": 1792018215567,
+      "uptime_s": 20.7,
+      "active": true,
+      "signature_verified": true
+    },
+    {
+      "node_id": "ea914d97caafef310e50385034abae9a50ba86496b0e9cbf4679e6070e4c25b0",
+      "process_instance_id": "992376e15c16c1b8d47f514b2f59ebc7",
+      "sequence": 4784,
+      "timestamp_ms": 1792018216892,
+      "uptime_s": 19.9,
+      "active": true,
+      "signature_verified": true
+    }
+  ]
+}

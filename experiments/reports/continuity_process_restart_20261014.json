@@ -1,0 +1,96 @@
+{
+  "scope": "Controlled physical laptop service restart detected by live public telemetry; not 24-hour completion",
+  "old_instance_id": "992376e15c16c1b8d47f514b2f59ebc7",
+  "detected": {
+    "timestamp": 1792018319.3296418,
+    "healthy": false,
+    "sampling_gap": false,
+    "nodes": [
+      {
+        "node_id": "28c218f34cd6b90e99955346711921d94b54852e4b8f29fb840207388f73444e",
+        "healthy": true,
+        "sequence": 4620,
+        "timestamp_ms": 1792018314516,
+        "state": "connected",
+        "uptime_s": 120.2,
+        "process_instance_id": "1603244b137babc5e9082930db014f79",
+        "uptime_reset_or_clock_jump": false
+      },
+      {
+        "node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+        "healthy": true,
+        "sequence": 4902,
+        "timestamp_ms": 1792018315028,
+        "state": "connected",
+        "uptime_s": 120.2,
+        "process_instance_id": "0be4df97abc26f7ffb6bda9699f02210",
+        "uptime_reset_or_clock_jump": false
+      },
+      {
+        "node_id": "ea914d97caafef310e50385034abae9a50ba86496b0e9cbf4679e6070e4c25b0",
+        "healthy": false,
+        "sequence": 4797,
+        "timestamp_ms": 1792018317156,
+        "state": "connected",
+        "uptime_s": 7.7,
+        "process_instance_id": "e6513d6a11fc5f8127f18ff4f043088a",
+        "uptime_reset_or_clock_jump": true
+      }
+    ],
+    "consecutive_healthy_seconds": 0.0,
+    "required_seconds": 86400,
+    "satisfied": false,
+    "samples": 5,
+    "failures": 1,
+    "process_instances_required": true,
+    "longest_healthy_seconds": 60.58,
+    "error_type": null
+  },
+  "recovered": {
+    "timestamp": 1792018339.5415943,
+    "healthy": true,
+    "sampling_gap": false,
+    "nodes": [
+      {
+        "node_id": "28c218f34cd6b90e99955346711921d94b54852e4b8f29fb840207388f73444e",
+        "healthy": true,
+        "sequence": 4621,
+        "timestamp_ms": 1792018329539,
+        "state": "connected",
+        "uptime_s": 135.2,
+        "process_instance_id": "1603244b137babc5e9082930db014f79",
+        "uptime_reset_or_clock_jump": false
+      },
+      {
+        "node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+        "healthy": true,
+        "sequence": 4903,
+        "timestamp_ms": 1792018330167,
+        "state": "connected",
+        "uptime_s": 135.3,
+        "process_instance_id": "0be4df97abc26f7ffb6bda9699f02210",
+        "uptime_reset_or_clock_jump": false
+      },
+      {
+        "node_id": "ea914d97caafef310e50385034abae9a50ba86496b0e9cbf4679e6070e4c25b0",
+        "healthy": true,
+        "sequence": 4798,
+        "timestamp_ms": 1792018332601,
+        "state": "connected",
+        "uptime_s": 23.1,
+        "process_instance_id": "e6513d6a11fc5f8127f18ff4f043088a",
+        "uptime_reset_or_clock_jump": false
+      }
+    ],
+    "consecutive_healthy_seconds": 0.0,
+    "required_seconds": 86400,
+    "satisfied": false,
+    "samples": 6,
+    "failures": 1,
+    "process_instances_required": true,
+    "longest_healthy_seconds": 60.58,
+    "error_type": null
+  },
+  "success": true,
+  "source_revision": "713ae1dc9aec71d6b6fb5a75a7f47e903f869d2c"
+}

@@ -1,0 +1,28 @@
+{
+  "success": true,
+  "internet": true,
+  "language_preparation_permission_gate": true,
+  "chat_first_answer": "Una red descentralizada es una red de computadoras que no est\u00e1 controlada por un solo punto central.",
+  "chat_ui_verified": true,
+  "chat_remote_context_opt_in": true,
+  "chat_history_survives_reopen": true,
+  "chat_history_encrypted": true,
+  "chat_receipt": {
+    "version": 1,
+    "job_id": "1e04a40c2bac026b137a02f63916c024c0923ec45aac3e57e256413005a46911",
+    "worker_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+    "requester_node_id": "123824df804e2f0d2d5b3af4eb2f7955ce9e8cc7e8f08a944fd9fd5969c62d26",
+    "result_digest": "143b8fad0f400a3b9394fed1a2e1dd92f88fbaf39c09d1d03166299424bd8141",
+    "finished_at": 1792018409.7488155,
+    "signature": "giM1z0T48X0jftSLHXnp3On8SqqPROJZhWPCL0EXFEHWxaNfiMpK/eKmlaHrWWMtslT2pnSj0IALTl4mH0FsCg=="
+  },
+  "chat_cancellation_verified": true,
+  "connection_s": 0.73,
+  "controls_confirmed": true,
+  "pause_keeps_connection": true,
+  "reconnect_keeps_identity": true,
+  "calculation_engines_loaded": false,
+  "scope": "Published frozen A7 Linux app talking to A9 physical nodes; genesis conversation and status compatibility only",
+  "current_node_source_revision": "713ae1dc9aec71d6b6fb5a75a7f47e903f869d2c",
+  "legacy_application_revision": "2683211"
+}

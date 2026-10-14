@@ -1,0 +1,28 @@
+{
+  "success": true,
+  "internet": true,
+  "language_preparation_permission_gate": true,
+  "chat_first_answer": "Una red descentralizada es una red de computadoras que no est\u00e1 controlada por un solo punto central.",
+  "chat_ui_verified": true,
+  "chat_remote_context_opt_in": true,
+  "chat_history_survives_reopen": true,
+  "chat_history_encrypted": true,
+  "chat_receipt": {
+    "version": 1,
+    "job_id": "abc1fec78f512e7b7a008a62eb1a4fc802c91c6c41d266e128deac232e783b93",
+    "worker_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+    "requester_node_id": "f06cd1a87c272aaf5ec85b8fa161deeda20b9ce7ca7a5e98fbca1cafa2937d36",
+    "result_digest": "cfd18a34fd00b29be4c3b3cfc415f3f74a968bc0675dff25d5e83b8cc1a46ba3",
+    "finished_at": 1792018109.3107927,
+    "signature": "jwO6DSPqzslDuDg0jRw2ee0AMJmas1PPuPEXRvTs8NgAb7n6WExG9DOyZYQsWdwD8kldh+W0ZUPaZ7s9PFF7CA=="
+  },
+  "chat_cancellation_verified": true,
+  "connection_s": 0.72,
+  "controls_confirmed": true,
+  "pause_keeps_connection": true,
+  "reconnect_keeps_identity": true,
+  "calculation_engines_loaded": false,
+  "scope": "Frozen Linux A9 app on desktop with negotiated status compatibility; synthetic Internet chat",
+  "source_revision": "713ae1dc9aec71d6b6fb5a75a7f47e903f869d2c",
+  "bundle_id": "0.4.0a9-60a72402e3f1"
+}
