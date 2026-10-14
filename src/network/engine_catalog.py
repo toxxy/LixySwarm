@@ -40,3 +40,26 @@ CPU_ENGINES: dict[tuple[str, str], EngineDownload] = {
 def cpu_engine():
     machine = {"AMD64": "x86_64", "aarch64": "arm64"}.get(platform.machine(), platform.machine())
     return CPU_ENGINES.get((sys.platform, machine))
+
+
+LANGUAGE_URL='https://github.com/toxxy/LixySwarm/releases/download/language-engine-0.4.0a1/'
+LANGUAGE_ENGINES={
+    'cpu':EngineDownload(LANGUAGE_URL+'LixySwarmLanguageCPU-linux-x86_64.zip',
+        'c075af9813e8ea8124c0dfae38b7ad30014cdad3d7b7749af3deec5e0cfa5f3b',286019554,
+        '231e0866dd651fe38eb211d248295d4321ff25b5fd0ca7bc42048ae03b1723b6',879096011,profile='language-cpu'),
+    'cuda':EngineDownload(LANGUAGE_URL+'LixySwarmLanguageCUDA-linux-x86_64.zip',
+        '32159cba0106fd124c3bdb07361d0cf91d4188b07ba30f202f20f54950674e74',2725324662,
+        'f93d4310d0178cfb7f61ac829da507adff992b01e29b91ced2e71bc1c7159bb8',7200954897,profile='language-cuda',parts=(
+            EnginePart(LANGUAGE_URL+'LixySwarmLanguageCUDA-linux-x86_64.zip.part1','6129e35d465fa761c46b9f592e8ea4ebd47a6e2ebc2a7f02afee9a4246fa9a08',1073741824),
+            EnginePart(LANGUAGE_URL+'LixySwarmLanguageCUDA-linux-x86_64.zip.part2','2290e7c14d76c7ca2bea14bd91d9f5ba1aaabba0047404755ac13bde12d7ab14',1073741824),
+            EnginePart(LANGUAGE_URL+'LixySwarmLanguageCUDA-linux-x86_64.zip.part3','17852d3f75a0d071897e72a4da1afdb998d123708fe0a704450beda867ceb367',577841014))),
+}
+
+
+def language_engine(device):
+    # These first binaries were built and checked on Ubuntu 24.04.
+    if sys.platform!='linux' or platform.machine()!='x86_64':return None
+    try:
+        if tuple(int(x) for x in platform.libc_ver()[1].split('.')[:2])<(2,39):return None
+    except ValueError:return None
+    return LANGUAGE_ENGINES.get(device)

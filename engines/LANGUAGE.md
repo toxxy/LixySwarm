@@ -10,4 +10,6 @@ El motor CUDA supera el tamaño de un archivo de distribución; se divide en tre
 
 Los primeros paquetes locales corresponden a Linux x86_64 Ubuntu 24.04. El motor CPU pasó un contenedor limpio sin Python. Hay CI de CPU para Linux, Windows y macOS; eso no acredita inferencia real en las tres plataformas ni instalación física. CUDA continúa con el ensayo de las PCs Linux.
 
+La [publicación experimental](https://github.com/toxxy/LixySwarm/releases/tag/language-engine-0.4.0a1) ofrece el archivo CPU y las tres partes CUDA de Linux Ubuntu 24.04. `engine_catalog.language_engine` fija sus tamaños, hashes de archivos y manifiestos; descarta sistemas Linux anteriores al entorno validado. La descarga pública y la integración del recorrido de preparación en la app se verifican por separado.
+
 La prueba del ejecutable CUDA con la familia pequeña obtuvo una respuesta factual incorrecta al reformular una pregunta. El intérprete de desarrollo reprodujo el fallo. El empaquetado funciona, pero no habilita conversación general ni sustituye los criterios pendientes de evaluación, réplica y aprendizaje distribuido.
