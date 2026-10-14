@@ -8,7 +8,7 @@ Las etapas se completan por sus pruebas de aceptación; una implementación parc
 | 1. Red continua | En observación | Servicios desplegados en dos PCs y VPS, estado por identidad en el Explorer y recuperación tras reinicio comprobados. Faltan operación de 24 horas y recuperación con otro relay público independiente. |
 | 2. App sencilla | En implementación | Interfaz de cuatro pantallas, controles locales confirmados, paquetes probados en Linux/Windows/macOS y app instalada en ambas PCs. Faltan modelo de red, preparación de trabajadores, arranque automático por plataforma y gate de instalación limpia completo. |
 | 3. Aprendizaje distribuido | Piloto verificado; integración pendiente | Dos GPUs procesaron ocho fragmentos por Internet: cuatro promociones y pérdida 5,56086 → 5,45485. Ambas adquirieron y usaron el modelo final. Faltan recuperación de trabajo incompleto, modelo conversacional e integración con la app. |
-| 4. Conocimiento persistente | Pendiente | Existen artefactos por contenido. Falta demostrar réplica y adquisición después de apagar al productor. |
+| 4. Conocimiento persistente | Piloto verificado parcialmente | Ambos trabajadores replicaron el modelo; un cliente vacío lo recuperó desde la otra PC con los procesos productores detenidos y reprodujo la evaluación. Faltan apagado físico, descubrimiento y reparación automáticos, memoria global y tres réplicas independientes. |
 | 5. Capacidad heterogénea | Pendiente | Falta medir beneficio de dos PCs y transferencia entre agentes de tamaños distintos. |
 | 6. Organismo funcional | Pendiente | Faltan integración persistente y comparaciones que demuestren utilidad de memoria, Dolphin y sectas. |
 | 7. Autonomía | Pendiente | Faltan decisiones por resultados, GrowthGate y diez ciclos auditables. |
@@ -75,6 +75,15 @@ El [informe de referencia](experiments/reports/internet_learning_20261014.json) 
 - Las sesiones entre trabajadores y coordinador atravesaron el relay público con cifrado de extremo a extremo. El coordinador corrió en una PC; el VPS transportó tráfico y no entrenó ni decidió las promociones.
 
 El corpus de evaluación comparte los hechos sintéticos de entrenamiento, con contexto distinto. Este gate comprueba una mejora reproducible de predicción y el recorrido distribuido; la generalización semántica y el aumento de capacidad al sumar nodos requieren otras evaluaciones.
+
+### Conservación y adquisición desde cero
+
+- Se cerraron limpiamente el coordinador y el trabajador de la PC productora. La otra PC reinició su proceso y restauró la release final, la identidad y los cuatro trabajos completados desde su estado persistente.
+- Un cliente nuevo, con cero bytes de artefactos, obtuvo desde esa PC cinco manifiestos firmados y 9.243.701 bytes de pesos, optimizador y evaluaciones por LSP. Verificó el genesis fijado, las firmas, cada predecesor y los hashes antes de activarlos.
+- Ese cliente cargó los pesos en CPU y reprodujo la evaluación: 5,4548539453 frente a 5,4548538764 en GPU. La diferencia fue inferior a 10⁻⁷.
+- El [informe de recuperación](experiments/reports/internet_persistence_20261014.json) conserva la evidencia sin direcciones de operadores. Las rutas hacia el relay público usaron Ethernet y Wi-Fi; la VPN se utilizó solamente para administrar procesos.
+- La prueba conserva acceso a los servicios de conectividad de las dos PCs, que no sirven estos checkpoints. Comprueba independencia de los procesos productores y almacenamiento vacío; apagar físicamente la PC productora sigue pendiente y no se da por cumplido con este ensayo.
+- Pasaron 110 pruebas de aprendizaje, versiones, artefactos, trabajo, transporte, telemetría, interfaz y límites. Los ensayos temporales se mantienen separados del cliente de uso diario.
 
 Desde el checkout y su entorno Python con `cryptography`:
 

@@ -1,0 +1,36 @@
+{
+  "acquired_bytes": 9243701,
+  "chain_length": 5,
+  "device": "cpu",
+  "evaluation_loss": 5.454853945290042,
+  "expected_loss": 5.454853876420851,
+  "initial_artifact_bytes": 0,
+  "model_id": "f2e3556f06a392291157b75c6adc44378cc15e1b10ddb9f633a2da19d30c66c2",
+  "provider_id": "1c7d1ac299aa917075d93a846e6750363ff5873cf89b48367d3b82a98b6c60ed",
+  "release_id": "59f68cdc1e6985fd539c1299e42bd200a4a24c42959d368fc3748780bcea98a3",
+  "routes": [
+    {
+      "node_id": "28c218f34cd6b90e99955346711921d94b54852e4b8f29fb840207388f73444e",
+      "transport": "direct"
+    },
+    {
+      "node_id": "1c7d1ac299aa917075d93a846e6750363ff5873cf89b48367d3b82a98b6c60ed",
+      "transport": "relay"
+    },
+    {
+      "node_id": "ea914d97caafef310e50385034abae9a50ba86496b0e9cbf4679e6070e4c25b0",
+      "transport": "relay"
+    },
+    {
+      "node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+      "transport": "relay"
+    }
+  ],
+  "sequence": 4,
+  "source_processes_offline": [
+    "53cea6456aced3a5a31ad24505aaa47d88e1827d1e7976592c91b54fc0e8980f",
+    "e14c6a73659a354ad58c1088a634eef9722184880d778bb3c886ddbbd2f2668b"
+  ],
+  "success": true,
+  "scope": "Fresh client, producer processes offline; physical producer PC remained on. Weights and manifests acquired from the other PC over public LSP."
+}
