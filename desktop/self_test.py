@@ -69,7 +69,8 @@ def main():
                 args.screenshot.parent.mkdir(parents=True, exist_ok=True)
                 window.grab().save(str(args.screenshot))
             window.disconnect_button.click()
-            wait(lambda: controller.snapshot()["status"].get("state") == "disconnected")
+            wait(lambda: controller.snapshot()["status"].get("state") == "disconnected"
+                 and controller.snapshot()["diagnostics"]["peers"] == [])
             assert controller.snapshot()["diagnostics"]["peers"] == []
             window.connect_button.click()
             wait(lambda: controller.snapshot()["status"].get("state") == "connected")
@@ -79,7 +80,9 @@ def main():
                           pause_keeps_connection=True, reconnect_keeps_identity=True,
                           calculation_engines_loaded=False)
         except Exception as exc:
-            report["error"] = str(exc)
+            import traceback
+            report["error"] = f"{type(exc).__name__}: {exc}"
+            report["traceback"] = traceback.format_exc()
             report["node_log"] = controller.log_tail()
         finally:
             if controller.process is not None:
