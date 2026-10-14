@@ -189,3 +189,9 @@ Never commit checkpoints, corpora, session histories, identities, peer databases
 - [PENDIENTES_2026-06-05.md](PENDIENTES_2026-06-05.md): current backlog retained under its historical filename
 
 Historical experiment notes are labeled as such and must not be read as current release status.
+
+## Vista previa instalable por Internet
+
+[Descargar LixySwarm 0.4.0a2](https://github.com/toxxy/LixySwarm/releases/tag/v0.4.0a2) para Linux x86_64, Windows x86_64 o macOS arm64. Descomprime el archivo, abre LixySwarm y usa **Instalar en este equipo** para añadir el acceso al menú. Elige tus recursos y conecta. No necesitas instalar Python, usar una VPN ni configurar puertos del router.
+
+Autorizar CPU con al menos 2 GB de RAM prepara automáticamente un motor público verificado y el modelo de referencia. La conexión comienza antes de esas descargas. La vista previa permite conservar conocimiento y aportar inferencia tipada de bytes; el chat conversacional y el entrenamiento abierto de desconocidos siguen pendientes. Los paquetes no tienen todavía firma pública de distribución; la instalación física de Windows y macOS conserva su gate, aunque sus ejecutables y descarga del motor pasaron CI. Consulta [la app](desktop/README.md) y [el avance completo de la visión](VISION_PROGRESS.md).
