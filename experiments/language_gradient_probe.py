@@ -10,7 +10,8 @@ from src.learning.public_bases import base_hash
 from src.learning.public_conversation import public_corpus, corpus_digest
 from src.network.artifact_store import ArtifactService, ArtifactStore
 from src.network.bootstrap import get_seed_endpoints
-from src.network.language_training import OPERATION
+from src.network.language_training import OPERATION,VERSIONED_OPERATION
+from src.network.language_version_service import fetch_history
 from src.network.lsp import LSPIdentity
 from src.network.lsp_v3 import LSPNodeV3
 from src.network.telemetry import atomic_json
@@ -24,12 +25,19 @@ def main():
     parser.add_argument('--identity-key', type=Path, required=True)
     parser.add_argument('--worker', action='append', required=True)
     parser.add_argument('--count', type=int, default=4)
+    parser.add_argument('--base-name',choices=['qwen3-0.6b','qwen3-1.7b'],default='qwen3-0.6b')
+    parser.add_argument('--legacy',action='store_true')
+    parser.add_argument('--candidate-worker')
+    parser.add_argument('--learning-rate',type=float,default=.001)
     args = parser.parse_args()
     repo = Path(__file__).resolve().parents[1]
     if args.directory.resolve().is_relative_to(repo):
         parser.error('Experiment state must be outside the checkout')
     if len(set(args.worker)) != len(args.worker) or not 1 <= len(args.worker) <= 8 or not 1 <= args.count <= 8:
         parser.error('Use distinct physical workers and bounded shard sizes')
+    if args.legacy and (args.base_name!='qwen3-0.6b' or args.candidate_worker):
+        parser.error('Legacy gradients support only the original small family and no candidate')
+    if not 1e-6<=args.learning_rate<=1e-3:parser.error('Candidate step is outside its bound')
     identity = LSPIdentity.load(str(args.identity_key))
     if identity is None:
         parser.error('A locally authorized requester identity is required')
@@ -45,11 +53,13 @@ def main():
         'physical_workers': args.worker, 'requester_id': identity.node_id_hex,
         'requester_is_extra_physical_worker': False, 'contributions': [], 'success': False,
         'candidate_promoted': False, 'started_at': time.time()}
+    report.update(base_name=args.base_name,operation=OPERATION if args.legacy else VERSIONED_OPERATION,
+        signed_results=[])
     path = args.directory/'report.json'
     atomic_json(path, report)
     try:
         node.start()
-        for index, worker in enumerate(args.worker):
+        def connect(worker):
             until = time.monotonic()+90
             while worker not in node.connected_node_ids:
                 if time.monotonic() >= until:
@@ -59,25 +69,48 @@ def main():
             route = next(p for p in node.peers() if p['node_id'] == worker)
             if not route['encrypted'] or not ipaddress.ip_address(route.get('relay_host') or route['host']).is_global:
                 raise ValueError('Gradient pilot requires encrypted public Internet transport')
-            payload = {'adapter_id': ADAPTERS['qwen3-0.6b'], 'dataset_id': corpus_digest(public_corpus()),
+            return route
+        for index, worker in enumerate(args.worker):
+            route=connect(worker)
+            if not args.legacy:
+                head=fetch_history(work,args.base_name,worker)[-1]
+                if 'head' in report and head['release']['release_id']!=report['head']['release']['release_id']:
+                    raise ValueError('Physical workers have different language versions')
+                report['head']=head
+            payload = {'adapter_id': ADAPTERS[args.base_name] if args.legacy else report['head']['release']['model_artifact_id'], 'dataset_id': corpus_digest(public_corpus()),
                 'start': index*args.count, 'count': args.count}
+            if not args.legacy:payload.update(base_name=args.base_name,release_id=report['head']['release']['release_id'])
             started = time.monotonic()
-            result = work.submit(OPERATION, payload, ResourceRequirements(kind='training', gpu_required=True,
-                ram_gb=4, disk_gb=.01), peer_id=worker, timeout_s=240)
+            result = work.submit(OPERATION if args.legacy else VERSIONED_OPERATION, payload, ResourceRequirements(kind='training', gpu_required=True,
+                ram_gb=6 if args.base_name=='qwen3-1.7b' else 4, disk_gb=.04), peer_id=worker, timeout_s=240)
             if result.status != 'ok':
                 raise RuntimeError(result.error)
             if not ResultReceipt.from_dict(result.receipt).verify(result, expected_worker_id=worker,
                     expected_requester_id=identity.node_id_hex):
                 raise ValueError('Language contribution receipt is invalid')
             output = result.output
-            if output['base_hash'] != base_hash('qwen3-0.6b') or any(output[k] != v for k, v in payload.items()):
+            if output['base_hash'] != base_hash(args.base_name) or any(output[k] != payload[k] for k in ['adapter_id','dataset_id','start','count']):
                 raise ValueError('Returned language contribution is from another version or shard')
             gradient = artifacts.fetch(output['gradient_id'], peer_id=worker, timeout_s=60,
                 expected_size=output['gradient_bytes'])
             report['contributions'].append({**output, 'path': str(gradient), 'worker_id': worker,
                 'seconds': round(time.monotonic()-started, 3), 'receipt': result.receipt,
                 'transport': route['transport'], 'encrypted': route['encrypted']})
+            report['signed_results'].append(result.to_dict())
             atomic_json(path, report)
+        if args.candidate_worker:
+            route=connect(args.candidate_worker)
+            payload={'base_name':args.base_name,'release_id':report['head']['release']['release_id'],
+                'adapter_id':report['head']['release']['model_artifact_id'],'dataset_id':corpus_digest(public_corpus()),
+                'contributions':report['signed_results'],'learning_rate':args.learning_rate}
+            report.update(candidate_state='evaluating',candidate_worker=args.candidate_worker)
+            atomic_json(path,report)
+            result=work.submit('language.candidate.v1',payload,ResourceRequirements(kind='training',gpu_required=True,
+                ram_gb=6 if args.base_name=='qwen3-1.7b' else 4,disk_gb=.1),peer_id=args.candidate_worker,timeout_s=900)
+            if result.status!='ok':raise RuntimeError(result.error)
+            if not ResultReceipt.from_dict(result.receipt).verify(result,expected_worker_id=args.candidate_worker,
+                    expected_requester_id=identity.node_id_hex):raise ValueError('Candidate evaluation receipt is invalid')
+            report.update(candidate_state='completed',candidate_result=result.to_dict(),candidate_transport=route['transport'])
         report.update(success=True, finished_at=time.time(), total_tokens=sum(c['tokens'] for c in report['contributions']))
         atomic_json(path, report)
         print(f"Verified {len(report['contributions'])} contributions; {report['total_tokens']} tokens; no promotion", flush=True)

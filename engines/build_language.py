@@ -49,7 +49,9 @@ def main():
                 for block in iter(lambda:stream.read(1024**2),b''):digest.update(block)
             files.append({'path':path.relative_to(package).as_posix(),'bytes':path.stat().st_size,'sha256':digest.hexdigest()})
     manifest={'version':1,'name':name,'platform':sys.platform,'machine':platform.machine(),'torch':torch.__version__,
-        'operations':['language.inference.v1'],'entrypoint':name+('.exe' if sys.platform=='win32' else ''),'files':files}
+        'operations':(['language.inference.v1','language.gradient.v2','language.candidate.v1'] if args.device=='cuda'
+                      else ['language.inference.v1']),
+        'entrypoint':name+('.exe' if sys.platform=='win32' else ''),'files':files}
     (package/'engine-package.json').write_text(json.dumps(manifest,indent=2)+'\n')
     print(json.dumps({'files':len(files),'bytes':sum(row['bytes'] for row in files)}))
 

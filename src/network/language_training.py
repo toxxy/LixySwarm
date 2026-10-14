@@ -26,9 +26,10 @@ class LanguageTrainingSettings:
     adapter_file:str=''
     requesters:list=field(default_factory=list)
     base_name:str='qwen3-0.6b'
+    candidates_enabled:bool=False
 
     def validate(self):
-        if type(self.version) is not int or self.version!=2 or type(self.enabled) is not bool or self.base_name not in BASES:raise ValueError('Invalid language training controls')
+        if type(self.version) is not int or self.version!=2 or type(self.enabled) is not bool or type(self.candidates_enabled) is not bool or self.base_name not in BASES:raise ValueError('Invalid language training controls')
         if not isinstance(self.command,list) or len(self.command)>4 or any(not isinstance(x,str) or not x or len(x)>4096 for x in self.command):raise ValueError('Invalid local gradient command')
         if not isinstance(self.requesters,list) or len(self.requesters)>8 or any(not isinstance(x,str) or len(x)!=64 or any(c not in '0123456789abcdef' for c in x) for x in self.requesters):raise ValueError('Invalid known language requesters')
         if self.enabled and (not self.command or not self.requesters or any(not Path(x).is_absolute() for x in [self.command[0],self.base_directory,self.adapter_file])):raise ValueError('Public language training requires locally approved inputs/requesters')
@@ -41,8 +42,10 @@ class LanguageTrainingSettings:
         if not path.exists():return cls()
         if path.stat().st_size>16*1024:raise ValueError('Language training controls exceed their bound')
         value=json.loads(path.read_text())
-        if isinstance(value,dict) and set(value)==set(asdict(cls()))-{'base_name'} and value.get('version')==1:
+        if isinstance(value,dict) and set(value)==set(asdict(cls()))-{'base_name','candidates_enabled'} and value.get('version')==1:
             value={**value,'version':2,'base_name':'qwen3-0.6b'}
+        if isinstance(value,dict) and set(value)==set(asdict(cls()))-{'candidates_enabled'} and value.get('version')==2:
+            value={**value,'candidates_enabled':False}
         if not isinstance(value,dict) or set(value)!=set(asdict(cls())):raise ValueError('Invalid language training settings schema')
         result=cls(**value);result.validate();return result
 
@@ -61,6 +64,14 @@ class LanguageTraining:
         except (OSError,ValueError,TypeError,KeyError):pass
         knowledge.work.register_handler(OPERATION,'training',self.gradient,permit_cached=self._permit_cached)
         knowledge.work.register_handler(VERSIONED_OPERATION,'training',self.versioned_gradient,permit_cached=self._permit_versioned_cached)
+        from .language_candidate import OPERATION as candidate_operation,run_candidate
+        knowledge.work.register_handler(candidate_operation,'training',lambda payload,execution:run_candidate(self,payload,execution),
+            permit_cached=lambda execution,result:self._permit_candidate_cached(execution,result))
+
+    def _permit_candidate_cached(self,execution,result):
+        if not self.ready or not self.engine.candidates_enabled or not self.knowledge.allowed or execution.work.origin_node_id not in self.engine.requesters:return False
+        try:return result['summary']['parent_release_id']==self._head()['release']['release_id']
+        except (OSError,ValueError,TypeError,KeyError):return False
 
     def _head(self):
         from src.release.language_versions import LanguageVersionRegistry

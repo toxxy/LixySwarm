@@ -124,8 +124,19 @@ def _verify_evaluation(report,parent,before,candidate,after):
         raise ReleaseError('Language candidate regresses factual preservation')
     if not instruction_verdict(report['instruction_before'],report['instruction_after'])['eligible_for_promotion']:
         raise ReleaseError('Language candidate regresses instructions or context')
-    contributions = report['contributions']
-    if not isinstance(contributions, list) or not 2 <= len(contributions) <= 16:
+    proof=verify_contributions(report['contributions'],base_name=before['base_name'],
+        adapter_id=parent.model_artifact_id,dataset_id=report['dataset_id'])
+    if len(genesis.canonical(report)) > MAX_EVALUATION_BYTES:
+        raise ReleaseError('Language evaluation exceeds its bound')
+    return {**proof,'candidate_id':candidate.release_id}
+
+
+def verify_contributions(contributions,*,base_name,adapter_id,dataset_id,require_distributed=True):
+    """Check signed physical receipts; promotion always uses both-worker mode."""
+    if (type(require_distributed) is not bool or base_name not in BASES
+            or dataset_id!=corpus_digest(public_corpus())):
+        raise ReleaseError('Invalid public contribution policy or dataset')
+    if not isinstance(contributions, list) or not (2 if require_distributed else 1) <= len(contributions) <= 16:
         raise ReleaseError('Distributed language promotion requires contributions from both PCs')
     workers, jobs, ranges, tokens = set(), set(), [], 0
     for row in contributions:
@@ -139,8 +150,8 @@ def _verify_evaluation(report,parent,before,candidate,after):
         output = result.output
         expected = {'base_hash', 'adapter_id', 'dataset_id', 'start', 'count', 'tokens', 'loss', 'retention_loss',
             'gradient_id', 'gradient_bytes', 'gradient'}
-        if (set(output) != expected or output['base_hash'] != before['base_hash']
-                or output['adapter_id'] != parent.model_artifact_id or output['dataset_id'] != report['dataset_id']
+        if (set(output) != expected or output['base_hash'] != genesis.base_hash(base_name)
+                or output['adapter_id'] != adapter_id or output['dataset_id'] != dataset_id
                 or type(output['start']) is not int or type(output['count']) is not int
                 or not 1 <= output['count'] <= 8 or not 0 <= output['start'] <= len(public_corpus()['train'])-output['count']
                 or type(output['tokens']) is not int or not 1 <= output['tokens'] <= 1536
@@ -155,11 +166,10 @@ def _verify_evaluation(report,parent,before,candidate,after):
         ranges.append((output['start'], output['start']+output['count']))
         tokens += output['tokens']
     ranges.sort()
-    if workers != WORKERS or tokens < 16 or any(a[1] > b[0] for a, b in zip(ranges, ranges[1:])):
+    if ((require_distributed and (workers != WORKERS or tokens < 16))
+            or any(a[1] > b[0] for a, b in zip(ranges, ranges[1:]))):
         raise ReleaseError('Language promotion requires distinct physical workers and disjoint useful shards')
-    if len(genesis.canonical(report)) > MAX_EVALUATION_BYTES:
-        raise ReleaseError('Language evaluation exceeds its bound')
-    return {'physical_workers': sorted(workers), 'tokens': tokens, 'candidate_id': candidate.release_id}
+    return {'physical_workers':sorted(workers),'tokens':tokens}
 
 
 def build_update(chain,adapter,evaluation,report,publisher):

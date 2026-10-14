@@ -30,7 +30,7 @@ MAX_PUBLIC_STORE = 512 * 1024**2
 def managed_public_bytes(directory):
     """Charge all public families and prepared engines to the one disk consent."""
     total=0;seen=set()
-    for name in ("public","engines","language-models","engine-downloads"):
+    for name in ("public","engines","language-models","engine-downloads","language-candidates"):
         for path in (Path(directory)/name).rglob("*"):
             try:
                 if path.is_file() and not path.is_symlink():
