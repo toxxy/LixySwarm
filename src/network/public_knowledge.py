@@ -14,7 +14,8 @@ from dataclasses import asdict, dataclass
 from pathlib import Path
 from types import SimpleNamespace
 
-from src.contribution import ContributionPolicy, ResourceGovernor
+from src.contribution.policy import ContributionPolicy
+from src.contribution.resource_governor import ResourceGovernor
 from src.release import ReleaseError, ReleaseManifest, ReleaseRegistry
 from src.release.history import ReleaseHistoryService, fetch_release_history
 from src.release.reference_catalog import REFERENCE_CATALOG
