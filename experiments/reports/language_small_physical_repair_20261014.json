@@ -1,0 +1,37 @@
+{
+  "acquired_objects": {
+    "3ff34a673bc4d8d83c0ba33286acfd2a1ee318c8ffbafce16caba345beb0b67f": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255"
+  },
+  "active_expert_changed": false,
+  "base_name": "qwen3-0.6b",
+  "finished_at": 1792019564.923497,
+  "history_failures": [
+    {
+      "error_type": "ReleaseError",
+      "provider": "ea914d97caafef310e50385034abae9a50ba86496b0e9cbf4679e6070e4c25b0",
+      "stage": "history"
+    }
+  ],
+  "model_id": "3ff34a673bc4d8d83c0ba33286acfd2a1ee318c8ffbafce16caba345beb0b67f",
+  "providers": [
+    "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255"
+  ],
+  "release_id": "a43dba6caab4c61a1a74482e3e4ec7b4f0c4a5f4e9764805056dddfaf84c9da0",
+  "resource_permissions_changed": false,
+  "sequence": 0,
+  "started_at": 1792019483.9473906,
+  "success": true,
+  "visitor_is_extra_physical_worker": false,
+  "scope": "Physical laptop repair of a missing public small-family adapter over Internet LSP; no new learning or quality approval",
+  "repaired_artifact": "3ff34a673bc4d8d83c0ba33286acfd2a1ee318c8ffbafce16caba345beb0b67f",
+  "repaired_bytes": 4599712,
+  "original_and_network_sha_match": true,
+  "controls_unchanged": true,
+  "active_expert_unchanged": true,
+  "source_revision": "20b2c3a",
+  "timestamp": 1792019564.986084,
+  "physical_receiver": "ea914d97caafef310e50385034abae9a50ba86496b0e9cbf4679e6070e4c25b0",
+  "producer_powered_off": false,
+  "new_learning_verified": false,
+  "chat_quality_approved": false
+}

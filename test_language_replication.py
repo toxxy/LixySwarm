@@ -62,6 +62,42 @@ def test_storage_preflight_and_permission_withdrawal_prevent_activation(monkeypa
     assert LanguageVersionRegistry(tmp_path/'receiver','qwen3-0.6b').head()==first
 
 
+def test_partial_replica_can_supply_content_after_its_history_rpc_fails(monkeypatch,tmp_path):
+    from src.network import language_replication
+    source,target,first,second,report,calls,_update=setup(monkeypatch,tmp_path)
+    transfer=language_replication.ArtifactService
+    model=second['release']['model_artifact_id']
+    def history(_work,_name,provider,**_kw):
+        if provider=='partial':raise ArtifactError('replica has incomplete family')
+        return [first,second]
+    class ComplementaryTransfer(transfer):
+        def fetch(self,identifier,**kwargs):
+            if identifier==model and kwargs['peer_id']=='metadata':
+                raise ArtifactError('this provider lost the adapter')
+            return super().fetch(identifier,**kwargs)
+    monkeypatch.setattr(language_replication,'fetch_history',history)
+    monkeypatch.setattr(language_replication,'ArtifactService',ComplementaryTransfer)
+    result=replicate_version(None,target,tmp_path/'receiver','qwen3-0.6b',['metadata','partial'])
+    assert result['release_id']==second['release']['release_id']
+    assert result['acquired_objects'][model]=='partial'
+    assert result['metadata_providers']==['metadata']
+    assert result['providers']==['metadata','partial']
+
+
+def test_known_head_can_be_repaired_when_every_history_rpc_is_unavailable(monkeypatch,tmp_path):
+    from src.network import language_replication
+    source,target,first,second,report,calls,_update=setup(monkeypatch,tmp_path)
+    replicate_version(None,target,tmp_path/'receiver','qwen3-0.6b',['working'])
+    model=second['release']['model_artifact_id'];target.object_path(model).unlink()
+    def unavailable(*_a,**_kw):raise ArtifactError('replica has incomplete family')
+    monkeypatch.setattr(language_replication,'fetch_history',unavailable)
+    result=replicate_version(None,target,tmp_path/'receiver','qwen3-0.6b',['working'])
+    assert result['release_id']==second['release']['release_id']
+    assert result['acquired_objects']=={model:'working'}
+    assert result['metadata_providers']==[]
+    assert len(result['history_failures'])==1
+
+
 def test_valid_signed_forks_are_not_silently_chosen(monkeypatch,tmp_path):
     from src.network import language_replication
     from src.release.language_versions import verify_chain
