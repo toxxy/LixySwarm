@@ -100,4 +100,12 @@ class NodeController:
                 stream.seek(max(0, stream.tell() - 16000))
                 return stream.read().decode("utf-8", errors="replace")
         except OSError:
+            snapshot = self.snapshot()
+            if snapshot["fresh"]:
+                status = snapshot["status"]
+                return (f"Nodo {status['node_id'][:16]}\n"
+                        f"Estado: {status['state']}\n"
+                        f"Conexiones: {len(snapshot['diagnostics'].get('peers', []))}\n"
+                        f"Secuencia de estado: {status['sequence']}\n\n"
+                        "La preparación de modelos y las contribuciones aparecerán aquí cuando los trabajadores estén disponibles.")
             return "El nodo guardará aquí su actividad cuando se conecte."

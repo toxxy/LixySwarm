@@ -53,12 +53,18 @@ class NodeStateLock:
         self.stream.close()
 
 
+def connectivity_policy():
+    policy = ContributionPolicy.for_mode("relay")
+    policy.consented_at = 0.0
+    return policy
+
+
 @dataclass
 class ClientSettings:
     version: int = 1
     connected: bool = True
     paused: bool = False
-    policy: ContributionPolicy = field(default_factory=ContributionPolicy)
+    policy: ContributionPolicy = field(default_factory=connectivity_policy)
 
     def validate(self):
         if type(self.version) is not int or self.version != 1:

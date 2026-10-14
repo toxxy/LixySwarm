@@ -76,6 +76,9 @@ def test_control_settings_preserve_consent_and_reject_invalid_budgets(tmp_path):
 
 def test_controls_cannot_enable_compute_without_consent_or_change_schema(tmp_path):
     settings = ClientSettings()
+    assert settings.policy.gpu_percent == 0
+    assert settings.policy.max_cpu_jobs == 0
+    assert settings.policy.max_gpu_jobs == 0
     settings.policy.mode = "balanced"
     with pytest.raises(ValueError, match="consent"):
         settings.save(tmp_path)
