@@ -149,6 +149,8 @@ La app empieza durante este tramo. Su promesa de aprendizaje compartido se habil
 
 ## Seguimiento de decisiones y avance
 
+El goal activo se registra en [VISION_PROGRESS.md](VISION_PROGRESS.md), con evidencia, decisiones y criterios todavía pendientes.
+
 Cada decisión que cambie el modelo de colaboración, la persistencia, el reparto por capacidad o la autonomía se registra con motivo, efecto sobre la visión, alternativa y prueba de aceptación. Los cambios se documentan en el mismo commit que los implementa. El avance se mide por condiciones cumplidas, versiones reproducibles y ensayos entre máquinas reales.
 
 El flujo de desarrollo usa el repositorio público: las PCs publican cambios por Git, el VPS los adquiere por Git y Dropbox sincroniza el árbol de trabajo de las PCs. La VPN proporciona administración. Los ensayos de comunicación, aprendizaje y adquisición de conocimiento utilizan Internet y LSP.

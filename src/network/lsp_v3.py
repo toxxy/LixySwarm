@@ -68,6 +68,7 @@ class PacketType:
     USEFUL_WORK_PROOFS = 0x0B
     WORK_CANCEL = 0x0C
     RELAY = 0x0D
+    NODE_STATUS = 0x0E
 
 
 _VALID_PACKET_TYPES = {
@@ -84,6 +85,7 @@ _VALID_PACKET_TYPES = {
     PacketType.USEFUL_WORK_PROOFS,
     PacketType.WORK_CANCEL,
     PacketType.RELAY,
+    PacketType.NODE_STATUS,
 }
 
 
@@ -336,6 +338,7 @@ class LSPNodeV3:
         self.resource_profile = dict(resource_profile or {})
         self.capabilities["relay_client_v1"] = True
         self.capabilities["relay_v1"] = bool(relay_enabled)
+        self.capabilities["node_status_v1"] = True
         self.max_connections = max(1, min(int(max_connections), 4096))
         self.max_inbound_per_ip = max(1, min(int(max_inbound_per_ip), 256))
         self.session_id = b""
@@ -381,6 +384,7 @@ class LSPNodeV3:
         self._release_callbacks: list[Callable] = []
         self._credit_callbacks: list[Callable] = []
         self._useful_work_proof_callbacks: list[Callable] = []
+        self._node_status_callbacks: list[Callable] = []
         self._useful_work_proof_provider: Optional[Callable] = None
         from .relay import RelayManager
         self.relay = RelayManager(
@@ -467,6 +471,14 @@ class LSPNodeV3:
         return self._send_json_to_peer(
             PacketType.WORK_CANCEL, node_id, cancellation
         )
+
+    def send_node_status(self, node_id: str, envelope: dict) -> bool:
+        from .telemetry import verify_status
+        verify_status(envelope, sender_id=self.identity.node_id_hex)
+        with self._snapshot_lock:
+            if not self._snapshot.get(node_id, {}).get("capabilities", {}).get("node_status_v1"):
+                return False
+        return self._send_json_to_peer(PacketType.NODE_STATUS, node_id, envelope)
 
     def announce_release(self, manifest: dict) -> int:
         payload = json.dumps(
@@ -568,6 +580,10 @@ class LSPNodeV3:
 
     def on_peer_lost(self, callback: Callable):
         self._peer_lost_callbacks.append(callback)
+        return callback
+
+    def on_node_status_received(self, callback: Callable):
+        self._node_status_callbacks.append(callback)
         return callback
 
     def on_feromon_received(self, callback: Callable):
@@ -956,6 +972,16 @@ class LSPNodeV3:
     async def _process_packet(self, session: PeerSession, packet: V3Packet):
         if packet.packet_type == PacketType.HELLO:
             raise ProtocolError("Unexpected HELLO on established session")
+        if packet.packet_type == PacketType.NODE_STATUS:
+            from .telemetry import MAX_STATUS_BYTES, verify_status
+            envelope = self._parse_json(packet.payload, max_size=MAX_STATUS_BYTES)
+            try:
+                verify_status(envelope, sender_id=session.node_id, now_ms=int(time.time() * 1000))
+            except ValueError as exc:
+                raise ProtocolError(str(exc)) from exc
+            for callback in self._node_status_callbacks:
+                callback(envelope, session.node_id)
+            return
         if packet.packet_type == PacketType.RELAY:
             if session.relay_node_id:
                 raise ProtocolError("Nested relay tunnels are not supported")

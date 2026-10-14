@@ -9,6 +9,7 @@ import logging
 import os
 import signal
 import sys
+import threading
 import time
 from pathlib import Path
 
@@ -46,6 +47,12 @@ def run():
     from src.network.bootstrap import get_seed_endpoints
     from src.network.lsp import LSPIdentity
     from src.network.lsp_v3 import LSPNodeV3
+    from src.network.telemetry import NodeStatusStore, build_status, sign_status
+
+    status_store = NodeStatusStore(os.environ.get(
+        "LIXYSWARM_STATUS_DIRECTORY", str(IDENTITY_PATH.parent / "node_status")
+    ))
+    status_store.reset_connections()
 
     identity = LSPIdentity.load(str(IDENTITY_PATH))
     if identity is None:
@@ -66,6 +73,7 @@ def run():
         capabilities={
             "peer_exchange": True,
             "seed": True,
+            "status_collector_v1": True,
             "pheromone": False,
             "global_memory": False,
         },
@@ -88,6 +96,14 @@ def run():
     @node.on_peer_lost
     def peer_lost(node_id):
         log.info("Peer disconnected id=%s", node_id[:16])
+        status_store.disconnected(node_id)
+
+    @node.on_node_status_received
+    def node_status(envelope, sender_id):
+        try:
+            status_store.save(envelope, sender_id)
+        except ValueError as exc:
+            log.warning("Rejected status id=%s reason=%s", sender_id[:16], exc)
 
     node.start()
     log.info(
@@ -95,24 +111,36 @@ def run():
         identity.node_id_hex[:16], node.port, node.address_book.count, TARGET_OUTBOUND, RELAY_ENABLED,
     )
 
-    stopping = False
+    stopping = threading.Event()
+    started = time.monotonic()
+    sequence = status_store.sequence(identity.node_id_hex)
+
+    def publish_self(state="connected"):
+        nonlocal sequence
+        sequence += 1
+        value = build_status(node, sequence=sequence, role="seed", state=state,
+                             uptime_s=time.monotonic() - started,
+                             resources={"cpu_cores": 0, "ram_gb": 0.0,
+                                        "gpu_vram_gb": 0.0, "has_gpu": False})
+        status_store.save(sign_status(identity, value), identity.node_id_hex, local=True)
 
     def handle_signal(_signal, _frame):
-        nonlocal stopping
-        stopping = True
+        stopping.set()
 
     signal.signal(signal.SIGTERM, handle_signal)
     signal.signal(signal.SIGINT, handle_signal)
 
-    while not stopping:
-        time.sleep(30)
+    while not stopping.is_set():
+        publish_self()
         log.info(
             "heartbeat connected=%s outbound=%s known=%s",
             node.peer_count,
             node.outbound_count,
             node.address_book.count,
         )
+        stopping.wait(15)
 
+    publish_self("disconnected")
     node.stop()
     log.info("Seed stopped cleanly")
 

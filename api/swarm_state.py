@@ -76,16 +76,16 @@ def _read_json(path: Path) -> dict:
 
 def get_agents_state() -> list[dict]:
     s = _read_status()
-    return s.get("agents", [])
+    return s.get("agents", []) if not s.get("_stale", True) else []
 
 
 def get_matriarca_state() -> dict:
     s = _read_status()
-    mat = s.get("matriarca", {})
     stale = s.get("_stale", True)
+    mat = s.get("matriarca", {}) if not stale else {}
     return {
-        "memory_count":   mat.get("memory_count", 0),
-        "avg_importance": mat.get("avg_importance", 0.0),
+        "memory_count":   mat.get("memory_count"),
+        "avg_importance": mat.get("avg_importance"),
         "active_pct":     mat.get("active_pct", None),
         "diversity":      mat.get("diversity", None),
         "data_fresh":     not stale,
@@ -94,11 +94,11 @@ def get_matriarca_state() -> dict:
 
 def get_dolphin_state() -> dict:
     s = _read_status()
-    dol = s.get("dolphin", {})
+    dol = s.get("dolphin", {}) if not s.get("_stale", True) else {}
     return {
-        "phase":           dol.get("phase", "A"),
-        "active_pings":    dol.get("active_pings", 5),
-        "ping_names":      dol.get("ping_names", ["topic","intent","need","context","emotion"]),
+        "phase":           dol.get("phase"),
+        "active_pings":    dol.get("active_pings"),
+        "ping_names":      dol.get("ping_names", []),
         "sleep_state_norm": dol.get("sleep_state_norm", None),
         "confidence":      dol.get("confidence", None),
     }
@@ -106,6 +106,24 @@ def get_dolphin_state() -> dict:
 
 def get_network_state() -> dict:
     """Lee nodos P2P del node.log del VPS + status publicado por el nodo local."""
+    from src.network.telemetry import NodeStatusStore
+    store = NodeStatusStore(os.environ.get(
+        "LIXYSWARM_STATUS_DIRECTORY", str(BASE / ".lixyswarm" / "node_status")
+    ))
+    telemetry_nodes = store.nodes()
+    if telemetry_nodes or store.directory.exists():
+        seeds = [n for n in telemetry_nodes if n["self"] and n["role"] == "seed"]
+        active_nodes = [n for n in telemetry_nodes if n["active"]]
+        lsp = get_lsp_state()
+        return {
+            "nodes": telemetry_nodes, "connected_count": len(active_nodes),
+            "known_peer_count": len(telemetry_nodes),
+            "participant_count": sum(n["role"] == "participant" for n in active_nodes),
+            "vps_node_id": seeds[0]["node_id"] if seeds else None,
+            "protocol": lsp["protocol"], "lsp": lsp, "internet": lsp["internet"],
+            "data_fresh": bool(active_nodes), "source": "signed-lsp-node-status",
+            "freshness_seconds": 60,
+        }
     nodes = []
     known_peer_count = 0
     vps_node_id = None
@@ -188,13 +206,13 @@ def get_network_state() -> dict:
 
 def get_metrics() -> dict:
     s = _read_status()
-    m = s.get("metrics", {})
-    ckpt = s.get("checkpoint", {})
+    m = s.get("metrics", {}) if not s.get("_stale", True) else {}
+    ckpt = s.get("checkpoint", {}) if not s.get("_stale", True) else {}
     return {
         "toks_per_sec":    m.get("toks_per_sec"),
         "val_loss":        m.get("val_loss") or ckpt.get("val_loss"),
         "step":            m.get("step") or ckpt.get("step"),
-        "training_active": s.get("training_active", False),
+        "training_active": s.get("training_active", False) and not s.get("_stale", True),
         "checkpoint":      ckpt.get("name"),
         "params_M":        ckpt.get("params_M"),
         "data_age_s":      s.get("_age_seconds"),
@@ -282,18 +300,20 @@ def get_full_swarm_status() -> dict:
     dolphin   = get_dolphin_state()
     network   = get_network_state()
     metrics   = get_metrics()
-    auto_loop = get_auto_loop_state()
+    auto_loop = get_auto_loop_state() if not s.get("_stale", True) else None
     lsp       = get_lsp_state()
     return {
         "agents":          agents,
         "agent_count":     len(agents),
-        "swarm_diversity": s.get("swarm_diversity"),
+        "swarm_diversity": s.get("swarm_diversity") if not s.get("_stale", True) else None,
         "matriarca":       matriarca,
         "dolphin":         dolphin,
         "network":         network,
         "lsp":             lsp,
         "metrics":         metrics,
         "auto_loop":       auto_loop,
-        "data_fresh":      not s.get("_stale", True),
+        "data_fresh":      not s.get("_stale", True) or network.get("data_fresh", False),
+        "training_data_fresh": not s.get("_stale", True),
+        "network_data_fresh": network.get("data_fresh", False),
         "last_update":     s.get("timestamp"),
     }

@@ -59,6 +59,7 @@ lixy_session.json
 lixy_session_*.json
 *.session.json
 swarm_status.json
+node_status/
 node.log
 *.pem
 *.key

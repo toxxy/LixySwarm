@@ -338,24 +338,27 @@
 
         const freshEl = document.getElementById("freshness");
         if (freshEl) {
-          freshEl.textContent = d.data_fresh ? "Estado fresco" : "Estado stale";
+          freshEl.textContent = d.network_data_fresh
+            ? (d.training_data_fresh ? "Red y aprendizaje actuales" : "Red actual · aprendizaje sin datos recientes")
+            : (d.data_fresh ? "Estado actual" : "Sin datos recientes");
           freshEl.className = "fresh-badge" + (d.data_fresh ? "" : " stale");
         }
 
         // Métricas principales
-        const nNodes = net.connected_count ?? 1;
+        const nNodes = net.connected_count ?? 0;
         const knownPeers = net.known_peer_count ?? nNodes;
         set("nodes", nNodes);
         const peerHint = knownPeers > nNodes ? ` · ${knownPeers} peers conocidos` : "";
-        set("nodes-sub", (nNodes === 1 ? "1 nodo activo" : nNodes + " nodos activos") + peerHint);
+        const participants = net.participant_count != null ? ` · ${net.participant_count} hormigas participantes` : "";
+        set("nodes-sub", (nNodes === 1 ? "1 nodo activo" : nNodes + " nodos activos") + participants + peerHint);
 
         set("speed", met.toks_per_sec != null ? met.toks_per_sec.toLocaleString() : "—");
         set("diversity", d.swarm_diversity != null ? d.swarm_diversity.toFixed(3) : "—");
         set("loss", met.val_loss != null ? met.val_loss.toFixed(4) : "—");
+        set("training-sub", met.training_active ? "🟢 Activo" : "Sin entrenamiento activo publicado");
         if (met.step != null) {
           set("step", "step " + met.step.toLocaleString());
           set("loss-sub", met.checkpoint || "Mejor checkpoint");
-          set("training-sub", d.training_active ? "🟢 Activo" : "⚪ En pausa");
         }
 
         // Matriarca
@@ -392,8 +395,7 @@
         if (d.network) renderNetwork(d.network.nodes, d.network.protocol || lsp.protocol);
         if (d.agents && d.agents.length) renderAgents(d.agents);
 
-        const ts = d.last_update ? new Date(d.last_update) : new Date();
-        set("updated", "Actualizado: " + ts.toLocaleTimeString("es", {hour:"2-digit",minute:"2-digit",second:"2-digit"}));
+        set("updated", "Consultado: " + new Date().toLocaleTimeString("es", {hour:"2-digit",minute:"2-digit",second:"2-digit"}));
       } catch(e) { console.warn("API:", e); }
     }
 
@@ -599,11 +601,9 @@
         grid.innerHTML = `<div class="node-card">
           <div class="node-header">
             <span>💻</span>
-            <span class="node-name">Nodo local</span>
-            <span class="node-mode mode-maximum">local</span>
+            <span class="node-name">Sin nodos observados</span>
           </div>
-          <div style="font-size:1.2rem;color:#4CAF50;font-weight:700">sin peers</div>
-          <div style="font-size:0.8rem;color:#444;margin-top:4px">Arranca otra PC en la misma LAN para descubrir peers.</div>
+          <div style="font-size:0.8rem;color:#888;margin-top:4px">Esperando estado de participantes conectados por Internet.</div>
           <div style="font-size:0.75rem;color:#4FC3F7;margin-top:6px">${escapeHtml(protocol || "LSP v3")} <span class="badge-v2">v3</span></div>
         </div>`;
         return;
@@ -613,23 +613,36 @@
         const isActive = n.active !== false && !n.stale;
         const icon = isVps ? "🌐" : "💻";
         const label = isVps ? "Seed público" : (n.self ? "Nodo actual" : "Nodo remoto");
-        const id = (n.node_id || "?").slice(0,8) + "...";
+        const id = escapeHtml((n.node_id || "?").slice(0,8) + "...");
         const step = n.step ? ` · step ${n.step.toLocaleString()}` : "";
-        const mode = n.contribution_mode || "maximum";
-        const modeCls = `mode-${mode}`;
+        const mode = n.contribution_mode || "relay";
+        const modeCls = ["maximum", "moderate", "relay"].includes(mode) ? `mode-${mode}` : "mode-relay";
+        const modeLabel = n.signature_verified ? "Conectividad" : escapeHtml(mode);
         const gpuFrac = n.effective_gpu_fraction != null ? (n.effective_gpu_fraction * 100).toFixed(0) + "% GPU" : "";
         const age = n.age_s != null ? ` · age ${Number(n.age_s).toFixed(0)}s` : "";
-        const status = isActive ? "activo" : "stale";
+        const labels = {connecting:"conectando", connected:"conectado", preparing:"preparando modelo", available:"disponible", working:"trabajando", paused:"pausado", disconnected:"desconectado"};
+        const status = n.state ? (labels[n.state] || "estado desconocido") : (isActive ? "activo" : "sin datos recientes");
         const statusColor = isActive ? "#4CAF50" : "#ff9800";
+        const resources = n.resources || {};
+        const resourceLine = n.signature_verified && !isVps
+          ? `<div style="font-size:0.75rem;color:#aaa;margin-top:6px">Recursos anunciados: ${Number(resources.cpu_cores || 0)} CPU · ${Number(resources.ram_gb || 0)} GB RAM · ${Number(resources.gpu_vram_gb || 0)} GB VRAM</div>` : "";
+        const jobs = n.jobs || {};
+        const workLine = n.signature_verified && !isVps
+          ? `<div style="font-size:0.75rem;color:#aaa;margin-top:4px">Trabajos reportados: ${Number(jobs.active || 0)} activos · ${Number(jobs.completed || 0)} completados</div>` : "";
+        const links = n.links || [];
+        const routeLine = n.signature_verified
+          ? ` · ${links.filter(l => l.transport === "direct").length} rutas directas · ${links.filter(l => l.transport === "relay").length} por relay` : "";
         return `<div class="node-card">
           <div class="node-header">
             <span>${icon}</span>
             <span class="node-name">${label}</span>
-            <span class="node-mode ${modeCls}">${mode}</span>
+            <span class="node-mode ${modeCls}">${modeLabel}</span>
           </div>
           <div style="font-size:1.2rem;color:#4CAF50;font-weight:700">${id}</div>
-          <div style="font-size:0.8rem;color:#444;margin-top:4px">${escapeHtml(n.host || "local")}${step}${age}</div>
+          <div style="font-size:0.8rem;color:#888;margin-top:4px">${n.signature_verified ? "Identidad firmada" : escapeHtml(n.host || "dirección no publicada")}${step}${age}</div>
           <div style="font-size:0.75rem;color:${statusColor};margin-top:4px">${status}</div>
+          ${resourceLine}${workLine}
+          <div style="font-size:0.7rem;color:#888;margin-top:4px">${routeLine}</div>
           ${gpuFrac ? `<div style="font-size:0.75rem;color:#555;margin-top:4px">${gpuFrac} · ${n.effective_sect_capacity ?? "?"} sectas máx</div>` : ""}
           <div style="font-size:0.75rem;color:#4FC3F7;margin-top:6px">${escapeHtml(protocol || "LSP v3")} <span class="badge-v2">v3</span></div>
         </div>`;

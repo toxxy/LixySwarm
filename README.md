@@ -14,6 +14,8 @@ The manuscript's experimental numbers are historical results for a specific chec
 
 [PLAN_VISION.md](PLAN_VISION.md) defines the delivery stages for continuous Internet operation, a simple desktop app, real distributed learning, persistent shared knowledge, hardware-adaptive contribution, useful biological layers and bounded autonomy. Each stage has a concrete acceptance test. The next milestone joins gradient computation, candidate evaluation, model publication and acquisition by another physical node.
 
+[VISION_PROGRESS.md](VISION_PROGRESS.md) tracks the active goal and includes the Linux reference participant service. Its network core connects without importing PyTorch, keeps machine-local identity outside the checkout and publishes signed per-node status over LSP. Calculation workers and the desktop app remain pending.
+
 ## Implemented system
 
 The default swarm configuration contains:
