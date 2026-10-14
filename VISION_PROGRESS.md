@@ -6,7 +6,7 @@ Las etapas se completan por sus pruebas de aceptación; una implementación parc
 | Etapa | Estado | Evidencia y trabajo restante |
 |---|---|---|
 | 1. Red continua | En observación | Servicios desplegados en dos PCs y VPS, estado por identidad en el Explorer y recuperación tras reinicio comprobados. Faltan operación de 24 horas y recuperación con otro relay público independiente. |
-| 2. App sencilla | Pendiente | El transporte ya puede importarse sin PyTorch. Faltan interfaz, controles de recursos y paquetes por plataforma. |
+| 2. App sencilla | En implementación | Interfaz de cuatro pantallas, controles locales confirmados y paquete Linux probado por Internet e instalado por usuario. Faltan resultados de los paquetes Windows/macOS, modelo de red, preparación de trabajadores y gate de instalación limpia completo. |
 | 3. Aprendizaje distribuido | Pendiente | Existen gradientes remotos. Falta completar actualización, evaluación y promoción con fragmentos distintos. |
 | 4. Conocimiento persistente | Pendiente | Existen artefactos por contenido. Falta demostrar réplica y adquisición después de apagar al productor. |
 | 5. Capacidad heterogénea | Pendiente | Falta medir beneficio de dos PCs y transferencia entre agentes de tamaños distintos. |
@@ -37,6 +37,10 @@ Comprobación del 2026-10-13, finalizada el **2026-10-14 03:45:25 UTC**:
 Los servicios quedaron funcionando después de los ensayos. Desde esa comprobación se acumula evidencia para la ventana de 24 horas. El journal del seed registra cada 15 segundos conexiones, nodos con estado fresco, participantes y enlaces por relay; los journals de las PCs conservan estado y secuencias. Una interrupción requiere revisar la ventana antes de darla por cumplida.
 
 ## Uso del servicio de referencia
+
+La app en desarrollo y su empaquetado se documentan en [desktop/README.md](desktop/README.md). La versión Linux se conectó al bootstrap público en 0,67 segundos durante el ensayo del ejecutable, confirmó límites, mantuvo la conexión al pausar y conservó identidad al reconectar. El transporte usó Ethernet hacia la dirección pública. El paquete ocupa aproximadamente 169 MiB antes de compresión e incluye el intérprete; los motores de cálculo permanecen excluidos. La persistencia cifrada se comprobó con el almacén protegido real de la PC de referencia.
+
+La elección de Qt se mantiene sujeta a los resultados de empaquetado en las tres plataformas. Los presupuestos de CPU/GPU preparados en la interfaz todavía deben comprobarse con trabajadores de cálculo reales. No se marca la etapa como completada por los controles o el paquete Linux.
 
 Desde el checkout y su entorno Python con `cryptography`:
 

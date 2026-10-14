@@ -1,0 +1,1 @@
+"""Installable LixySwarm participant interface."""

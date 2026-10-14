@@ -6,7 +6,6 @@ personal memories or training files are read by this service.
 from __future__ import annotations
 
 import argparse
-import fcntl
 import json
 import logging
 import os
@@ -15,18 +14,25 @@ import subprocess
 import sys
 import threading
 import time
+from dataclasses import asdict
 from pathlib import Path
 
 from src.network.bootstrap import get_seed_endpoints
 from src.network.lsp import LSPIdentity
 from src.network.lsp_v3 import LSPNodeV3
 from src.network.telemetry import atomic_json, build_status, sign_status, verify_status
+from src.network.client_state import ClientSettings, NodeStateLock, state_directory
 
 log = logging.getLogger("lixy.client")
 
 
 def hardware_resources() -> dict:
     ram_gb = 0.0
+    try:
+        import psutil
+        ram_gb = psutil.virtual_memory().total / 1024**3
+    except ImportError:
+        pass
     try:
         ram_gb = os.sysconf("SC_PHYS_PAGES") * os.sysconf("SC_PAGE_SIZE") / 1024**3
     except (AttributeError, ValueError, OSError):
@@ -44,9 +50,11 @@ def hardware_resources() -> dict:
             "gpu_vram_gb": round(vram_gb, 2), "has_gpu": vram_gb > 0}
 
 
-def state_directory() -> Path:
-    root = Path(os.environ.get("XDG_STATE_HOME", str(Path.home() / ".local" / "state")))
-    return Path(os.environ.get("LIXYSWARM_STATE_DIR", str(root / "lixyswarm")))
+def node_command(directory: Path, *, host="0.0.0.0", port=7338, allow_private=False):
+    command = [sys.executable]
+    command += ["--node"] if getattr(sys, "frozen", False) else [str(Path(__file__).resolve())]
+    command += ["--state-dir", str(directory.resolve()), "--host", host, "--port", str(port)]
+    return command + (["--allow-private"] if allow_private else [])
 
 
 def install_user_service(directory: Path, *, host="0.0.0.0", port=7338):
@@ -62,7 +70,7 @@ Wants=network-online.target
 
 [Service]
 Type=simple
-ExecStart={quote(sys.executable)} {quote(Path(__file__).resolve())} --state-dir {quote(directory.resolve())} --host {quote(host)} --port {port}
+ExecStart={' '.join(quote(value) for value in node_command(directory, host=host, port=port))}
 Restart=always
 RestartSec=5
 TimeoutStopSec=20
@@ -83,14 +91,10 @@ WantedBy=default.target
     print(f"Installed {path}")
 
 
-def run(directory: Path, *, host="0.0.0.0", port=7338, interval=15):
+def run(directory: Path, *, host="0.0.0.0", port=7338, interval=15, allow_private=False):
     directory.mkdir(parents=True, exist_ok=True, mode=0o700)
     directory.chmod(0o700)
-    with (directory / "node.lock").open("a") as lock:
-        try:
-            fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
-        except BlockingIOError as exc:
-            raise RuntimeError("A node already uses this state directory") from exc
+    with NodeStateLock(directory):
         identity = LSPIdentity.load(str(directory / "identity.key"))
         if identity is None:
             identity = LSPIdentity.generate()
@@ -105,15 +109,21 @@ def run(directory: Path, *, host="0.0.0.0", port=7338, interval=15):
             address_book_path=directory / "peers_v3.json", target_outbound=4,
             capabilities={"peer_exchange": True, "pheromone": False, "global_memory": False,
                           "training": False, "inference": False, "worker_ready": False},
-            resource_profile={**resources, "mode": "network-only"},
+            resource_profile={**resources, "mode": "network-only"}, allow_private=allow_private,
         )
         stop = threading.Event()
         for signum in (signal.SIGINT, signal.SIGTERM):
             signal.signal(signum, lambda *_: stop.set())
         started = time.monotonic()
+        refresh = threading.Event()
+        node.on_peer_connected(lambda *_: refresh.set())
+        node.on_peer_lost(lambda *_: refresh.set())
 
-        def publish(state):
+        last_sent = 0.0
+
+        def publish(state, settings, error=None):
             nonlocal sequence
+            nonlocal last_sent
             sequence += 1
             status = build_status(node, sequence=sequence, role="participant", state=state,
                                   uptime_s=time.monotonic() - started, resources=resources)
@@ -124,19 +134,55 @@ def run(directory: Path, *, host="0.0.0.0", port=7338, interval=15):
             atomic_json(directory / "diagnostics.json", {
                 "node_id": identity.node_id_hex, "timestamp_ms": status["timestamp_ms"],
                 "port": node.port, "peers": peers,
+                "pid": os.getpid(), "runtime_version": "0.4.0a1", "controls_version": 1,
+                "settings": asdict(settings), "worker_ready": False, "control_error": error,
             })
-            for peer in peers:
-                if peer.get("capabilities", {}).get("status_collector_v1"):
-                    node.send_node_status(peer["node_id"], envelope)
+            eligible = time.monotonic() - last_sent >= 2
+            if eligible:
+                for peer in peers:
+                    if peer.get("capabilities", {}).get("status_collector_v1"):
+                        node.send_node_status(peer["node_id"], envelope)
+                last_sent = time.monotonic()
             log.info("state=%s peers=%s sequence=%s", state, len(peers), sequence)
+            return eligible
 
         try:
-            node.start()
-            log.info("Started persistent node id=%s TCP=%s mode=network-only", identity.node_id_hex[:16], node.port)
+            running = False
+            next_publish = 0.0
+            last_settings = None
+            settings = ClientSettings()
+            log.info("Started persistent node id=%s mode=network-only", identity.node_id_hex[:16])
             while not stop.is_set():
-                publish("connected" if node.peer_count else "connecting")
-                stop.wait(interval)
-            publish("disconnected")
+                error = None
+                try:
+                    settings = ClientSettings.load(directory)
+                except (OSError, ValueError, TypeError) as exc:
+                    error = str(exc)
+                    settings = ClientSettings(connected=False, paused=True)
+                changed = asdict(settings) != last_settings
+                if changed:
+                    mode = settings.policy.mode
+                    node.resource_profile = {
+                        **resources, "mode": "moderate" if mode == "balanced" else mode,
+                        "cpu_percent": settings.policy.cpu_percent, "gpu_percent": settings.policy.gpu_percent,
+                        "ram_budget_gb": settings.policy.max_ram_gb, "consent_version": settings.policy.version,
+                        "worker_ready": False,
+                    }
+                if settings.connected and not running:
+                    node.start()
+                    running = True
+                if not settings.connected and running:
+                    publish("disconnected", settings, error)
+                    node.stop()
+                    running = False
+                current_state = "disconnected" if not running else "paused" if settings.paused else "connected" if node.peer_count else "connecting"
+                if changed or refresh.is_set() or time.monotonic() >= next_publish:
+                    refresh.clear()
+                    eligible = publish(current_state, settings, error)
+                    next_publish = time.monotonic() + interval if eligible else max(time.monotonic() + 0.1, last_sent + 2.1)
+                    last_settings = asdict(settings)
+                stop.wait(0.5)
+            publish("disconnected", settings)
         finally:
             node.stop()
             log.info("Node stopped cleanly")
@@ -148,12 +194,13 @@ def main():
     parser.add_argument("--host", default="0.0.0.0")
     parser.add_argument("--port", type=int, default=7338)
     parser.add_argument("--install-user-service", action="store_true")
+    parser.add_argument("--allow-private", action="store_true", help=argparse.SUPPRESS)
     args = parser.parse_args()
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(name)s %(message)s")
     if args.install_user_service:
         install_user_service(args.state_dir, host=args.host, port=args.port)
     else:
-        run(args.state_dir, host=args.host, port=args.port)
+        run(args.state_dir, host=args.host, port=args.port, allow_private=args.allow_private)
 
 
 if __name__ == "__main__":

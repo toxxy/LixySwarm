@@ -1000,6 +1000,8 @@ class LSPNodeV3:
             self.peer_manager.add_discovered(filtered)
             return
         if packet.packet_type == PacketType.PHEROMONE:
+            if not self.capabilities.get("pheromone", False) and not self._pheromone_callbacks:
+                return
             pheromone = FeromonV2Payload.unpack(packet.payload)
             size = pheromone.feromon.numel() if hasattr(pheromone.feromon, "numel") else len(pheromone.feromon)
             if size <= 0 or size > 4096:
@@ -1008,6 +1010,8 @@ class LSPNodeV3:
                 callback(pheromone.feromon, session.node_id)
             return
         if packet.packet_type == PacketType.GLOBAL_DELTA:
+            if not self.capabilities.get("global_memory", False) and not self._global_delta_callbacks:
+                return
             delta = self._parse_json(packet.payload, max_size=MAX_PAYLOAD_SIZE)
             for callback in self._global_delta_callbacks:
                 callback(delta, session.node_id)
