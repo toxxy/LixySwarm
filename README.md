@@ -16,7 +16,7 @@ The manuscript's experimental numbers are historical results for a specific chec
 
 [VISION_PROGRESS.md](VISION_PROGRESS.md) tracks the active goal and its remaining acceptance gates. The Linux participant service connects without importing PyTorch, keeps machine-local identity outside the checkout and publishes signed per-node status over LSP. Separate supervised workers perform computation within local resource permissions.
 
-The [desktop app](desktop/README.md) includes connection controls, persistent contribution settings and per-user installation. The [public A7 preview](https://github.com/toxxy/LixySwarm/releases/tag/v0.4.0a7) connects chat to the known pilot expert over public Internet, stores conversation history encrypted locally and adds guided expert preparation. Complete clean-machine GPU preparation, open collaboration and the remaining platform gates are still pending.
+The [desktop app](desktop/README.md) includes connection controls, persistent contribution settings and per-user installation. The [public Linux A10 preview](https://github.com/toxxy/LixySwarm/releases/tag/v0.4.0a10) connects chat to the known pilot expert over public Internet, stores conversation history encrypted locally and prepares evaluated expert versions from multiple providers. Complete clean-machine GPU preparation, open collaboration and the remaining platform gates are still pending.
 
 ## Implemented system
 
@@ -192,6 +192,6 @@ Historical experiment notes are labeled as such and must not be read as current 
 
 ## Vista previa instalable por Internet
 
-[Descargar LixySwarm 0.4.0a7](https://github.com/toxxy/LixySwarm/releases/tag/v0.4.0a7) para Linux x86_64, Windows x86_64 o macOS arm64. Descomprime el archivo, abre LixySwarm y usa **Instalar en este equipo** para añadir el acceso al menú. Elige tus recursos y conecta. No necesitas instalar Python, usar una VPN ni configurar puertos del router.
+[Descargar LixySwarm 0.4.0a10 para Linux x86_64](https://github.com/toxxy/LixySwarm/releases/tag/v0.4.0a10). Descomprime el archivo, abre LixySwarm y usa **Instalar en este equipo** para añadir el acceso al menú. Elige tus recursos y conecta. No necesitas instalar Python, usar una VPN ni configurar puertos del router. Windows y macOS quedan para la validación final; sus paquetes de la [versión anterior A7](https://github.com/toxxy/LixySwarm/releases/tag/v0.4.0a7) se conservan como antecedentes.
 
 Autorizar CPU con al menos 2 GB de RAM prepara automáticamente un motor público verificado y el modelo de referencia. La conexión y las consultas al experto remoto pueden comenzar antes de descargar modelos locales. Recursos permite preparar el experto GPU compatible respetando RAM, GPU y disco autorizados. El chat usa el experto conocido del piloto; el entrenamiento abierto de desconocidos sigue pendiente. Los paquetes no tienen todavía firma pública de distribución; la instalación física de Windows y macOS conserva su gate, aunque sus ejecutables y descarga del motor pasaron CI. Consulta [la app](desktop/README.md) y [el avance completo de la visión](VISION_PROGRESS.md).

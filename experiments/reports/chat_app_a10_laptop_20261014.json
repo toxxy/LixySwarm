@@ -1,0 +1,27 @@
+{
+  "success": true,
+  "internet": true,
+  "language_preparation_permission_gate": true,
+  "chat_first_answer": "Una red descentralizada es una red de computadoras que no est\u00e1 controlada por un solo punto central.",
+  "chat_ui_verified": true,
+  "chat_remote_context_opt_in": true,
+  "chat_history_survives_reopen": true,
+  "chat_history_encrypted": true,
+  "chat_receipt": {
+    "version": 1,
+    "job_id": "310b9514959c7def352a95d82d438551a38ed23aeb30cd8123d582faf9973c3b",
+    "worker_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+    "requester_node_id": "f1d1a804ded5ec71ee61632808d968402a629c36d06eddf580e7f55ffecde192",
+    "result_digest": "c93919f8934eecd67df56e3996aeada0bccd8e3398058163016aa1fd3954bc7a",
+    "finished_at": 1792020742.57181,
+    "signature": "qSXXgUkFkAEO6vQAMqQMOyUhWW8DXfvgjdMwbECMAYXvYebt+oS9LKZslfLSlWTY2/PXvHBxx48g23DRH31KDA=="
+  },
+  "chat_cancellation_verified": true,
+  "connection_s": 0.91,
+  "controls_confirmed": true,
+  "pause_keeps_connection": true,
+  "reconnect_keeps_identity": true,
+  "calculation_engines_loaded": false,
+  "source_revision": "a17bb1c",
+  "scope": "Frozen Linux A10 app on the existing laptop over public Internet; genesis chat only; no new physical worker or model preparation proof"
+}
