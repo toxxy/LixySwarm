@@ -103,8 +103,9 @@ def main():
                     from src.contribution import ContributionPolicy,ResourceGovernor,ResourceRequirements
                     from src.network.reference_compute import INFERENCE_OPERATION
                     from types import SimpleNamespace
+                    from src.network.bootstrap import get_seed_endpoints
                     visitor=LSPNodeV3(LSPIdentity.generate(),host="0.0.0.0",port=0,
-                                      address_book_path=root/"visitor-peers.json",allow_private=False)
+                                      seeds=get_seed_endpoints(),address_book_path=root/"visitor-peers.json",allow_private=False)
                     requests=WorkCoordinator(visitor,ResourceGovernor(ContributionPolicy.for_mode("relay"),
                         hardware=SimpleNamespace(cpu_cores=1,ram_gb=1,has_gpu=False,gpu_vram_gb=0,disk_gb=1),
                         storage_path=root/"visitor"))
@@ -114,6 +115,7 @@ def main():
                         while identity not in visitor.connected_node_ids:
                             if time.monotonic()>until: raise RuntimeError("The app worker was not reachable over Internet")
                             visitor.connect_node(identity,timeout=12)
+                            app.processEvents();time.sleep(0.1)
                         response=requests.submit(INFERENCE_OPERATION,
                             {"model_artifact_id":release.model_artifact_id,"prompt":"La memoria personal "},
                             ResourceRequirements(kind="inference",ram_gb=2),peer_id=identity,timeout_s=60)
