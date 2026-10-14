@@ -765,17 +765,6 @@ def train(cfg: SwarmTrainConfig, swarm_checkpoint: str = None):
                 )
                 loss = loss / cfg.grad_accum_steps
 
-                # Diversity regularization: penaliza agentes demasiado similares
-                if swarm._last_fitnesses and micro_step == 0:
-                    SIMILARITY_THRESHOLD = 0.7
-                    DIVERSITY_WEIGHT = 0.01
-                    feromons = [af.feromon_divergence for af in swarm._last_fitnesses]
-                    # Si divergencia promedio cae por debajo del umbral, penalizar
-                    avg_div = sum(feromons) / len(feromons) if feromons else 1.0
-                    if avg_div < (1.0 - SIMILARITY_THRESHOLD):
-                        diversity_penalty = DIVERSITY_WEIGHT * (1.0 - SIMILARITY_THRESHOLD - avg_div)
-                        loss = loss + diversity_penalty
-
             loss.backward()
             loss_accum += loss.item()
 

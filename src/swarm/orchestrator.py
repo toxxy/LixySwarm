@@ -21,6 +21,7 @@ from dataclasses import dataclass, field, replace
 import json
 import shutil
 import time
+import math
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 import torch
@@ -116,12 +117,13 @@ class SpecializationTracker:
     """
     SIMILARITY_THRESHOLD = 0.7   # cos_sim por encima de esto = demasiado parecidos
 
-    def __init__(self, n_agents: int, checkpoint_dir: str = "checkpoints"):
+    def __init__(self, n_agents: int, checkpoint_dir: str = "checkpoints", *, load_existing=True):
         self.n_agents = n_agents
         self.path = Path(checkpoint_dir) / "ant_specialization.json"
         self.history: dict = {str(i): [] for i in range(n_agents)}
         self.current: dict = {str(i): AgentFitness(agent_id=i) for i in range(n_agents)}
-        self._load()
+        if load_existing:
+            self._load()
 
     def _load(self):
         if self.path.exists():
@@ -281,8 +283,16 @@ class SwarmConfig:
     matriarca_personal_path: Optional[str] = None
     matriarca_global_path: Optional[str] = None
     dolphin_config: Optional[DolphinConfig] = None   # None = usar config derivada de agent_configs
+    auxiliary_loss_weight: float = 0.25
+    diversity_loss_weight: float = 0.01
+    diversity_similarity_margin: float = 0.7
 
     def __post_init__(self):
+        for weight in (self.auxiliary_loss_weight, self.diversity_loss_weight):
+            if not math.isfinite(weight) or weight < 0:
+                raise ValueError("Swarm loss weights must be finite and nonnegative")
+        if not math.isfinite(self.diversity_similarity_margin) or not -1 <= self.diversity_similarity_margin <= 1:
+            raise ValueError("Swarm diversity similarity margin must be in [-1, 1]")
         if not self.agent_configs:
             for i in range(self.n_agents):
                 self.agent_configs.append(AgentConfig(
@@ -404,7 +414,8 @@ class LixySwarm(nn.Module):
       🐘 Matriarca.store(estado_final) — aprende de esta interacción
     """
 
-    def __init__(self, config: SwarmConfig, load_matriarca: bool = True, agent_checkpoint: str = None):
+    def __init__(self, config: SwarmConfig, load_matriarca: bool = True, agent_checkpoint: str = None,
+                 load_runtime_state: bool = True):
         super().__init__()
         self.config = config
 
@@ -490,7 +501,7 @@ class LixySwarm(nn.Module):
                 print(f"  🐘 Matriarca conectada: {self.matriarca.memory_count} memorias | 🧬 legados: {self.matriarca.legacy_count}")
 
         # 🐜 Tracker de especialización
-        self.specialization = SpecializationTracker(config.n_agents)
+        self.specialization = SpecializationTracker(config.n_agents, load_existing=load_runtime_state)
         self._last_fitnesses: Optional[List[AgentFitness]] = None
 
         # 🐜 Ciclo de vida dinámico — NUEVA ARQUITECTURA
@@ -855,11 +866,37 @@ class LixySwarm(nn.Module):
             fitnesses = getattr(self, '_last_fitnesses', None)
 
         if targets is not None:
-            total_loss /= self.config.n_agents * self.config.swarm_rounds
+            auxiliary_loss = total_loss / (self.config.n_agents * self.config.swarm_rounds)
+            collective_loss = F.cross_entropy(
+                aggregated.reshape(-1, aggregated.shape[-1]), targets.reshape(-1)
+            )
+            diversity_loss = self.pheromone_diversity_loss(
+                all_round_feromons, self.config.diversity_similarity_margin
+            )
+            # Evaluation reports the prediction loss. Training also keeps
+            # individual agents useful and discourages identical signals.
+            total_loss = collective_loss
+            if self.training:
+                total_loss = (total_loss + self.config.auxiliary_loss_weight * auxiliary_loss
+                              + self.config.diversity_loss_weight * diversity_loss)
+            self._last_loss_terms = {
+                "collective": float(collective_loss.detach()),
+                "individual": float(auxiliary_loss.detach()),
+                "diversity": float(diversity_loss.detach()),
+            }
 
         self._last_feromon = feromon.detach()
 
         return aggregated, total_loss if targets is not None else None, feromon
+
+    @staticmethod
+    def pheromone_diversity_loss(feromones, similarity_margin):
+        if len(feromones) < 2:
+            return feromones[0].new_zeros(())
+        vectors = F.normalize(torch.stack(feromones, dim=1), dim=-1)
+        similarities = vectors @ vectors.transpose(1, 2)
+        pairs = torch.triu(torch.ones_like(similarities, dtype=torch.bool), diagonal=1)
+        return F.relu(similarities[pairs] - similarity_margin).mean()
 
 
 # ─── Test ─────────────────────────────────────────────────────────────────────

@@ -7,7 +7,7 @@ Las etapas se completan por sus pruebas de aceptación; una implementación parc
 |---|---|---|
 | 1. Red continua | En observación | Servicios desplegados en dos PCs y VPS, estado por identidad en el Explorer y recuperación tras reinicio comprobados. Faltan operación de 24 horas y recuperación con otro relay público independiente. |
 | 2. App sencilla | En implementación | Interfaz de cuatro pantallas, controles locales confirmados, paquetes probados en Linux/Windows/macOS y app instalada en ambas PCs. Faltan modelo de red, preparación de trabajadores, arranque automático por plataforma y gate de instalación limpia completo. |
-| 3. Aprendizaje distribuido | Pendiente | Existen gradientes remotos. Falta completar actualización, evaluación y promoción con fragmentos distintos. |
+| 3. Aprendizaje distribuido | En implementación | Pérdida colectiva y diversidad conectadas al gradiente; ciclo candidato con fragmentos distintos, evaluación, promoción y recuperación implementado. Falta el ensayo completo por Internet y su integración con el modelo conversacional y la app. |
 | 4. Conocimiento persistente | Pendiente | Existen artefactos por contenido. Falta demostrar réplica y adquisición después de apagar al productor. |
 | 5. Capacidad heterogénea | Pendiente | Falta medir beneficio de dos PCs y transferencia entre agentes de tamaños distintos. |
 | 6. Organismo funcional | Pendiente | Faltan integración persistente y comparaciones que demuestren utilidad de memoria, Dolphin y sectas. |
@@ -53,6 +53,14 @@ La elección de Qt queda respaldada por el empaquetado y la prueba del ejecutabl
 - Pasaron 107 pruebas del proyecto. El chat y el cálculo continúan en preparación; la generación de claves y el cifrado personal están preparados para la integración de memoria.
 
 Próximo tramo: modelo de referencia público, evaluación reproducible, trabajadores compatibles con las dos PCs y actualización candidata real sobre fragmentos distintos. La adquisición de versiones y la inferencia deben incorporarse después a la app.
+
+### Decisiones del ciclo de aprendizaje
+
+- La pérdida principal corresponde a los logits combinados que entrega el enjambre. En entrenamiento se añade una pérdida auxiliar de agentes con peso 0,25 y una penalización diferenciable de similitud de feromonas con peso 0,01 y margen 0,7. La evaluación reporta la pérdida predictiva colectiva. Estos pesos son valores iniciales configurables; su efecto de calidad y especialización debe medirse.
+- El entrenamiento productivo reparte rangos sin solapamiento y combina sus gradientes por cantidad de tokens predichos. La repetición del mismo rango mantiene su función de verificación en el agregador de mediana existente. No se relajan sus requisitos de quórum.
+- El primer piloto productivo fija explícitamente dos identidades de trabajadores conocidos. La aceptación abierta de desconocidos conserva los gates de validación pendientes.
+- Los cambios se aplican sobre un modelo candidato separado. Se conservan pesos y optimizador al promoverlo, con informe de evaluación y recibos en una release firmada. Una regresión conserva la versión activa. Una promoción interrumpida se recupera sin volver a aplicar gradientes.
+- `experiments/internet_learning.py` usa un enjambre de referencia pequeño y reproducible, con tres agentes, Dolphin y feromonas. Su corpus sintético y su evaluación quedan separados; no carga memoria personal ni historial de especialización del checkout. El ensayo inicial prueba el recorrido y la pérdida de lenguaje; el modelo conversacional sigue pendiente.
 
 Desde el checkout y su entorno Python con `cryptography`:
 
