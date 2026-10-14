@@ -116,6 +116,14 @@ Próximo tramo del goal: integrar el almacenamiento público y los trabajadores 
 
 Los participantes con esta app pueden obtener y conservar la referencia sin terminal ni GPU. Usarla para cálculo y ofrecer conversación requieren todavía los motores separados y su evaluación. El catálogo inicial permanece limitado al piloto conocido; no se da por terminado el conocimiento global, la diversidad de modelos ni la aceptación abierta de aportes.
 
+### Procesos supervisados de cálculo
+
+- El nodo físico conserva la identidad, las conexiones, los artefactos y los recibos. Un proceso hijo sin identidad de red carga únicamente el checkpoint público activo y devuelve inferencia de referencia o un gradiente. El servicio ligero permanece sin PyTorch.
+- El supervisor termina el proceso al cancelar, vencer el plazo, retirar permisos, cambiar el presupuesto, exceder RAM o producir salida fuera de límites. Los resultados temporales se incorporan por hash y sus directorios se retiran al finalizar. Los contadores de cálculo completado se conservan entre reinicios y son distintos de trabajo aceptado por aprendizaje.
+- El primer motor acepta el corpus público fijado y rangos de hasta 65 tokens; entrenamiento solo desde los coordinadores conocidos del piloto. La inferencia de bytes no se anuncia como conversación útil. Otros modelos y el protocolo abierto requieren sus validaciones posteriores.
+- El motor se configura localmente; un peer no puede enviar un comando o implementación ejecutable. Las dos PCs permiten probarlo con los entornos de cálculo existentes. El instalador automático y los paquetes de motores CPU/GPU continúan pendientes; el paquete ligero no incorpora ese entorno de desarrollo.
+- Esta separación permite detener un cálculo sin perder la identidad o la versión aceptada. Es supervisión de procesos y permisos; el aislamiento completo del sistema de archivos y los límites generales de utilización GPU conservan su etapa de endurecimiento pendiente.
+
 Desde el checkout y su entorno Python con `cryptography`:
 
 ```bash

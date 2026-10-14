@@ -167,7 +167,7 @@ class PublicKnowledgeService:
                    and settings.policy.max_bandwidth_mbps > 0 and limit >= self.store.total_bytes() and limit > 0)
         self.allowed = allowed
         with self.governor._lock:
-            self.governor.policy = settings.policy if allowed else ContributionPolicy.for_mode("disabled")
+            self.governor.policy = settings.policy if settings.connected and not settings.paused else ContributionPolicy.for_mode("disabled")
         if not allowed:
             self.cancel.set()
             self._set_status(state="paused" if sharing.enabled else "disabled")
