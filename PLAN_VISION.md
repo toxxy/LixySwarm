@@ -2,6 +2,8 @@
 
 **Fecha:** 2026-10-13
 
+**Prioridad actualizada el 2026-10-14:** por indicación del usuario, el desarrollo y las pruebas de Windows y macOS quedan para el tramo final. Primero se completa el recorrido funcional en Linux: conexión por Internet, aprendizaje evaluado, distribución y conservación de las mejoras. Las compilaciones automáticas habituales se concentran en Linux; la matriz completa se conserva como ejecución manual para la validación final. Esta prioridad cambia el orden de trabajo, no las condiciones de aceptación de las demás etapas.
+
 LixySwarm debe ser una red que aprende, conserva lo aprendido y permite utilizarlo desde cualquier PC compatible. Cada máquina aporta dentro de los recursos que su usuario autoriza. La capacidad de entrenamiento debe aumentar al incorporar contribuciones útiles; las máquinas potentes pueden realizar más trabajo y alojar agentes mayores.
 
 El primer hito de producto será completar este recorrido por Internet: una PC recibe trabajo, calcula una contribución real, la red evalúa una nueva versión, otros participantes la adquieren y pueden utilizarla después de apagar la máquina que la produjo. El siguiente hito será realizar ese recorrido desde una app instalable sencilla.
@@ -65,7 +67,7 @@ Las tres máquinas actuales permiten el piloto de conectividad y aprendizaje. La
 
 ### 2 App sencilla y cliente ligero
 
-Construir una app instalable para Windows, Linux y macOS. Linux será la referencia inicial de pruebas con las máquinas disponibles; cada plataforma tendrá su propio paquete y validación. La interfaz se desarrolla sobre el servicio local estable, y sus funciones de aprendizaje se habilitan al completar las siguientes etapas.
+Construir primero la app instalable de Linux con las máquinas disponibles. Windows y macOS se completarán y validarán al final, después del recorrido funcional de aprendizaje y persistencia por Internet. Cada plataforma tendrá su propio paquete y validación. La interfaz se desarrolla sobre el servicio local estable, y sus funciones de aprendizaje se habilitan al completar las siguientes etapas.
 
 El recorrido de entrada será instalar, abrir, elegir cuánto aportar y conectar. La app crea la identidad, descubre pares, detecta hardware y presenta progreso de preparación. La conectividad comienza independientemente de las descargas de modelos. La contribución efectiva comienza cuando existe trabajo compatible y están listos sus artefactos.
 

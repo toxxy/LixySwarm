@@ -1,6 +1,11 @@
 name: Language CPU engine packages
 on:
   workflow_dispatch:
+    inputs:
+      all_platforms:
+        description: 'Include Windows and macOS for the final platform validation'
+        type: boolean
+        default: false
   push:
     branches: [main]
     paths:
@@ -16,7 +21,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-24.04, windows-2025, macos-15]
+        os: ${{ fromJSON(inputs.all_platforms == true && '["ubuntu-24.04", "windows-2025", "macos-15"]' || '["ubuntu-24.04"]') }}
     runs-on: ${{ matrix.os }}
     timeout-minutes: 25
     env:

@@ -3,6 +3,8 @@
 El usuario activó [PLAN_VISION.md](PLAN_VISION.md) como goal el 2026-10-13.
 Las etapas se completan por sus pruebas de aceptación; una implementación parcial conserva la etapa pendiente.
 
+**Orden de trabajo (2026-10-14):** el usuario pospuso Windows y macOS hasta el tramo final. Se priorizan Linux, el aprendizaje por Internet y la conservación de las mejoras. Los tres workflows de paquetes ejecutan Linux por defecto y permiten solicitar todas las plataformas manualmente mediante `all_platforms`; los paquetes publicados previamente siguen disponibles.
+
 | Etapa | Estado | Evidencia y trabajo restante |
 |---|---|---|
 | 1. Red continua | En observación | Servicios desplegados en dos PCs y VPS, estado por identidad en el Explorer y recuperación tras reinicio comprobados. Faltan operación de 24 horas y recuperación con otro relay público independiente. |
