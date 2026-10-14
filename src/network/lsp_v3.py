@@ -441,6 +441,33 @@ class LSPNodeV3:
         )
         return bool(future.result(timeout=timeout))
 
+    def connect_node(self, node_id: str, timeout: float = 20.0) -> bool:
+        """Connect a specific discovered provider without waiting behind old peers."""
+        if not self._loop:
+            return False
+        future = asyncio.run_coroutine_threadsafe(self._connect_node(node_id), self._loop)
+        try:
+            return bool(future.result(timeout=timeout))
+        except TimeoutError:
+            future.cancel()
+            return False
+
+    async def _connect_node(self, node_id: str) -> bool:
+        try:
+            if len(bytes.fromhex(node_id)) != 32:
+                return False
+        except (ValueError, TypeError):
+            return False
+        if node_id in self.connected_node_ids:
+            return True
+        addresses = self.address_book.addresses_for_node(node_id)
+        if not addresses:
+            return False
+        address = addresses[0]
+        if await self._connect_address(address.host, address.port, expected_node_id=node_id):
+            return True
+        return await self._connect_via_relay(node_id, address.host, address.port)
+
     def broadcast_feromon(self, feromon, *, fitness: float = 0.5, step: int = 0) -> int:
         payload = FeromonV2Payload(
             feromon=feromon,
@@ -738,7 +765,7 @@ class LSPNodeV3:
                 except Exception:
                     pass
 
-    async def _connect_address(self, host: str, port: int) -> bool:
+    async def _connect_address(self, host: str, port: int, *, expected_node_id=None) -> bool:
         if not self._loop or self.is_address_connected(host, port, direct_only=True):
             return False
         if self.reputation.is_banned("ip", host):
@@ -751,7 +778,7 @@ class LSPNodeV3:
             reader, writer = await asyncio.wait_for(
                 asyncio.open_connection(host, port), timeout=5.0
             )
-            return await self._establish_outbound(reader, writer, host)
+            return await self._establish_outbound(reader, writer, host, expected_node_id=expected_node_id)
         except ProtocolError as exc:
             self.reputation.report("ip", host)
             if session is not None:

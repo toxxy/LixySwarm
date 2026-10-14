@@ -396,6 +396,12 @@ class AddressBook:
                 diverse.append(candidate)
         return (diverse + repeated)[:limit]
 
+    def addresses_for_node(self, node_id: str) -> list[PeerAddress]:
+        with self._lock:
+            result = [PeerAddress(**asdict(entry)) for entry in self._entries.values()
+                      if entry.node_id == node_id]
+        return sorted(result, key=lambda entry: entry.last_seen, reverse=True)
+
     def export(self, limit: int = 100) -> list[dict]:
         with self._lock:
             entries = sorted(

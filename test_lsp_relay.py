@@ -39,6 +39,29 @@ def connect_relay(source, target):
     ))
 
 
+def test_targeted_provider_connection_uses_relay_and_pins_identity(tmp_path):
+    relay = node(tmp_path, "relay", relay=True)
+    source, target = node(tmp_path, "source"), node(tmp_path, "target")
+    try:
+        for peer in (relay, source, target):
+            peer.start()
+        for peer in (source, target):
+            assert peer.connect_peer("127.0.0.1", relay.port)
+        source.peer_manager.add_discovered([{
+            "host": "127.0.0.1", "port": target.port, "node_id": target.identity.node_id_hex,
+        }])
+        original = source._connect_address
+        async def nat_connect(host, port, **kwargs):
+            return False if port == target.port else await original(host, port, **kwargs)
+        source._connect_address = nat_connect
+        assert source.connect_node(target.identity.node_id_hex)
+        route = next(p for p in source.peers() if p["node_id"] == target.identity.node_id_hex)
+        assert route["transport"] == "relay" and route["encrypted"]
+    finally:
+        for peer in (target, source, relay):
+            peer.stop()
+
+
 def test_nat_fallback_keeps_end_to_end_identity_and_ciphertext(tmp_path):
     relay = node(tmp_path, "relay", relay=True)
     a, b = node(tmp_path, "a"), node(tmp_path, "b")

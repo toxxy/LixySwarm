@@ -174,7 +174,8 @@ class Pilot:
         workers = self.args.worker_ids.split(",")
         if len(workers) != 2 or len(set(workers)) != 2:
             raise ValueError("This first pilot requires exactly two pinned physical workers")
-        wait_for(lambda: set(workers) <= self.node.connected_node_ids)
+        for peer in workers:
+            wait_for(lambda: peer in self.node.connected_node_ids or self.node.connect_node(peer))
         training, evaluation = reference_corpus()
         train_path = self.state / "public-tokens.npy"; np.save(train_path, training, allow_pickle=False)
         dataset = self.store.import_file(train_path, kind="dataset", media_type="application/x-npy")
