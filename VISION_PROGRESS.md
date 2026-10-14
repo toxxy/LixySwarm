@@ -139,6 +139,8 @@ El [ensayo por Internet](experiments/reports/persistent_compute_20261014.json) e
 
 Pendiente para el siguiente recorrido completo: coordinación desde el nodo persistente, trabajos recuperables, evaluación y promoción que actualicen el catálogo; instalación automática de motores y modelo conversacional. El cálculo de referencia preparado en las dos PCs utiliza sus entornos existentes fuera del paquete ligero, y no da por cumplida la instalación limpia de motores en una PC nueva.
 
+La comprobación posterior pasó 122 pruebas. El [CI dbfc2a0](https://github.com/toxxy/LixySwarm/actions/runs/38573547066) verificó los paquetes en Linux, Windows y macOS con los controles de procesos y permisos de caché. Los dos ejecutables Linux volvieron a adquirir el modelo desde directorios vacíos por Internet, conservando pesos e identidad al pausar y reconectar; el proceso ligero siguió sin cargar PyTorch. Sus lanzadores se actualizaron en ambas PCs. El VPS adquirió el código por Git y recuperó sus servicios de transporte y API.
+
 Desde el checkout y su entorno Python con `cryptography`:
 
 ```bash
