@@ -27,6 +27,7 @@ from src.network.reference_compute import ReferenceComputeService
 from src.network.learning_coordinator import LearningCoordinator
 from src.network.language_compute import LanguageComputeService
 from src.network.chat_service import ChatBroker,LocalChatAPI
+from src.network.language_families import LanguageFamilies
 
 log = logging.getLogger("lixy.client")
 
@@ -119,6 +120,7 @@ def run(directory: Path, *, host="0.0.0.0", port=7338, interval=15, allow_privat
         knowledge = PublicKnowledgeService(node, directory, resources)
         compute = ReferenceComputeService(knowledge,directory,resources)
         language = LanguageComputeService(knowledge,directory,resources)
+        families=LanguageFamilies(knowledge,directory)
         chat=ChatBroker(node,knowledge.work,language);chat_api=LocalChatAPI(chat,directory);chat_api.start()
         learning = LearningCoordinator(knowledge,compute,directory)
         stop = threading.Event()
@@ -148,11 +150,12 @@ def run(directory: Path, *, host="0.0.0.0", port=7338, interval=15, allow_privat
             atomic_json(directory / "diagnostics.json", {
                 "node_id": identity.node_id_hex, "timestamp_ms": status["timestamp_ms"],
                 "port": node.port, "peers": peers,
-                "pid": os.getpid(), "runtime_version": "0.4.0a4", "controls_version": 1,
+                "pid": os.getpid(), "runtime_version": "0.4.0a5", "controls_version": 1,
                 "settings": asdict(settings), "worker_ready": computation["ready"] or conversation["ready"], "control_error": error,
                 "knowledge": public_knowledge,
                 "compute":computation,
                 "language":conversation,
+                "language_families":families.snapshot(),
                 "chat":chat.snapshot(),
                 "learning":learning.snapshot(),
             })
@@ -219,6 +222,7 @@ def run(directory: Path, *, host="0.0.0.0", port=7338, interval=15, allow_privat
                 node.resource_profile["models"]=([public_state["model_id"]] if compute.ready else [])+([language.engine.adapter_id] if language.ready else [])
                 node.capabilities["inference"]=compute.ready or language.ready
                 node.capabilities["language_inference_v1"]=language.ready
+                node.resource_profile["language_families_v1"]=families.snapshot()["available"]
                 node.capabilities["training"]=compute.ready and bool(compute.engine.training_requesters)
                 node.capabilities["worker_ready"]=compute.ready or language.ready
                 node.resource_profile["public_releases"] = [public_state["release_id"]] if public_state["sharing"] and public_state["release_id"] else []

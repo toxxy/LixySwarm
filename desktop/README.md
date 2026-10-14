@@ -1,6 +1,6 @@
 # App de LixySwarm
 
-El código `0.4.0a4` del participante instalable incluye Estado, Chat, Recursos y Actividad. La conexión, los permisos locales, la pausa y la reconexión tienen un proceso de red separado de la interfaz. El chat integra consultas al experto del piloto y conversación cifrada local. La descarga pública sigue siendo `0.4.0a2`; la preparación automática y réplica del experto de lenguaje conservan sus condiciones pendientes.
+El código `0.4.0a5` del participante instalable incluye Estado, Chat, Recursos y Actividad. La conexión, los permisos locales, la pausa y la reconexión tienen un proceso de red separado de la interfaz. El chat integra consultas al experto del piloto y conversación cifrada local. La descarga pública sigue siendo `0.4.0a2`; la preparación automática y réplica del experto de lenguaje conservan sus condiciones pendientes.
 
 El ejecutable incluye Python y los componentes de interfaz y transporte. La instalación por usuario conserva la identidad y el estado fuera del paquete. En Linux crea una entrada en el menú de aplicaciones; Windows y macOS tienen sus propios adaptadores de instalación.
 

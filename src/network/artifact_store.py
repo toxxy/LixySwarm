@@ -281,18 +281,18 @@ class ArtifactStore:
 class ArtifactService:
     """Register artifact read operations and fetch verified objects from peers."""
 
-    def __init__(self, coordinator, store: ArtifactStore, *, receive_budget=None):
+    def __init__(self, coordinator, store: ArtifactStore, *, receive_budget=None, namespace="artifact",register_handlers=True):
+        if namespace not in {"artifact", "language.artifact"}:
+            raise ArtifactError("unsupported artifact operation namespace")
         self.coordinator = coordinator
         self.store = store
         self.receive_budget = receive_budget
+        self.namespace = namespace
         self._fetch_locks: dict[str, threading.Lock] = {}
         self._fetch_locks_guard = threading.Lock()
-        coordinator.register_handler(
-            "artifact.describe.v1", "artifact", self._describe
-        )
-        coordinator.register_handler(
-            "artifact.read-chunk.v1", "artifact", self._read_chunk
-        )
+        if register_handlers:
+            coordinator.register_handler(f"{namespace}.describe.v1", "artifact", self._describe)
+            coordinator.register_handler(f"{namespace}.read-chunk.v1", "artifact", self._read_chunk)
 
     def _describe(self, payload: dict, _work) -> dict:
         if set(payload) != {"artifact_id"}:
@@ -318,6 +318,7 @@ class ArtifactService:
         peer_id: str,
         timeout_s: float = 60.0,
         cancel_event: Optional[threading.Event] = None,
+        expected_size: Optional[int] = None,
     ) -> Path:
         if not _HEX_64_RE.fullmatch(str(artifact_id)):
             raise ArtifactError("invalid artifact ID")
@@ -338,6 +339,7 @@ class ArtifactService:
                 peer_id=peer_id,
                 deadline=deadline,
                 cancel_event=cancel_event,
+                expected_size=expected_size,
             )
         finally:
             fetch_lock.release()
@@ -349,11 +351,14 @@ class ArtifactService:
         peer_id: str,
         deadline: float,
         cancel_event: Optional[threading.Event],
+        expected_size: Optional[int] = None,
     ) -> Path:
         if self.store.has(artifact_id):
+            if expected_size is not None and self.store.manifest(artifact_id).size!=expected_size:
+                raise ArtifactError("local artifact differs from the signed dependency size")
             return self.store._object_path(artifact_id)
         describe = self.coordinator.submit(
-            "artifact.describe.v1",
+            f"{self.namespace}.describe.v1",
             {"artifact_id": artifact_id},
             ResourceRequirements(kind="artifact"),
             peer_id=peer_id,
@@ -368,6 +373,8 @@ class ArtifactService:
         )
         if manifest.artifact_id != artifact_id:
             raise ArtifactError("peer returned a different artifact")
+        if expected_size is not None and manifest.size!=expected_size:
+            raise ArtifactError("peer artifact size differs from the signed dependency")
         partial, offset = self.store.begin_receive(manifest)
         if offset == manifest.size:
             return self.store.finalize_receive(manifest, partial)
@@ -376,7 +383,7 @@ class ArtifactService:
             while offset < manifest.size:
                 length = min(ARTIFACT_CHUNK_BYTES, manifest.size - offset)
                 result = self.coordinator.submit(
-                    "artifact.read-chunk.v1",
+                    f"{self.namespace}.read-chunk.v1",
                     {"artifact_id": artifact_id, "offset": offset, "length": length},
                     ResourceRequirements(kind="artifact"),
                     peer_id=peer_id,

@@ -377,6 +377,7 @@ class WorkCoordinator:
         max_queued_offers: int = 16,
         max_offers_per_peer: int = 2,
         max_offers_per_minute: int = 12,
+        max_completed_bytes: int = 32*1024**2,
     ):
         self.node = node
         self.governor = governor
@@ -388,6 +389,8 @@ class WorkCoordinator:
         self._pending: dict[str, _PendingWork] = {}
         self._inflight: set[str] = set()
         self._completed: OrderedDict[str, WorkResult] = OrderedDict()
+        self._completed_bytes=0
+        self.max_completed_bytes=max(1024,min(int(max_completed_bytes),256*1024**2))
         self._lock = threading.RLock()
         self._closed = False
         self._max_workers = max(1, min(int(max_workers), 64))
@@ -1054,10 +1057,14 @@ class WorkCoordinator:
         result = self._signed_result(result, peer_id)
         with self._lock:
             self._inflight.discard(job_id)
+            previous=self._completed.get(job_id)
+            if previous:self._completed_bytes-=len(_canonical_json(previous.to_dict()))
             self._completed[job_id] = result
+            self._completed_bytes+=len(_canonical_json(result.to_dict()))
             self._completed.move_to_end(job_id)
-            while len(self._completed) > MAX_COMPLETED_CACHE:
-                self._completed.popitem(last=False)
+            while len(self._completed) > MAX_COMPLETED_CACHE or self._completed_bytes>self.max_completed_bytes:
+                _,removed=self._completed.popitem(last=False)
+                self._completed_bytes-=len(_canonical_json(removed.to_dict()))
         try:
             self.node.send_work_result(peer_id, result.to_dict())
         except Exception:

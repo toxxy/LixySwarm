@@ -25,4 +25,14 @@ La reserva mínima de RAM considera el arranque: una petición del experto mayor
 
 El piloto pidió tres respuestas desde la laptop al experto mayor alojado en la RTX 5090, bajo la identidad física existente, por Internet. Se verificaron recibos, modelo exacto y ruta cifrada. El solicitante no importó PyTorch ni Transformers. Son consultas a conocimiento aprendido localmente, no entrenamiento distribuido de lenguaje ni replicas nuevas. La configuración quedó preparada y deshabilitada después de restaurar los permisos originales.
 
-Pendiente: familias con base y adaptaciones adquiridas por LSP, entrenamiento distribuido de estas adaptaciones, transferencia evaluada entre tamaños, selección de especialistas, chat desde la app y memoria persistente. La política personal sigue siendo responsabilidad del software; no se delega a las respuestas del modelo.
+El chat del piloto ya consulta desde la app y recupera historial cifrado. La política personal sigue siendo responsabilidad del software; no se delega a las respuestas del modelo.
+
+## Paquetes de familia y réplica
+
+El catálogo inicial `src/release/language_catalog.py` fija dos releases firmadas. Cada una vincula adaptación safetensors, descriptor, tokenizer y evaluación pública. El descriptor enumera todas las dependencias de la base por nombre cerrado, tamaño y SHA-256; conserva la licencia upstream. `publish_language_families.py` verifica los archivos públicos antes de importar y reproduce el genesis existente sin sustituirlo. No publica checkpoints personales ni selecciona archivos de memoria o conversación.
+
+`LanguageFamilies` comparte la identidad y el coordinador del nodo físico. Sus operaciones `language.family.v1` y `language.artifact.*` conservan el protocolo cifrado, recibos y transferencia reanudable. El receptor verifica el genesis fijado y rechaza un tamaño diferente antes de solicitar chunks. Solo anuncia una familia completa después de verificar todos los objetos. La base mayor conserva sus dos shards originales; los gradientes de familias distintas no se mezclan.
+
+Los paquetes públicos, motores y archivos parciales consumen la misma cuota de disco del participante. Reducirla por debajo del contenido conservado pausa el servicio público. El presupuesto de conexión y la pausa también se aplican a las transferencias de familia. La caché de respuestas de trabajo tiene un límite de 32 MiB, además del límite por cantidad de trabajos.
+
+La primera réplica completa está en curso entre las PCs por Internet. La publicación inicial y una transferencia parcial no prueban disponibilidad independiente ni aprendizaje distribuido de lenguaje. Continúan pendientes la preparación del motor de lenguaje desde la app, la carga de una réplica adquirida, el entrenamiento distribuido de estas adaptaciones, la transferencia evaluada entre tamaños y la selección de especialistas.

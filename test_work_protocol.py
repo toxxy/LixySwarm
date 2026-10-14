@@ -55,6 +55,19 @@ def _wait_for(predicate, timeout=3.0):
     return False
 
 
+def test_completed_results_cache_is_bounded_by_bytes_as_well_as_count(tmp_path):
+    governor=_governor(tmp_path,'relay');node=_node(tmp_path,'cache',governor)
+    work=WorkCoordinator(node,governor,max_completed_bytes=1500)
+    try:
+        work._finish('a'*64,'b'*64,WorkResult(job_id='a'*64,status='ok',output={'data':'x'*2000}))
+        assert work._completed_bytes==0 and not work._completed
+        for identifier in ['c'*64,'d'*64]:
+            work._finish(identifier,'b'*64,WorkResult(job_id=identifier,status='ok',output={'answer':'public'}))
+            assert work._completed_bytes<=1500
+        assert work._completed
+    finally:work.close()
+
+
 def test_work_unit_is_content_addressed_and_rejects_code():
     requirements = ResourceRequirements(kind="inference", ram_gb=0.5)
     work = WorkUnit.create(

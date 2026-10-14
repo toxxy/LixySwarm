@@ -241,3 +241,17 @@ El [CI del chat/app 526ca83](https://github.com/toxxy/LixySwarm/actions/runs/386
 El objetivo del registro es reunir una ventana de 24 horas; la ejecución tiene un límite de 48 horas. No sustituye la prueba del segundo relay independiente ni mide calidad del modelo. La condición de continuidad permanece pendiente hasta revisar las muestras completas y el resumen final.
 
 Tras la comprobación corta del CLI sobre la API pública, se inició el registro largo el 2026-10-14 como servicio de usuario separado del participante. Su revisión de origen es `c08321c`; conserva evidencia fuera del repositorio y no altera los controles de aportación. La observación inicial vio las tres máquinas saludables. Ese inicio no acredita todavía las 24 horas.
+
+### Familias de lenguaje firmadas y copia por Internet
+
+El catálogo de `src/release/language_catalog.py` publica dos genesis de expertos: `a43dba6c…` para la base menor y `3095364a…` para la mayor. Vinculan las adaptaciones ya evaluadas, dependencias completas de upstream, tokenizer, licencia y evaluación. Las bases mantienen sus hashes originales y formato safetensors; el proceso de publicación rechaza modelos o adaptaciones diferentes. La firma usa el publicador existente del piloto y los clientes fijan los genesis concretos.
+
+El almacén de familias se separa del de referencia de bytes, con objetos de hasta 4 GiB y cuota propia máxima de 8 GiB. Ambas áreas, archivos parciales y motores cuentan en el permiso total de disco. Las familias comparten el servicio y la identidad física persistente; ninguna ruta nueva permite ejecutar comandos enviados por pares. La inferencia y los permisos de GPU conservan su configuración anterior.
+
+El tráfico de objetos continúa limitado por conexión y leases. El coordinador permite hasta 600 ofertas por minuto por par, conserva cuatro ofertas simultáneas como máximo y limita la caché de resultados a 32 MiB, además del número de entradas. El límite anterior de 180 ofertas hacía insuficiente el transporte de pesos grandes. Los clientes comprueban los tamaños firmados antes de recibir y verifican chunks y el SHA-256 completo antes de conservar cada objeto.
+
+Ambas PCs instalaron el nodo 0.4.0a5. La PC principal conserva CPU 5 %, GPU cero y RAM 0,5 GiB; el piloto aumentó temporalmente solo disco a 8 GiB para servir 5.604.263.444 bytes públicos. La laptop conserva su perfil equilibrado y cuota de 10 GiB. La consulta sobre la cuota permanente sigue pendiente de la preferencia del operador.
+
+El cliente de copia en la laptop está activo y recibe la base menor a través del relay público. Se observaron 188.067.860 bytes conservados o parciales durante la transferencia. Su identidad pertenece a un solicitante de ensayo, no a otro trabajador físico. La comprobación de conexión rechazó rutas privadas; los pesos no viajaron por Dropbox, Git ni SSH. El primer descubrimiento requirió reintento y queda registrado. La copia no se declara completa hasta verificar todos los objetos y cargar la familia adquirida.
+
+Pasaron 177 pruebas de regresión, incluidas firmas, pins, rechazo de nombres, tamaños previos, aislamiento de namespace, transporte con fixture y presupuesto de caché. El ejecutable Linux pasó conexión y controles con estado vacío. El registro de continuidad sigue vivo, con las tres identidades físicas explícitas; aún no reúne 24 horas. Continúan pendientes las réplicas completas, motor de lenguaje instalable, entrenamiento distribuido de esas adaptaciones, transferencia entre tamaños y las demás condiciones del plan.
