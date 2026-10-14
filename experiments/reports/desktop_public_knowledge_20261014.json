@@ -1,0 +1,35 @@
+{
+  "code_revision": "1d01777",
+  "scope": "Actual bundled executables, clean state on two physical PCs; public LSP acquisition, no tensor engine or conversational quality claim",
+  "machines": {
+    "workstation": {
+      "success": true,
+      "internet": true,
+      "public_knowledge_ready": true,
+      "public_release_id": "59f68cdc1e6985fd539c1299e42bd200a4a24c42959d368fc3748780bcea98a3",
+      "public_model_id": "f2e3556f06a392291157b75c6adc44378cc15e1b10ddb9f633a2da19d30c66c2",
+      "public_bytes": 9243701,
+      "pause_preserves_public_weights": true,
+      "connection_s": 1.62,
+      "controls_confirmed": true,
+      "pause_keeps_connection": true,
+      "reconnect_keeps_identity": true,
+      "calculation_engines_loaded": false
+    },
+    "laptop": {
+      "success": true,
+      "internet": true,
+      "public_knowledge_ready": true,
+      "public_release_id": "59f68cdc1e6985fd539c1299e42bd200a4a24c42959d368fc3748780bcea98a3",
+      "public_model_id": "f2e3556f06a392291157b75c6adc44378cc15e1b10ddb9f633a2da19d30c66c2",
+      "public_bytes": 9243701,
+      "pause_preserves_public_weights": true,
+      "connection_s": 0.82,
+      "controls_confirmed": true,
+      "pause_keeps_connection": true,
+      "reconnect_keeps_identity": true,
+      "calculation_engines_loaded": false
+    }
+  },
+  "independent_physical_replicas": 2
+}

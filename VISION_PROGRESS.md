@@ -6,7 +6,7 @@ Las etapas se completan por sus pruebas de aceptación; una implementación parc
 | Etapa | Estado | Evidencia y trabajo restante |
 |---|---|---|
 | 1. Red continua | En observación | Servicios desplegados en dos PCs y VPS, estado por identidad en el Explorer y recuperación tras reinicio comprobados. Faltan operación de 24 horas y recuperación con otro relay público independiente. |
-| 2. App sencilla | En implementación | Interfaz de cuatro pantallas, controles locales confirmados, paquetes probados en Linux/Windows/macOS y app instalada en ambas PCs. Faltan modelo de red, preparación de trabajadores, arranque automático por plataforma y gate de instalación limpia completo. |
+| 2. App sencilla | En implementación | Cuatro pantallas, controles confirmados, catálogo y adquisición de la referencia pública desde el ejecutable; paquetes verificados en tres sistemas y app instalada en ambas PCs. Faltan motores de cálculo, modelo conversacional, arranque automático por plataforma y gate completo de instalación limpia. |
 | 3. Aprendizaje distribuido | Piloto verificado; integración pendiente | Dos GPUs procesaron ocho fragmentos por Internet: cuatro promociones y pérdida 5,56086 → 5,45485. Ambas adquirieron y usaron el modelo final. Faltan recuperación de trabajo incompleto, modelo conversacional e integración con la app. |
 | 4. Conocimiento persistente | Piloto verificado parcialmente | Ambos trabajadores replicaron el modelo; un cliente vacío lo recuperó desde la otra PC con los procesos productores detenidos y reprodujo la evaluación. Faltan apagado físico, descubrimiento y reparación automáticos, memoria global y tres réplicas independientes. |
 | 5. Capacidad heterogénea | Pendiente | Falta medir beneficio de dos PCs y transferencia entre agentes de tamaños distintos. |
@@ -104,6 +104,17 @@ Próximo tramo del goal: integrar el almacenamiento público y los trabajadores 
 - La app ofrece **Conservar conocimiento público**, con consentimiento separado para almacenamiento, progreso y pausa. El almacén `public/` sirve solamente archivos incorporados por el recorrido de releases; nunca abre el banco personal ni copia todo el directorio de un ensayo.
 - Las transferencias comparten un presupuesto de chunks codificados, interrumpible y limitado a la cuota elegida y a 5 Mbps durante esta integración. Las cuotas se aplican antes de nuevas adquisiciones; una reducción conserva los archivos existentes y suspende su servicio. Los nodos sin GPU pueden colaborar almacenando versiones.
 - Las pruebas cubren adquisición desde cero, continuidad de identidad del proveedor, restauración de versiones, pausa conservando pesos, cancelación, cuotas y exclusión de contenido personal de una migración. La comprobación en PCs reales y ejecutables empaquetados se registra al finalizar el despliegue.
+
+### Verificación de almacenamiento y app del 2026-10-14
+
+- Los dos servicios de las PCs migraron solamente los artefactos de las cinco releases públicas del piloto. Conservan sus identidades originales y sirven 9.243.701 bytes por LSP. No se migraron claves del piloto, datos privados ni todo su directorio de estado.
+- Después de reiniciar ambos servicios, sus diagnósticos muestran la misma release final y la cadena conservada. Ocupan aproximadamente 35 MiB de RAM por proceso y no tienen bibliotecas de PyTorch cargadas. El permiso de cálculo GPU continúa en cero.
+- El [CI 1d01777](https://github.com/toxxy/LixySwarm/actions/runs/38526456146) verificó paquetes Linux, Windows y macOS, con pruebas adicionales de adquisición, firma, controles y almacenamiento público sin motores de cálculo.
+- En ambas PCs, el ejecutable instalado se probó con directorio vacío y el botón de conservación. Adquirió por Internet la cadena y los pesos, verificó el hash de la release, conservó los archivos al pausar y mantuvo identidad y versión al reconectar. Las conexiones iniciales se observaron en 1,62 y 0,82 segundos.
+- El [informe de los ejecutables](experiments/reports/desktop_public_knowledge_20261014.json) guarda esos resultados. Ambos menús de aplicaciones apuntan a los nuevos paquetes. La inspección visual comprobó que estado, conservación, pausa y conexión caben en la ventana.
+- Pasaron 116 pruebas del proyecto; la comprobación posterior de disponibilidad anunciada y estado de la interfaz pasó 47 pruebas pertinentes. El VPS se actualizó por Git y conserva exclusivamente transporte, descubrimiento, API y Explorer.
+
+Los participantes con esta app pueden obtener y conservar la referencia sin terminal ni GPU. Usarla para cálculo y ofrecer conversación requieren todavía los motores separados y su evaluación. El catálogo inicial permanece limitado al piloto conocido; no se da por terminado el conocimiento global, la diversidad de modelos ni la aceptación abierta de aportes.
 
 Desde el checkout y su entorno Python con `cryptography`:
 
