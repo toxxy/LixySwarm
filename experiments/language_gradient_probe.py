@@ -1,7 +1,9 @@
 """Obtain typed public LoRA contributions from explicit physical workers."""
 import argparse
 import ipaddress
+import threading
 import time
+from concurrent.futures import ThreadPoolExecutor,as_completed
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -70,19 +72,27 @@ def main():
             if not route['encrypted'] or not ipaddress.ip_address(route.get('relay_host') or route['host']).is_global:
                 raise ValueError('Gradient pilot requires encrypted public Internet transport')
             return route
-        for index, worker in enumerate(args.worker):
+        routes={}
+        for worker in args.worker:
             route=connect(worker)
+            routes[worker]=route
             if not args.legacy:
                 head=fetch_history(work,args.base_name,worker)[-1]
                 if 'head' in report and head['release']['release_id']!=report['head']['release']['release_id']:
                     raise ValueError('Physical workers have different language versions')
                 report['head']=head
+        atomic_json(path,report)
+        cancelled=threading.Event()
+        def contribute(index,worker):
+            route=routes[worker]
             payload = {'adapter_id': ADAPTERS[args.base_name] if args.legacy else report['head']['release']['model_artifact_id'], 'dataset_id': corpus_digest(public_corpus()),
                 'start': index*args.count, 'count': args.count}
             if not args.legacy:payload.update(base_name=args.base_name,release_id=report['head']['release']['release_id'])
             started = time.monotonic()
+            began_at=time.time()
             result = work.submit(OPERATION if args.legacy else VERSIONED_OPERATION, payload, ResourceRequirements(kind='training', gpu_required=True,
-                ram_gb=6 if args.base_name=='qwen3-1.7b' else 4, disk_gb=.04), peer_id=worker, timeout_s=240)
+                ram_gb=6 if args.base_name=='qwen3-1.7b' else 4, disk_gb=.04), peer_id=worker, timeout_s=240,cancel_event=cancelled)
+            compute_seconds=time.monotonic()-started
             if result.status != 'ok':
                 raise RuntimeError(result.error)
             if not ResultReceipt.from_dict(result.receipt).verify(result, expected_worker_id=worker,
@@ -92,12 +102,25 @@ def main():
             if output['base_hash'] != base_hash(args.base_name) or any(output[k] != payload[k] for k in ['adapter_id','dataset_id','start','count']):
                 raise ValueError('Returned language contribution is from another version or shard')
             gradient = artifacts.fetch(output['gradient_id'], peer_id=worker, timeout_s=60,
-                expected_size=output['gradient_bytes'])
-            report['contributions'].append({**output, 'path': str(gradient), 'worker_id': worker,
+                expected_size=output['gradient_bytes'],cancel_event=cancelled)
+            row={**output, 'path': str(gradient), 'worker_id': worker,
                 'seconds': round(time.monotonic()-started, 3), 'receipt': result.receipt,
-                'transport': route['transport'], 'encrypted': route['encrypted']})
-            report['signed_results'].append(result.to_dict())
-            atomic_json(path, report)
+                'compute_seconds':compute_seconds,'request_started_at':began_at,'received_at':time.time(),
+                'transport': route['transport'], 'encrypted': route['encrypted']}
+            return row,result.to_dict()
+        began=time.monotonic()
+        with ThreadPoolExecutor(max_workers=min(4,len(args.worker))) as pool:
+            futures=[pool.submit(contribute,index,worker) for index,worker in enumerate(args.worker)]
+            try:
+                for future in as_completed(futures):
+                    row,result=future.result();report['contributions'].append(row);report['signed_results'].append(result)
+                    atomic_json(path,report)
+            except BaseException:
+                cancelled.set()
+                raise
+        report['contributions'].sort(key=lambda row:row['start'])
+        report['signed_results'].sort(key=lambda row:row['output']['start'])
+        report.update(parallel_workers=min(4,len(args.worker)),contribution_wall_seconds=time.monotonic()-began)
         if args.candidate_worker:
             route=connect(args.candidate_worker)
             payload={'base_name':args.base_name,'release_id':report['head']['release']['release_id'],
