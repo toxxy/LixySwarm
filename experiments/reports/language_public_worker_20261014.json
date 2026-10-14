@@ -1,0 +1,10 @@
+{
+  "success": true,
+  "scope": "Frozen CPU worker acquired by public HTTPS using its pinned catalog; complete language model acquired by LSP",
+  "result": {
+    "model_id": "3ff34a673bc4d8d83c0ba33286acfd2a1ee318c8ffbafce16caba345beb0b67f",
+    "answer": "The cat is in the house.",
+    "output_tokens": 8
+  },
+  "uses_development_interpreter_for_inference": false
+}
