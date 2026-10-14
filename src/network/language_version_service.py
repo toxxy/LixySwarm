@@ -24,10 +24,10 @@ class LanguageVersionService:
     def head(self, payload, execution):
         if not isinstance(payload, dict) or set(payload) != {'base_name'}:
             raise ReleaseError('Invalid language-head request')
+        # Signed history remains useful if this replica loses an object: other
+        # providers may hold the missing content. Complete-family availability
+        # is advertised separately by LanguageFamilies.
         bundle = LanguageVersionRegistry(self.families.root, payload['base_name']).head()
-        for identifier, size in dependencies(bundle):
-            if self.families.store.manifest(identifier).size != size:
-                raise ReleaseError('Language head dependencies are unavailable')
         self._charge(bundle,execution)
         return bundle
 

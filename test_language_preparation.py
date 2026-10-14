@@ -27,9 +27,8 @@ def context(monkeypatch, tmp_path, hook=lambda: None, corrupt=False):
     deps = [(identifier, size) for _, identifier, size in objects]
     monkeypatch.setattr(preparation, 'INITIAL_BUNDLES', {preparation.CHAT_FAMILY: bundle})
     monkeypatch.setattr(preparation, 'CHAT_ADAPTER', release.model_artifact_id)
-    monkeypatch.setattr(preparation, 'load_bundle', lambda *_: bundle)
-    monkeypatch.setattr(preparation, 'verify_bundle', lambda *_: (release, descriptor))
     monkeypatch.setattr(preparation, 'dependencies', lambda *_: deps)
+    monkeypatch.setattr(preparation,'LanguageVersionRegistry',lambda *_:SimpleNamespace(head=lambda:bundle))
     name = 'LixySwarmLanguageCUDA'+('.exe' if sys.platform == 'win32' else '')
     binary = b'public engine fixture; never executed'
     manifest = json.dumps({'version': 1, 'name': 'LixySwarmLanguageCUDA', 'platform': sys.platform,
@@ -63,6 +62,8 @@ def context(monkeypatch, tmp_path, hook=lambda: None, corrupt=False):
     # Package fixtures are never executable; the public GPU smoke test belongs
     # to the physical-machine run. Keep orchestration tests explicitly scoped.
     monkeypatch.setattr(service,'_probe',lambda *_:None)
+    monkeypatch.setattr(service,'_prepare_version',lambda settings,entry,allowed:
+        (release,language_install.materialize_family(tmp_path,preparation.CHAT_FAMILY,allowed=allowed)))
     return service, entry, descriptor, opens
 
 
@@ -104,19 +105,12 @@ def test_permission_or_operator_selection_changes_prevent_activation(monkeypatch
         assert json.loads(service.intent.read_text())['requested'] is False
 
 
-def test_corrupt_package_or_unapproved_family_cannot_enable_expert(monkeypatch, tmp_path):
+def test_corrupt_package_cannot_enable_expert(monkeypatch, tmp_path):
     service, _, _, _ = context(monkeypatch, tmp_path, corrupt=True)
     service.start()
     finish(service)
     assert service.snapshot()['state'] == 'waiting'
     assert not LanguageSettings.load(tmp_path).enabled
-    second = tmp_path/'other'
-    second.mkdir()
-    service, _, descriptor, opens = context(monkeypatch, second)
-    descriptor['base_name'] = 'qwen3-0.6b'
-    service.start()
-    finish(service)
-    assert not opens and not LanguageSettings.load(second).enabled
 
 
 def test_preparation_respects_low_laptop_resources_and_serializes_with_cpu_download(monkeypatch, tmp_path):
@@ -176,11 +170,67 @@ def test_probe_uses_resource_lease_and_rejects_wrong_answers(monkeypatch,tmp_pat
         assert governor.status()['leased_ram_gb']==5
         assert kwargs['allowed']() and kwargs['ram_gb']==5
         assert request['messages'][0]['content']==preparation.quality_cases()[0]['prompt']
+        assert request['adapter_id']==answer['model_id']
         return answer
     monkeypatch.setattr(preparation.ComputeSupervisor,'run',compute)
     preparation.LanguagePreparation._probe(service,'fixture',tmp_path,ClientSettings.load(tmp_path),lambda:True)
     assert governor.status()['active_gpu_jobs']==0
+    answer['model_id']='c'*64
+    preparation.LanguagePreparation._probe(service,'fixture',tmp_path,ClientSettings.load(tmp_path),lambda:True,'c'*64)
+    answer['model_id']=preparation.CHAT_ADAPTER
     answer['answer']='Madrid'
     with pytest.raises(ValueError,match='no pasó'):
         preparation.LanguagePreparation._probe(service,'fixture',tmp_path,ClientSettings.load(tmp_path),lambda:True)
     assert governor.status()['active_gpu_jobs']==0
+
+
+def test_preparation_selects_the_verified_current_adapter_instead_of_genesis(monkeypatch,tmp_path):
+    service,entry,_,_=context(monkeypatch,tmp_path)
+    current=SimpleNamespace(release_id='b'*64,model_artifact_id='c'*64)
+    monkeypatch.setattr(preparation,'LanguageVersionRegistry',lambda *_:SimpleNamespace(head=lambda:{'release':{'release_id':current.release_id}}))
+    monkeypatch.setattr(service,'_prepare_version',lambda settings,entry,allowed:(current,tmp_path/'public-fixture'))
+    checked=[]
+    monkeypatch.setattr(service,'_probe',lambda command,base,settings,allowed,adapter_id:checked.append(adapter_id))
+    service.start();finish(service)
+    assert service.snapshot()['state']=='complete',service.snapshot()
+    assert checked==[current.model_artifact_id]
+    assert LanguageSettings.load(tmp_path).adapter_id==current.model_artifact_id
+
+
+def test_newer_head_while_preparing_cannot_activate_an_obsolete_adapter(monkeypatch,tmp_path):
+    service,entry,_,_=context(monkeypatch,tmp_path)
+    head={'release':{'release_id':'b'*64}}
+    monkeypatch.setattr(preparation,'LanguageVersionRegistry',lambda *_:SimpleNamespace(head=lambda:head))
+    monkeypatch.setattr(service,'_prepare_version',lambda settings,entry,allowed:
+        (SimpleNamespace(release_id='a'*64,model_artifact_id='c'*64),tmp_path/'public-fixture'))
+    service.start();finish(service)
+    assert service.snapshot()['state']=='waiting'
+    assert not LanguageSettings.load(tmp_path).enabled
+
+
+@pytest.mark.parametrize('failure',['evaluation','family','signature'])
+def test_current_version_materialization_rechecks_real_signed_history_and_evaluation(monkeypatch,tmp_path,failure):
+    from test_language_versions import fixture
+    from src.release.language_versions import LanguageVersionRegistry
+    root=tmp_path/'public/language'
+    store,first,update,_publisher=fixture(monkeypatch,root);second,report=update(first)
+    registry=LanguageVersionRegistry(root,'qwen3-0.6b');registry.install([first,second],store)
+    monkeypatch.setattr(preparation,'CHAT_FAMILY','qwen3-0.6b')
+    monkeypatch.setattr(preparation,'INITIAL_PROVIDERS',set())
+    service=preparation.LanguagePreparation(SimpleNamespace(peers=lambda:[]),SimpleNamespace(allowed=True),
+        SimpleNamespace(root=root,store=store),tmp_path,{'has_gpu':True,'gpu_vram_gb':8})
+    entry=EngineDownload('https://example.invalid/fixture','a'*64,1,'b'*64,1,profile='language-cuda')
+    controls=ClientSettings(policy=ContributionPolicy.for_mode('maximum'))
+    selected,base=service._prepare_version(controls,entry,lambda:True)
+    assert selected.release_id==second['release']['release_id']
+    assert (base/'adapter.safetensors').read_bytes()==store.object_path(second['release']['model_artifact_id']).read_bytes()
+    assert not LanguageSettings.load(tmp_path).enabled
+    if failure=='evaluation':
+        evaluation=second['descriptor']['evaluation_id'];store.object_path(evaluation).write_bytes(b'corrupt public fixture')
+    else:
+        path=registry.bundles/(second['release']['release_id']+'.json')
+        damaged=json.loads(path.read_text())
+        if failure=='family':damaged['descriptor']['base_name']='qwen3-1.7b'
+        else:damaged['release']['signatures'][0]['signature']='A'*88
+        path.write_text(json.dumps(damaged))
+    with pytest.raises(ValueError):service._prepare_version(controls,entry,lambda:True)

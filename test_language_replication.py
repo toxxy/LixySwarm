@@ -142,19 +142,28 @@ def test_encrypted_transfer_recovers_missing_object_from_second_provider(monkeyp
             node.start();nodes.append(node)
             works.append(WorkCoordinator(node,ResourceGovernor(ContributionPolicy.for_mode('relay'),
                 hardware=SimpleNamespace(cpu_cores=1,ram_gb=1,disk_gb=10,has_gpu=False,gpu_vram_gb=0),storage_path=directory),max_offers_per_minute=600))
+        stores=[]
+        from src.release.language_versions import dependencies
         for index in [0,1]:
             knowledge=SimpleNamespace(work=works[index],allowed=True,cancel=threading.Event(),
                 budget=SimpleNamespace(wait=lambda *_a,**_kw:None))
             family=LanguageFamilies(knowledge,tmp_path/['first','second'][index])
-            family.store=source;family.artifacts.store=source
-            LanguageVersionRegistry(family.root,'qwen3-0.6b').install([first,second],source)
-        def unavailable(_payload,_execution):raise ArtifactError('fixture first provider lost this object')
-        works[0].register_handler('language.artifact.read-chunk.v1','artifact',unavailable)
+            for identifier in {identifier for bundle in [first,second] for identifier,_size in dependencies(bundle)}:
+                manifest=source.manifest(identifier)
+                family.store.import_file(source.object_path(identifier),kind=manifest.kind,media_type=manifest.media_type)
+            LanguageVersionRegistry(family.root,'qwen3-0.6b').install([first,second],family.store)
+            stores.append(family.store)
+        model=second['release']['model_artifact_id']
+        config=second['descriptor']['files'][0]['artifact_id']
+        stores[0].object_path(model).unlink()
+        stores[1].object_path(config).unlink()
         for node in nodes[:2]:assert nodes[2].connect_peer('127.0.0.1',node.port)
         target=ArtifactStore(tmp_path/'receiver/artifacts')
         result=replicate_version(works[2],target,tmp_path/'receiver','qwen3-0.6b',[node.identity.node_id_hex for node in nodes[:2]])
         assert result['release_id']==second['release']['release_id']
-        assert set(result['acquired_objects'].values())=={nodes[1].identity.node_id_hex}
+        assert result['metadata_providers']==[node.identity.node_id_hex for node in nodes[:2]]
+        assert result['acquired_objects'][model]==nodes[1].identity.node_id_hex
+        assert result['acquired_objects'][config]==nodes[0].identity.node_id_hex
         assert all(peer['encrypted'] for peer in nodes[2].peers())
     finally:
         for work in works:work.close()

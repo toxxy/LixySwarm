@@ -7,14 +7,15 @@ import threading
 import time
 
 from src.release.language_catalog import INITIAL_BUNDLES
-from src.release.language_family import dependencies, load_bundle, verify_bundle
+from src.release.language_family import dependencies
+from src.release.language_versions import LanguageVersionRegistry,dependencies as version_dependencies,validate_bundle
 from .client_state import ClientSettings,NodeStateLock
 from .engine_catalog import language_engine
 from .engine_download import PreparationCancelled, prepare_engine
 from .engine_package import verify_package
 from .language_compute import LanguageSettings
-from .language_families import fetch_family
-from .language_install import materialize_family
+from .language_install import materialize_version
+from .language_replication import replicate_version
 from .public_knowledge import managed_public_bytes
 from .telemetry import atomic_json
 from .compute_process import ComputeSupervisor
@@ -26,7 +27,8 @@ from src.learning.public_quality import quality_cases,correct_answer
 # adapter failed; being signed and downloadable does not make it selectable.
 CHAT_FAMILY = 'qwen3-1.7b'
 CHAT_ADAPTER = 'badef4394af180ab75ca25f0d9d47f2406b92809b53b5845ab65d451cf9c4b3c'
-INITIAL_PROVIDERS = {'c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255'}
+INITIAL_PROVIDERS = {'c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255',
+    'ea914d97caafef310e50385034abae9a50ba86496b0e9cbf4679e6070e4c25b0'}
 
 
 def preparation_budget(entry):
@@ -36,20 +38,24 @@ def preparation_budget(entry):
     return 2*sum(size for _, size in dependencies(bundle)) + 2*entry.installed_bytes + entry.bytes*(2 if entry.parts else 1)
 
 
-def remaining_budget(directory, store, entry):
+def remaining_budget(directory, store, entry,*,chain=None):
     """Reserve remaining stages, including resumable archives and staging."""
     directory = Path(directory)
     model_missing = 0
-    for identifier, size in dependencies(INITIAL_BUNDLES[CHAT_FAMILY]):
+    required=dict(dependencies(INITIAL_BUNDLES[CHAT_FAMILY])) if chain is None else {
+        identifier:size for bundle in chain for identifier,size in version_dependencies(bundle)}
+    for identifier, size in required.items():
         try:
-            if store.manifest(identifier).size == size:
+            if store.has(identifier) and store.manifest(identifier).size == size:
                 continue
         except (OSError, ValueError):
             pass
         partial = store.incoming/f'{identifier}.part'
         present = min(size, partial.stat().st_size) if partial.is_file() else 0
         model_missing += size-present
-    model_copy = 0 if (directory/'language-models'/INITIAL_BUNDLES[CHAT_FAMILY]['release']['release_id']).is_dir() else sum(size for _, size in dependencies(INITIAL_BUNDLES[CHAT_FAMILY]))
+    selected=INITIAL_BUNDLES[CHAT_FAMILY] if chain is None else chain[-1]
+    selected_dependencies=dependencies(selected) if chain is None else version_dependencies(selected)
+    model_copy = 0 if (directory/'language-models'/selected['release']['release_id']).is_dir() else sum(size for _, size in selected_dependencies)
     if (directory/'engines'/entry.manifest_sha256).is_dir():
         return model_missing+model_copy
     download = directory/'engine-downloads'
@@ -158,45 +164,13 @@ class LanguagePreparation:
                 raise ValueError('El almacenamiento disponible cambió; la preparación se conserva para reanudarla')
             if not allowed():
                 raise PreparationCancelled('Preparación detenida; los archivos se conservan')
-            try:
-                bundle = load_bundle(self.families.root, CHAT_FAMILY)
-                if not all(self.families.store.has(identifier) for identifier, _ in dependencies(bundle)):
-                    raise ValueError('Incomplete local family')
-            except (OSError, ValueError):
-                self._status('discovering', message='Buscando participantes con el experto público')
-                provider = None
-                candidates = [p['node_id'] for p in self.node.peers()
-                    if CHAT_FAMILY in p.get('resources', {}).get('language_families_v1', [])]
-                for identifier in list(dict.fromkeys(candidates + sorted(INITIAL_PROVIDERS))):
-                    if not allowed():
-                        raise PreparationCancelled('Preparación detenida; los archivos se conservan')
-                    if self.node.connect_node(identifier, timeout=12):
-                        provider = identifier
-                        break
-                if provider is None:
-                    raise RuntimeError('Esperando un participante que conserve el experto')
-                total = sum(size for _, size in dependencies(INITIAL_BUNDLES[CHAT_FAMILY]))
-                self._status('model', 0, total, 'Descargando y verificando el experto por la red')
-                received = 0
-                last_progress = 0
-                def progress(_identifier, size):
-                    nonlocal received
-                    received += size
-                    self._status('model', received, total, 'Descargando y verificando el experto por la red')
-                def chunk_progress(_identifier, done, size):
-                    nonlocal last_progress
-                    if done==size or time.monotonic()-last_progress>=.5:
-                        last_progress=time.monotonic()
-                        self._status('model', received+done, total, 'Descargando y verificando el experto por la red')
-                from .public_knowledge import BandwidthBudget
-                bundle = fetch_family(self.knowledge.work, self.families.store, self.families.root, CHAT_FAMILY, provider,
-                    cancel_event=self.cancel, progress=progress,chunk_progress=chunk_progress,
-                    receive_budget=BandwidthBudget(lambda: settings.policy.max_bandwidth_mbps/2 if allowed() else 0))
-            release, descriptor = verify_bundle(bundle)
-            if descriptor['base_name'] != CHAT_FAMILY or release.model_artifact_id != CHAT_ADAPTER:
-                raise ValueError('Este experto no supera la política local de activación')
-            self._status('materializing', message='Verificando los archivos del experto')
-            base = materialize_family(self.directory, CHAT_FAMILY, allowed=allowed)
+            self._status('discovering',message='Buscando la versión evaluada del experto público')
+            release,base = self._prepare_version(settings,entry,allowed)
+            adapter_id=release.model_artifact_id
+            accepted_release_id=release.release_id
+            unchanged_permissions=allowed
+            def allowed():
+                return (unchanged_permissions() and LanguageVersionRegistry(self.families.root,CHAT_FAMILY).head()['release']['release_id']==accepted_release_id)
             self._status('engine', message='Preparando el motor de lenguaje')
             installed = self.directory/'engines'/entry.manifest_sha256
             if installed.is_dir():
@@ -210,11 +184,11 @@ class LanguagePreparation:
             if not allowed():
                 raise PreparationCancelled('Los permisos cambiaron; el experto no se activó')
             self._status('testing',message='Comprobando que el experto responde dentro de tus límites')
-            self._probe(command,base,settings,allowed)
+            self._probe(command,base,settings,allowed,adapter_id)
             if not allowed():
                 raise PreparationCancelled('Los permisos cambiaron; el experto no se activó')
             LanguageSettings(enabled=True, command=[command], base_name=CHAT_FAMILY, base_directory=str(base),
-                adapter_file=str(base/'adapter.safetensors'), adapter_id=CHAT_ADAPTER).save(self.directory)
+                adapter_file=str(base/'adapter.safetensors'), adapter_id=adapter_id).save(self.directory)
             atomic_json(self.intent, {'version': 1, 'requested': False})
             self._status('complete', message='Experto preparado; responde y colabora dentro de tus permisos')
         except Exception as error:
@@ -228,7 +202,44 @@ class LanguagePreparation:
         finally:
             if acquired:guard.__exit__(None,None,None)
 
-    def _probe(self,command,base,settings,allowed):
+    def _prepare_version(self,settings,entry,allowed):
+        registry=LanguageVersionRegistry(self.families.root,CHAT_FAMILY)
+        candidates=[peer['node_id'] for peer in self.node.peers()
+            if CHAT_FAMILY in peer.get('resources',{}).get('language_families_v1',[])
+            or peer.get('capabilities',{}).get('language_versions_v1')]
+        providers=[]
+        for identifier in list(dict.fromkeys(candidates+sorted(INITIAL_PROVIDERS)))[:8]:
+            if not allowed():raise PreparationCancelled('Los permisos cambiaron; el experto no se activó')
+            if identifier!=self.node.identity.node_id_hex and self.node.connect_node(identifier,timeout=12):providers.append(identifier)
+        sizes={};received={};last_progress=0
+        def preflight(chain):
+            sizes.update({identifier:size for bundle in chain for identifier,size in version_dependencies(bundle)})
+            required=remaining_budget(self.directory,self.families.store,entry,chain=chain)
+            if (managed_public_bytes(self.directory)+required>settings.policy.max_disk_gb*1024**3
+                    or shutil.disk_usage(self.directory).free<required):
+                raise ValueError('No hay espacio autorizado para la versión aceptada y su motor')
+        def progress(identifier,done,_provider):
+            nonlocal last_progress
+            received[identifier]=done
+            if done==sizes.get(identifier) or time.monotonic()-last_progress>=.5:
+                last_progress=time.monotonic()
+                self._status('versions',sum(received.values()),sum(sizes.values()),'Verificando la versión evaluada del experto')
+        if providers:
+            self._status('versions',message='Adquiriendo la versión evaluada del experto')
+            from .public_knowledge import BandwidthBudget
+            replicate_version(self.knowledge.work,self.families.store,self.families.root,CHAT_FAMILY,providers,
+                cancel_event=self.cancel,allowed=allowed,preflight=preflight,
+                receive_budget=BandwidthBudget(lambda:settings.policy.max_bandwidth_mbps/2 if allowed() else 0),
+                progress=progress)
+        head=registry.head();chain=registry.history(head['release']['release_id'])
+        preflight(chain);registry.install(chain,self.families.store)
+        release,descriptor=validate_bundle(head)
+        if descriptor['base_name']!=CHAT_FAMILY:raise ValueError('La versión aceptada pertenece a otra familia')
+        base=materialize_version(self.directory,CHAT_FAMILY,release.release_id,allowed=allowed)
+        return release,base
+
+    def _probe(self,command,base,settings,allowed,adapter_id=None):
+        if adapter_id is None:adapter_id=CHAT_ADAPTER
         requirements=ResourceRequirements(kind='inference',gpu_required=True,ram_gb=5)
         lease,reason=self.knowledge.governor.acquire(requirements)
         if lease is None:raise RuntimeError('El cálculo no está disponible ahora: '+reason)
@@ -237,12 +248,12 @@ class LanguagePreparation:
                 operation='language.inference.v1',kind='inference',requirements=requirements,payload={},timeout_s=60),self.cancel)
             case=quality_cases()[0]
             request={'action':'inference','device':'cuda','base_name':CHAT_FAMILY,'base_directory':str(base),
-                'adapter_file':str(base/'adapter.safetensors'),'adapter_id':CHAT_ADAPTER,
+                'adapter_file':str(base/'adapter.safetensors'),'adapter_id':adapter_id,
                 'messages':[{'role':'user','content':case['prompt']}],'deadline':execution.deadline,
                 'cpu_threads':max(1,min(8,int(self.resources.get('cpu_cores',1)*settings.policy.cpu_percent/100))),
                 'gpu_fraction':settings.policy.gpu_percent/100/max(1,settings.policy.max_gpu_jobs)}
             result=ComputeSupervisor().run([command],request,execution,allowed=allowed,ram_gb=5)
-            if (set(result)!={'model_id','answer','output_tokens'} or result['model_id']!=CHAT_ADAPTER
+            if (set(result)!={'model_id','answer','output_tokens'} or result['model_id']!=adapter_id
                     or type(result['output_tokens']) is not int or not 1<=result['output_tokens']<=128
                     or not isinstance(result['answer'],str) or len(result['answer'].encode())>8192
                     or not correct_answer(case,result['answer'])):
