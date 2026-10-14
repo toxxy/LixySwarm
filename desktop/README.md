@@ -25,6 +25,10 @@ La interfaz escribe `controls.json` en el directorio local del nodo. El proceso 
 
 Los presupuestos se preparan para los trabajadores. Esta vista previa mantiene entrenamiento e inferencia deshabilitados, y los contadores de cálculo permanecen en cero. La comprobación de límites durante trabajos reales corresponde a la integración de esos trabajadores.
 
+El botón **Conservar conocimiento público** habilita adquisición, verificación y servicio de versiones del catálogo público dentro del permiso de almacenamiento y conexión. El catálogo inicial contiene el enjambre de referencia de bytes que superó el piloto distribuido; aún no es el modelo conversacional. El servicio descarga la cadena desde un participante disponible, comprueba firmas, genesis y hashes, y conserva los pesos al pausar, desconectar o reiniciar. Usa la identidad del equipo y un almacén `public/` separado de la memoria personal. No carga PyTorch ni ejecuta un modelo al compartir archivos.
+
+Una reducción de cuota por debajo de los archivos conservados pausa su servicio; no elimina conocimiento automáticamente. Dejar de compartir conserva los archivos y detiene nuevas transferencias. El presupuesto de transferencia se aplica a chunks codificados y puede interrumpirse; por ahora se limita además a 5 Mbps por servicio para respetar la ventana de bytes LSP. Descubrimiento global por contenido, reparación automática y modelo de chat siguen pendientes.
+
 La clave de cifrado personal se genera en el almacén protegido del sistema. Si falta o está bloqueado, la memoria personal conserva estado pendiente. No hay clave alternativa en archivo plano. La pérdida de una clave existente no genera una sustituta que inutilice el contenido cifrado. La integración de Matriarca y conversación persistente continúa en las etapas de aprendizaje y memoria.
 
 La instalación por usuario guarda cada versión del paquete identificada por su contenido y actualiza el lanzador. Conserva las versiones previas y mantiene el estado personal fuera de ellas. El arranque automático se integra con el servicio de referencia de Linux; la configuración equivalente por plataforma sigue pendiente.

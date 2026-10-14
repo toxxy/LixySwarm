@@ -1,7 +1,7 @@
-"""Persistent lightweight Internet participant. Calculation workers come later.
+"""Persistent lightweight Internet participant and public model provider.
 
-Identity and runtime files are machine-local, outside Dropbox. No models,
-personal memories or training files are read by this service.
+Identity and runtime files are machine-local, outside Dropbox. Public artifacts
+are verified and served without loading models, personal memory or tensors.
 """
 from __future__ import annotations
 
@@ -22,6 +22,7 @@ from src.network.lsp import LSPIdentity
 from src.network.lsp_v3 import LSPNodeV3
 from src.network.telemetry import atomic_json, build_status, sign_status, verify_status
 from src.network.client_state import ClientSettings, NodeStateLock, state_directory
+from src.network.public_knowledge import KnowledgeSettings, PublicKnowledgeService
 
 log = logging.getLogger("lixy.client")
 
@@ -111,6 +112,7 @@ def run(directory: Path, *, host="0.0.0.0", port=7338, interval=15, allow_privat
                           "training": False, "inference": False, "worker_ready": False},
             resource_profile={**resources, "mode": "network-only"}, allow_private=allow_private,
         )
+        knowledge = PublicKnowledgeService(node, directory, resources)
         stop = threading.Event()
         for signum in (signal.SIGINT, signal.SIGTERM):
             signal.signal(signum, lambda *_: stop.set())
@@ -131,11 +133,13 @@ def run(directory: Path, *, host="0.0.0.0", port=7338, interval=15, allow_privat
             # Persist sequence before sending, so restart cannot reuse it.
             atomic_json(status_path, envelope)
             peers = node.peers()
+            public_knowledge = knowledge.snapshot()
             atomic_json(directory / "diagnostics.json", {
                 "node_id": identity.node_id_hex, "timestamp_ms": status["timestamp_ms"],
                 "port": node.port, "peers": peers,
                 "pid": os.getpid(), "runtime_version": "0.4.0a1", "controls_version": 1,
                 "settings": asdict(settings), "worker_ready": False, "control_error": error,
+                "knowledge": public_knowledge,
             })
             eligible = time.monotonic() - last_sent >= 2
             if eligible:
@@ -150,6 +154,7 @@ def run(directory: Path, *, host="0.0.0.0", port=7338, interval=15, allow_privat
             running = False
             next_publish = 0.0
             last_settings = None
+            last_knowledge = None
             settings = ClientSettings()
             log.info("Started persistent node id=%s mode=network-only", identity.node_id_hex[:16])
             while not stop.is_set():
@@ -175,7 +180,19 @@ def run(directory: Path, *, host="0.0.0.0", port=7338, interval=15, allow_privat
                     publish("disconnected", settings, error)
                     node.stop()
                     running = False
+                try:
+                    sharing = KnowledgeSettings.load(directory)
+                except (OSError, ValueError, TypeError):
+                    sharing = KnowledgeSettings()
+                knowledge.update(settings, sharing)
                 current_state = "disconnected" if not running else "paused" if settings.paused else "connected" if node.peer_count else "connecting"
+                public_state = knowledge.snapshot()
+                knowledge_change = (public_state["state"], public_state["release_id"],
+                                    public_state["versions_done"], public_state["sharing"])
+                if running and current_state == "connected" and public_state["state"] == "downloading":
+                    current_state = "preparing"
+                if knowledge_change != last_knowledge:
+                    refresh.set(); last_knowledge = knowledge_change
                 if changed or refresh.is_set() or time.monotonic() >= next_publish:
                     refresh.clear()
                     eligible = publish(current_state, settings, error)
@@ -184,6 +201,7 @@ def run(directory: Path, *, host="0.0.0.0", port=7338, interval=15, allow_privat
                 stop.wait(0.5)
             publish("disconnected", settings)
         finally:
+            knowledge.close()
             node.stop()
             log.info("Node stopped cleanly")
 
@@ -195,13 +213,19 @@ def main():
     parser.add_argument("--port", type=int, default=7338)
     parser.add_argument("--install-user-service", action="store_true")
     parser.add_argument("--allow-private", action="store_true", help=argparse.SUPPRESS)
+    parser.add_argument("--import-public-run", type=Path, help=argparse.SUPPRESS)
     args = parser.parse_args()
     handlers = None
     if sys.stderr is None:
         args.state_dir.mkdir(parents=True, exist_ok=True, mode=0o700)
         handlers = [logging.FileHandler(args.state_dir / "client.log")]
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(name)s %(message)s", handlers=handlers)
-    if args.install_user_service:
+    if args.import_public_run:
+        from src.network.public_knowledge import import_public_run
+        with NodeStateLock(args.state_dir):
+            release = import_public_run(args.import_public_run, args.state_dir)
+            print(f"Imported public release {release.release_id}")
+    elif args.install_user_service:
         install_user_service(args.state_dir, host=args.host, port=args.port)
     else:
         run(args.state_dir, host=args.host, port=args.port, allow_private=args.allow_private)

@@ -12,6 +12,7 @@ import psutil
 from client_daemon import node_command
 from src.network.client_state import ClientSettings
 from src.network.telemetry import verify_status
+from src.network.public_knowledge import KnowledgeSettings
 
 
 class NodeController:
@@ -88,6 +89,15 @@ class NodeController:
         settings = self.settings()
         settings.policy = policy
         settings.save(self.directory)
+
+    def share_knowledge(self, enabled):
+        KnowledgeSettings(enabled=bool(enabled), consented_at=time.time() if enabled else 0).save(self.directory)
+
+    def knowledge_settings(self):
+        try:
+            return KnowledgeSettings.load(self.directory)
+        except (OSError, ValueError, TypeError):
+            return KnowledgeSettings()
 
     def confirmed_settings(self):
         snapshot = self.snapshot()

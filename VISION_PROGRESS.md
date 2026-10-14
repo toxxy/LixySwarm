@@ -97,6 +97,14 @@ Pasaron 111 pruebas, incluyendo pérdida silenciosa de paquetes. El [CI 59a26a3]
 
 Próximo tramo del goal: integrar el almacenamiento público y los trabajadores como procesos separados del servicio de cada PC, con una sola identidad por equipo; incorporar adquisición de modelos y uso desde la app. La referencia de bytes conservará su función de evaluación del protocolo, y el modelo conversacional tendrá su propia evaluación de calidad.
 
+### Integración de conocimiento público en el servicio
+
+- El servicio ligero incorpora artefactos, historia firmada y adquisición del catálogo usando la identidad persistente del equipo. Los pesos se conservan y sirven sin importar PyTorch. La inferencia y los trabajadores de cálculo mantienen su integración pendiente.
+- El catálogo inicial fija el genesis y el publicador del piloto conocido; un proveedor de archivos no obtiene autoridad para aceptar modelos. La alternativa de descargar el modelo más anunciado sin política de firmas permite suplantación. La política abierta entre operadores sigue pendiente.
+- La app ofrece **Conservar conocimiento público**, con consentimiento separado para almacenamiento, progreso y pausa. El almacén `public/` sirve solamente archivos incorporados por el recorrido de releases; nunca abre el banco personal ni copia todo el directorio de un ensayo.
+- Las transferencias comparten un presupuesto de chunks codificados, interrumpible y limitado a la cuota elegida y a 5 Mbps durante esta integración. Las cuotas se aplican antes de nuevas adquisiciones; una reducción conserva los archivos existentes y suspende su servicio. Los nodos sin GPU pueden colaborar almacenando versiones.
+- Las pruebas cubren adquisición desde cero, continuidad de identidad del proveedor, restauración de versiones, pausa conservando pesos, cancelación, cuotas y exclusión de contenido personal de una migración. La comprobación en PCs reales y ejecutables empaquetados se registra al finalizar el despliegue.
+
 Desde el checkout y su entorno Python con `cryptography`:
 
 ```bash

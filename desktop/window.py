@@ -83,6 +83,9 @@ class SwarmWindow(QMainWindow):
         self.personal_label.setWordWrap(True); self.personal_label.setObjectName("muted"); self.state_tab.addWidget(self.personal_label)
         self.stage = QLabel("La red está en preparación. Los modelos y el entrenamiento se incorporarán al completar su evaluación.")
         self.stage.setWordWrap(True); self.stage.setObjectName("muted"); self.state_tab.addWidget(self.stage)
+        self.knowledge_label = QLabel(); self.knowledge_label.setWordWrap(True); self.state_tab.addWidget(self.knowledge_label)
+        self.knowledge_button = QPushButton("Conservar conocimiento público")
+        self.knowledge_button.clicked.connect(self.toggle_knowledge); self.state_tab.addWidget(self.knowledge_button)
         actions = QHBoxLayout()
         self.connect_button = QPushButton("Conectar"); self.connect_button.clicked.connect(self.connect_node); actions.addWidget(self.connect_button)
         self.pause_button = QPushButton("Pausar aporte"); self.pause_button.clicked.connect(self.pause_node); actions.addWidget(self.pause_button)
@@ -198,11 +201,14 @@ class SwarmWindow(QMainWindow):
     def save_resources(self):
         self._action(lambda: self.controller.save_policy(self.chosen_policy()))
 
+    def toggle_knowledge(self):
+        self._action(lambda: self.controller.share_knowledge(not self.controller.knowledge_settings().enabled))
+
     def refresh(self):
         snapshot = self.controller.snapshot(); status = snapshot["status"]
         diagnostic = snapshot["diagnostics"]
         state = status.get("state") if snapshot["fresh"] else "stopped"
-        labels = {"stopped":"Listo para conectar", "connecting":"Conectando", "connected":"Conectado a la red", "paused":"Aporte pausado", "disconnected":"Desconectado"}
+        labels = {"stopped":"Listo para conectar", "connecting":"Conectando", "connected":"Conectado a la red", "preparing":"Preparando conocimiento público", "paused":"Aporte pausado", "disconnected":"Desconectado"}
         self.status.setText(labels.get(state, state))
         peers = diagnostic.get("peers", []) if snapshot["fresh"] else []
         self.detail.setText(f"{len(peers)} conexiones cifradas. El conocimiento compartido se preparará cuando haya un modelo compatible.")
@@ -210,6 +216,18 @@ class SwarmWindow(QMainWindow):
         self.routes.setText(f"Rutas: {sum(p.get('transport') == 'direct' for p in peers)} directas · {sum(p.get('transport') == 'relay' for p in peers)} por relay")
         r = status.get("resources", {})
         self.resources_label.setText(f"Tu equipo: {r.get('cpu_cores', '—')} hilos CPU · {r.get('ram_gb', '—')} GB RAM · {r.get('gpu_vram_gb', '—')} GB VRAM")
+        knowledge = diagnostic.get("knowledge", {}) if snapshot["fresh"] else {}
+        knowledge_state = knowledge.get("state", "disabled")
+        messages = {"disabled":"Puedes aportar almacenamiento para conservar versiones aprendidas.",
+                    "discovering":"Buscando participantes que conservan el modelo público…",
+                    "pending":"Esperando un proveedor compatible del conocimiento público.",
+                    "downloading":"Adquiriendo y verificando las versiones del modelo…",
+                    "paused":"El aporte de almacenamiento está pausado; las versiones guardadas se conservan.",
+                    "available":"Modelo público conservado y disponible para otros participantes."}
+        self.knowledge_label.setText(messages.get(knowledge_state, "Preparando conocimiento público")
+            + (f" {knowledge.get('stored_bytes',0)/1024**2:.1f} MiB · versión {knowledge.get('sequence')}"
+               if knowledge.get("sequence") is not None else ""))
+        self.knowledge_button.setText("Dejar de compartir conocimiento" if self.controller.knowledge_settings().enabled else "Conservar conocimiento público")
         self.connect_button.setEnabled(state in {"stopped", "disconnected"})
         self.disconnect_button.setEnabled(state not in {"stopped", "disconnected"})
         self.pause_button.setEnabled(state not in {"stopped", "disconnected"})

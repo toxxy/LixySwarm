@@ -281,9 +281,10 @@ class ArtifactStore:
 class ArtifactService:
     """Register artifact read operations and fetch verified objects from peers."""
 
-    def __init__(self, coordinator, store: ArtifactStore):
+    def __init__(self, coordinator, store: ArtifactStore, *, receive_budget=None):
         self.coordinator = coordinator
         self.store = store
+        self.receive_budget = receive_budget
         self._fetch_locks: dict[str, threading.Lock] = {}
         self._fetch_locks_guard = threading.Lock()
         coordinator.register_handler(
@@ -396,6 +397,9 @@ class ArtifactService:
                     raise ArtifactError("peer returned an invalid chunk length")
                 if hashlib.sha256(chunk).hexdigest() != result.output.get("chunk_sha256"):
                     raise ArtifactError("artifact chunk hash does not match")
+                if self.receive_budget is not None:
+                    self.receive_budget.wait(len(result.output["data"])+2048,
+                        cancel_event=cancel_event, deadline=time.time()+max(0, deadline-time.monotonic()))
                 destination.write(chunk)
                 offset += len(chunk)
             destination.flush()
