@@ -231,3 +231,9 @@ Una repetición detectó la entrega pendiente del resultado de Qt después de te
 Pasaron 165 pruebas de regresión. Los servicios y lanzadores de ambas PCs usan el paquete actual y conservan identidades, referencia versión 6 y sus controles previos: conectividad en la PC principal y perfil equilibrado en la laptop. El experto se dejó preparado pero deshabilitado después del piloto; se corrigió su comando local para conservar el intérprete del entorno de cálculo. No se sustituyó ningún banco personal ni se entrenó con conversación privada.
 
 Esta integración comprueba consulta remota y persistencia de conversación; no completa Matriarca, Dolphin o la preparación automática de lenguaje. La descarga pública sigue en 0.4.0a2. Faltan base y adaptación replicadas por LSP, motor de lenguaje instalable, entrenamiento distribuido de esa familia y transferencia evaluada entre tamaños. El goal mantiene las ocho etapas y sus condiciones de aceptación.
+
+### Registro de continuidad
+
+`experiments/observe_internet.py` observa la API pública del Explorer cada 20 segundos para las tres identidades físicas explícitas. Conserva muestras y resumen fuera de Dropbox. Solo acumula una ventana saludable cuando todas tienen telemetría firmada, activa y reciente, con secuencia y tiempo sin retrocesos. Un intervalo sin observación mayor de 60 segundos, una identidad duplicada o un estado inválido reinician la ventana. Dos pruebas verifican esos rechazos y el requisito de duración completa.
+
+El objetivo del registro es reunir una ventana de 24 horas; la ejecución tiene un límite de 48 horas. No sustituye la prueba del segundo relay independiente ni mide calidad del modelo. La condición de continuidad permanece pendiente hasta revisar las muestras completas y el resumen final.
