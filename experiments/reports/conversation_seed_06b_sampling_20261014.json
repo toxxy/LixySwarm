@@ -1,0 +1,143 @@
+{
+  "schema_version": 1,
+  "model_repository": "Qwen/Qwen3-0.6B",
+  "model_revision": "c1899de289a04d12100db370d81485cdf75e47ca",
+  "license": "Apache-2.0",
+  "source": "https://huggingface.co/Qwen/Qwen3-0.6B",
+  "public_data_only": true,
+  "remote_code": false,
+  "torch_version": "2.12.0+cu130",
+  "transformers_version": "5.10.1",
+  "device": "cuda",
+  "load_seconds": 0.5467155229998752,
+  "decoding": "qwen-recommended",
+  "random_seed": 20261014,
+  "parameter_count": 596049920,
+  "peak_gpu_allocated_bytes": 1240942080,
+  "gate": {
+    "minimum_passed": 11,
+    "total": 12,
+    "passed": 6,
+    "required_cases": [
+      "en_instruction",
+      "en_public_context",
+      "es_instruction",
+      "es_public_context"
+    ],
+    "eligible_for_integration": false
+  },
+  "files": {
+    "model.safetensors": {
+      "sha256": "f47f71177f32bcd101b7573ec9171e6a57f4f4d31148d38e382306f42996874b",
+      "bytes": 1503300328
+    },
+    "tokenizer.json": {
+      "sha256": "aeb13307a71acd8fe81861d94ad54ab689df773318809eed3cbe794b4492dae4",
+      "bytes": 11422654
+    }
+  },
+  "cases": [
+    {
+      "case": "es_addition",
+      "prompt": "Responde únicamente con el resultado: ¿cuánto es 2 + 2?",
+      "answer": "2 + 2 = 4",
+      "passed": false,
+      "seconds": 0.459073242964223,
+      "output_tokens": 8
+    },
+    {
+      "case": "en_multiplication",
+      "prompt": "Reply with just the number: what is 7 times 8?",
+      "answer": "7 × 8 = 56",
+      "passed": false,
+      "seconds": 0.07046165596693754,
+      "output_tokens": 9
+    },
+    {
+      "case": "es_translation",
+      "prompt": "Traduce al inglés únicamente esta frase: El gato está en la casa.",
+      "answer": "The cat is in the house.",
+      "passed": true,
+      "seconds": 0.062191994045861065,
+      "output_tokens": 8
+    },
+    {
+      "case": "en_translation",
+      "prompt": "Translate into Spanish, without explanation: Good morning.",
+      "answer": "Buenos días.",
+      "passed": true,
+      "seconds": 0.04709186695981771,
+      "output_tokens": 6
+    },
+    {
+      "case": "es_instruction",
+      "prompt": "Escribe exactamente la palabra conectada y nada más.",
+      "answer": "conectada",
+      "passed": true,
+      "seconds": 0.03169707499910146,
+      "output_tokens": 4
+    },
+    {
+      "case": "en_instruction",
+      "prompt": "Write exactly the word ready and nothing else.",
+      "answer": "ready",
+      "passed": true,
+      "seconds": 0.016515147988684475,
+      "output_tokens": 2
+    },
+    {
+      "case": "es_fact",
+      "prompt": "¿Cuál es la capital de Francia? Responde en una oración breve en español.",
+      "answer": "La capital de Francia es París.",
+      "passed": true,
+      "seconds": 0.07737302605528384,
+      "output_tokens": 10
+    },
+    {
+      "case": "en_fact",
+      "prompt": "What is the chemical formula of water? Reply with only the formula.",
+      "answer": "H₂O",
+      "passed": true,
+      "seconds": 0.03173142403829843,
+      "output_tokens": 4
+    },
+    {
+      "case": "es_order",
+      "prompt": "Ordena estos números de menor a mayor. Responde solo con la lista: 9, 2, 5.",
+      "answer": "[2, 5, 9]",
+      "passed": false,
+      "seconds": 0.09181537991389632,
+      "output_tokens": 10
+    },
+    {
+      "case": "en_extract",
+      "prompt": "Given this JSON: {\"node\": \"ant\", \"status\": \"online\"}. Return only the value of status.",
+      "answer": "status",
+      "passed": false,
+      "seconds": 0.017133202054537833,
+      "output_tokens": 2
+    },
+    {
+      "case": "es_public_context",
+      "prompt": "Usa solo estos datos: El VPS de LixySwarm sirve de relay y descubrimiento. No entrena modelos. ¿El VPS entrena? Responde sí o no.",
+      "answer": "Sí.",
+      "passed": false,
+      "seconds": 0.03212280501611531,
+      "output_tokens": 4
+    },
+    {
+      "case": "en_public_context",
+      "prompt": "Use these facts: an ant is a physical computer; experts are models hosted on it. Can one ant host two experts? Answer yes or no.",
+      "answer": "No.",
+      "passed": false,
+      "seconds": 0.024469628930091858,
+      "output_tokens": 3
+    }
+  ],
+  "limitations": [
+    "Elementary instruction gate only",
+    "No distributed-learning claim",
+    "No swarm, memory, or specialist benefit measured",
+    "Non-thinking decoding"
+  ]
+}

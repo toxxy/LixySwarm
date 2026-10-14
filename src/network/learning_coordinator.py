@@ -81,6 +81,17 @@ class LearningCoordinator:
             return {**{key:self.ledger.get(key) for key in ("status","round","cursor","accepted_sequence","error")},
                     "paused":self.cancel.is_set() and self.ledger.get("status") in {"collecting","evaluating","promoting"}}
 
+    def _training_requirements(self,peer):
+        requester=self.knowledge.node.identity.node_id_hex
+        if peer==requester:
+            gpu=("cuda" in self.compute.engine.devices and self.compute.settings.policy.gpu_percent>0
+                 and self.knowledge.resources["has_gpu"])
+        else:
+            resources=next((item.get("resources",{}) for item in self.knowledge.node.peers()
+                            if item["node_id"]==peer),{})
+            gpu=resources.get("has_gpu") is True
+        return ResourceRequirements(kind="training",gpu_required=gpu,ram_gb=2,disk_gb=0.01)
+
     def update(self):
         try: self.settings=LearningSettings.load(self.directory)
         except (OSError,ValueError,TypeError): self.settings=LearningSettings()
@@ -144,11 +155,12 @@ class LearningCoordinator:
                 if not self._authorized(cancel,configuration): raise RuntimeError("Learning permission withdrawn")
                 start=position*7200+self.ledger["cursor"]%7135
                 payload={"model_artifact_id":active.model_artifact_id,"dataset_artifact_id":PUBLIC_DATASET_ID,"start_token":start,"token_count":65}
-                requirements=ResourceRequirements(kind="training",gpu_required=True,ram_gb=2,disk_gb=0.01)
                 if peer==requester:
+                    requirements=self._training_requirements(peer)
                     result=self.knowledge.work.execute_local(TRAINING_OPERATION,payload,requirements,timeout_s=60,cancel_event=cancel)
                 else:
                     if peer not in self.knowledge.node.connected_node_ids: self.knowledge.node.connect_node(peer)
+                    requirements=self._training_requirements(peer)
                     result=self.knowledge.work.submit(TRAINING_OPERATION,payload,requirements,peer_id=peer,timeout_s=60,cancel_event=cancel)
                 if result.status!="ok": raise RuntimeError(f"Physical shard failed: {result.error}")
                 if not ResultReceipt.from_dict(result.receipt).verify(result,expected_worker_id=peer,expected_requester_id=requester):

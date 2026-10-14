@@ -1,0 +1,4 @@
+# Install torch==2.12.0 from https://download.pytorch.org/whl/cpu separately.
+numpy==2.3.4
+cryptography==48.0.0
+psutil==7.2.2

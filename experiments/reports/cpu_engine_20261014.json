@@ -1,0 +1,23 @@
+{
+  "success": true,
+  "frozen": true,
+  "torch_version": "2.12.0+cpu",
+  "cuda_runtime": false,
+  "inference_logits": 256,
+  "gradient_tokens": 64,
+  "personal_state_loaded": false,
+  "network_identity_loaded": false,
+  "schema_version": 1,
+  "execution_directory": "temporary directory outside source checkout",
+  "system_python_used": false,
+  "source_checkout_on_pythonpath": false,
+  "distribution_status": "local verified build; public installer pending",
+  "accepted_release_check": {
+    "sequence": 6,
+    "release_id": "977603e7a2c2070d6cd1c705e53f763d7e31057d5980f36cc02aefb2bb7ce25c",
+    "model_id": "23e44d2c2f0834f798c4309b7f0360cae0b9d4769bb84a452498e95d322524a9",
+    "cpu_logit_max_abs_delta": 0.0,
+    "ram_lease_gib": 2,
+    "installed_engine_verified": true
+  }
+}

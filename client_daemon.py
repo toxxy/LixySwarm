@@ -201,6 +201,8 @@ def run(directory: Path, *, host="0.0.0.0", port=7338, interval=15, allow_privat
                 if compute.ready: available.add("inference")
                 if compute.ready and compute.engine.training_requesters: available.add("training")
                 node.resource_profile.update(knowledge.governor.advertised_profile(available_work=available))
+                if "cuda" not in compute.engine.devices:
+                    node.resource_profile.update(has_gpu=False,gpu_percent=0,gpu_vram_gb=0)
                 node.resource_profile["work"] = {"connectivity":running, "artifact":public_state["sharing"],
                     "inference":compute.ready, "training":compute.ready and bool(compute.engine.training_requesters), "memory":False}
                 node.resource_profile["worker_ready"]=compute.ready

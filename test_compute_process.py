@@ -66,3 +66,13 @@ def test_engine_command_is_machine_local_and_unknown_fields_are_rejected(tmp_pat
     path.write_text(json.dumps(value))
     with pytest.raises(ValueError,match="schema"):
         EngineSettings.load(tmp_path)
+
+
+def test_old_engine_settings_keep_devices_and_cpu_packages_cannot_claim_cuda(tmp_path):
+    EngineSettings(enabled=True,command=[sys.executable],devices=["cpu"]).save(tmp_path)
+    assert EngineSettings.load(tmp_path).devices==["cpu"]
+    path=tmp_path/"compute-engine.json"; value=json.loads(path.read_text()); value.pop("devices")
+    path.write_text(json.dumps(value))
+    assert EngineSettings.load(tmp_path).devices==["cpu","cuda"]
+    with pytest.raises(ValueError,match="devices"):
+        EngineSettings(devices=["cpu","cpu"]).validate()

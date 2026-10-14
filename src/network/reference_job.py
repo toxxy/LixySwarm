@@ -15,6 +15,11 @@ def main():
     if len(raw)>16*1024:
         raise ValueError("Compute request exceeds its bound")
     request=json.loads(raw)
+    run_request(request)
+
+
+def run_request(request):
+    """Run locally selected typed work, also used by the packaged engine."""
     import numpy as np
     import torch
     from src.network.reference_model import load_reference_checkpoint, reference_logits

@@ -1,0 +1,147 @@
+{
+  "schema_version": 1,
+  "model_repository": "Qwen/Qwen3-1.7B",
+  "model_revision": "70d244cc86ccca08cf5af4e1e306ecf908b1ad5e",
+  "license": "Apache-2.0",
+  "source": "https://huggingface.co/Qwen/Qwen3-1.7B",
+  "public_data_only": true,
+  "remote_code": false,
+  "torch_version": "2.12.0+cu130",
+  "transformers_version": "5.10.1",
+  "device": "cuda",
+  "load_seconds": 0.8098725120071322,
+  "decoding": "greedy",
+  "random_seed": 20261014,
+  "parameter_count": 1720574976,
+  "peak_gpu_allocated_bytes": 3492374016,
+  "gate": {
+    "minimum_passed": 11,
+    "total": 12,
+    "passed": 8,
+    "required_cases": [
+      "en_instruction",
+      "en_public_context",
+      "es_instruction",
+      "es_public_context"
+    ],
+    "eligible_for_integration": false
+  },
+  "files": {
+    "model-00001-of-00002.safetensors": {
+      "sha256": "169ad53ec313c3a34b06c0809216e4fc072cce444a5d4ff2b59690d064130ed5",
+      "bytes": 3441185608
+    },
+    "model-00002-of-00002.safetensors": {
+      "sha256": "912becff8d60672aa8628ef08c05898d9adf17c2ad4ae3caf99b065622fdeff9",
+      "bytes": 622329984
+    },
+    "tokenizer.json": {
+      "sha256": "aeb13307a71acd8fe81861d94ad54ab689df773318809eed3cbe794b4492dae4",
+      "bytes": 11422654
+    }
+  },
+  "cases": [
+    {
+      "case": "es_addition",
+      "prompt": "Responde únicamente con el resultado: ¿cuánto es 2 + 2?",
+      "answer": "4",
+      "passed": true,
+      "seconds": 0.381210366031155,
+      "output_tokens": 2
+    },
+    {
+      "case": "en_multiplication",
+      "prompt": "Reply with just the number: what is 7 times 8?",
+      "answer": "56",
+      "passed": true,
+      "seconds": 0.024163573049008846,
+      "output_tokens": 3
+    },
+    {
+      "case": "es_translation",
+      "prompt": "Traduce al inglés únicamente esta frase: El gato está en la casa.",
+      "answer": "The cat is in the house.",
+      "passed": true,
+      "seconds": 0.06078682595398277,
+      "output_tokens": 8
+    },
+    {
+      "case": "en_translation",
+      "prompt": "Translate into Spanish, without explanation: Good morning.",
+      "answer": "Buenos días.",
+      "passed": true,
+      "seconds": 0.04603498405776918,
+      "output_tokens": 6
+    },
+    {
+      "case": "es_instruction",
+      "prompt": "Escribe exactamente la palabra conectada y nada más.",
+      "answer": "conectada",
+      "passed": true,
+      "seconds": 0.03135549696162343,
+      "output_tokens": 4
+    },
+    {
+      "case": "en_instruction",
+      "prompt": "Write exactly the word ready and nothing else.",
+      "answer": "ready",
+      "passed": true,
+      "seconds": 0.016458100988529623,
+      "output_tokens": 2
+    },
+    {
+      "case": "es_fact",
+      "prompt": "¿Cuál es la capital de Francia? Responde en una oración breve en español.",
+      "answer": "La capital de Francia es París.",
+      "passed": true,
+      "seconds": 0.07671861397102475,
+      "output_tokens": 10
+    },
+    {
+      "case": "en_fact",
+      "prompt": "What is the chemical formula of water? Reply with only the formula.",
+      "answer": "H₂O",
+      "passed": true,
+      "seconds": 0.031215813010931015,
+      "output_tokens": 4
+    },
+    {
+      "case": "es_order",
+      "prompt": "Ordena estos números de menor a mayor. Responde solo con la lista: 9, 2, 5.",
+      "answer": "[2, 5, 9]",
+      "passed": false,
+      "seconds": 0.07614920800551772,
+      "output_tokens": 10
+    },
+    {
+      "case": "en_extract",
+      "prompt": "Given this JSON: {\"node\": \"ant\", \"status\": \"online\"}. Return only the value of status.",
+      "answer": "\"online\"",
+      "passed": false,
+      "seconds": 0.0314535319339484,
+      "output_tokens": 4
+    },
+    {
+      "case": "es_public_context",
+      "prompt": "Usa solo estos datos: El VPS de LixySwarm sirve de relay y descubrimiento. No entrena modelos. ¿El VPS entrena? Responde sí o no.",
+      "answer": "No. El VPS de LixySwarm no entrena modelos. El VPS sirve de relay y descubrimiento, y no se utiliza para entrenar modelos.",
+      "passed": false,
+      "seconds": 0.29230139998253435,
+      "output_tokens": 39
+    },
+    {
+      "case": "en_public_context",
+      "prompt": "Use these facts: an ant is a physical computer; experts are models hosted on it. Can one ant host two experts? Answer yes or no.",
+      "answer": "Yes.\n\n**Explanation:**\n\n- An ant is described as a \"physical computer,\" which implies it has the capacity to host or run models (in this case, \"experts\").\n- The statement says \"experts are models hosted on it,\" which suggests that an ant can host one or more models (experts).\n- Therefore, it is reasonable to conclude that **one ant can host two experts**, based on the given analogy.\n\n**Answer: Yes.**",
+      "passed": false,
+      "seconds": 0.7227494950639084,
+      "output_tokens": 95
+    }
+  ],
+  "limitations": [
+    "Elementary instruction gate only",
+    "No distributed-learning claim",
+    "No swarm, memory, or specialist benefit measured",
+    "Non-thinking decoding"
+  ]
+}

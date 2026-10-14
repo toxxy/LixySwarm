@@ -12,6 +12,7 @@ from src.contribution.resource_governor import ResourceRequirements
 from src.network.artifact_store import ArtifactStore
 from src.network.client_state import ClientSettings
 from src.network.learning_coordinator import LearningCoordinator,LearningSettings
+from src.network.reference_compute import EngineSettings
 from src.network.lsp import LSPIdentity
 from src.network.lsp_v3 import LSPNodeV3
 from src.network.public_knowledge import PublicKnowledgeService,KnowledgeSettings
@@ -33,7 +34,7 @@ def setup(tmp_path):
     catalog=CatalogEntry("test",genesis.release_id,policy,allow_signed_updates=True)
     knowledge=PublicKnowledgeService(node,tmp_path/"node",RESOURCES,catalog=catalog)
     knowledge.update(ClientSettings(),KnowledgeSettings(enabled=True,consented_at=time.time()))
-    compute=SimpleNamespace(ready=True,settings=ClientSettings(policy=ContributionPolicy.for_mode("balanced")))
+    compute=SimpleNamespace(ready=True,settings=ClientSettings(policy=ContributionPolicy.for_mode("balanced")),engine=EngineSettings())
     return signer,node,knowledge,LearningCoordinator(knowledge,compute,tmp_path/"node")
 
 
@@ -87,3 +88,18 @@ def test_learning_controls_reject_duplicate_workers_and_unbounded_runs(tmp_path)
     worker=LSPIdentity.generate().node_id_hex
     with pytest.raises(ValueError): LearningSettings(enabled=True,cycles=11,workers=[worker],signing_key_file=str(tmp_path/"key")).save(tmp_path)
     with pytest.raises(ValueError): LearningSettings(enabled=True,workers=[worker,worker],signing_key_file=str(tmp_path/"key")).save(tmp_path)
+
+
+def test_cpu_engine_on_gpu_hardware_gets_cpu_work_and_remote_permissions_apply(tmp_path,monkeypatch):
+    _,node,knowledge,coordinator=setup(tmp_path)
+    try:
+        knowledge.resources={**RESOURCES,"has_gpu":True,"gpu_vram_gb":32}
+        coordinator.compute.engine=EngineSettings(devices=["cpu"])
+        assert not coordinator._training_requirements(node.identity.node_id_hex).gpu_required
+        coordinator.compute.engine=EngineSettings(devices=["cpu","cuda"])
+        assert coordinator._training_requirements(node.identity.node_id_hex).gpu_required
+        remote="a"*64
+        monkeypatch.setattr(node,"peers",lambda:[{"node_id":remote,"resources":{"has_gpu":False}}])
+        assert not coordinator._training_requirements(remote).gpu_required
+    finally:
+        coordinator.close(); knowledge.close()

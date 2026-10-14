@@ -1,0 +1,122 @@
+"""Verify and install a locally selected package against a trusted digest.
+
+The trusted digest is supplied by local application configuration, never by an
+LSP peer or by the downloaded package itself. Verification does not execute
+package code. An installed engine remains subject to contribution permissions.
+"""
+from __future__ import annotations
+
+import hashlib
+import json
+import platform
+import re
+import shutil
+import sys
+import tempfile
+from pathlib import Path, PurePosixPath
+
+from .reference_compute import EngineSettings
+
+HEX = re.compile(r"^[0-9a-f]{64}$")
+MAX_MANIFEST_BYTES = 2 * 1024**2
+MAX_PACKAGE_BYTES = 2 * 1024**3
+MAX_PACKAGE_FILES = 10000
+
+
+def digest_file(path):
+    digest = hashlib.sha256()
+    with Path(path).open("rb") as stream:
+        for block in iter(lambda: stream.read(1024**2), b""):
+            digest.update(block)
+    return digest.hexdigest()
+
+
+def safe_relative(value):
+    if not isinstance(value, str) or not value or len(value) > 1024 or "\\" in value or ":" in value:
+        raise ValueError("Invalid engine package path")
+    path = PurePosixPath(value)
+    if path.is_absolute() or path.as_posix() != value or any(part in {".", ".."} for part in path.parts):
+        raise ValueError("Engine package path escaped its root")
+    return path
+
+
+def verify_package(directory, trusted_manifest_sha256):
+    root = Path(directory).resolve()
+    if not isinstance(trusted_manifest_sha256, str) or not HEX.fullmatch(trusted_manifest_sha256):
+        raise ValueError("Engine installation requires a locally trusted manifest digest")
+    manifest_path = root / "engine-package.json"
+    if manifest_path.is_symlink() or manifest_path.stat().st_size > MAX_MANIFEST_BYTES:
+        raise ValueError("Engine manifest exceeds its bound or is a symlink")
+    if digest_file(manifest_path) != trusted_manifest_sha256:
+        raise ValueError("Engine package manifest is not trusted")
+    manifest = json.loads(manifest_path.read_text())
+    if not isinstance(manifest, dict) or set(manifest) != {"version", "name", "platform", "machine", "torch", "operations", "entrypoint", "files"}:
+        raise ValueError("Invalid engine package schema")
+    if manifest["version"] != 1 or manifest["name"] != "LixySwarmEngineCPU" or manifest["platform"] != sys.platform or manifest["machine"] != platform.machine():
+        raise ValueError("Engine package is incompatible with this machine")
+    if manifest["operations"] != ["reference.inference.v1", "training.gradient.v1", "reference.candidate.v1"]:
+        raise ValueError("Unsupported engine operations")
+    expected_entry = "LixySwarmEngineCPU.exe" if sys.platform == "win32" else "LixySwarmEngineCPU"
+    if manifest["entrypoint"] != expected_entry:
+        raise ValueError("Invalid engine entry point")
+    files = manifest["files"]
+    if not isinstance(files, list) or not 1 <= len(files) <= MAX_PACKAGE_FILES:
+        raise ValueError("Engine package file count exceeds its bound")
+    declared = set()
+    size = 0
+    for item in files:
+        if not isinstance(item, dict) or set(item) != {"path", "bytes", "sha256"}:
+            raise ValueError("Invalid engine file schema")
+        relative = safe_relative(item["path"])
+        if item["path"] in declared or item["path"] == "engine-package.json":
+            raise ValueError("Duplicate engine package path")
+        declared.add(item["path"])
+        if type(item["bytes"]) is not int or not 0 <= item["bytes"] <= MAX_PACKAGE_BYTES or not isinstance(item["sha256"], str) or not HEX.fullmatch(item["sha256"]):
+            raise ValueError("Invalid engine file bounds")
+        size += item["bytes"]
+        if size > MAX_PACKAGE_BYTES:
+            raise ValueError("Engine package exceeds its disk bound")
+        path = root.joinpath(*relative.parts)
+        if not path.resolve().is_relative_to(root) or not path.is_file() or path.stat().st_size != item["bytes"] or digest_file(path) != item["sha256"]:
+            raise ValueError("Engine package file failed verification")
+    actual = set()
+    for path in root.rglob("*"):
+        if path.is_symlink() and not path.resolve().is_relative_to(root):
+            raise ValueError("Engine package symlink escaped its root")
+        if path.is_file():
+            actual.add(path.relative_to(root).as_posix())
+        elif not path.is_dir():
+            raise ValueError("Engine package contains a non-regular object")
+    if actual != declared | {"engine-package.json"} or expected_entry not in declared:
+        raise ValueError("Engine package contains undeclared or missing files")
+    return manifest
+
+
+def install_package(directory, trusted_manifest_sha256, state_directory):
+    source = Path(directory)
+    verify_package(source, trusted_manifest_sha256)
+    engines = Path(state_directory) / "engines"
+    engines.mkdir(parents=True, exist_ok=True)
+    destination = engines / trusted_manifest_sha256
+    if not destination.exists():
+        with tempfile.TemporaryDirectory(prefix=".install-", dir=engines) as temporary:
+            staged = Path(temporary) / "package"
+            shutil.copytree(source, staged, symlinks=True)
+            # Verify the copy before atomically exposing it. A changed source
+            # during copying must not become an executable selected by the node.
+            verify_package(staged, trusted_manifest_sha256)
+            try:
+                staged.rename(destination)
+            except FileExistsError:
+                verify_package(destination, trusted_manifest_sha256)
+    manifest = verify_package(destination, trusted_manifest_sha256)
+    if sys.platform != "win32":
+        # Artifact ZIPs do not preserve executable bits. Apply this only after
+        # the locally trusted digest and every installed file were verified.
+        (destination / manifest["entrypoint"]).chmod(0o755)
+    settings = EngineSettings.load(state_directory)
+    settings.command = [str((destination / manifest["entrypoint"]).resolve())]
+    settings.enabled = True
+    settings.devices = ["cpu"]
+    settings.save(state_directory)
+    return settings.command[0]

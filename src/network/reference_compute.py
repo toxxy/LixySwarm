@@ -25,6 +25,7 @@ class EngineSettings:
     enabled:bool=False
     command:list[str]=field(default_factory=list)
     training_requesters:list[str]=field(default_factory=list)
+    devices:list[str]=field(default_factory=lambda:["cpu","cuda"])
 
     def validate(self):
         if type(self.version) is not int or self.version!=1 or type(self.enabled) is not bool:
@@ -35,6 +36,8 @@ class EngineSettings:
             raise ValueError("Compute requires a locally installed engine")
         if not isinstance(self.training_requesters,list) or len(self.training_requesters)>16 or any(not NODE_ID.fullmatch(x) for x in self.training_requesters):
             raise ValueError("Invalid known pilot requesters")
+        if not isinstance(self.devices,list) or not 1<=len(self.devices)<=2 or len(set(self.devices))!=len(self.devices) or any(x not in {"cpu","cuda"} for x in self.devices):
+            raise ValueError("Invalid locally installed engine devices")
 
     def save(self,directory):
         self.validate(); atomic_json(Path(directory)/"compute-engine.json",asdict(self))
@@ -45,7 +48,8 @@ class EngineSettings:
         if not path.exists(): return cls()
         if path.stat().st_size>20*1024: raise ValueError("Engine settings exceed their bound")
         value=json.loads(path.read_text())
-        if set(value)!={"version","enabled","command","training_requesters"}:
+        base={"version","enabled","command","training_requesters"}
+        if set(value) not in (base,base|{"devices"}):
             raise ValueError("Invalid engine settings schema")
         result=cls(**value); result.validate(); return result
 
@@ -82,7 +86,8 @@ class ReferenceComputeService:
     def snapshot(self):
         with self.lock:
             installed=self.engine.enabled and bool(self.engine.command) and all(Path(arg).is_file() for arg in self.engine.command)
-            return {"installed":installed,"ready":self.ready,"active":self.active,"completed":self.completed}
+            return {"installed":installed,"ready":self.ready,"active":self.active,"completed":self.completed,
+                    "devices":list(self.engine.devices) if installed else []}
 
     def inference(self,payload,execution):
         if set(payload)!={"model_artifact_id","prompt"} or not isinstance(payload["prompt"],str) or not 1<=len(payload["prompt"].encode())<=256:
@@ -111,6 +116,8 @@ class ReferenceComputeService:
         policy=self.settings.policy
         permission=asdict(policy); engine_permission=asdict(self.engine)
         gpu=execution.resource_requirements().gpu_required
+        if ("cuda" if gpu else "cpu") not in self.engine.devices:
+            raise ComputeProcessError("The locally installed engine does not support this device")
         if gpu and (not self.resources["has_gpu"] or policy.gpu_percent<=0):
             raise ComputeProcessError("GPU work is not available within current permission")
         if gpu and action=="training" and execution.resource_requirements().ram_gb<2:
