@@ -171,6 +171,12 @@ def test_complete_version_and_evidence_acquire_over_encrypted_lsp(monkeypatch,tm
         restored=versions.LanguageVersionRegistry(tmp_path/'receiver','qwen3-0.6b')
         assert restored.head()==second
         assert nodes[1].peers()[0]['encrypted']
+        from src.network.chat_versions import ChatVersions
+        light=ChatVersions(tmp_path/'light-client','qwen3-0.6b')
+        light.synchronize(works[1],nodes[0].identity.node_id_hex,cancel_event=None,preflight=lambda _size:None)
+        assert light.head()==second
+        assert light.store.has(second['descriptor']['evaluation_id'])
+        assert not light.store.has(second['release']['model_artifact_id'])
     finally:
         for work in works:work.close()
         for node in nodes:node.stop()

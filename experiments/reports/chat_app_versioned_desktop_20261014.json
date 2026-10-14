@@ -1,0 +1,27 @@
+{
+  "success": true,
+  "internet": true,
+  "language_preparation_permission_gate": true,
+  "chat_first_answer": "Una red descentralizada es una red de computadoras que no est\u00e1 controlada por un solo punto central.",
+  "chat_ui_verified": true,
+  "chat_remote_context_opt_in": true,
+  "chat_history_survives_reopen": true,
+  "chat_history_encrypted": true,
+  "chat_receipt": {
+    "version": 1,
+    "job_id": "06e7431a8df2b5851a3f3d43f610603b379d87a29725f08cd75174a75e2070b6",
+    "worker_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+    "requester_node_id": "5acb0dd69a99c3a523f8325baad79dc8e077d5afa767f104ea218d46d9ed5da1",
+    "result_digest": "8b32db95457fc237f991058f8ced5fbee21a2d48da5f588c718b4d24ccfe75ec",
+    "finished_at": 1792016733.3582382,
+    "signature": "fOT2rNMWe3Uf2TzUxw6QKULvJ/jED5RQsOAL8ZQADSRjA9BhEXFqMiqrhdJVS1q/O8nhufUgfuYg8J16OplgCw=="
+  },
+  "chat_cancellation_verified": true,
+  "connection_s": 0.72,
+  "controls_confirmed": true,
+  "pause_keeps_connection": true,
+  "reconnect_keeps_identity": true,
+  "calculation_engines_loaded": false,
+  "scope": "Frozen Linux app on desktop; synthetic public chat over Internet; no extra physical ant",
+  "source_revision": "8e70f93 plus verified-head chat changes"
+}

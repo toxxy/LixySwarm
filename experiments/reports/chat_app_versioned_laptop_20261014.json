@@ -1,0 +1,28 @@
+{
+  "success": true,
+  "internet": true,
+  "language_preparation_permission_gate": true,
+  "chat_first_answer": "Una red descentralizada es una red de computadoras que no está controlada por un solo punto central.",
+  "chat_ui_verified": true,
+  "chat_remote_context_opt_in": true,
+  "chat_history_survives_reopen": true,
+  "chat_history_encrypted": true,
+  "chat_receipt": {
+    "version": 1,
+    "job_id": "90824e97d8a78335c89f8910ba047db03aa296115f47b1eab7c444686c2a09fa",
+    "worker_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+    "requester_node_id": "afc0f476fa6824cda4d8d1ad025f19c0711db7571f81696427a3b04fdf630ae5",
+    "result_digest": "d04ae86da2136e2537798ce527bf9a9cf34cb2acb2249dffa8fb5175ced9d535",
+    "finished_at": 1792016734.0759194,
+    "signature": "OmMBu9Xn0t4WMqmLTUscLYkpBSB4hxSSY2XNHyN/KM3qZ2LxVRI13MEr+PGDZI8EUQJ2EBnSY0BVRmOROjhIAw=="
+  },
+  "chat_cancellation_verified": true,
+  "connection_s": 0.82,
+  "controls_confirmed": true,
+  "pause_keeps_connection": true,
+  "reconnect_keeps_identity": true,
+  "calculation_engines_loaded": false,
+  "scope": "Frozen Linux app on laptop; synthetic public chat over Internet; no extra physical ant",
+  "source_base_revision": "8e70f93",
+  "bundle_id": "0.4.0a8-264b740d3459"
+}

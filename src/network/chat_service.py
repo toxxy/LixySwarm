@@ -18,7 +18,8 @@ from .telemetry import atomic_json
 from .work_protocol import ResultReceipt
 
 MODEL_ID="badef4394af180ab75ca25f0d9d47f2406b92809b53b5845ab65d451cf9c4b3c"
-PROVIDERS={"c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255"}
+PROVIDERS={"c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+           "ea914d97caafef310e50385034abae9a50ba86496b0e9cbf4679e6070e4c25b0"}
 REQUEST_ID=re.compile(r"^[0-9a-f]{32}$")
 
 
@@ -30,10 +31,16 @@ class ChatBroker:
         self.node,self.work,self.language=node,work,language
         self.lock=threading.RLock();self.requests={};self.cancelled={};self.connected=False;self.closed=False
         self.discovery_thread=None;self.last_discovery=0.0
+        self.settings=None;self.catalog_cancel=threading.Event();self.catalog=None
+        if getattr(language,'directory',None) is not None:
+            from .chat_versions import ChatVersions
+            self.catalog=ChatVersions(Path(language.directory)/'public/chat-language')
 
     def update(self,settings):
+        self.settings=settings
         self.connected=settings.connected and not self.closed
         if not self.connected:
+            self.catalog_cancel.set()
             with self.lock:
                 for event in self.requests.values():event.set()
         elif not self.language.ready and not self.providers() and hasattr(self.node,"connect_node"):
@@ -41,27 +48,58 @@ class ChatBroker:
             # the general connection queue to reach the approved pilot expert.
             if time.monotonic()-self.last_discovery>=15 and (self.discovery_thread is None or not self.discovery_thread.is_alive()):
                 self.last_discovery=time.monotonic()
+                self.catalog_cancel=threading.Event()
                 self.discovery_thread=threading.Thread(target=self._discover,daemon=True,name="lixy-chat-discovery")
                 self.discovery_thread.start()
 
     def _discover(self):
         for provider in sorted(PROVIDERS):
             if not self.connected or self.closed:return
-            try:self.node.connect_node(provider,timeout=12)
+            try:
+                self.node.connect_node(provider,timeout=12)
+                if self.catalog is not None and provider in self.node.connected_node_ids:
+                    from .public_knowledge import managed_public_bytes
+                    def preflight(extra):
+                        if (not self.connected or self.closed or managed_public_bytes(self.language.directory)+extra
+                                >self.settings.policy.max_disk_gb*1024**3):raise ChatUnavailable('No hay espacio autorizado para verificar versiones de chat')
+                    self.catalog.synchronize(self.work,provider,cancel_event=self.catalog_cancel,preflight=preflight,
+                        receive_budget=getattr(self.language.knowledge,'budget',None))
             except Exception:pass
 
-    def providers(self):
+    def _model_id(self):
+        directory=getattr(self.language,'directory',None)
+        if directory is None:return MODEL_ID
+        from src.release.language_versions import LanguageVersionRegistry
+        try:
+            registry=LanguageVersionRegistry(Path(directory)/'public/language','qwen3-1.7b');local=registry.head()
+            remote=self.catalog.head() if self.catalog is not None else local
+            if self.catalog is not None:
+                local_sequence=local['release']['sequence'];remote_sequence=remote['release']['sequence']
+                newer=(registry.history(local['release']['release_id']) if local_sequence>remote_sequence else self.catalog.read()['chain'])
+                older=remote if local_sequence>remote_sequence else local
+                if newer[older['release']['sequence']]['release']['release_id']!=older['release']['release_id']:
+                    raise ValueError('Stored chat and model histories disagree')
+            chosen=local if local['release']['sequence']>=remote['release']['sequence'] else remote
+            return chosen['release']['model_artifact_id']
+        except (OSError,ValueError,TypeError,KeyError):return ''
+
+    def providers(self,model_id=None):
+        model_id=self._model_id() if model_id is None else model_id
+        if not model_id:return []
         result=[]
         for peer in self.node.peers():
             resources=peer.get("resources",{})
-            if peer["node_id"] in PROVIDERS and peer.get("capabilities",{}).get("language_inference_v1") and MODEL_ID in resources.get("models",[]) and resources.get("has_gpu") and resources.get("ram_gb",0)>=5:
+            capabilities=peer.get('capabilities',{})
+            models=capabilities.get('language_inference_models',resources.get('models',[]))
+            if peer["node_id"] in PROVIDERS and capabilities.get("language_inference_v1") and model_id in models and resources.get("has_gpu") and resources.get("ram_gb",0)>=5:
                 result.append(peer["node_id"])
         return result
 
     def snapshot(self):
-        local=bool(self.language.ready and self.language.engine.adapter_id==MODEL_ID)
-        return {"connected":self.connected,"available":self.connected and (local or bool(self.providers())),
-                "local":local,"remote_providers":len(self.providers()),"model_id":MODEL_ID,"active":len(self.requests)}
+        model_id=self._model_id();providers=self.providers(model_id)
+        local=bool(model_id and self.language.ready and self.language.engine.adapter_id==model_id)
+        return {"connected":self.connected,"available":self.connected and (local or bool(providers)),
+                "local":local,"remote_providers":len(providers),"model_id":model_id,"active":len(self.requests)}
 
     def cancel(self,request_id):
         if not isinstance(request_id,str) or not REQUEST_ID.fullmatch(request_id):raise ValueError("Invalid chat cancellation")
@@ -83,15 +121,17 @@ class ChatBroker:
             if self.requests:raise ChatUnavailable("Ya hay una consulta en curso")
             self.requests[request_id]=event
         try:
-            local=self.language.ready and self.language.engine.adapter_id==MODEL_ID
+            model_id=self._model_id()
+            if not model_id:raise ChatUnavailable('No se pudo verificar la versión de lenguaje conservada')
+            local=self.language.ready and self.language.engine.adapter_id==model_id
             messages=value["messages"] if local or value["remote_context"] else [value["messages"][-1]]
-            payload={"model_artifact_id":MODEL_ID,"messages":messages}
+            payload={"model_artifact_id":model_id,"messages":messages}
             requirements=ResourceRequirements(kind="inference",gpu_required=True,ram_gb=5)
             if local:
                 provider=self.node.identity.node_id_hex
                 result=self.work.execute_local(LANGUAGE_OPERATION,payload,requirements,timeout_s=60,cancel_event=event)
             else:
-                providers=self.providers()
+                providers=self.providers(model_id)
                 if not providers:raise ChatUnavailable("No hay un experto de lenguaje disponible; puedes seguir conectado")
                 provider=providers[0]
                 result=self.work.submit(LANGUAGE_OPERATION,payload,requirements,peer_id=provider,timeout_s=60,cancel_event=event)
@@ -100,15 +140,16 @@ class ChatBroker:
             if not ResultReceipt.from_dict(result.receipt).verify(result,expected_worker_id=provider,expected_requester_id=self.node.identity.node_id_hex):
                 raise ChatUnavailable("No se pudo verificar el recibo de la respuesta")
             output=result.output
-            if output.get("model_id")!=MODEL_ID or not isinstance(output.get("answer"),str) or not 1<=len(output["answer"].encode())<=8192:
+            if output.get("model_id")!=model_id or not isinstance(output.get("answer"),str) or not 1<=len(output["answer"].encode())<=8192:
                 raise ChatUnavailable("El experto devolvió una respuesta inválida")
-            return {"answer":output["answer"],"provider_id":provider,"model_id":MODEL_ID,
+            return {"answer":output["answer"],"provider_id":provider,"model_id":model_id,
                     "route":"local" if local else "network","context_sent":not local and value["remote_context"],"receipt":result.receipt}
         finally:
             with self.lock:self.requests.pop(request_id,None)
 
     def close(self):
         self.closed=True;self.connected=False
+        self.catalog_cancel.set()
         with self.lock:
             for event in self.requests.values():event.set()
         if self.discovery_thread is not None:self.discovery_thread.join(timeout=1)

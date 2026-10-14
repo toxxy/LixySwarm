@@ -58,6 +58,36 @@ def test_current_question_only_is_sent_by_default_and_ipc_writes_no_plaintext(mo
     assert not (tmp_path/"local-api.json").exists()
 
 
+def test_chat_tracks_verified_head_and_pins_it_through_each_response(monkeypatch,tmp_path):
+    from src.release import language_versions
+    broker,sent=broker_fixture(monkeypatch);broker.language.directory=tmp_path
+    head={'release':{'model_artifact_id':'d'*64,'sequence':1}}
+    monkeypatch.setattr(language_versions,'LanguageVersionRegistry',lambda *_a:SimpleNamespace(head=lambda:head))
+    worker=LSPIdentity.generate();monkeypatch.setattr(chat_service,'PROVIDERS',{worker.node_id_hex})
+    broker.node.peers=lambda:[{'node_id':worker.node_id_hex,'capabilities':{'language_inference_v1':True},
+        'resources':{'models':['d'*64],'has_gpu':True,'ram_gb':5}}]
+    def submit(_operation,payload,*_args,**_kwargs):
+        sent.append(payload);head['release']['model_artifact_id']='e'*64
+        result=WorkResult(job_id='f'*64,status='ok',output={'model_id':'d'*64,'answer':'versioned public answer','output_tokens':3})
+        return replace(result,receipt=ResultReceipt.create(result,worker,broker.node.identity.node_id_hex).to_dict())
+    broker.work.submit=submit
+    assert broker.snapshot()['available'] and broker.snapshot()['model_id']=='d'*64
+    result=broker.ask({'request_id':'a'*32,'remote_context':False,'messages':[{'role':'user','content':'public question'}]})
+    assert sent[-1]['model_artifact_id']=='d'*64 and result['model_id']=='d'*64
+    assert not broker.snapshot()['available'] and broker.snapshot()['model_id']=='e'*64
+
+
+def test_corrupt_stored_language_head_cannot_fall_back_to_an_unverified_expert(monkeypatch,tmp_path):
+    from src.release import language_versions
+    broker,sent=broker_fixture(monkeypatch);broker.language.directory=tmp_path
+    def corrupt():raise ValueError('invalid signed history')
+    monkeypatch.setattr(language_versions,'LanguageVersionRegistry',lambda *_a:SimpleNamespace(head=corrupt))
+    assert not broker.snapshot()['available'] and broker.snapshot()['model_id']==''
+    with pytest.raises(chat_service.ChatUnavailable,match='verificar'):
+        broker.ask({'request_id':'b'*32,'remote_context':False,'messages':[{'role':'user','content':'public question'}]})
+    assert not sent
+
+
 def test_expert_preparation_ipc_requires_auth_and_accepts_no_programs_or_paths(monkeypatch,tmp_path):
     broker,_=broker_fixture(monkeypatch);started=[]
     preparation=SimpleNamespace(snapshot=lambda:{'state':'idle'},start=lambda:started.append(True) or {'state':'starting'},stop=lambda:{'state':'stopped'})

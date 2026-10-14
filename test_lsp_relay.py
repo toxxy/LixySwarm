@@ -121,7 +121,8 @@ def test_nat_fallback_keeps_end_to_end_identity_and_ciphertext(tmp_path):
         large = {"blob": "segment-" * 25_000}
         b.broadcast_global_delta(large)
         assert wait_for(lambda: (large, b.identity.node_id_hex) in observed)
-        assert relay.relay.forwarded_bytes > 200_000
+        # The receiver can finish before the relay's awaited send updates its counter.
+        assert wait_for(lambda: relay.relay.forwarded_bytes > 200_000)
     finally:
         for peer in (b, a, relay):
             peer.stop()

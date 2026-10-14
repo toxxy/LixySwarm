@@ -232,6 +232,7 @@ def run(directory: Path, *, host="0.0.0.0", port=7338, interval=15, allow_privat
                 node.resource_profile["models"]=list(dict.fromkeys(([public_state["model_id"]] if compute.ready else [])+([language.engine.adapter_id] if language.ready else [])+([language_training.snapshot()['model_id']] if language_training.ready else [])))
                 node.capabilities["inference"]=compute.ready or language.ready
                 node.capabilities["language_inference_v1"]=language.ready
+                node.capabilities["language_inference_models"]=[language.engine.adapter_id] if language.ready else []
                 node.resource_profile["language_families_v1"]=families.snapshot()["available"]
                 node.capabilities["training"]=compute.ready and bool(compute.engine.training_requesters) or language_training.ready
                 node.capabilities["language_training_v1"]=language_training.ready and language_training.engine.base_name=='qwen3-0.6b'
