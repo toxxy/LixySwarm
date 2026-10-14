@@ -6,11 +6,13 @@ import sys
 import threading
 import subprocess
 import zipfile
+import stat
 from dataclasses import replace
+from pathlib import Path
 
 import pytest
 
-from src.network.engine_catalog import EngineDownload
+from src.network.engine_catalog import EngineDownload,EnginePart
 from src.network.engine_download import PreparationCancelled, prepare_engine
 from src.network.reference_compute import EngineSettings
 
@@ -35,6 +37,43 @@ def archive(extra=None):
 class Response(io.BytesIO):
     def __init__(self,data,status=200,headers=None):
         super().__init__(data);self.status=status;self.headers=headers or {}
+
+
+def language_archive(link='library',profile='language-cuda'):
+    name='LixySwarmLanguageCUDA';binary=b'known-language-code';library=b'known-library'
+    metadata={'version':1,'name':name,'platform':sys.platform,'machine':platform.machine(),'torch':'2.12.0+cu130',
+        'operations':['language.inference.v1'],'entrypoint':name,'files':[
+            {'path':path,'bytes':len(content),'sha256':hashlib.sha256(content).hexdigest()}
+            for path,content in [(name,binary),('library',library),('alias',library)]]}
+    manifest=json.dumps(metadata).encode();buffer=io.BytesIO()
+    with zipfile.ZipFile(buffer,'w') as zipped:
+        zipped.writestr(name,binary);zipped.writestr('library',library);zipped.writestr('engine-package.json',manifest)
+        info=zipfile.ZipInfo('alias');info.create_system=3;info.external_attr=(stat.S_IFLNK|0o777)<<16
+        zipped.writestr(info,link.encode())
+    data=buffer.getvalue()
+    entry=EngineDownload('https://example.invalid/language.zip',hashlib.sha256(data).hexdigest(),len(data),
+        hashlib.sha256(manifest).hexdigest(),len(binary)+2*len(library)+len(manifest),profile=profile)
+    return entry,data
+
+
+def test_multipart_language_archive_checks_every_part_and_preserves_active_settings(tmp_path):
+    if sys.platform=='win32':pytest.skip('POSIX library-link archive fixture')
+    entry,data=language_archive();cut=len(data)//2;pieces=[data[:cut],data[cut:]]
+    parts=tuple(EnginePart(f'https://example.invalid/part{i}',hashlib.sha256(piece).hexdigest(),len(piece)) for i,piece in enumerate(pieces))
+    entry=replace(entry,parts=parts);old=b'current-operator-expert'
+    (tmp_path/'language-engine.json').write_bytes(old)
+    def opener(request,**_):return Response(pieces[int(request.full_url[-1])])
+    command=prepare_engine(entry,tmp_path,allowed=lambda:True,rate_mbps=lambda:1000000,opener=opener)
+    assert (tmp_path/'language-engine.json').read_bytes()==old
+    assert (Path(command).parent/'alias').read_bytes()==b'known-library'
+    assert not EngineSettings.load(tmp_path).enabled
+
+
+@pytest.mark.parametrize('link',['../../outside','/outside','C:/outside'])
+def test_pinned_language_archive_cannot_escape_by_library_alias(tmp_path,link):
+    entry,data=language_archive(link)
+    with pytest.raises(ValueError,match='link'):
+        prepare_engine(entry,tmp_path,allowed=lambda:True,rate_mbps=lambda:1000000,opener=lambda *_a,**_k:Response(data))
 
 
 def test_download_and_archive_are_verified_without_executing_package_code(tmp_path):

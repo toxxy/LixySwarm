@@ -1,0 +1,74 @@
+{
+  "scope": "Offline compute packaging and factual-paraphrase limitation; no general-chat promotion",
+  "cuda_fixture": {
+    "success": true,
+    "frozen": true,
+    "torch": "2.12.0+cu130",
+    "cuda_runtime": "13.0",
+    "cuda_available": true,
+    "qwen3_logits": 128,
+    "adapter_fixture_verified": true,
+    "personal_state_loaded": false,
+    "signing_identity_loaded": false,
+    "scope": "Synthetic architecture fixture; not public-model inference"
+  },
+  "cpu_fixture": {
+    "success": true,
+    "frozen": true,
+    "torch": "2.12.0+cpu",
+    "cuda_runtime": null,
+    "cuda_available": false,
+    "qwen3_logits": 128,
+    "adapter_fixture_verified": true,
+    "personal_state_loaded": false,
+    "signing_identity_loaded": false,
+    "scope": "Synthetic architecture fixture; not public-model inference"
+  },
+  "clean_no_python_cpu_container": {
+    "success": true,
+    "frozen": true,
+    "torch": "2.12.0+cpu",
+    "cuda_runtime": null,
+    "cuda_available": false,
+    "qwen3_logits": 128,
+    "adapter_fixture_verified": true,
+    "personal_state_loaded": false,
+    "signing_identity_loaded": false,
+    "scope": "Synthetic architecture fixture; not public-model inference"
+  },
+  "public_inference": {
+    "success": true,
+    "scope": "Local frozen CUDA worker with pinned public base; not the LSP-acquired replica",
+    "elapsed_s": 3.868420388083905,
+    "result": {
+      "model_id": "3ff34a673bc4d8d83c0ba33286acfd2a1ee318c8ffbafce16caba345beb0b67f",
+      "answer": "Madrid",
+      "output_tokens": 3
+    },
+    "source_comparison": {
+      "model_id": "3ff34a673bc4d8d83c0ba33286acfd2a1ee318c8ffbafce16caba345beb0b67f",
+      "answer": "Madrid",
+      "output_tokens": 3
+    },
+    "answer_correct": false,
+    "quality_scope": "Paraphrased factual prompt failed; runtime success does not authorize general chat"
+  },
+  "packages": {
+    "cpu": {
+      "archive_sha256": "c075af9813e8ea8124c0dfae38b7ad30014cdad3d7b7749af3deec5e0cfa5f3b",
+      "bytes": 286019554,
+      "manifest_sha256": "231e0866dd651fe38eb211d248295d4321ff25b5fd0ca7bc42048ae03b1723b6",
+      "installed_bytes": 879096011,
+      "physical_package_bytes": 850961024,
+      "platform_scope": "Linux x86_64 Ubuntu 24.04; other platforms pending"
+    },
+    "cuda": {
+      "archive_sha256": "32159cba0106fd124c3bdb07361d0cf91d4188b07ba30f202f20f54950674e74",
+      "bytes": 2725324662,
+      "manifest_sha256": "f93d4310d0178cfb7f61ac829da507adff992b01e29b91ced2e71bc1c7159bb8",
+      "installed_bytes": 7200954897,
+      "physical_package_bytes": 4765190045,
+      "platform_scope": "Linux x86_64 Ubuntu 24.04; other platforms pending"
+    }
+  }
+}

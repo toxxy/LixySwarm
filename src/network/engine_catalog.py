@@ -6,12 +6,21 @@ import sys
 
 
 @dataclass(frozen=True)
+class EnginePart:
+    url:str
+    sha256:str
+    bytes:int
+
+
+@dataclass(frozen=True)
 class EngineDownload:
     url: str
     sha256: str
     bytes: int
     manifest_sha256: str
     installed_bytes: int
+    profile: str = 'reference-cpu'
+    parts: tuple[EnginePart,...] = ()
 
 
 BASE_URL = "https://github.com/toxxy/LixySwarm/releases/download/cpu-engine-0.4.0a1/"

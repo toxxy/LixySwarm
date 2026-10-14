@@ -29,11 +29,13 @@ MAX_PUBLIC_STORE = 512 * 1024**2
 
 def managed_public_bytes(directory):
     """Charge all public families and prepared engines to the one disk consent."""
-    total=0
+    total=0;seen=set()
     for name in ("public","engines","language-models"):
         for path in (Path(directory)/name).rglob("*"):
             try:
-                if path.is_file() and not path.is_symlink():total+=path.stat().st_size
+                if path.is_file() and not path.is_symlink():
+                    stat=path.stat();identity=(stat.st_dev,stat.st_ino)
+                    if identity not in seen:total+=stat.st_size;seen.add(identity)
             except OSError:pass
     return total
 

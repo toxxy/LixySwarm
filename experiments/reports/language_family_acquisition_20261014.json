@@ -1,0 +1,28 @@
+{
+  "acquisition": {
+    "adapter_id": "3ff34a673bc4d8d83c0ba33286acfd2a1ee318c8ffbafce16caba345beb0b67f",
+    "base_name": "qwen3-0.6b",
+    "error_type": "ConnectionError",
+    "received_bytes": 1519351332,
+    "release_id": "a43dba6caab4c61a1a74482e3e4ec7b4f0c4a5f4e9764805056dddfaf84c9da0",
+    "requester_id": "63410ae4a92b06a6f3fdf13fa611061fdeb82478f7fa714fff9e0973c7553a5c",
+    "scope": "Visitor requester on the laptop; not an additional physical worker",
+    "state": "available",
+    "success": true,
+    "transport": "public encrypted LSP",
+    "updated_at": 1792006847.37889,
+    "worker_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255"
+  },
+  "acquired_model_inference": {
+    "success": true,
+    "scope": "CPU loading of complete public family acquired and verified by LSP on the laptop",
+    "result": {
+      "model_id": "3ff34a673bc4d8d83c0ba33286acfd2a1ee318c8ffbafce16caba345beb0b67f",
+      "answer": "The cat is in the house.",
+      "output_tokens": 8
+    },
+    "calculation_uses_development_interpreter": true
+  },
+  "scope": "Complete small public family acquired by LSP; inference still uses development interpreter",
+  "general_chat_eligible": false
+}

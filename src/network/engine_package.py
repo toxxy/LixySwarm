@@ -16,6 +16,7 @@ import tempfile
 from pathlib import Path, PurePosixPath
 
 from .reference_compute import EngineSettings
+from .engine_profiles import engine_profile
 
 HEX = re.compile(r"^[0-9a-f]{64}$")
 MAX_MANIFEST_BYTES = 2 * 1024**2
@@ -40,7 +41,8 @@ def safe_relative(value):
     return path
 
 
-def verify_package(directory, trusted_manifest_sha256, *, target_platform=None, target_machine=None):
+def verify_package(directory, trusted_manifest_sha256, *, target_platform=None, target_machine=None,profile='reference-cpu'):
+    selected=engine_profile(profile);maximum=selected['max_package_bytes']
     root = Path(directory).resolve()
     if not isinstance(trusted_manifest_sha256, str) or not HEX.fullmatch(trusted_manifest_sha256):
         raise ValueError("Engine installation requires a locally trusted manifest digest")
@@ -52,11 +54,11 @@ def verify_package(directory, trusted_manifest_sha256, *, target_platform=None, 
     manifest = json.loads(manifest_path.read_text())
     if not isinstance(manifest, dict) or set(manifest) != {"version", "name", "platform", "machine", "torch", "operations", "entrypoint", "files"}:
         raise ValueError("Invalid engine package schema")
-    if manifest["version"] != 1 or manifest["name"] != "LixySwarmEngineCPU" or manifest["platform"] != (target_platform or sys.platform) or manifest["machine"] != (target_machine or platform.machine()):
+    if manifest["version"] != 1 or manifest["name"] != selected['name'] or manifest["platform"] != (target_platform or sys.platform) or manifest["machine"] != (target_machine or platform.machine()):
         raise ValueError("Engine package is incompatible with this machine")
-    if manifest["operations"] != ["reference.inference.v1", "training.gradient.v1", "reference.candidate.v1"]:
+    if manifest["operations"] != selected['operations']:
         raise ValueError("Unsupported engine operations")
-    expected_entry = "LixySwarmEngineCPU.exe" if (target_platform or sys.platform) == "win32" else "LixySwarmEngineCPU"
+    expected_entry = selected['name']+('.exe' if (target_platform or sys.platform)=='win32' else '')
     if manifest["entrypoint"] != expected_entry:
         raise ValueError("Invalid engine entry point")
     files = manifest["files"]
@@ -71,10 +73,10 @@ def verify_package(directory, trusted_manifest_sha256, *, target_platform=None, 
         if item["path"] in declared or item["path"] == "engine-package.json":
             raise ValueError("Duplicate engine package path")
         declared.add(item["path"])
-        if type(item["bytes"]) is not int or not 0 <= item["bytes"] <= MAX_PACKAGE_BYTES or not isinstance(item["sha256"], str) or not HEX.fullmatch(item["sha256"]):
+        if type(item["bytes"]) is not int or not 0 <= item["bytes"] <= maximum or not isinstance(item["sha256"], str) or not HEX.fullmatch(item["sha256"]):
             raise ValueError("Invalid engine file bounds")
         size += item["bytes"]
-        if size > MAX_PACKAGE_BYTES:
+        if size > maximum:
             raise ValueError("Engine package exceeds its disk bound")
         path = root.joinpath(*relative.parts)
         if not path.resolve().is_relative_to(root) or not path.is_file() or path.stat().st_size != item["bytes"] or digest_file(path) != item["sha256"]:
@@ -92,9 +94,9 @@ def verify_package(directory, trusted_manifest_sha256, *, target_platform=None, 
     return manifest
 
 
-def install_package(directory, trusted_manifest_sha256, state_directory):
+def install_package(directory, trusted_manifest_sha256, state_directory,*,profile='reference-cpu'):
     source = Path(directory)
-    verify_package(source, trusted_manifest_sha256)
+    verify_package(source, trusted_manifest_sha256,profile=profile)
     engines = Path(state_directory) / "engines"
     engines.mkdir(parents=True, exist_ok=True)
     destination = engines / trusted_manifest_sha256
@@ -104,18 +106,23 @@ def install_package(directory, trusted_manifest_sha256, state_directory):
             shutil.copytree(source, staged, symlinks=True)
             # Verify the copy before atomically exposing it. A changed source
             # during copying must not become an executable selected by the node.
-            verify_package(staged, trusted_manifest_sha256)
+            verify_package(staged, trusted_manifest_sha256,profile=profile)
             try:
                 staged.rename(destination)
             except FileExistsError:
-                verify_package(destination, trusted_manifest_sha256)
-    manifest = verify_package(destination, trusted_manifest_sha256)
+                verify_package(destination, trusted_manifest_sha256,profile=profile)
+    manifest = verify_package(destination, trusted_manifest_sha256,profile=profile)
     if sys.platform != "win32":
         # Archive extraction can lose executable bits. Apply this only after
         # the locally trusted digest and every installed file were verified.
         (destination / manifest["entrypoint"]).chmod(0o755)
-    settings = EngineSettings.load(state_directory)
     command = [str((destination / manifest["entrypoint"]).resolve())]
+    if profile!='reference-cpu':
+        from .telemetry import atomic_json
+        atomic_json(Path(state_directory)/f'{profile}-prepared.json',{'version':1,'profile':profile,
+            'manifest_sha256':trusted_manifest_sha256,'command':command})
+        return command[0]
+    settings = EngineSettings.load(state_directory)
     if settings.enabled and "cuda" in settings.devices and settings.command and all(Path(arg).is_file() for arg in settings.command):
         settings.cpu_command = command
         if "cpu" not in settings.devices: settings.devices.append("cpu")
