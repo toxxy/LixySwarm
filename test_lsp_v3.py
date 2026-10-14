@@ -74,6 +74,30 @@ def test_v3_signed_packet_roundtrip():
     assert packet.payload == b'{"value":1}'
 
 
+def test_live_capacity_refresh_preserves_session_and_verified_work_evidence(tmp_path):
+    source=_node(tmp_path,"capacity-source",target_outbound=0)
+    receiver=_node(tmp_path,"capacity-receiver",target_outbound=0)
+    try:
+        source.start(); receiver.start()
+        assert receiver.connect_peer("127.0.0.1",source.port)
+        before=receiver.peers()[0]["connected_at"]
+        receiver.update_peer_useful_work(source.identity.node_id_hex,{"locally_verified":True})
+        source.resource_profile={"work":{"training":True},"models":["ab"*32],
+                                 "useful_work":{"forged":999}}
+        source.capabilities["worker_ready"]=True
+        source.ping()
+        assert _wait_for(lambda:receiver.peers()[0]["capabilities"].get("worker_ready") is True)
+        current=receiver.peers()[0]
+        assert current["connected_at"]==before
+        assert current["resources"]["models"]==["ab"*32]
+        assert current["resources"]["useful_work"]=={"locally_verified":True}
+        source.resource_profile["work"]={"training":False}
+        source.capabilities["worker_ready"]=False; source.ping()
+        assert _wait_for(lambda:receiver.peers()[0]["capabilities"].get("worker_ready") is False)
+    finally:
+        receiver.stop(); source.stop()
+
+
 def test_v3_rejects_unsigned_and_tampered_packets():
     identity = LSPIdentity.generate()
     raw = bytearray(_packet(identity))

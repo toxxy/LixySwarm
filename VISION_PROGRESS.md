@@ -123,6 +123,8 @@ Los participantes con esta app pueden obtener y conservar la referencia sin term
 - El primer motor acepta el corpus público fijado y rangos de hasta 65 tokens; entrenamiento solo desde los coordinadores conocidos del piloto. La inferencia de bytes no se anuncia como conversación útil. Otros modelos y el protocolo abierto requieren sus validaciones posteriores.
 - El motor se configura localmente; un peer no puede enviar un comando o implementación ejecutable. Las dos PCs permiten probarlo con los entornos de cálculo existentes. El instalador automático y los paquetes de motores CPU/GPU continúan pendientes; el paquete ligero no incorpora ese entorno de desarrollo.
 - Esta separación permite detener un cálculo sin perder la identidad o la versión aceptada. Es supervisión de procesos y permisos; el aislamiento completo del sistema de archivos y los límites generales de utilización GPU conservan su etapa de endurecimiento pendiente.
+- Las capacidades cambian con los permisos y los motores disponibles. Un anuncio acotado en los pings cifrados refresca capacidades, modelos y presupuestos sin reiniciar sesiones; conserva compatibilidad con pares anteriores. La evidencia de trabajo verificada localmente se mantiene separada y no puede sobrescribirse con ese anuncio.
+- La primera prueba CUDA detuvo un gradiente que superó la reserva declarada de 1,5 GiB. Solicitar 2 GiB, dentro del perfil equilibrado de prueba, completó el trabajo. El requisito incluye el runtime de CUDA, además del pequeño modelo; no se eliminó la comprobación de RAM para lograr el ensayo.
 
 Desde el checkout y su entorno Python con `cryptography`:
 

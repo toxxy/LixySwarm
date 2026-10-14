@@ -498,8 +498,16 @@ class LSPNodeV3:
         return self._broadcast_sync(PacketType.GLOBAL_DELTA, payload, ttl=8)
 
     def ping(self) -> int:
-        payload = json.dumps({"sent_at": time.time()}).encode()
+        payload = self._ping_payload()
         return self._broadcast_sync(PacketType.PING, payload, ttl=1)
+
+    def _ping_payload(self):
+        value={"sent_at":time.time(),"advertisement":{"capabilities":self.capabilities,
+                                                       "resources":self.resource_profile}}
+        payload=json.dumps(value,allow_nan=False,separators=(",",":")).encode()
+        if len(payload)>16*1024:
+            raise ProtocolError("Peer advertisement exceeds its bound")
+        return payload
 
     def send_work_offer(self, node_id: str, offer: dict) -> bool:
         return self._send_json_to_peer(PacketType.WORK_OFFER, node_id, offer)
@@ -728,7 +736,7 @@ class LSPNodeV3:
             return
         try:
             await session.send_raw(self._new_packet(PacketType.PING,
-                json.dumps({"sent_at": time.time()}).encode(), ttl=1,
+                self._ping_payload(), ttl=1,
                 encryption_key=session.encryption_key))
         except Exception:
             await self._close_session(session)
@@ -1086,6 +1094,27 @@ class LSPNodeV3:
                 callback(delta, session.node_id)
             return
         if packet.packet_type == PacketType.PING:
+            # Older peers already echo arbitrary PING payloads. The optional
+            # authenticated advertisement refreshes capacity without HELLO,
+            # a new packet type, or a disruptive session restart.
+            try:
+                value=self._parse_json(packet.payload,max_size=16*1024)
+                advertisement=value.get("advertisement")
+                if isinstance(advertisement,dict) and set(advertisement)=={"capabilities","resources"}:
+                    capabilities,resources=advertisement["capabilities"],advertisement["resources"]
+                    if isinstance(capabilities,dict) and isinstance(resources,dict) and len(capabilities)<=32 and len(resources)<=32:
+                        resources=dict(resources); resources.pop("useful_work",None)
+                        session.hello["capabilities"]=dict(capabilities)
+                        session.hello["resources"]=dict(resources)
+                        with self._snapshot_lock:
+                            current=self._snapshot.get(session.node_id)
+                            if current is not None:
+                                evidence=current["resources"].get("useful_work")
+                                if evidence is not None: resources["useful_work"]=evidence
+                                current["capabilities"]=dict(capabilities)
+                                current["resources"]=resources
+            except ProtocolError:
+                pass
             await session.send_raw(self._new_packet(
                 PacketType.PONG,
                 packet.payload,

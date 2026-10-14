@@ -80,7 +80,8 @@ class ReferenceComputeService:
 
     def snapshot(self):
         with self.lock:
-            return {"ready":self.ready,"active":self.active,"completed":self.completed}
+            installed=self.engine.enabled and bool(self.engine.command) and all(Path(arg).is_file() for arg in self.engine.command)
+            return {"installed":installed,"ready":self.ready,"active":self.active,"completed":self.completed}
 
     def inference(self,payload,execution):
         if set(payload)!={"model_artifact_id","prompt"} or not isinstance(payload["prompt"],str) or not 1<=len(payload["prompt"].encode())<=256:
@@ -111,6 +112,8 @@ class ReferenceComputeService:
         gpu=execution.resource_requirements().gpu_required
         if gpu and (not self.resources["has_gpu"] or policy.gpu_percent<=0):
             raise ComputeProcessError("GPU work is not available within current permission")
+        if gpu and action=="training" and execution.resource_requirements().ram_gb<2:
+            raise ComputeProcessError("The CUDA gradient runtime requires a two-GiB RAM lease")
         job_directory=self.directory/"compute"/uuid.uuid4().hex
         job_directory.mkdir(parents=True,mode=0o700)
         request={"action":action,"payload":payload,"device":"cuda" if gpu else "cpu",

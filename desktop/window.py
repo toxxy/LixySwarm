@@ -217,6 +217,11 @@ class SwarmWindow(QMainWindow):
         r = status.get("resources", {})
         self.resources_label.setText(f"Tu equipo: {r.get('cpu_cores', '—')} hilos CPU · {r.get('ram_gb', '—')} GB RAM · {r.get('gpu_vram_gb', '—')} GB VRAM")
         knowledge = diagnostic.get("knowledge", {}) if snapshot["fresh"] else {}
+        computation=diagnostic.get("compute",{}) if snapshot["fresh"] else {}
+        if computation.get("installed"):
+            self.stage.setText("Motor de referencia preparado. Tus permisos controlan el cálculo; el modelo de chat sigue en preparación.")
+        else:
+            self.stage.setText("Puedes conservar el conocimiento público entre equipos. El motor de cálculo está en preparación.")
         knowledge_state = knowledge.get("state", "disabled")
         messages = {"disabled":"Puedes aportar almacenamiento para conservar versiones aprendidas.",
                     "discovering":"Buscando participantes que conservan el modelo público…",
@@ -227,6 +232,8 @@ class SwarmWindow(QMainWindow):
         self.knowledge_label.setText(messages.get(knowledge_state, "Preparando conocimiento público")
             + (f" {knowledge.get('stored_bytes',0)/1024**2:.1f} MiB · versión {knowledge.get('sequence')}"
                if knowledge.get("sequence") is not None else ""))
+        if computation.get("ready"):
+            self.knowledge_label.setText(self.knowledge_label.text()+f" · {computation.get('active',0)} tareas activas · {computation.get('completed',0)} completadas")
         self.knowledge_button.setText("Dejar de compartir conocimiento" if self.controller.knowledge_settings().enabled else "Conservar conocimiento público")
         self.connect_button.setEnabled(state in {"stopped", "disconnected"})
         self.disconnect_button.setEnabled(state not in {"stopped", "disconnected"})

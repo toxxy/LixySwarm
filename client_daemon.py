@@ -193,10 +193,15 @@ def run(directory: Path, *, host="0.0.0.0", port=7338, interval=15, allow_privat
                 compute.update(settings)
                 current_state = "disconnected" if not running else "paused" if settings.paused else "connected" if node.peer_count else "connecting"
                 public_state = knowledge.snapshot()
+                available={"artifact"} if public_state["sharing"] else set()
+                if compute.ready: available.add("inference")
+                if compute.ready and compute.engine.training_requesters: available.add("training")
+                node.resource_profile.update(knowledge.governor.advertised_profile(available_work=available))
                 node.resource_profile["work"] = {"connectivity":running, "artifact":public_state["sharing"],
                     "inference":compute.ready, "training":compute.ready and bool(compute.engine.training_requesters), "memory":False}
                 node.resource_profile["worker_ready"]=compute.ready
                 node.resource_profile["model_artifact_id"]=public_state["model_id"] if compute.ready else ""
+                node.resource_profile["models"]=[public_state["model_id"]] if compute.ready else []
                 node.capabilities["inference"]=compute.ready
                 node.capabilities["training"]=compute.ready and bool(compute.engine.training_requesters)
                 node.capabilities["worker_ready"]=compute.ready
