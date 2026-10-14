@@ -6,6 +6,8 @@
 
 **Scope:** current source tree and collected tests; ignored local checkpoints are not release artifacts
 
+**Network update (2026-10-13):** bounded opt-in byte relays now preserve end-to-end LSP encryption and endpoint work identities when direct TCP fails behind NAT. A public-Internet probe on two physical computers and one public relay exchanged synthetic signals and verified signed CPU work in both directions using their ordinary Internet interfaces. This adds communication evidence; the paper's learning-quality and collective model-promotion gaps remain.
+
 Status meanings:
 
 - **Implemented:** a production path exists and has direct test or source evidence.
@@ -46,7 +48,7 @@ Status meanings:
 |---|---|---|
 | Ed25519 identity and signed packets | Implemented in v3 | LSP v3 requires valid Ed25519 signatures for every frame. Legacy v2 remains explicitly selectable and retains its weaker verifier. Decaying local misbehavior bans exist, but no decentralized reputation/trust policy exists yet. |
 | 636-byte default pheromone packet | Implemented | 108-byte envelope plus 528-byte float16 payload for 256 dimensions. |
-| TTL decay and bounded forwarding | Superseded in v3 | Legacy v2 contains TTL/decay but its relay test resets origin semantics. Default v3 forms direct persistent sessions and does not flood/relay pheromone packets. |
+| TTL decay and bounded forwarding | Superseded in v3 | Legacy v2 contains TTL/decay but its relay test resets origin semantics. V3 prefers direct endpoint sessions and supports bounded opt-in ciphertext tunnels for NAT; it does not flood application packets. |
 | Merge-on-transit | Partial | A merge buffer exists, but the receive path flushes immediately, preventing useful accumulation during normal traffic. |
 | TCP handshake and peer exchange | Implemented in v3 | Persistent signed/encrypted sessions, X25519/HKDF/ChaCha20-Poly1305, bounded frames, validated addresses, saved peers, retry/backoff, and direct peer exchange are tested. Rekeying, independent cryptographic review, and Sybil/eclipsing resistance remain missing. |
 | Global Matriarca gossip delta | Partial | Export, filtering, transport signature, deduplication, and import exist. Per-memory provenance/signature validation, reputation, conflict handling, and poisoning defenses do not. |

@@ -2,7 +2,7 @@
 
 LixySwarm is a research prototype for bio-inspired distributed language intelligence. It combines transformer agents (ants), persistent memory (Matriarca/elephant), an echolocation router (dolphin), and the persistent LSP v3 peer protocol.
 
-**Current status (2026-06-23):** local research prototype. The model, memory, runtime, LAN/explicit-peer transport, status publisher, and dashboard paths exist. The repository is not ready for untrusted Internet exposure or mass deployment.
+**Current status (2026-10-13):** research prototype with controlled public-Internet NAT communication and signed synthetic CPU work verified on two physical computers and a public relay. Model, memory, runtime, transport, publisher and dashboard paths exist. Untrusted public compute and mass deployment remain future work.
 
 ## Paper
 
@@ -54,7 +54,7 @@ tokens
   -> repetition-penalized top-k/top-p sampling in RuntimeSession
 ```
 
-LSP v3 multiplexes pheromones, peer exchange, global-memory deltas, work offers, and work results over persistent TCP `7338` sessions. Large artifacts move as verified chunks through typed work. A fresh node includes the project's first public bootstrap seed, learns direct routes, persists peers, and continues if the seed disappears. `LIXYSWARM_BOOTSTRAP_SEEDS=host:7338[,host:7338]` replaces the defaults; an explicitly empty value disables bootstrap. In-process and separate-process three-node acceptance tests verify encrypted direct communication after the seed exits. A second independent seed and public DNS seed domains are still required before public release.
+LSP v3 multiplexes pheromones, peer exchange, global-memory deltas, work offers, and work results over persistent TCP `7338` sessions. Large artifacts move as verified chunks through typed work. A fresh node includes the project's first public bootstrap seed, learns routes and persists peers. Direct sessions continue after seed loss; a relayed NAT path needs its relay or another compatible reachable relay. `LIXYSWARM_BOOTSTRAP_SEEDS=host:7338[,host:7338]` replaces the defaults; an explicitly empty value disables bootstrap. Separate-process tests verify direct seed independence, and relay tests verify alternate-relay recovery. A second independently operated public seed/relay remains required before public release.
 
 ## Install and verify
 
@@ -67,6 +67,8 @@ python experiments/internet_probe.py --label node-a --test-id UNIQUE-RUN-ID --du
 ```
 
 The probe reports direct/relay paths, public-interface routing, received synthetic signals and verified worker receipts. It loads no model or personal memory and does not measure learning quality.
+
+On 2026-10-13 the probe succeeded in both directions between two physical computers on distinct IPv4 NAT networks through the public relay. Each computer received a synthetic signal and verified the other computer's signed CPU result. Reported LSP paths used the ordinary Ethernet/Wi-Fi Internet interfaces; the administrative VPN carried no cross-machine LSP test traffic.
 
 Python 3.12 and a recent PyTorch installation are recommended.
 

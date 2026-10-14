@@ -264,4 +264,3 @@ class RelayManager:
             task.cancel()
         if self.tasks:
             await asyncio.gather(*self.tasks, return_exceptions=True)
-
