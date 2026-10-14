@@ -35,6 +35,7 @@ from src.network.telemetry import atomic_json, build_status, sign_status
 from src.network.training_worker import TRAINING_OPERATION, TrainingWorker
 from src.network.work_protocol import ResultReceipt, WorkCoordinator
 from src.release import ReleaseManifest, ReleaseRegistry, TrustPolicy
+from src.release.history import ReleaseHistoryService, fetch_release_history
 from src.swarm.node_manager import HardwareProfile
 
 
@@ -68,7 +69,7 @@ class Pilot:
             raise ValueError("Pilot state must be outside the code/Dropbox checkout")
         self.state.mkdir(parents=True, exist_ok=True, mode=0o700)
         self.identity = identity_at(self.state)
-        self.device = "cuda" if torch.cuda.is_available() else "cpu"
+        self.device = "cuda" if args.role != "consumer" and torch.cuda.is_available() else "cpu"
         self.resources = hardware_resources()
         self.policy = ContributionPolicy.for_mode("balanced")
         self.policy.save(self.state / "pilot-policy.json")
@@ -98,7 +99,20 @@ class Pilot:
         self.stop = threading.Event()
         self.started = time.monotonic()
         status_path = self.state / "pilot-status.json"
-        self.status_sequence = json.loads(status_path.read_text()).get("status_sequence", 0) if status_path.exists() else 0
+        previous = json.loads(status_path.read_text()) if status_path.exists() else {}
+        self.status_sequence = previous.get("status_sequence", 0)
+        self.training_jobs = previous.get("training_jobs", 0)
+
+    def restore_model(self):
+        policy = TrustPolicy(trusted_signers=(self.args.coordinator_id,))
+        active = self.registry.verify_active(policy, self.store)
+        with self.lock:
+            self.model = load_reference_checkpoint(self.store.object_path(active.model_artifact_id), self.device)
+            self.trainer = TrainingWorker(self.work, self.artifacts, self.model,
+                model_artifact_id=active.model_artifact_id, device=self.device, execution_lock=self.lock,
+                max_batch_tokens=65)
+            self.work.register_handler(TRAINING_OPERATION, "training", self.gradient)
+        return active
 
     def status(self):
         active = self.governor.status()["active_cpu_jobs"]
@@ -244,27 +258,78 @@ class Pilot:
         if self.args.role == "worker":
             self.work.register_handler("learning.prepare.v1", "memory", self.prepare)
             self.work.register_handler("reference.inference.v1", "inference", self.inference)
+            ReleaseHistoryService(self.work, self.registry,
+                TrustPolicy(trusted_signers=(self.args.coordinator_id,)))
+            if self.registry.active() is not None:
+                restored = self.restore_model()
+                report("restored", release_id=restored.release_id, model_id=restored.model_artifact_id)
         try:
             self.node.start()
             report("started", role=self.args.role, identity=self.identity.node_id_hex, device=self.device)
             if self.args.role == "coordinator":
                 self.coordinator()
+            elif self.args.role == "consumer":
+                self.consumer()
             else:
                 while not self.stop.is_set():
                     self.status(); self.stop.wait(15)
         finally:
             self.work.close(); self.node.stop()
 
+    def consumer(self):
+        if self.store.total_bytes() or self.registry.active() is not None:
+            raise ValueError("The persistence gate requires a fresh artifact store")
+        peer = self.args.provider_id
+        wait_for(lambda: peer in self.node.connected_node_ids or self.node.connect_node(peer))
+        offline = set(filter(None, self.args.offline_ids.split(",")))
+        if not offline or offline.intersection(self.node.connected_node_ids):
+            raise ValueError("Producer processes must be offline for this gate")
+        policy = TrustPolicy(trusted_signers=(self.args.coordinator_id,),
+                             pinned_genesis_release_id=self.args.genesis_id)
+        chain = fetch_release_history(self.work, release_id=self.args.release_id,
+            peer_id=peer, policy=policy, max_releases=16, timeout_s=120)
+        # Models and chain metadata are acquired from the other physical PC
+        # through LSP; no producer files or synchronized checkpoint paths.
+        for release in chain:
+            for identifier in (release.model_artifact_id, release.config_artifact_id, release.tokenizer_artifact_id):
+                if identifier:
+                    self.artifacts.fetch(identifier, peer_id=peer, timeout_s=120)
+            self.registry.accept(release, policy, self.store)
+            self.registry.activate(release.release_id, policy, self.store)
+            time.sleep(15)
+        final = self.registry.verify_active(policy, self.store)
+        model = load_reference_checkpoint(self.store.object_path(final.model_artifact_id), "cpu")
+        _, evaluation = reference_corpus()
+        loss = evaluate_reference(model, evaluation)
+        same_loss = abs(loss-self.args.expected_loss) < 0.00001
+        value = {"success": same_loss, "release_id":final.release_id,
+            "model_id":final.model_artifact_id, "sequence":final.sequence,
+            "evaluation_loss":loss, "expected_loss":self.args.expected_loss,
+            "provider_id":peer, "source_processes_offline":sorted(offline),
+            "initial_artifact_bytes":0, "acquired_bytes":self.store.total_bytes(),
+            "chain_length":len(chain), "device":"cpu",
+            "routes":[{"node_id":p["node_id"],"transport":p["transport"],"host":p["host"],
+                       "relay_host":p.get("relay_host")} for p in self.node.peers()]}
+        atomic_json(self.state / "report.json", value)
+        report("persistence", **value)
+        if not same_loss:
+            raise RuntimeError("Recovered reference evaluation differs from the promoted model")
+
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--state-dir", type=Path, required=True)
-    parser.add_argument("--role", choices=("worker", "coordinator"))
+    parser.add_argument("--role", choices=("worker", "coordinator", "consumer"))
     parser.add_argument("--print-id", action="store_true")
     parser.add_argument("--coordinator-id", default="")
     parser.add_argument("--worker-ids", default="")
     parser.add_argument("--cycles", type=int, default=4)
     parser.add_argument("--port", type=int, default=0)
+    parser.add_argument("--provider-id", default="")
+    parser.add_argument("--release-id", default="")
+    parser.add_argument("--genesis-id", default="")
+    parser.add_argument("--offline-ids", default="")
+    parser.add_argument("--expected-loss", type=float, default=0)
     args = parser.parse_args()
     if args.print_id:
         print(identity_at(args.state_dir).node_id_hex); return

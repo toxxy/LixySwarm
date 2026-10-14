@@ -1,0 +1,243 @@
+{
+  "accepted_sequence": 4,
+  "device": "cuda",
+  "final_release": {
+    "config_artifact_id": "d3a76f2bbfe0c7443ea7dd241ae3ad1e28f075d575f5a6e31ec0691f15b18826",
+    "created_at": 1791958771.5216377,
+    "minimum_client_version": "0.3.0",
+    "model_artifact_id": "f2e3556f06a392291157b75c6adc44378cc15e1b10ddb9f633a2da19d30c66c2",
+    "model_format": "pytorch-weights-only-v1",
+    "network_id": "LIXYMAIN",
+    "previous_release_id": "d02ab48175e66537dd617b88b5ac7721eab4b427c0e1cc0bb3579f34dd0c5f50",
+    "release_id": "59f68cdc1e6985fd539c1299e42bd200a4a24c42959d368fc3748780bcea98a3",
+    "sequence": 4,
+    "signatures": [
+      {
+        "signature": "S5KIQ6eWbCRaYnk6RJ/rRWTo9+VS9NaDgeocTK0X4DQFdn+3WcyZytUc2w8lGGHMDWg8xFks3z913JLUy+OnCg==",
+        "signer_id": "53cea6456aced3a5a31ad24505aaa47d88e1827d1e7976592c91b54fc0e8980f"
+      }
+    ],
+    "tokenizer_artifact_id": "",
+    "version": 1
+  },
+  "inference_max_difference": 2.9802322387695312e-08,
+  "replicas": [
+    "e14c6a73659a354ad58c1088a634eef9722184880d778bb3c886ddbbd2f2668b",
+    "1c7d1ac299aa917075d93a846e6750363ff5873cf89b48367d3b82a98b6c60ed"
+  ],
+  "rounds": [
+    {
+      "accepted": true,
+      "after_loss": 5.537755196819279,
+      "aggregation": "prediction-token-weighted-mean",
+      "base_release_id": "9b6ee48ae1f58733f930d6cb2491fa937f1c577292ff04034e68d056c64fc53e",
+      "before_loss": 5.560859923513588,
+      "contributions": [
+        {
+          "gradient_id": "e138d5878e545d0701eabfae5780a951c1e0982e579fbf23e2f2664a222c94d2",
+          "job_id": "49dbc963e91653abacdbd4827abcd8e589667997ebe0eaecc55f9271700336ba",
+          "peer_id": "e14c6a73659a354ad58c1088a634eef9722184880d778bb3c886ddbbd2f2668b",
+          "receipt": {
+            "finished_at": 1791958704.0036144,
+            "job_id": "49dbc963e91653abacdbd4827abcd8e589667997ebe0eaecc55f9271700336ba",
+            "requester_node_id": "53cea6456aced3a5a31ad24505aaa47d88e1827d1e7976592c91b54fc0e8980f",
+            "result_digest": "dc2748f75581df311c379dc8743ce29e09749145174b45ebfb272ac8bf4a6d03",
+            "signature": "c7yaOiY36cryb4ZdDgJydoWIHUfQlFx8QCAF4vkT8AAVr5VTCUdr71qp2I4DnpW1qwxKHWsyUWRcEiECyvjqAw==",
+            "version": 1,
+            "worker_node_id": "e14c6a73659a354ad58c1088a634eef9722184880d778bb3c886ddbbd2f2668b"
+          },
+          "start_token": 0,
+          "token_count": 65
+        },
+        {
+          "gradient_id": "0b165720df56a18bf64355977e1ab266d5b7de6a0645641a88a72004568fbbdc",
+          "job_id": "abe67863ee5593e3e3d944ec265d91854b90cd4c70c2bb286350e9ffacffd820",
+          "peer_id": "1c7d1ac299aa917075d93a846e6750363ff5873cf89b48367d3b82a98b6c60ed",
+          "receipt": {
+            "finished_at": 1791958704.756124,
+            "job_id": "abe67863ee5593e3e3d944ec265d91854b90cd4c70c2bb286350e9ffacffd820",
+            "requester_node_id": "53cea6456aced3a5a31ad24505aaa47d88e1827d1e7976592c91b54fc0e8980f",
+            "result_digest": "41849d5961a71cf8512c2193c1d647039f355dd0bcb28bdc2818bde9bb0c520f",
+            "signature": "BPJRGUrdjLxfaAN1UP8ngdMbTGuBFVcwgnEHf2dxYDGC0aRdDuGb1sCMCvdXTlq/+4dZ7L8nHJz5RusELv7LAA==",
+            "version": 1,
+            "worker_node_id": "1c7d1ac299aa917075d93a846e6750363ff5873cf89b48367d3b82a98b6c60ed"
+          },
+          "start_token": 7200,
+          "token_count": 65
+        }
+      ],
+      "dataset_id": "df3c694642f2eacef9e0734e1e958a14d1052d3d6927457e311e87a90f93c97b",
+      "evaluation_id": "2830626cf91612a1f1028815c9905d4c631f7be07669e82784ff6ce373a4c0d9",
+      "minimum_improvement": 0.001,
+      "predicted_tokens": 128
+    },
+    {
+      "accepted": true,
+      "after_loss": 5.512324173807934,
+      "aggregation": "prediction-token-weighted-mean",
+      "base_release_id": "b9fb36179591de9ffd057c6ac87c4f4f993491319441f6494467482c6f31527d",
+      "before_loss": 5.537755196819279,
+      "contributions": [
+        {
+          "gradient_id": "4ee7092f87ee0f880a3bdded209f60252ec02ba3bdf3172d73ed2edec024806e",
+          "job_id": "3b31533676fe1d3ca08e2a7124861b38cc89217c306827ca7d54fce11791143a",
+          "peer_id": "e14c6a73659a354ad58c1088a634eef9722184880d778bb3c886ddbbd2f2668b",
+          "receipt": {
+            "finished_at": 1791958725.868596,
+            "job_id": "3b31533676fe1d3ca08e2a7124861b38cc89217c306827ca7d54fce11791143a",
+            "requester_node_id": "53cea6456aced3a5a31ad24505aaa47d88e1827d1e7976592c91b54fc0e8980f",
+            "result_digest": "f37b329361313e8bcdb03f952837a86c79e96b5fd71841e477be02a237a4c153",
+            "signature": "U+vQwr+lZxZ/lHvjSbgz/FWyie6iojlDWBMP0xHn+gywbH1QlEn324Lj1EE1cdhlA3voYOY52Y7LW+jhvZBIAQ==",
+            "version": 1,
+            "worker_node_id": "e14c6a73659a354ad58c1088a634eef9722184880d778bb3c886ddbbd2f2668b"
+          },
+          "start_token": 65,
+          "token_count": 65
+        },
+        {
+          "gradient_id": "1a8875de8734b6ac6516708e9612384acbed5b352633a4b399fb99d763014554",
+          "job_id": "a563bdcc7c0d6a48fb8832c9133cb793450363a3800690c6747e42c3513e0a29",
+          "peer_id": "1c7d1ac299aa917075d93a846e6750363ff5873cf89b48367d3b82a98b6c60ed",
+          "receipt": {
+            "finished_at": 1791958727.0719402,
+            "job_id": "a563bdcc7c0d6a48fb8832c9133cb793450363a3800690c6747e42c3513e0a29",
+            "requester_node_id": "53cea6456aced3a5a31ad24505aaa47d88e1827d1e7976592c91b54fc0e8980f",
+            "result_digest": "0291dbf9abd6b784d4fb149496074046fab644874f076bfe1f19a5f0954cd35c",
+            "signature": "JDMh21vnC+385zQBMTBn90plcOhM/DHFoxZDAx/7ixYIkD7UMx/hkJRWWi0SqE7Q3Cgn83FmKS43x/Ktyu/oDg==",
+            "version": 1,
+            "worker_node_id": "1c7d1ac299aa917075d93a846e6750363ff5873cf89b48367d3b82a98b6c60ed"
+          },
+          "start_token": 7265,
+          "token_count": 65
+        }
+      ],
+      "dataset_id": "df3c694642f2eacef9e0734e1e958a14d1052d3d6927457e311e87a90f93c97b",
+      "evaluation_id": "2830626cf91612a1f1028815c9905d4c631f7be07669e82784ff6ce373a4c0d9",
+      "minimum_improvement": 0.001,
+      "predicted_tokens": 128
+    },
+    {
+      "accepted": true,
+      "after_loss": 5.484423935167399,
+      "aggregation": "prediction-token-weighted-mean",
+      "base_release_id": "49a93d99ff10eb30187af856ad18bea86953eb7334b2876200296793663eaa2e",
+      "before_loss": 5.512324173807934,
+      "contributions": [
+        {
+          "gradient_id": "c17b03ec44aab241116193c38d13ed663088e76c630e9db4ae5e1300ba92f2fc",
+          "job_id": "f409d8dbb522ff817a73b6047b7d5ebf3f427ccead37810370593f658bd23834",
+          "peer_id": "e14c6a73659a354ad58c1088a634eef9722184880d778bb3c886ddbbd2f2668b",
+          "receipt": {
+            "finished_at": 1791958747.533026,
+            "job_id": "f409d8dbb522ff817a73b6047b7d5ebf3f427ccead37810370593f658bd23834",
+            "requester_node_id": "53cea6456aced3a5a31ad24505aaa47d88e1827d1e7976592c91b54fc0e8980f",
+            "result_digest": "3054fd756d92ff6a004e1d6052b3d8e056d60abd95cc481af3b508b28069bac1",
+            "signature": "girHNSqWIuspx5Lag9Qj23HcTIb4/tLEXgHuauPaAIb86lp5bp1KHaLoh2URnU7+pGWETPBvAtusFIp7x3cGAQ==",
+            "version": 1,
+            "worker_node_id": "e14c6a73659a354ad58c1088a634eef9722184880d778bb3c886ddbbd2f2668b"
+          },
+          "start_token": 130,
+          "token_count": 65
+        },
+        {
+          "gradient_id": "511164e9d51e9c0a47097b9ea28e6b3526b2b74de1bda38092ff3f85e6be64a3",
+          "job_id": "680645cdc0e743f05ba118fffc951b5c4a6c68e86030fe2ae85fecdef62fb3df",
+          "peer_id": "1c7d1ac299aa917075d93a846e6750363ff5873cf89b48367d3b82a98b6c60ed",
+          "receipt": {
+            "finished_at": 1791958748.6456647,
+            "job_id": "680645cdc0e743f05ba118fffc951b5c4a6c68e86030fe2ae85fecdef62fb3df",
+            "requester_node_id": "53cea6456aced3a5a31ad24505aaa47d88e1827d1e7976592c91b54fc0e8980f",
+            "result_digest": "bd854aeceb0a8728853988039cefec609a88e5a0ceb6032215799c948b198858",
+            "signature": "IsySZieDWHbHKrY2Ig2pTsgL4O5moSHC5NV8tfDbbTtGLMaDA62xsW1e534W0pKouGj8BCulL1ESXF1qhzkADQ==",
+            "version": 1,
+            "worker_node_id": "1c7d1ac299aa917075d93a846e6750363ff5873cf89b48367d3b82a98b6c60ed"
+          },
+          "start_token": 7330,
+          "token_count": 65
+        }
+      ],
+      "dataset_id": "df3c694642f2eacef9e0734e1e958a14d1052d3d6927457e311e87a90f93c97b",
+      "evaluation_id": "2830626cf91612a1f1028815c9905d4c631f7be07669e82784ff6ce373a4c0d9",
+      "minimum_improvement": 0.001,
+      "predicted_tokens": 128
+    },
+    {
+      "accepted": true,
+      "after_loss": 5.454853876420851,
+      "aggregation": "prediction-token-weighted-mean",
+      "base_release_id": "d02ab48175e66537dd617b88b5ac7721eab4b427c0e1cc0bb3579f34dd0c5f50",
+      "before_loss": 5.484423935167399,
+      "contributions": [
+        {
+          "gradient_id": "ff67de1497a5d53e100db989450937e8b7001b820b23103e91b2b607493b3758",
+          "job_id": "e2d7ecc717c98987f3635b62576f82a7ad2e7579ada35ac63f623c76575fd3a1",
+          "peer_id": "e14c6a73659a354ad58c1088a634eef9722184880d778bb3c886ddbbd2f2668b",
+          "receipt": {
+            "finished_at": 1791958769.1464486,
+            "job_id": "e2d7ecc717c98987f3635b62576f82a7ad2e7579ada35ac63f623c76575fd3a1",
+            "requester_node_id": "53cea6456aced3a5a31ad24505aaa47d88e1827d1e7976592c91b54fc0e8980f",
+            "result_digest": "9399f516e591b2a5720aa486c60a4727330c38112200372d59db92e0cd6f2de8",
+            "signature": "h9lOGFCj9bYSLxsamcbrBrG2hTCPcpUkedqZ0w0MDkUW18sV8YWdACFkt7kSkiEcpFpIXJ8EK36n82FAMfPtDw==",
+            "version": 1,
+            "worker_node_id": "e14c6a73659a354ad58c1088a634eef9722184880d778bb3c886ddbbd2f2668b"
+          },
+          "start_token": 195,
+          "token_count": 65
+        },
+        {
+          "gradient_id": "c8ec67c6776e184db70135ed0626adec2c1b752909d629dced698abc1cf0b625",
+          "job_id": "4dc80d5fc941d18fd006b876a160a3e6311731ed5dc170a1b2c9ad15fcc3923f",
+          "peer_id": "1c7d1ac299aa917075d93a846e6750363ff5873cf89b48367d3b82a98b6c60ed",
+          "receipt": {
+            "finished_at": 1791958770.18374,
+            "job_id": "4dc80d5fc941d18fd006b876a160a3e6311731ed5dc170a1b2c9ad15fcc3923f",
+            "requester_node_id": "53cea6456aced3a5a31ad24505aaa47d88e1827d1e7976592c91b54fc0e8980f",
+            "result_digest": "adcaa793adf2099631913a820bb3c08ae4faeddfef150adfeb33e12a7342fec2",
+            "signature": "NcCWJ9Vo5aWbJU3fQx1JYeS46/dqZ1c3zqiAI5pxNz71pZg9D2taPFruzB+O51Hq+1BKdDqPpJIsFXyCS3PfBA==",
+            "version": 1,
+            "worker_node_id": "1c7d1ac299aa917075d93a846e6750363ff5873cf89b48367d3b82a98b6c60ed"
+          },
+          "start_token": 7395,
+          "token_count": 65
+        }
+      ],
+      "dataset_id": "df3c694642f2eacef9e0734e1e958a14d1052d3d6927457e311e87a90f93c97b",
+      "evaluation_id": "2830626cf91612a1f1028815c9905d4c631f7be07669e82784ff6ce373a4c0d9",
+      "minimum_improvement": 0.001,
+      "predicted_tokens": 128
+    }
+  ],
+  "routes": [
+    {
+      "node_id": "28c218f34cd6b90e99955346711921d94b54852e4b8f29fb840207388f73444e",
+      "transport": "direct"
+    },
+    {
+      "node_id": "1c7d1ac299aa917075d93a846e6750363ff5873cf89b48367d3b82a98b6c60ed",
+      "transport": "relay"
+    },
+    {
+      "node_id": "e14c6a73659a354ad58c1088a634eef9722184880d778bb3c886ddbbd2f2668b",
+      "transport": "relay"
+    },
+    {
+      "node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+      "transport": "relay"
+    },
+    {
+      "node_id": "ea914d97caafef310e50385034abae9a50ba86496b0e9cbf4679e6070e4c25b0",
+      "transport": "relay"
+    }
+  ],
+  "success": true,
+  "reference": {
+    "parameters": 245676,
+    "seed": 20261014,
+    "gpu_models": [
+      "NVIDIA GeForce RTX 5090",
+      "NVIDIA RTX 2000 Ada Generation Laptop GPU"
+    ],
+    "scope": "Synthetic byte prediction, two known physical workers; not general conversational quality",
+    "predicted_tokens": 512
+  }
+}
