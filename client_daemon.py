@@ -187,6 +187,9 @@ def run(directory: Path, *, host="0.0.0.0", port=7338, interval=15, allow_privat
                 knowledge.update(settings, sharing)
                 current_state = "disconnected" if not running else "paused" if settings.paused else "connected" if node.peer_count else "connecting"
                 public_state = knowledge.snapshot()
+                node.resource_profile["work"] = {"connectivity":running, "artifact":public_state["sharing"],
+                    "inference":False, "training":False, "memory":False}
+                node.resource_profile["public_releases"] = [public_state["release_id"]] if public_state["sharing"] and public_state["release_id"] else []
                 knowledge_change = (public_state["state"], public_state["release_id"],
                                     public_state["versions_done"], public_state["sharing"])
                 if running and current_state == "connected" and public_state["state"] == "downloading":

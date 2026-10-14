@@ -211,7 +211,7 @@ class SwarmWindow(QMainWindow):
         labels = {"stopped":"Listo para conectar", "connecting":"Conectando", "connected":"Conectado a la red", "preparing":"Preparando conocimiento público", "paused":"Aporte pausado", "disconnected":"Desconectado"}
         self.status.setText(labels.get(state, state))
         peers = diagnostic.get("peers", []) if snapshot["fresh"] else []
-        self.detail.setText(f"{len(peers)} conexiones cifradas. El conocimiento compartido se preparará cuando haya un modelo compatible.")
+        self.detail.setText(f"{len(peers)} conexiones cifradas.")
         self.identity.setText("Identidad: " + status.get("node_id", "se crea al conectar")[:16])
         self.routes.setText(f"Rutas: {sum(p.get('transport') == 'direct' for p in peers)} directas · {sum(p.get('transport') == 'relay' for p in peers)} por relay")
         r = status.get("resources", {})
