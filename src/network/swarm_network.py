@@ -418,6 +418,9 @@ class SwarmNetwork:
             target_outbound=self.target_outbound,
             allow_private=self.allow_private_peers,
             resource_profile=resources,
+            relay_enabled=os.environ.get("LIXYSWARM_RELAY_ENABLED", "").lower() in {
+                "1", "true", "yes",
+            },
         )
 
         @self._lsp_v3_node.on_feromon_received

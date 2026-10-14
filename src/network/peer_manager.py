@@ -534,6 +534,12 @@ class PeerManager:
                         success = await self.node._connect_address(
                             candidate.host, candidate.port
                         )
+                        if not success and candidate.node_id:
+                            connect_relay = getattr(self.node, "_connect_via_relay", None)
+                            if connect_relay is not None:
+                                success = await connect_relay(
+                                    candidate.node_id, candidate.host, candidate.port
+                                )
                         self.address_book.mark_attempt(
                             candidate.host,
                             candidate.port,

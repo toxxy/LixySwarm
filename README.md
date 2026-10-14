@@ -58,6 +58,16 @@ LSP v3 multiplexes pheromones, peer exchange, global-memory deltas, work offers,
 
 ## Install and verify
 
+When direct TCP fails behind NAT, clients can carry the same end-to-end encrypted LSP session through a reachable peer advertising relay support. An operator explicitly enables serving with `LIXYSWARM_RELAY_ENABLED=1`; any reachable configured node can serve. Direct connections remain preferred, and recovery through another relay requires both endpoints to reach that relay.
+
+To check real Internet communication and signed synthetic CPU work, run this on two physical machines with the same unique test ID and different labels:
+
+```bash
+python experiments/internet_probe.py --label node-a --test-id UNIQUE-RUN-ID --duration 90
+```
+
+The probe reports direct/relay paths, public-interface routing, received synthetic signals and verified worker receipts. It loads no model or personal memory and does not measure learning quality.
+
 Python 3.12 and a recent PyTorch installation are recommended.
 
 ```bash

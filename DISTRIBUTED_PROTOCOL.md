@@ -1,6 +1,6 @@
 # Distributed Protocol Overview
 
-**Updated:** 2026-06-23
+**Updated:** 2026-10-13
 
 LSP v3 is the default network path. It uses persistent outbound-friendly TCP sessions for peer exchange, pheromones, Global Matriarca deltas, typed work, and verified artifact chunks.
 
@@ -15,7 +15,7 @@ new node
   -> seed can disappear
 ```
 
-Saved addresses and peer exchange are preferred after initial discovery. The VPS runs `node_daemon.py` as a seed, not as a required relay. An automated acceptance test starts all three nodes in separate interpreters, learns the direct client route only through peer exchange, kills the seed process, and verifies an encrypted signed delta still arrives directly.
+Saved addresses and peer exchange are preferred after initial discovery. `node_daemon.py` introduces peers and can optionally provide a NAT relay with `LIXYSWARM_RELAY_ENABLED=1`. Direct routes survive seed loss; relayed routes recover when another compatible relay is connected to both endpoints. The separate-interpreter acceptance test verifies direct seed independence, while `test_lsp_relay.py` verifies relay fallback and alternate-relay recovery.
 
 The first public bootstrap endpoint is compiled into the client, so a default installation needs no seed configuration. Operators can replace the defaults with multiple endpoints:
 
@@ -42,7 +42,7 @@ Setting `LIXYSWARM_BOOTSTRAP_SEEDS` to an empty value disables bootstrap complet
 - Artifacts: SHA-256 manifests and resumable verified chunks without source filenames or paths.
 - Training: bounded token batches against an exact local model hash; results are NPZ gradient artifacts and are never applied automatically. Quorum mode validates three-to-31 distinct peer results, produces a streaming coordinate median, and returns a dual-signed useful-work credit to each included worker.
 
-Nodes behind NAT need only outbound TCP connectivity. Public nodes and seeds accept inbound sessions. No VPN or port forwarding is required for an outbound-only participant.
+Nodes behind NAT initiate outbound TCP sessions. Full peer communication requires a direct reachable path or a connected compatible relay; peer discovery alone cannot make a private listen port public. The relay transports the ordinary end-to-end encrypted LSP session, preserving requester/worker identities. Participants can use that path without a VPN or port forwarding.
 
 ## Current limits
 

@@ -71,6 +71,8 @@ These mechanisms are locally tested. Dynamic addition/removal of live model para
 
 ## Network layer
 
+Optional NAT relays carry the existing end-to-end encrypted LSP session when direct TCP fails. Serving requires `LIXYSWARM_RELAY_ENABLED=1`; a relayed path depends on that relay or another compatible reachable relay. Endpoint identities and signed work receipts remain unchanged.
+
 `SwarmNetwork` defaults to `LSPNodeV3`. It uses persistent TCP 7338 sessions for signed HELLO, encrypted peer exchange, binary float16 pheromones, Global Matriarca deltas, and work. Each node maintains a bounded persistent address book and a target number of outbound sessions. The built-in public bootstrap and any operator-configured DNS seeds only introduce peers; learned direct sessions survive seed shutdown.
 
 The v3 envelope requires Ed25519 signatures and includes network, session, message, sequence, timestamp, and bounded-length fields. Signed X25519 HELLO derives an HKDF-SHA256 key, and all later payloads require ChaCha20-Poly1305. Replay, stale, malformed, wrong-network, oversized, invalid-AEAD, and identity-changing frames are rejected. Public peer advertisements reject private/link-local/multicast/invalid addresses unless LAN/test mode is explicit.

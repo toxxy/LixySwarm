@@ -1,8 +1,8 @@
 # Public LSP v3 Seed Deployment
 
-**Updated:** 2026-06-23
+**Updated:** 2026-10-13
 
-The VPS is a replaceable bootstrap seed. It accepts persistent LSP v3 sessions and shares learned peer addresses. It does not relay model traffic, coordinate decisions, or remain necessary after peers connect.
+The VPS is a replaceable bootstrap seed. It accepts persistent LSP v3 sessions and shares peer addresses. Enable `LIXYSWARM_RELAY_ENABLED=1` to also transport end-to-end encrypted sessions between NAT clients. Direct peers remain independent; NAT peers need this relay or another compatible reachable relay. Relaying does not coordinate model decisions.
 
 Do not commit credentials, private keys, private inventory details, or ordinary peer/operator addresses. A bootstrap address may be committed only when its operator explicitly designates it as public infrastructure. Prefer a stable DNS name for long-term operation.
 
@@ -22,6 +22,7 @@ Create `/etc/lixyswarm/seed.env` outside Git:
 LIXYSWARM_PUBLIC_HOST=seed.example.net
 LIXYSWARM_GOSSIP_PORT=7338
 LIXYSWARM_TARGET_OUTBOUND=0
+LIXYSWARM_RELAY_ENABLED=1
 ```
 
 The checked-in `lixyswarm-seed.service` stores identity/address state under `/var/lib/lixyswarm`, runs without root, and applies systemd hardening.
@@ -65,7 +66,7 @@ Use a dedicated DNS name plus HTTPS before presenting the explorer as a producti
 - Keep the HTTP API on a separate TLS endpoint and policy.
 - Add at least one independently operated seed before a public release.
 
-Ordinary participants do not open ports or use a VPN. They initiate outbound TCP sessions to seeds/learned peers.
+Ordinary participants initiate outbound TCP sessions. If direct worker connections fail behind NAT, a compatible relay provides the data path without participant port forwarding. Use administrative VPN access separately from public LSP testing.
 
 ## Client bootstrap
 

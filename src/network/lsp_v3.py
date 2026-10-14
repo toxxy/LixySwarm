@@ -67,6 +67,7 @@ class PacketType:
     USEFUL_WORK_CREDIT = 0x0A
     USEFUL_WORK_PROOFS = 0x0B
     WORK_CANCEL = 0x0C
+    RELAY = 0x0D
 
 
 _VALID_PACKET_TYPES = {
@@ -82,6 +83,7 @@ _VALID_PACKET_TYPES = {
     PacketType.USEFUL_WORK_CREDIT,
     PacketType.USEFUL_WORK_PROOFS,
     PacketType.WORK_CANCEL,
+    PacketType.RELAY,
 }
 
 
@@ -267,6 +269,8 @@ class PeerSession:
     connected_at: float = field(default_factory=time.time)
     write_lock: asyncio.Lock = field(default_factory=asyncio.Lock)
     task: Optional[asyncio.Task] = None
+    relay_node_id: str = ""
+    relay_host: str = ""
     _message_times: deque = field(default_factory=deque)
     _byte_events: deque = field(default_factory=deque)
 
@@ -315,6 +319,9 @@ class LSPNodeV3:
         maintenance_interval: float = 2.0,
         max_connections: int = DEFAULT_MAX_CONNECTIONS,
         max_inbound_per_ip: int = DEFAULT_MAX_INBOUND_PER_IP,
+        relay_enabled: bool = False,
+        max_relay_streams: int = 64,
+        max_relay_streams_per_peer: int = 4,
     ):
         self.identity = identity
         self.host = host
@@ -327,6 +334,8 @@ class LSPNodeV3:
             "peer_exchange": True,
         })
         self.resource_profile = dict(resource_profile or {})
+        self.capabilities["relay_client_v1"] = True
+        self.capabilities["relay_v1"] = bool(relay_enabled)
         self.max_connections = max(1, min(int(max_connections), 4096))
         self.max_inbound_per_ip = max(1, min(int(max_inbound_per_ip), 256))
         self.session_id = b""
@@ -373,6 +382,11 @@ class LSPNodeV3:
         self._credit_callbacks: list[Callable] = []
         self._useful_work_proof_callbacks: list[Callable] = []
         self._useful_work_proof_provider: Optional[Callable] = None
+        from .relay import RelayManager
+        self.relay = RelayManager(
+            self, enabled=relay_enabled, max_streams=max_relay_streams,
+            per_peer=max_relay_streams_per_peer,
+        )
 
     def _reset_process_session(self):
         self.session_id = os.urandom(16)
@@ -538,10 +552,11 @@ class LSPNodeV3:
                 for peer in self._snapshot.values()
             }
 
-    def is_address_connected(self, host: str, port: int) -> bool:
+    def is_address_connected(self, host: str, port: int, *, direct_only: bool = False) -> bool:
         with self._snapshot_lock:
             return any(
                 peer["host"] == host and int(peer["port"]) == int(port)
+                and (not direct_only or not peer["relay_node_id"])
                 for peer in self._snapshot.values()
             )
 
@@ -619,6 +634,7 @@ class LSPNodeV3:
             await self._stop_event.wait()
         finally:
             await self.peer_manager.stop()
+            await self.relay.stop()
             if self._server:
                 self._server.close()
             for session in list(self._sessions.values()):
@@ -658,6 +674,9 @@ class LSPNodeV3:
             if packet.packet_type != PacketType.HELLO or not self.replay_guard.accept(packet):
                 raise ProtocolError("Expected a fresh LSP v3 HELLO")
             hello = self._parse_hello(packet.payload)
+            expected_node_id = getattr(writer, "expected_node_id", None)
+            if expected_node_id is not None and packet.sender_id.hex() != expected_node_id:
+                raise ProtocolError("Relayed HELLO changed endpoint identity")
             if self.reputation.is_banned("node", packet.sender_id.hex()):
                 raise ProtocolError("Peer identity is locally banned")
             remote_port = int(hello["listen_port"])
@@ -673,6 +692,11 @@ class LSPNodeV3:
                     hello, packet.sender_id, packet.session_id
                 ),
                 task=asyncio.current_task(),
+                relay_node_id=getattr(writer, "relay_id", ""),
+                relay_host=(
+                    self._sessions[writer.relay_id].host
+                    if getattr(writer, "relay_id", "") in self._sessions else ""
+                ),
             )
             if not await self._register_session(session):
                 return
@@ -699,7 +723,7 @@ class LSPNodeV3:
                     pass
 
     async def _connect_address(self, host: str, port: int) -> bool:
-        if not self._loop or self.is_address_connected(host, port):
+        if not self._loop or self.is_address_connected(host, port, direct_only=True):
             return False
         if self.reputation.is_banned("ip", host):
             return False
@@ -711,38 +735,7 @@ class LSPNodeV3:
             reader, writer = await asyncio.wait_for(
                 asyncio.open_connection(host, port), timeout=5.0
             )
-            await self._write_raw(writer, self._new_packet(
-                PacketType.HELLO, self._hello_payload(), ttl=1
-            ))
-            packet = await asyncio.wait_for(self._read_packet(reader), timeout=10.0)
-            if packet.packet_type != PacketType.HELLO or not self.replay_guard.accept(packet):
-                raise ProtocolError("Peer returned an invalid LSP v3 HELLO")
-            node_id = packet.sender_id.hex()
-            if node_id == self.identity.node_id_hex:
-                raise ProtocolError("Refusing self connection")
-            if self.reputation.is_banned("node", node_id):
-                raise ProtocolError("Peer identity is locally banned")
-            hello = self._parse_hello(packet.payload)
-            session = PeerSession(
-                node_id=node_id,
-                host=host,
-                port=int(hello["listen_port"]),
-                reader=reader,
-                writer=writer,
-                outbound=True,
-                hello=hello,
-                encryption_key=self._derive_session_key(
-                    hello, packet.sender_id, packet.session_id
-                ),
-            )
-            if not await self._register_session(session):
-                return False
-            await self._after_connected(session)
-            session.task = asyncio.create_task(
-                self._run_outbound_session(session),
-                name=f"lsp-v3-read-{node_id[:8]}",
-            )
-            return True
+            return await self._establish_outbound(reader, writer, host)
         except ProtocolError as exc:
             self.reputation.report("ip", host)
             if session is not None:
@@ -769,6 +762,74 @@ class LSPNodeV3:
                     pass
             return False
 
+    async def _establish_outbound(self, reader, writer, host, *, expected_node_id=None):
+        session = None
+        try:
+            await self._write_raw(writer, self._new_packet(
+                PacketType.HELLO, self._hello_payload(), ttl=1
+            ))
+            packet = await asyncio.wait_for(self._read_packet(reader), timeout=10.0)
+            if packet.packet_type != PacketType.HELLO or not self.replay_guard.accept(packet):
+                raise ProtocolError("Peer returned an invalid LSP v3 HELLO")
+            node_id = packet.sender_id.hex()
+            if expected_node_id is not None and node_id != expected_node_id:
+                raise ProtocolError("Relayed HELLO changed endpoint identity")
+            if node_id == self.identity.node_id_hex:
+                raise ProtocolError("Refusing self connection")
+            if self.reputation.is_banned("node", node_id):
+                raise ProtocolError("Peer identity is locally banned")
+            hello = self._parse_hello(packet.payload)
+            relay_id = getattr(writer, "relay_id", "")
+            relay_session = self._sessions.get(relay_id)
+            session = PeerSession(
+                node_id=node_id, host=host, port=int(hello["listen_port"]),
+                reader=reader, writer=writer, outbound=True, hello=hello,
+                encryption_key=self._derive_session_key(
+                    hello, packet.sender_id, packet.session_id
+                ),
+                relay_node_id=relay_id,
+                relay_host=relay_session.host if relay_session is not None else "",
+            )
+            if not await self._register_session(session):
+                return False
+            await self._after_connected(session)
+            session.task = asyncio.create_task(
+                self._run_outbound_session(session), name=f"lsp-v3-read-{node_id[:8]}"
+            )
+            return True
+        except BaseException:
+            if session is not None:
+                await self._close_session(session)
+            else:
+                writer.close()
+                await writer.wait_closed()
+            raise
+
+    async def _connect_via_relay(self, node_id: str, host: str, port: int) -> bool:
+        try:
+            decoded_id = bytes.fromhex(node_id)
+        except (TypeError, ValueError):
+            return False
+        if len(decoded_id) != 32:
+            return False
+        node_id = decoded_id.hex()
+        if (node_id == self.identity.node_id_hex
+                or node_id in self._sessions or self.reputation.is_banned("node", node_id)):
+            return False
+        for relay_id, relay_session in list(self._sessions.items()):
+            if (relay_session.relay_node_id
+                    or relay_session.hello.get("capabilities", {}).get("relay_v1") is not True):
+                continue
+            try:
+                reader, writer = await self.relay.open(relay_id, node_id, host, port)
+                return await self._establish_outbound(
+                    reader, writer, host, expected_node_id=node_id
+                )
+            except (ConnectionError, OSError, asyncio.TimeoutError,
+                    asyncio.IncompleteReadError, ProtocolError) as error:
+                log.debug("LSP relay connection to %s failed: %s", node_id[:12], error)
+        return False
+
     async def _register_session(self, session: PeerSession) -> bool:
         if session.node_id == self.identity.node_id_hex:
             await self._close_session(session, notify=False)
@@ -778,8 +839,12 @@ class LSPNodeV3:
             await self._close_session(session, notify=False)
             return False
         if existing:
-            prefer_outbound = self.identity.node_id_hex < session.node_id
-            if existing.outbound == prefer_outbound or session.outbound != prefer_outbound:
+            # A working direct session always wins over a relayed alternative.
+            keep_existing = not existing.relay_node_id and bool(session.relay_node_id)
+            if bool(existing.relay_node_id) == bool(session.relay_node_id):
+                prefer_outbound = self.identity.node_id_hex < session.node_id
+                keep_existing = existing.outbound == prefer_outbound or session.outbound != prefer_outbound
+            if keep_existing:
                 await self._close_session(session, notify=False)
                 return False
             await self._close_session(existing)
@@ -793,6 +858,9 @@ class LSPNodeV3:
                 "outbound": session.outbound,
                 "connected_at": session.connected_at,
                 "encrypted": True,
+                "transport": "relay" if session.relay_node_id else "direct",
+                "relay_node_id": session.relay_node_id,
+                "relay_host": session.relay_host,
                 "capabilities": dict(session.hello.get("capabilities", {})),
                 "resources": dict(session.hello.get("resources", {})),
             }
@@ -845,6 +913,8 @@ class LSPNodeV3:
             except Exception:
                 pass
         session.encryption_key = b""
+        if removed and not session.relay_node_id:
+            await self.relay.peer_closed(session.node_id)
         if removed and notify:
             self.peer_manager.disconnected()
             for callback in self._peer_lost_callbacks:
@@ -886,6 +956,11 @@ class LSPNodeV3:
     async def _process_packet(self, session: PeerSession, packet: V3Packet):
         if packet.packet_type == PacketType.HELLO:
             raise ProtocolError("Unexpected HELLO on established session")
+        if packet.packet_type == PacketType.RELAY:
+            if session.relay_node_id:
+                raise ProtocolError("Nested relay tunnels are not supported")
+            await self.relay.handle(session, packet.payload)
+            return
         if packet.packet_type == PacketType.PEERS:
             payload = self._parse_json(packet.payload, max_size=128 * 1024)
             peers = payload.get("peers", [])

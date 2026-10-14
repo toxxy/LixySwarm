@@ -1,12 +1,12 @@
 # LSP Architecture Decisions
 
-**Updated:** 2026-06-23
+**Updated:** 2026-10-13
 
 ## Non-negotiable topology
 
-- The VPS is a replaceable seed, never a required relay or coordinator.
-- Ordinary NAT nodes participate through persistent outbound sessions.
-- Learned peers replace seed dependency immediately after bootstrap.
+- Seeds introduce peers. A reachable consenting node can additionally offer a replaceable relay service.
+- Ordinary NAT nodes use outbound sessions and fall back to an advertised relay when direct TCP fails.
+- Direct sessions survive seed loss. A relayed path requires its relay or another reachable relay connected to both endpoints.
 - Every message is signed, bounded, freshness-checked, and replay-protected.
 - Local resources are declared to the swarm but are not trusted without verification.
 - Personal memory remains local; only Global Matriarca deltas use the network.
@@ -27,6 +27,14 @@ Ed25519 proves continuity of a pseudonymous node identity and message integrity.
 4. DHT after the first three layers are adversarially tested.
 
 A DHT is not a substitute for safe sessions or verified peer data. It is deliberately later in the sequence.
+
+## NAT relay fallback
+
+The Internet probe on two physical computers showed that joining a public seed did not make the advertised listen ports reachable. LSP now tries direct TCP first, then opens a bounded virtual byte stream through a connected peer advertising `relay_v1`.
+
+Endpoints perform the existing signed HELLO/X25519 handshake inside that stream and pin the expected endpoint identity. The relay forwards ciphertext; application callbacks, work offers and result receipts retain the endpoint identity. A direct connection supersedes a relayed connection. After relay failure, peer maintenance can use another connected compatible relay.
+
+Serving is explicitly enabled with `LIXYSWARM_RELAY_ENABLED=1` for either `node_daemon.py` or `lixyswarm start`. Defaults bound the relay to 64 streams, four per endpoint, 64 KiB transport chunks and the existing session message/byte quotas. Nested tunnels are rejected. `test_lsp_relay.py` covers NAT fallback, receipt identities, ciphertext integrity, capacity, cleanup, direct upgrade and alternate-relay recovery.
 
 ## Compute architecture direction
 

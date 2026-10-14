@@ -1,8 +1,8 @@
 """LixySwarm LSP v3 public seed node.
 
-The seed accepts persistent sessions and introduces peers. It is not a central
-relay: connected nodes establish their own sessions through peer exchange and
-continue operating if this process disappears.
+The seed introduces peers and can optionally carry end-to-end encrypted LSP
+sessions for NAT clients. Any reachable consenting node can provide this relay
+service; direct peers remain independent of it.
 """
 
 import logging
@@ -28,6 +28,9 @@ LISTEN_HOST = os.environ.get("LIXYSWARM_LISTEN_HOST", "0.0.0.0")
 GOSSIP_PORT = int(os.environ.get("LIXYSWARM_GOSSIP_PORT", "7338"))
 PUBLIC_HOST = os.environ.get("LIXYSWARM_PUBLIC_HOST")
 TARGET_OUTBOUND = int(os.environ.get("LIXYSWARM_TARGET_OUTBOUND", "0"))
+RELAY_ENABLED = os.environ.get("LIXYSWARM_RELAY_ENABLED", "").lower() in {
+    "1", "true", "yes",
+}
 ALLOW_PRIVATE = os.environ.get("LIXYSWARM_ALLOW_PRIVATE_PEERS", "").lower() in {
     "1", "true", "yes",
 }
@@ -59,6 +62,7 @@ def run():
         address_book_path=PEERS_PATH,
         target_outbound=TARGET_OUTBOUND,
         allow_private=ALLOW_PRIVATE,
+        relay_enabled=RELAY_ENABLED,
         capabilities={
             "peer_exchange": True,
             "seed": True,
@@ -87,8 +91,8 @@ def run():
 
     node.start()
     log.info(
-        "Seed active id=%s TCP=%s known=%s target_outbound=%s",
-        identity.node_id_hex[:16], node.port, node.address_book.count, TARGET_OUTBOUND,
+        "Seed active id=%s TCP=%s known=%s target_outbound=%s relay=%s",
+        identity.node_id_hex[:16], node.port, node.address_book.count, TARGET_OUTBOUND, RELAY_ENABLED,
     )
 
     stopping = False
