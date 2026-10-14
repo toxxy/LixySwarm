@@ -1,5 +1,6 @@
 """Obtain typed public LoRA contributions from explicit physical workers."""
 import argparse
+from contextlib import contextmanager
 import ipaddress
 import threading
 import time
@@ -12,6 +13,7 @@ from src.learning.public_bases import base_hash
 from src.learning.public_conversation import public_corpus, corpus_digest
 from src.network.artifact_store import ArtifactService, ArtifactStore
 from src.network.bootstrap import get_seed_endpoints
+from src.network.client_state import NodeStateLock,state_directory
 from src.network.language_training import OPERATION,VERSIONED_OPERATION
 from src.network.language_version_service import fetch_history
 from src.network.lsp import LSPIdentity
@@ -21,12 +23,39 @@ from src.network.work_protocol import ResultReceipt, WorkCoordinator
 from src.release.language_family import ADAPTERS
 
 
+def shard_plan(workers,count,shards=None):
+    total=len(workers) if shards is None else shards
+    if (not 1<=len(workers)<=8 or len(set(workers))!=len(workers)
+            or type(count) is not int or not 1<=count<=8
+            or type(total) is not int or not len(workers)<=total<=16
+            or any(not isinstance(worker,str) or len(worker)!=64 or any(c not in '0123456789abcdef' for c in worker) for worker in workers)):
+        raise ValueError('Use distinct physical workers and at most sixteen disjoint shards')
+    return [(index,workers[index%len(workers)]) for index in range(total)]
+
+
+@contextmanager
+def requester_lock(node_id,*,timeout_s=120,directory=None):
+    # The waiting two-PC pilot and a baseline must never open the same network
+    # identity at once, even when they write reports to different directories.
+    lock=NodeStateLock((state_directory()/'requesters' if directory is None else directory)/node_id)
+    deadline=time.monotonic()+timeout_s
+    while True:
+        try:lock.__enter__();break
+        except RuntimeError:
+            if time.monotonic()>=deadline:raise RuntimeError('Public requester identity is already in use')
+            time.sleep(min(.1,max(0,deadline-time.monotonic())))
+    try:yield
+    finally:lock.__exit__(None,None,None)
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--directory', type=Path, required=True)
     parser.add_argument('--identity-key', type=Path, required=True)
     parser.add_argument('--worker', action='append', required=True)
     parser.add_argument('--count', type=int, default=4)
+    parser.add_argument('--shards',type=int,help='Total distinct shards; defaults to one per worker')
+    parser.add_argument('--parallel-jobs',type=int,help='Concurrent requests, from one to four')
     parser.add_argument('--base-name',choices=['qwen3-0.6b','qwen3-1.7b'],default='qwen3-0.6b')
     parser.add_argument('--legacy',action='store_true')
     parser.add_argument('--candidate-worker')
@@ -35,14 +64,21 @@ def main():
     repo = Path(__file__).resolve().parents[1]
     if args.directory.resolve().is_relative_to(repo):
         parser.error('Experiment state must be outside the checkout')
-    if len(set(args.worker)) != len(args.worker) or not 1 <= len(args.worker) <= 8 or not 1 <= args.count <= 8:
-        parser.error('Use distinct physical workers and bounded shard sizes')
+    try:shard_plan(args.worker,args.count,args.shards)
+    except ValueError as error:parser.error(str(error))
+    if args.parallel_jobs is not None and not 1<=args.parallel_jobs<=4:parser.error('Use one to four concurrent jobs')
     if args.legacy and (args.base_name!='qwen3-0.6b' or args.candidate_worker):
         parser.error('Legacy gradients support only the original small family and no candidate')
     if not 1e-6<=args.learning_rate<=1e-3:parser.error('Candidate step is outside its bound')
     identity = LSPIdentity.load(str(args.identity_key))
     if identity is None:
         parser.error('A locally authorized requester identity is required')
+    with requester_lock(identity.node_id_hex):run(args,identity)
+
+
+def run(args,identity):
+    plan=shard_plan(args.worker,args.count,args.shards)
+    parallel_jobs=min(len(plan),args.parallel_jobs if args.parallel_jobs is not None else min(4,len(args.worker)))
     args.directory.mkdir(parents=True, exist_ok=True, mode=0o700)
     node = LSPNodeV3(identity, host='0.0.0.0', port=0, seeds=get_seed_endpoints(),
         address_book_path=args.directory/'peers.json', allow_private=False)
@@ -56,7 +92,8 @@ def main():
         'requester_is_extra_physical_worker': False, 'contributions': [], 'success': False,
         'candidate_promoted': False, 'started_at': time.time()}
     report.update(base_name=args.base_name,operation=OPERATION if args.legacy else VERSIONED_OPERATION,
-        signed_results=[])
+        signed_results=[],shard_plan=[{'worker_id':worker,'start':index*args.count,'count':args.count} for index,worker in plan],
+        parallel_jobs=parallel_jobs)
     path = args.directory/'report.json'
     atomic_json(path, report)
     try:
@@ -77,10 +114,11 @@ def main():
             route=connect(worker)
             routes[worker]=route
             if not args.legacy:
-                head=fetch_history(work,args.base_name,worker)[-1]
+                history=fetch_history(work,args.base_name,worker);head=history[-1]
                 if 'head' in report and head['release']['release_id']!=report['head']['release']['release_id']:
                     raise ValueError('Physical workers have different language versions')
                 report['head']=head
+                report['history']=history
         atomic_json(path,report)
         cancelled=threading.Event()
         def contribute(index,worker):
@@ -109,8 +147,8 @@ def main():
                 'transport': route['transport'], 'encrypted': route['encrypted']}
             return row,result.to_dict()
         began=time.monotonic()
-        with ThreadPoolExecutor(max_workers=min(4,len(args.worker))) as pool:
-            futures=[pool.submit(contribute,index,worker) for index,worker in enumerate(args.worker)]
+        with ThreadPoolExecutor(max_workers=parallel_jobs) as pool:
+            futures=[pool.submit(contribute,index,worker) for index,worker in plan]
             try:
                 for future in as_completed(futures):
                     row,result=future.result();report['contributions'].append(row);report['signed_results'].append(result)
@@ -120,7 +158,7 @@ def main():
                 raise
         report['contributions'].sort(key=lambda row:row['start'])
         report['signed_results'].sort(key=lambda row:row['output']['start'])
-        report.update(parallel_workers=min(4,len(args.worker)),contribution_wall_seconds=time.monotonic()-began)
+        report.update(parallel_workers=min(parallel_jobs,len(args.worker)),contribution_wall_seconds=time.monotonic()-began)
         if args.candidate_worker:
             route=connect(args.candidate_worker)
             payload={'base_name':args.base_name,'release_id':report['head']['release']['release_id'],

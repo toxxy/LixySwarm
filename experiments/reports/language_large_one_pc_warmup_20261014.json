@@ -1,0 +1,247 @@
+{
+  "base_name": "qwen3-1.7b",
+  "candidate_promoted": false,
+  "contribution_wall_seconds": 50.37481920607388,
+  "contributions": [
+    {
+      "adapter_id": "badef4394af180ab75ca25f0d9d47f2406b92809b53b5845ab65d451cf9c4b3c",
+      "base_hash": "dfff7c96c5ca45c3aa7e6b68fb0650e103ed2c39a7abc912f19b55fdba819cdc",
+      "compute_seconds": 10.584946371032856,
+      "count": 8,
+      "dataset_id": "24eb8b9e9c268021ededa84a171a4b6804cbe58263edbb2b2944f49dd4de64a5",
+      "encrypted": true,
+      "gradient": {
+        "artifact_id": "6cdd9d18953a7ce891e2610f6207120372e7b4c7a7cbe16d8cdf6af1e377dabf",
+        "created_at": 1792019948.6889067,
+        "kind": "gradient",
+        "media_type": "application/octet-stream",
+        "size": 6434888
+      },
+      "gradient_bytes": 6434888,
+      "gradient_id": "6cdd9d18953a7ce891e2610f6207120372e7b4c7a7cbe16d8cdf6af1e377dabf",
+      "loss": 1.2143104917823766,
+      "receipt": {
+        "finished_at": 1792019948.693085,
+        "job_id": "990344d7b8188480dab94d33ff0f6bed18444c8832fa5cdcb9a95ac94809a22a",
+        "requester_node_id": "53cea6456aced3a5a31ad24505aaa47d88e1827d1e7976592c91b54fc0e8980f",
+        "result_digest": "6ff7f4a1031e334471b720a8e29541d90bd9763c0a404ee35de3faa5a0a19a30",
+        "signature": "Q0r3suTRMsFp5bMntu4fNxVUOVAoCNcOttyqt7/dt8UDYAkdV0OGJR06EMDLs194sZxIKSbHXxNt8JEUJoxCBA==",
+        "version": 1,
+        "worker_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255"
+      },
+      "received_at": 1792019988.2941406,
+      "request_started_at": 1792019938.2993176,
+      "retention_loss": 0.0039744069799780846,
+      "seconds": 49.995,
+      "start": 0,
+      "tokens": 49,
+      "transport": "relay",
+      "worker_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255"
+    },
+    {
+      "adapter_id": "badef4394af180ab75ca25f0d9d47f2406b92809b53b5845ab65d451cf9c4b3c",
+      "base_hash": "dfff7c96c5ca45c3aa7e6b68fb0650e103ed2c39a7abc912f19b55fdba819cdc",
+      "compute_seconds": 10.40239261800889,
+      "count": 8,
+      "dataset_id": "24eb8b9e9c268021ededa84a171a4b6804cbe58263edbb2b2944f49dd4de64a5",
+      "encrypted": true,
+      "gradient": {
+        "artifact_id": "659efeba309809cc31d232e961fe923faa194c9447df900aa948c1f8f4431a2d",
+        "created_at": 1792019948.6415396,
+        "kind": "gradient",
+        "media_type": "application/octet-stream",
+        "size": 6434888
+      },
+      "gradient_bytes": 6434888,
+      "gradient_id": "659efeba309809cc31d232e961fe923faa194c9447df900aa948c1f8f4431a2d",
+      "loss": 1.207629849558117,
+      "receipt": {
+        "finished_at": 1792019948.6459243,
+        "job_id": "c7607984b461ce5f0e1108c93e04986fb2eb3e0bea434a15f1bb245f56fec6c0",
+        "requester_node_id": "53cea6456aced3a5a31ad24505aaa47d88e1827d1e7976592c91b54fc0e8980f",
+        "result_digest": "5ff84b35bfd87656b1160f76d8a3131046cf92f54ae61fc6fa5e354202e86ac3",
+        "signature": "pkTKU9RpuEdFCaZNc0BEcwcifuH4UBzZIJ1TkKHEj9q5Nss3tItXcPzcYqyMcMKV5jnu4buEdqtF5hchfvD0DQ==",
+        "version": 1,
+        "worker_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255"
+      },
+      "received_at": 1792019988.6726081,
+      "request_started_at": 1792019938.3006458,
+      "retention_loss": 0.0017785398522391915,
+      "seconds": 50.372,
+      "start": 8,
+      "tokens": 61,
+      "transport": "relay",
+      "worker_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255"
+    }
+  ],
+  "finished_at": 1792019988.6732488,
+  "head": {
+    "descriptor": {
+      "adapter_bytes": 6434736,
+      "adapter_id": "badef4394af180ab75ca25f0d9d47f2406b92809b53b5845ab65d451cf9c4b3c",
+      "base_hash": "dfff7c96c5ca45c3aa7e6b68fb0650e103ed2c39a7abc912f19b55fdba819cdc",
+      "base_name": "qwen3-1.7b",
+      "evaluation_id": "1097ee2349a74b55db352eb006081093c3dd03250cdcecdfc678c91fadabf727",
+      "files": [
+        {
+          "artifact_id": "832dd9e00a68dd83b3c3fb9f5588dad7dcf337a0db50f7d9483f310cd292e92e",
+          "bytes": 11343,
+          "name": "LICENSE"
+        },
+        {
+          "artifact_id": "1ddb5b89ebc90dcb417a45c213d818577e65976454d29385c8f6140771d95197",
+          "bytes": 726,
+          "name": "config.json"
+        },
+        {
+          "artifact_id": "2325da0f15bb848e018c5ae071b7943332e9f871d6b60e2ed22ca97d4cb993d2",
+          "bytes": 239,
+          "name": "generation_config.json"
+        },
+        {
+          "artifact_id": "169ad53ec313c3a34b06c0809216e4fc072cce444a5d4ff2b59690d064130ed5",
+          "bytes": 3441185608,
+          "name": "model-00001-of-00002.safetensors"
+        },
+        {
+          "artifact_id": "912becff8d60672aa8628ef08c05898d9adf17c2ad4ae3caf99b065622fdeff9",
+          "bytes": 622329984,
+          "name": "model-00002-of-00002.safetensors"
+        },
+        {
+          "artifact_id": "0d660e94b165eb912669a5249dff44b83188c4777a07ddb9611fb78d91b0578d",
+          "bytes": 25605,
+          "name": "model.safetensors.index.json"
+        },
+        {
+          "artifact_id": "aeb13307a71acd8fe81861d94ad54ab689df773318809eed3cbe794b4492dae4",
+          "bytes": 11422654,
+          "name": "tokenizer.json"
+        },
+        {
+          "artifact_id": "d5d09f07b48c3086c508b30d1c9114bd1189145b74e982a265350c923acd8101",
+          "bytes": 9732,
+          "name": "tokenizer_config.json"
+        }
+      ],
+      "version": 1
+    },
+    "release": {
+      "config_artifact_id": "bc6dcf13cba57dfe71fcc5bd884e51a3e26f28f28abd3a38e3add8e46af5e2f1",
+      "created_at": 1792002695.3053608,
+      "minimum_client_version": "0.4.0a5",
+      "model_artifact_id": "badef4394af180ab75ca25f0d9d47f2406b92809b53b5845ab65d451cf9c4b3c",
+      "model_format": "safetensors-v1",
+      "network_id": "LIXYMAIN",
+      "previous_release_id": "",
+      "release_id": "3095364a8aed7e74e4b55a954d531246fd1494e4ababaec408a68ce777a63301",
+      "sequence": 0,
+      "signatures": [
+        {
+          "signature": "OwCVAB0l/iDHK7eThjE9JPmM8tSFZ/jO6kYdtfTkARC5fQ6qBhgBI79l0iwUqAMGVmDhuyTRqHHUZORdsh/UAQ==",
+          "signer_id": "53cea6456aced3a5a31ad24505aaa47d88e1827d1e7976592c91b54fc0e8980f"
+        }
+      ],
+      "tokenizer_artifact_id": "aeb13307a71acd8fe81861d94ad54ab689df773318809eed3cbe794b4492dae4",
+      "version": 1
+    }
+  },
+  "operation": "language.gradient.v2",
+  "parallel_jobs": 2,
+  "parallel_workers": 1,
+  "physical_workers": [
+    "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255"
+  ],
+  "requester_id": "53cea6456aced3a5a31ad24505aaa47d88e1827d1e7976592c91b54fc0e8980f",
+  "requester_is_extra_physical_worker": false,
+  "schema_version": 1,
+  "scope": "Physical one-PC public-LSP training warm-up during concurrent large-family copy; not the uncontended scaling baseline",
+  "shard_plan": [
+    {
+      "count": 8,
+      "start": 0,
+      "worker_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255"
+    },
+    {
+      "count": 8,
+      "start": 8,
+      "worker_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255"
+    }
+  ],
+  "signed_results": [
+    {
+      "error": "",
+      "finished_at": 1792019948.693085,
+      "job_id": "990344d7b8188480dab94d33ff0f6bed18444c8832fa5cdcb9a95ac94809a22a",
+      "output": {
+        "adapter_id": "badef4394af180ab75ca25f0d9d47f2406b92809b53b5845ab65d451cf9c4b3c",
+        "base_hash": "dfff7c96c5ca45c3aa7e6b68fb0650e103ed2c39a7abc912f19b55fdba819cdc",
+        "count": 8,
+        "dataset_id": "24eb8b9e9c268021ededa84a171a4b6804cbe58263edbb2b2944f49dd4de64a5",
+        "gradient": {
+          "artifact_id": "6cdd9d18953a7ce891e2610f6207120372e7b4c7a7cbe16d8cdf6af1e377dabf",
+          "created_at": 1792019948.6889067,
+          "kind": "gradient",
+          "media_type": "application/octet-stream",
+          "size": 6434888
+        },
+        "gradient_bytes": 6434888,
+        "gradient_id": "6cdd9d18953a7ce891e2610f6207120372e7b4c7a7cbe16d8cdf6af1e377dabf",
+        "loss": 1.2143104917823766,
+        "retention_loss": 0.0039744069799780846,
+        "start": 0,
+        "tokens": 49
+      },
+      "receipt": {
+        "finished_at": 1792019948.693085,
+        "job_id": "990344d7b8188480dab94d33ff0f6bed18444c8832fa5cdcb9a95ac94809a22a",
+        "requester_node_id": "53cea6456aced3a5a31ad24505aaa47d88e1827d1e7976592c91b54fc0e8980f",
+        "result_digest": "6ff7f4a1031e334471b720a8e29541d90bd9763c0a404ee35de3faa5a0a19a30",
+        "signature": "Q0r3suTRMsFp5bMntu4fNxVUOVAoCNcOttyqt7/dt8UDYAkdV0OGJR06EMDLs194sZxIKSbHXxNt8JEUJoxCBA==",
+        "version": 1,
+        "worker_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255"
+      },
+      "status": "ok"
+    },
+    {
+      "error": "",
+      "finished_at": 1792019948.6459243,
+      "job_id": "c7607984b461ce5f0e1108c93e04986fb2eb3e0bea434a15f1bb245f56fec6c0",
+      "output": {
+        "adapter_id": "badef4394af180ab75ca25f0d9d47f2406b92809b53b5845ab65d451cf9c4b3c",
+        "base_hash": "dfff7c96c5ca45c3aa7e6b68fb0650e103ed2c39a7abc912f19b55fdba819cdc",
+        "count": 8,
+        "dataset_id": "24eb8b9e9c268021ededa84a171a4b6804cbe58263edbb2b2944f49dd4de64a5",
+        "gradient": {
+          "artifact_id": "659efeba309809cc31d232e961fe923faa194c9447df900aa948c1f8f4431a2d",
+          "created_at": 1792019948.6415396,
+          "kind": "gradient",
+          "media_type": "application/octet-stream",
+          "size": 6434888
+        },
+        "gradient_bytes": 6434888,
+        "gradient_id": "659efeba309809cc31d232e961fe923faa194c9447df900aa948c1f8f4431a2d",
+        "loss": 1.207629849558117,
+        "retention_loss": 0.0017785398522391915,
+        "start": 8,
+        "tokens": 61
+      },
+      "receipt": {
+        "finished_at": 1792019948.6459243,
+        "job_id": "c7607984b461ce5f0e1108c93e04986fb2eb3e0bea434a15f1bb245f56fec6c0",
+        "requester_node_id": "53cea6456aced3a5a31ad24505aaa47d88e1827d1e7976592c91b54fc0e8980f",
+        "result_digest": "5ff84b35bfd87656b1160f76d8a3131046cf92f54ae61fc6fa5e354202e86ac3",
+        "signature": "pkTKU9RpuEdFCaZNc0BEcwcifuH4UBzZIJ1TkKHEj9q5Nss3tItXcPzcYqyMcMKV5jnu4buEdqtF5hchfvD0DQ==",
+        "version": 1,
+        "worker_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255"
+      },
+      "status": "ok"
+    }
+  ],
+  "started_at": 1792019932.546704,
+  "success": true,
+  "total_tokens": 110,
+  "concurrent_initial_model_copy": true,
+  "eligible_for_uncontended_scaling_comparison": false,
+  "new_learning_verified": false
+}
