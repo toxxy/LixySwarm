@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import argparse
 import contextlib
+from dataclasses import replace
 import hashlib
 import io
 import json
@@ -20,8 +21,12 @@ if not getattr(sys, "frozen", False):
 def self_test():
     import numpy as np
     import torch
-    from src.network.reference_model import REFERENCE_CONFIG, make_reference_model
+    from src.network.reference_model import REFERENCE_CONFIG, make_reference_model, reference_corpus
+    from src.network.artifact_store import ArtifactStore
+    from src.network.lsp import LSPIdentity
+    from src.network.work_protocol import WorkResult, ResultReceipt
     from src.network.training_worker import validate_gradient_artifact
+    from src.release import ReleaseManifest, ReleaseRegistry, TrustPolicy
 
     if torch.version.cuda is not None:
         raise ValueError("The CPU package must not include a CUDA runtime")
@@ -35,7 +40,8 @@ def self_test():
         torch.save({"format": 1, "config": REFERENCE_CONFIG, "model": model.state_dict()}, checkpoint)
         model_id = hashlib.sha256(checkpoint.read_bytes()).hexdigest()
         tokens = root / "tokens.npy"
-        np.save(tokens, np.arange(65, dtype=np.int64))
+        public_tokens, _ = reference_corpus()
+        np.save(tokens, public_tokens, allow_pickle=False)
         dataset_id = hashlib.sha256(tokens.read_bytes()).hexdigest()
         command = [sys.executable] if getattr(sys, "frozen", False) else [sys.executable, str(Path(__file__).resolve())]
         request = {"device": "cpu", "cpu_threads": 2, "model_path": str(checkpoint),
@@ -57,9 +63,52 @@ def self_test():
                                    expected_start_token=0, expected_token_count=65)
         if hashlib.sha256(path.read_bytes()).hexdigest() != result["gradient"]["artifact_id"]:
             raise ValueError("Frozen gradient hash mismatch")
+        # These are test-only signing fixtures, not connected physical nodes.
+        # Only public keys reach the compute child; no signing keys or personal
+        # state are loaded by ordinary inference/training/candidate jobs.
+        publisher = LSPIdentity.generate()
+        workers = [LSPIdentity.generate(), LSPIdentity.generate()]
+        store = ArtifactStore(root / "public" / "artifacts")
+        base = store.import_file(checkpoint, kind="model")
+        genesis = ReleaseManifest.create(model_artifact_id=base.artifact_id,
+                                        model_format="pytorch-weights-only-v1", sequence=0).sign(publisher)
+        policy = TrustPolicy(trusted_signers=(publisher.node_id_hex,), pinned_genesis_release_id=genesis.release_id)
+        registry = ReleaseRegistry(root / "public" / "releases")
+        registry.accept(genesis, policy, store)
+        registry.activate(genesis.release_id, policy, store)
+        contributions = []
+        for index, worker in enumerate(workers):
+            start = index * 7200
+            if index:
+                request["output_directory"] = str(root / "second-job")
+                request["payload"]["start_token"] = start
+                gradient = subprocess.run(command, input=json.dumps(request), text=True, capture_output=True, timeout=45, check=True)
+                result = json.loads(gradient.stdout)
+            imported = store.import_file(Path(result.pop("gradient_path")), kind="gradient", media_type="application/x-npz")
+            result["gradient"] = imported.to_dict()
+            work = WorkResult(job_id=hashlib.sha256(f"package-check-{index}".encode()).hexdigest(), status="ok", output=result)
+            work = replace(work, receipt=ResultReceipt.create(work, worker, publisher.node_id_hex).to_dict())
+            contributions.append({"peer_id": worker.node_id_hex, "start_token": start, "token_count": 65,
+                                  "gradient_id": imported.artifact_id, "result": work.to_dict()})
+        from dataclasses import asdict
+        candidate_request = {"action": "candidate", "device": "cpu", "cpu_threads": 2,
+                             "deadline": time.time() + 45, "output_directory": str(root / "candidate"),
+                             "public_directory": str(root / "public"), "store_quota": 32 * 1024**2,
+                             "trust_policy": asdict(policy), "base_release": genesis.to_dict(),
+                             "requester_node_id": publisher.node_id_hex,
+                             "trusted_workers": [worker.node_id_hex for worker in workers],
+                             "dataset_id": dataset_id, "contributions": contributions}
+        candidate_process = subprocess.run(command, input=json.dumps(candidate_request), text=True, capture_output=True, timeout=45, check=True)
+        candidate = json.loads(candidate_process.stdout)
+        if not candidate["accepted"] or candidate["release"]["signatures"] or registry.active().release_id != genesis.release_id:
+            raise ValueError("Frozen evaluator did not return an unsigned improvement without promotion")
     return {"success": True, "frozen": bool(getattr(sys, "frozen", False)), "torch_version": torch.__version__,
             "cuda_runtime": False, "inference_logits": 256, "gradient_tokens": 64,
-            "personal_state_loaded": False, "network_identity_loaded": False}
+            "candidate_evaluated": True, "candidate_signed_or_promoted": False,
+            "candidate_loss_before": candidate["report"]["before_loss"],
+            "candidate_loss_after": candidate["report"]["after_loss"],
+            "test_fixture_signers": 3, "personal_state_loaded": False,
+            "job_process_signing_keys_loaded": False}
 
 
 def main():
