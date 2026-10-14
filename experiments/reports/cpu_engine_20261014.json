@@ -25,5 +25,26 @@
     "cpu_logit_max_abs_delta": 0.0,
     "ram_lease_gib": 2,
     "installed_engine_verified": true
+  },
+  "clean_container_check": {
+    "success": true,
+    "image": "ubuntu@sha256:534baea6a22c03a63003dbc8dbe78fe34bc0d7e595d9a9dc9834884ff530eb55",
+    "python_installed": false,
+    "network": "none",
+    "root_filesystem": "read-only",
+    "cpu_limit": 2,
+    "ram_limit_gib": 2,
+    "candidate_evaluated": true,
+    "candidate_signed_or_promoted": false,
+    "loss_before": 5.560859923513588,
+    "loss_after": 5.537755013824001
+  },
+  "ci_artifact_installation": {
+    "run_id": 38585333266,
+    "platform": "ubuntu-22.04",
+    "manifest_sha256": "26d73b28d1340fd9c2951f52ee3d154ccdb71e2cbeebf1272fd2c19af4ae12b9",
+    "entry_mode_before_install": "0o755",
+    "entry_mode_after_install": "0o755",
+    "frozen_inference_and_gradient_check": true
   }
 }
