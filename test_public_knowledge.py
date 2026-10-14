@@ -1,4 +1,5 @@
 import json
+from dataclasses import replace
 import threading
 import time
 from pathlib import Path
@@ -166,5 +167,19 @@ def test_cached_results_cannot_bypass_withdrawn_consent(tmp_path):
         enabled=True; service.governor.policy=ContributionPolicy.for_mode("disabled")
         service.work._execute_offer(work.to_dict(),peer.node_id_hex)
         assert outputs[-1]["status"]=="rejected" and len(calls)==1
+    finally:
+        service.close()
+
+
+def test_known_catalog_provider_is_targeted_before_general_stale_address_queue(tmp_path):
+    source=tmp_path/"source"; source.mkdir(); catalog,_=run_fixture(source)
+    provider=LSPIdentity.generate().node_id_hex
+    catalog=replace(catalog,bootstrap_providers=(provider,))
+    instance=node(tmp_path/"receiver"); attempts=[]
+    instance.connect_node=lambda peer,timeout:attempts.append(peer) or False
+    service=PublicKnowledgeService(instance,tmp_path/"receiver",RESOURCES,catalog=catalog)
+    try:
+        service._acquire(threading.Event())
+        assert attempts==[provider] and service.snapshot()["state"]=="pending"
     finally:
         service.close()

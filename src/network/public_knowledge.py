@@ -238,6 +238,13 @@ class PublicKnowledgeService:
 
     def _acquire(self, cancellation):
         try:
+            # Pin the operated catalog providers before a long general dial
+            # queue of saved, now offline experimental addresses. These are
+            # discovery hints, not additional model-signing authorities.
+            for peer in self.catalog.bootstrap_providers:
+                if cancellation.is_set(): return
+                if peer!=self.node.identity.node_id_hex and peer not in self.node.connected_node_ids:
+                    self.node.connect_node(peer,timeout=12)
             candidates = [p["node_id"] for p in self.node.peers()
                           if p.get("capabilities", {}).get("public_artifacts_v1")]
             if not candidates:

@@ -11,6 +11,7 @@ class CatalogEntry:
     policy: TrustPolicy
     max_chain_length: int = 16
     allow_signed_updates: bool = False
+    bootstrap_providers: tuple[str,...] = ()
 
 
 REFERENCE_CATALOG = CatalogEntry(
@@ -22,4 +23,6 @@ REFERENCE_CATALOG = CatalogEntry(
     ),
     max_chain_length=64,
     allow_signed_updates=True,
+    bootstrap_providers=("c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+                         "ea914d97caafef310e50385034abae9a50ba86496b0e9cbf4679e6070e4c25b0"),
 )

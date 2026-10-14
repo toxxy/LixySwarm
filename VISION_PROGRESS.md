@@ -162,6 +162,8 @@ El [informe de aprendizaje nativo](experiments/reports/native_learning_20261014.
 
 La evaluación sigue siendo predicción de bytes sobre hechos sintéticos conocidos. Estas promociones comprueban continuidad y aprendizaje distribuido; la calidad conversacional, el beneficio de escalar nodos y las comparaciones de memoria y especialización mantienen sus propios gates.
 
+El [CI f806197](https://github.com/toxxy/LixySwarm/actions/runs/38579619373) completó los tres paquetes después de la corrección del cierre. Las pruebas de ambos ejecutables por Internet adquirieron la versión 6 y terminaron limpiamente. Una observación adicional detectó demora al recorrer direcciones antiguas de ensayos: el catálogo inicial añade dos identidades de proveedores operados como pistas de conexión directa por identidad, antes de continuar la búsqueda general. Estas pistas no otorgan autoridad sobre modelos ni sustituyen la validación de firmas. El reporte del ejecutable registra ahora el tiempo de adquisición además del tiempo de conexión.
+
 Desde el checkout y su entorno Python con `cryptography`:
 
 ```bash

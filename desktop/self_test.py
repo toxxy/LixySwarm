@@ -65,6 +65,7 @@ def main():
                 assert all(ipaddress.ip_address(p.get("relay_host") or p["host"]).is_global for p in snapshot["diagnostics"]["peers"])
             identity = snapshot["status"]["node_id"]
             if args.knowledge:
+                acquiring_started=time.monotonic()
                 window.knowledge_button.click()
                 wait(lambda: controller.snapshot()["diagnostics"].get("knowledge", {}).get("state") == "available", timeout=180)
                 value=controller.snapshot()["diagnostics"]["knowledge"]
@@ -76,7 +77,8 @@ def main():
                 assert release.sequence >= 4 and value["sharing"]
                 assert (controller.directory/"public/releases/manifests"/f"{REFERENCE_CATALOG.release_id}.json").exists()
                 report.update(public_knowledge_ready=True, public_release_id=release.release_id,
-                              public_model_id=release.model_artifact_id, public_bytes=store.total_bytes())
+                              public_model_id=release.model_artifact_id, public_bytes=store.total_bytes(),
+                              model_acquisition_s=round(time.monotonic()-acquiring_started,2))
             window.profile.setCurrentIndex(0); window.cpu.setValue(17); window.gpu.setValue(12)
             window.save_resources()
             wait(lambda: controller.confirmed_settings() and controller.snapshot()["diagnostics"]["settings"]["policy"]["cpu_percent"] == 17)
