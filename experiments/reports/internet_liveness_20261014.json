@@ -1,0 +1,157 @@
+{
+  "success": true,
+  "fault_duration_s": 80,
+  "source_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+  "same_process": true,
+  "detected_loss": true,
+  "timeline": [
+    {
+      "elapsed_s": 0.0,
+      "timestamp": 1791960219.0857897,
+      "seed_connected": true,
+      "peers": 2,
+      "state": "connected",
+      "same_process": true
+    },
+    {
+      "elapsed_s": 5.0,
+      "timestamp": 1791960224.0862293,
+      "seed_connected": true,
+      "peers": 2,
+      "state": "connected",
+      "same_process": true
+    },
+    {
+      "elapsed_s": 10.0,
+      "timestamp": 1791960229.0865526,
+      "seed_connected": true,
+      "peers": 2,
+      "state": "connected",
+      "same_process": true
+    },
+    {
+      "elapsed_s": 15.0,
+      "timestamp": 1791960234.086957,
+      "seed_connected": true,
+      "peers": 2,
+      "state": "connected",
+      "same_process": true
+    },
+    {
+      "elapsed_s": 20.0,
+      "timestamp": 1791960239.0873551,
+      "seed_connected": true,
+      "peers": 2,
+      "state": "connected",
+      "same_process": true
+    },
+    {
+      "elapsed_s": 25.0,
+      "timestamp": 1791960244.0877922,
+      "seed_connected": true,
+      "peers": 2,
+      "state": "connected",
+      "same_process": true
+    },
+    {
+      "elapsed_s": 30.0,
+      "timestamp": 1791960249.0880578,
+      "seed_connected": true,
+      "peers": 2,
+      "state": "connected",
+      "same_process": true
+    },
+    {
+      "elapsed_s": 35.0,
+      "timestamp": 1791960254.0883772,
+      "seed_connected": true,
+      "peers": 2,
+      "state": "connected",
+      "same_process": true
+    },
+    {
+      "elapsed_s": 40.0,
+      "timestamp": 1791960259.0887856,
+      "seed_connected": true,
+      "peers": 2,
+      "state": "connected",
+      "same_process": true
+    },
+    {
+      "elapsed_s": 45.0,
+      "timestamp": 1791960264.0891995,
+      "seed_connected": true,
+      "peers": 2,
+      "state": "connected",
+      "same_process": true
+    },
+    {
+      "elapsed_s": 50.0,
+      "timestamp": 1791960269.0896037,
+      "seed_connected": true,
+      "peers": 2,
+      "state": "connected",
+      "same_process": true
+    },
+    {
+      "elapsed_s": 55.0,
+      "timestamp": 1791960274.089894,
+      "seed_connected": true,
+      "peers": 2,
+      "state": "connected",
+      "same_process": true
+    },
+    {
+      "elapsed_s": 60.0,
+      "timestamp": 1791960279.090311,
+      "seed_connected": true,
+      "peers": 2,
+      "state": "connected",
+      "same_process": true
+    },
+    {
+      "elapsed_s": 65.0,
+      "timestamp": 1791960284.090878,
+      "seed_connected": true,
+      "peers": 2,
+      "state": "connected",
+      "same_process": true
+    },
+    {
+      "elapsed_s": 70.0,
+      "timestamp": 1791960289.0912614,
+      "seed_connected": true,
+      "peers": 2,
+      "state": "connected",
+      "same_process": true
+    },
+    {
+      "elapsed_s": 75.0,
+      "timestamp": 1791960294.0916033,
+      "seed_connected": false,
+      "peers": 0,
+      "state": "connecting",
+      "same_process": true
+    },
+    {
+      "elapsed_s": 80.0,
+      "timestamp": 1791960299.092021,
+      "seed_connected": false,
+      "peers": 0,
+      "state": "connecting",
+      "same_process": true
+    },
+    {
+      "elapsed_s": 85.0,
+      "timestamp": 1791960304.0923991,
+      "seed_connected": true,
+      "peers": 1,
+      "state": "connected",
+      "same_process": true
+    }
+  ],
+  "fault_rules_removed_timestamp": 1791960298.1768308,
+  "fault_cleanup_confirmed": true,
+  "observed_recovery_after_restoring_s": 5.916,
+  "scope": "One physical PC, public LSP TCP packet loss; administration over VPN unaffected. Same process and identity recovered; this does not test a second relay."
+}

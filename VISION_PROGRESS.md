@@ -91,6 +91,12 @@ El despliegue posterior al piloto expuso una conexión TCP de la primera PC que 
 
 Se añadieron pings cifrados cada 15 segundos, cierre tras 60 segundos sin recibir una trama válida y espera máxima de cinco segundos para enviar una trama. El cierre elimina la sesión y sus túneles, notifica trabajos pendientes y despierta el descubrimiento para volver a conectar. La alternativa de esperar el timeout TCP del sistema conserva sesiones sin respuesta durante demasiado tiempo. Una prueba con un proxy TCP que descarta todos los paquetes, manteniendo sockets abiertos, comprobó caducidad y reconexión cifrada sin reiniciar el nodo; una conexión inactiva sana sobrevivió varias ventanas.
 
+El [ensayo público de interrupción](experiments/reports/internet_liveness_20261014.json) descartó durante 80 segundos únicamente el tráfico TCP LSP de una PC. El nodo pasó de conectado a reconectando y volvió al seed con el mismo proceso e identidad, dentro de los seis segundos observados tras retirar las reglas. Recuperó también el enlace cifrado con la otra PC por relay. Las reglas temporales se retiraron automáticamente y su ausencia se verificó; al finalizar quedaron tres servicios activos y frescos. Este ensayo sigue usando un único relay, por lo que no cumple el gate de sustitución por otro operador.
+
+Pasaron 111 pruebas, incluyendo pérdida silenciosa de paquetes. El [CI 59a26a3](https://github.com/toxxy/LixySwarm/actions/runs/38523688292) reconstruyó y verificó los tres paquetes. Las apps Linux actualizadas se probaron por Internet en ambas PCs, con conexiones de 0,72 y 0,76 segundos y controles, pausa e identidad conservados. Los lanzadores del menú apuntan a los nuevos paquetes. La observación de continuidad debe empezar después de esta interrupción controlada; todavía no han transcurrido 24 horas.
+
+Próximo tramo del goal: integrar el almacenamiento público y los trabajadores como procesos separados del servicio de cada PC, con una sola identidad por equipo; incorporar adquisición de modelos y uso desde la app. La referencia de bytes conservará su función de evaluación del protocolo, y el modelo conversacional tendrá su propia evaluación de calidad.
+
 Desde el checkout y su entorno Python con `cryptography`:
 
 ```bash
