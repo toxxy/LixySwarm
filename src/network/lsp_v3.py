@@ -11,6 +11,7 @@ import asyncio
 import base64
 import json
 import logging
+import math
 import os
 import struct
 import threading
@@ -269,6 +270,7 @@ class PeerSession:
     hello: dict
     encryption_key: bytes = field(repr=False)
     connected_at: float = field(default_factory=time.time)
+    last_received: float = field(default_factory=time.monotonic)
     write_lock: asyncio.Lock = field(default_factory=asyncio.Lock)
     task: Optional[asyncio.Task] = None
     relay_node_id: str = ""
@@ -295,9 +297,13 @@ class PeerSession:
         if self.writer.is_closing():
             raise ConnectionError("Peer session is closed")
         framed = struct.pack("!I", len(raw)) + raw
-        async with self.write_lock:
-            self.writer.write(framed)
-            await self.writer.drain()
+        async def write():
+            async with self.write_lock:
+                self.writer.write(framed)
+                await self.writer.drain()
+        # Bound both queued writers and a stalled TCP/relay drain. A healthy
+        # small frame should never wait indefinitely behind a dead session.
+        await asyncio.wait_for(write(), timeout=5.0)
 
 
 class LSPNodeV3:
@@ -324,12 +330,19 @@ class LSPNodeV3:
         relay_enabled: bool = False,
         max_relay_streams: int = 64,
         max_relay_streams_per_peer: int = 4,
+        heartbeat_interval: float = 15.0,
+        session_idle_timeout: float = 60.0,
     ):
         self.identity = identity
         self.host = host
         self.port = int(port)
         self.advertised_host = advertised_host
         self.network_id = network_id
+        if not math.isfinite(heartbeat_interval) or not math.isfinite(session_idle_timeout) or heartbeat_interval <= 0 or session_idle_timeout < 2 * heartbeat_interval:
+            raise ValueError("Session idle timeout must cover at least two finite heartbeat intervals")
+        self.heartbeat_interval = float(heartbeat_interval)
+        self.session_idle_timeout = float(session_idle_timeout)
+        self._liveness_task = None
         self.capabilities = dict(capabilities or {
             "pheromone": True,
             "global_memory": True,
@@ -673,9 +686,17 @@ class LSPNodeV3:
             if sockets:
                 self.port = int(sockets[0].getsockname()[1])
             await self.peer_manager.start()
+            self._liveness_task = asyncio.create_task(self._maintain_liveness())
             self._ready.set()
             await self._stop_event.wait()
         finally:
+            if self._liveness_task:
+                self._liveness_task.cancel()
+                try:
+                    await self._liveness_task
+                except asyncio.CancelledError:
+                    pass
+                self._liveness_task = None
             await self.peer_manager.stop()
             await self.relay.stop()
             if self._server:
@@ -691,6 +712,26 @@ class LSPNodeV3:
                 self._server = None
             with self._snapshot_lock:
                 self._snapshot.clear()
+
+    async def _maintain_liveness(self):
+        while True:
+            await asyncio.sleep(self.heartbeat_interval)
+            await asyncio.gather(*(self._probe_session(session)
+                for session in list(self._sessions.values())), return_exceptions=True)
+
+    async def _probe_session(self, session):
+        if self._sessions.get(session.node_id) is not session:
+            return
+        if time.monotonic() - session.last_received >= self.session_idle_timeout:
+            log.info("LSP v3 session unresponsive id=%s; reconnecting", session.node_id[:16])
+            await self._close_session(session)
+            return
+        try:
+            await session.send_raw(self._new_packet(PacketType.PING,
+                json.dumps({"sent_at": time.time()}).encode(), ttl=1,
+                encryption_key=session.encryption_key))
+        except Exception:
+            await self._close_session(session)
 
     # Handshake and session management -------------------------------------
 
@@ -994,6 +1035,7 @@ class LSPNodeV3:
             if not (packet.flags & ENCRYPTED_FLAG):
                 raise ProtocolError("Established LSP v3 packet is not encrypted")
             packet = self._decrypt_packet(packet, session.encryption_key)
+            session.last_received = time.monotonic()
             await self._process_packet(session, packet)
 
     async def _process_packet(self, session: PeerSession, packet: V3Packet):

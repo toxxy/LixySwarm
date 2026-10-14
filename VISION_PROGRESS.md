@@ -85,6 +85,12 @@ El corpus de evaluación comparte los hechos sintéticos de entrenamiento, con c
 - La prueba conserva acceso a los servicios de conectividad de las dos PCs, que no sirven estos checkpoints. Comprueba independencia de los procesos productores y almacenamiento vacío; apagar físicamente la PC productora sigue pendiente y no se da por cumplido con este ensayo.
 - Pasaron 110 pruebas de aprendizaje, versiones, artefactos, trabajo, transporte, telemetría, interfaz y límites. Los ensayos temporales se mantienen separados del cliente de uso diario.
 
+### Recuperación de conexiones sin respuesta
+
+El despliegue posterior al piloto expuso una conexión TCP de la primera PC que permanecía abierta con datos sin confirmar después de reiniciar el seed. La interfaz local conservaba pares antiguos mientras el collector ya había caducado su estado. Esta observación invalida dar por terminada la continuidad con los ensayos anteriores.
+
+Se añadieron pings cifrados cada 15 segundos, cierre tras 60 segundos sin recibir una trama válida y espera máxima de cinco segundos para enviar una trama. El cierre elimina la sesión y sus túneles, notifica trabajos pendientes y despierta el descubrimiento para volver a conectar. La alternativa de esperar el timeout TCP del sistema conserva sesiones sin respuesta durante demasiado tiempo. Una prueba con un proxy TCP que descarta todos los paquetes, manteniendo sockets abiertos, comprobó caducidad y reconexión cifrada sin reiniciar el nodo; una conexión inactiva sana sobrevivió varias ventanas.
+
 Desde el checkout y su entorno Python con `cryptography`:
 
 ```bash
