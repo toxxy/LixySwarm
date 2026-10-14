@@ -39,12 +39,12 @@ def main():
         # QtGui links the GLVND dispatch libraries even with raster/offscreen
         # rendering. PyInstaller normally excludes them as system graphics.
         listing = subprocess.check_output(["ldconfig", "-p"], text=True)
-        for name in ("libEGL.so.1", "libOpenGL.so.0", "libGLX.so.0", "libGLdispatch.so.0"):
+        for name in ("libEGL.so.1", "libOpenGL.so.0", "libGLX.so.0", "libGLdispatch.so.0", "libGL.so.1", "libxcb.so.1"):
             matches = [line.split("=>", 1)[1].strip() for line in listing.splitlines() if line.strip().startswith(name + " ") and "=>" in line]
             if not matches:
                 raise RuntimeError(f"Build machine is missing {name}")
             command += ["--add-binary", f"{matches[0]}{os.pathsep}."]
-        for name in ("libegl1", "libopengl0", "libglx0", "libglvnd0"):
+        for name in ("libegl1", "libopengl0", "libglx0", "libglvnd0", "libgl1", "libxcb1"):
             source = Path("/usr/share/doc") / name / "copyright"
             if source.exists():
                 shutil.copy2(source, licenses / f"{name}-copyright.txt")

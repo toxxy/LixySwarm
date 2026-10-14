@@ -5,6 +5,7 @@ import json
 import os
 import sys
 import tempfile
+import contextlib
 import time
 from pathlib import Path
 
@@ -20,6 +21,7 @@ def main():
     parser.add_argument("--prepare-engine", action="store_true")
     parser.add_argument("--report", type=Path)
     parser.add_argument("--screenshot", type=Path)
+    parser.add_argument("--work-directory", type=Path)
     args = parser.parse_args()
     if args.knowledge and not args.internet:
         parser.error("The real catalog acquisition gate requires --internet")
@@ -34,7 +36,11 @@ def main():
     report = {"success": False, "internet": args.internet}
     seed = None
     previous_seeds = os.environ.get("LIXYSWARM_BOOTSTRAP_SEEDS")
-    with tempfile.TemporaryDirectory(prefix="lixyswarm-package-") as temporary:
+    if args.work_directory:
+        args.work_directory.mkdir(parents=True,exist_ok=True)
+        if any(args.work_directory.iterdir()): parser.error("Verification requires an empty work directory")
+    workspace=contextlib.nullcontext(str(args.work_directory)) if args.work_directory else tempfile.TemporaryDirectory(prefix="lixyswarm-package-")
+    with workspace as temporary:
         root = Path(temporary)
         controller = NodeController(root / "clean-node", port=0, allow_private=not args.internet)
         def wait(predicate, timeout=30):
@@ -158,6 +164,7 @@ def main():
             report["error"] = f"{type(exc).__name__}: {exc}"
             report["traceback"] = traceback.format_exc()
             report["node_log"] = controller.log_tail()
+            report["knowledge_diagnostics"]=controller.snapshot()["diagnostics"].get("knowledge",{})
         finally:
             if window is not None:
                 # Dispose QObject connections while QApplication and Python

@@ -19,5 +19,18 @@
   "reconnect_keeps_identity": true,
   "calculation_engines_loaded": false,
   "scope": "Frozen Linux app: Internet model acquisition plus public CPU engine download and standalone checks",
-  "engine_release": "https://github.com/toxxy/LixySwarm/releases/tag/cpu-engine-0.4.0a1"
+  "engine_release": "https://github.com/toxxy/LixySwarm/releases/tag/cpu-engine-0.4.0a1",
+  "clean_linux_app_check": {
+    "success": true,
+    "internet": false,
+    "connection_s": 0.67,
+    "controls_confirmed": true,
+    "pause_keeps_connection": true,
+    "reconnect_keeps_identity": true,
+    "calculation_engines_loaded": false,
+    "python_installed": false,
+    "network": "none",
+    "image": "ubuntu@sha256:534baea6a22c03a63003dbc8dbe78fe34bc0d7e595d9a9dc9834884ff530eb55",
+    "note": "Offscreen UI and lightweight node. Public model and CPU downloads are checked separately over Internet."
+  }
 }

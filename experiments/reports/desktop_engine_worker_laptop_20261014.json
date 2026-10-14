@@ -1,0 +1,35 @@
+{
+  "success": true,
+  "internet": true,
+  "public_knowledge_ready": true,
+  "public_release_id": "977603e7a2c2070d6cd1c705e53f763d7e31057d5980f36cc02aefb2bb7ce25c",
+  "public_model_id": "23e44d2c2f0834f798c4309b7f0360cae0b9d4769bb84a452498e95d322524a9",
+  "public_bytes": 13092926,
+  "model_acquisition_s": 38.8,
+  "engine_downloaded_and_verified": true,
+  "engine_frozen": true,
+  "engine_candidate_evaluated": true,
+  "engine_devices": [
+    "cpu"
+  ],
+  "engine_preparation_s": 59.36,
+  "app_worker_cpu_inference_verified": true,
+  "app_worker_receipt": {
+    "version": 1,
+    "job_id": "82116659d3bfc6e20b741875f78b109415e93eb3add320bbb689c9420030457a",
+    "worker_node_id": "91981e954f110ce68fe4186dba2ac37d245baa2da70d27eb4c12e88943e59f04",
+    "requester_node_id": "07e36f25b614efa1d69fdd7fc23963ed753282884ac69b3f63e495f6a567fa63",
+    "result_digest": "5ccfe348fc364a51157e29de8a5d2e92e21213b3a8401fde11bdf6c1b80cf76a",
+    "finished_at": 1791994584.096191,
+    "signature": "zrsz/zSfzlXn/g1pXOF5KFgSzUttDGeUHCOTDWQtq5um++cGfE0Tzg9GMEWg1N6lOn/tc9OBKw4wDNA0Y2TtAA=="
+  },
+  "app_worker_model_id": "23e44d2c2f0834f798c4309b7f0360cae0b9d4769bb84a452498e95d322524a9",
+  "pause_preserves_public_weights": true,
+  "connection_s": 0.77,
+  "controls_confirmed": true,
+  "pause_keeps_connection": true,
+  "reconnect_keeps_identity": true,
+  "calculation_engines_loaded": false,
+  "scope": "Fresh frozen Linux app and test requester on laptop; public Internet routes, model v6 and CPU work. These identities are test instances, not additional physical machines.",
+  "engine_release": "https://github.com/toxxy/LixySwarm/releases/tag/cpu-engine-0.4.0a1"
+}
