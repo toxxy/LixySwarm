@@ -25,6 +25,18 @@ def materialize_version(directory,name,release_id,*,allowed=lambda:True):
     return _materialize(directory,store,bundle,release,descriptor,version_dependencies(bundle),allowed)
 
 
+def materialize_accepted_version(directory,name,release_id,*,allowed=lambda:True):
+    """Prepare an accepted ancestor for inference, without changing the head."""
+    from src.release.language_versions import LanguageVersionRegistry,validate_bundle,dependencies as version_dependencies
+    directory=Path(directory);root=directory/'public/language'
+    registry=LanguageVersionRegistry(root,name);head=registry.head()
+    matches=[bundle for bundle in registry.history(head['release']['release_id']) if bundle['release']['release_id']==release_id]
+    if len(matches)!=1:raise ValueError('Language inference requires a version in the accepted history')
+    bundle=matches[0];release,descriptor=validate_bundle(bundle)
+    store=ArtifactStore(root/'artifacts',max_artifact_bytes=4*1024**3,max_total_bytes=8*1024**3)
+    return _materialize(directory,store,bundle,release,descriptor,version_dependencies(bundle),allowed)
+
+
 def _materialize(directory,store,bundle,release,descriptor,required,allowed):
     for identifier,size in required:
         if not allowed():raise RuntimeError('Preparación de lenguaje detenida')

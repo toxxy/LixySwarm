@@ -1,6 +1,6 @@
 # App de LixySwarm
 
-El código `0.4.0a8` del participante instalable incluye Estado, Chat, Recursos y Actividad. La conexión, los permisos locales, la pausa y la reconexión tienen un proceso de red separado de la interfaz. El chat integra consultas al experto del piloto y conversación cifrada local. Recursos incorpora preparación y reanudación del experto GPU compatible. La [descarga pública `0.4.0a7`](https://github.com/toxxy/LixySwarm/releases/tag/v0.4.0a7) incluye chat y preparación guiada; las instalaciones limpias integrales de lenguaje conservan sus condiciones pendientes.
+El código `0.4.0a9` del participante instalable incluye Estado, Chat, Recursos y Actividad. La conexión, los permisos locales, la pausa y la reconexión tienen un proceso de red separado de la interfaz. El chat integra consultas al experto del piloto y conversación cifrada local, además de seguimiento de versiones evaluadas sin descargar sus pesos. Recursos incorpora preparación y reanudación del experto GPU compatible. La [descarga pública `0.4.0a7`](https://github.com/toxxy/LixySwarm/releases/tag/v0.4.0a7) incluye chat y preparación guiada; las instalaciones limpias integrales de lenguaje conservan sus condiciones pendientes. Windows y macOS quedan para la validación final.
 
 El ejecutable incluye Python y los componentes de interfaz y transporte. La instalación por usuario conserva la identidad y el estado fuera del paquete. En Linux crea una entrada en el menú de aplicaciones; Windows y macOS tienen sus propios adaptadores de instalación.
 

@@ -156,7 +156,7 @@ def run(directory: Path, *, host="0.0.0.0", port=7338, interval=15, allow_privat
             atomic_json(directory / "diagnostics.json", {
                 "node_id": identity.node_id_hex, "timestamp_ms": status["timestamp_ms"],
                 "port": node.port, "peers": peers,
-                "pid": os.getpid(), "runtime_version": "0.4.0a8", "controls_version": 1,
+                "pid": os.getpid(), "runtime_version": "0.4.0a9", "controls_version": 1,
                 "settings": asdict(settings), "worker_ready": computation["ready"] or conversation["ready"] or training["ready"], "control_error": error,
                 "knowledge": public_knowledge,
                 "compute":computation,
@@ -229,10 +229,11 @@ def run(directory: Path, *, host="0.0.0.0", port=7338, interval=15, allow_privat
                     "inference":compute.ready or language.ready, "training":compute.ready and bool(compute.engine.training_requesters) or language_training.ready, "memory":False}
                 node.resource_profile["worker_ready"]=compute.ready or language.ready or language_training.ready
                 node.resource_profile["model_artifact_id"]=public_state["model_id"] if compute.ready else language.engine.adapter_id if language.ready else ""
-                node.resource_profile["models"]=list(dict.fromkeys(([public_state["model_id"]] if compute.ready else [])+([language.engine.adapter_id] if language.ready else [])+([language_training.snapshot()['model_id']] if language_training.ready else [])))
+                language_models=language.approved_models()
+                node.resource_profile["models"]=list(dict.fromkeys(([public_state["model_id"]] if compute.ready else [])+language_models+([language_training.snapshot()['model_id']] if language_training.ready else [])))
                 node.capabilities["inference"]=compute.ready or language.ready
                 node.capabilities["language_inference_v1"]=language.ready
-                node.capabilities["language_inference_models"]=[language.engine.adapter_id] if language.ready else []
+                node.capabilities["language_inference_models"]=language_models
                 node.resource_profile["language_families_v1"]=families.snapshot()["available"]
                 node.capabilities["training"]=compute.ready and bool(compute.engine.training_requesters) or language_training.ready
                 node.capabilities["language_training_v1"]=language_training.ready and language_training.engine.base_name=='qwen3-0.6b'

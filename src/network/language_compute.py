@@ -72,7 +72,24 @@ class LanguageComputeService:
                 self.completed=value
             except (OSError,ValueError,TypeError,KeyError):pass
         knowledge.work.register_handler(LANGUAGE_OPERATION,"inference",self.inference,
-            permit_cached=lambda execution,result:self.ready and result.get("model_id")==self.engine.adapter_id)
+            permit_cached=lambda execution,result:self.ready and result.get("model_id") in self.approved_models())
+
+    def _ancestors(self):
+        """Only predecessors of the locally selected adaptation may answer."""
+        from src.release.language_versions import LanguageVersionRegistry
+        from .artifact_store import ArtifactStore
+        try:
+            registry=LanguageVersionRegistry(self.directory/'public/language',self.engine.base_name)
+            chain=registry.history(registry.head()['release']['release_id'])
+            selected=max(i for i,row in enumerate(chain) if row['release']['model_artifact_id']==self.engine.adapter_id)
+            store=ArtifactStore(self.directory/'public/language/artifacts',max_artifact_bytes=4*1024**3,max_total_bytes=8*1024**3)
+            return {row['release']['model_artifact_id']:row['release']['release_id'] for row in chain[:selected]
+                if store.object_path(row['release']['model_artifact_id']).is_file()}
+        except (OSError,ValueError,TypeError,KeyError,StopIteration):return {}
+
+    def approved_models(self):
+        if not self.ready:return []
+        return list(dict.fromkeys([self.engine.adapter_id,*self._ancestors()]))
 
     def update(self,settings):
         self.settings=settings
@@ -94,20 +111,29 @@ class LanguageComputeService:
     def inference(self,payload,execution):
         if set(payload)!={"model_artifact_id","messages"}:raise ValueError("Invalid language operation schema")
         validate_messages(payload["messages"])
-        if payload["model_artifact_id"]!=self.engine.adapter_id:raise ValueError("Only the exact locally approved adapter can answer")
+        model_id=payload['model_artifact_id'];ancestors=self._ancestors() if model_id!=self.engine.adapter_id else {}
+        if model_id!=self.engine.adapter_id and model_id not in ancestors:raise ValueError("Only the exact locally approved adapter or its accepted ancestors can answer")
         if not self.ready or not execution.resource_requirements().gpu_required or execution.resource_requirements().ram_gb<self.required_ram():raise ComputeProcessError("Language inference requires a permitted GPU and sufficient RAM lease")
         permission=asdict(self.settings.policy);configuration=asdict(self.engine)
-        request={"action":"inference","device":"cuda","base_name":self.engine.base_name,"base_directory":self.engine.base_directory,
-                 "adapter_file":self.engine.adapter_file,"adapter_id":self.engine.adapter_id,"messages":payload["messages"],
+        def allowed():
+            execution.raise_if_cancelled()
+            return self.ready and asdict(self.settings.policy)==permission and asdict(self.engine)==configuration
+        base_directory=self.engine.base_directory;adapter_file=self.engine.adapter_file
+        if model_id!=self.engine.adapter_id:
+            from .language_install import materialize_accepted_version
+            base=materialize_accepted_version(self.directory,self.engine.base_name,ancestors[model_id],allowed=allowed)
+            base_directory=str(base);adapter_file=str(base/'adapter.safetensors')
+        request={"action":"inference","device":"cuda","base_name":self.engine.base_name,"base_directory":base_directory,
+                 "adapter_file":adapter_file,"adapter_id":model_id,"messages":payload["messages"],
                  "deadline":execution.deadline,"cpu_threads":max(1,min(8,int(self.resources["cpu_cores"]*self.settings.policy.cpu_percent/100))),
                  "gpu_fraction":self.settings.policy.gpu_percent/100/max(1,self.settings.policy.max_gpu_jobs)}
         with self.lock:self.active+=1
         self.changed.set()
         try:
             result=self.supervisor.run(self.engine.command,request,execution,
-                allowed=lambda:self.ready and asdict(self.settings.policy)==permission and asdict(self.engine)==configuration,
+                allowed=allowed,
                 ram_gb=execution.resource_requirements().ram_gb)
-            if set(result)!={"model_id","answer","output_tokens"} or result["model_id"]!=self.engine.adapter_id or not isinstance(result["answer"],str) or not result["answer"] or len(result["answer"].encode())>8192 or type(result["output_tokens"]) is not int or not 1<=result["output_tokens"]<=128:raise ValueError("Invalid language result")
+            if set(result)!={"model_id","answer","output_tokens"} or result["model_id"]!=model_id or not isinstance(result["answer"],str) or not result["answer"] or len(result["answer"].encode())>8192 or type(result["output_tokens"]) is not int or not 1<=result["output_tokens"]<=128:raise ValueError("Invalid language result")
             with self.lock:
                 self.completed+=1;atomic_json(self.directory/"language-status.json",{"completed":self.completed})
             return result

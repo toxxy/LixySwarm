@@ -352,6 +352,7 @@ class LSPNodeV3:
         self.capabilities["relay_client_v1"] = True
         self.capabilities["relay_v1"] = bool(relay_enabled)
         self.capabilities["node_status_v1"] = True
+        self.capabilities['node_status_instances_v1']=True
         self.max_connections = max(1, min(int(max_connections), 4096))
         self.max_inbound_per_ip = max(1, min(int(max_inbound_per_ip), 256))
         self.session_id = b""
@@ -524,8 +525,16 @@ class LSPNodeV3:
         from .telemetry import verify_status
         verify_status(envelope, sender_id=self.identity.node_id_hex)
         with self._snapshot_lock:
-            if not self._snapshot.get(node_id, {}).get("capabilities", {}).get("node_status_v1"):
+            capabilities=self._snapshot.get(node_id,{}).get('capabilities',{})
+            if not capabilities.get('node_status_v1'):
                 return False
+            accepts_instances=bool(capabilities.get('node_status_instances_v1'))
+        if not accepts_instances and 'process_instance_id' in envelope['status']:
+            # Older validators accept only the original signed status shape.
+            # This method verified that the envelope belongs to our own node.
+            from .telemetry import sign_status
+            legacy={key:value for key,value in envelope['status'].items() if key!='process_instance_id'}
+            envelope=sign_status(self.identity,legacy)
         return self._send_json_to_peer(PacketType.NODE_STATUS, node_id, envelope)
 
     def announce_release(self, manifest: dict) -> int:

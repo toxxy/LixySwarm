@@ -8,6 +8,8 @@ from __future__ import annotations
 import argparse
 import ipaddress
 import json
+import math
+import re
 import signal
 import time
 import urllib.parse
@@ -33,19 +35,32 @@ class Continuity:
             rows[identity]=row
         for identity in sorted(self.node_ids):
             row=rows.get(identity,{})
-            seq=row.get("sequence");stamp=row.get("timestamp_ms")
+            seq=row.get("sequence");stamp=row.get("timestamp_ms");uptime=row.get('uptime_s');instance=row.get('process_instance_id')
             valid=(row.get("active") is True and row.get("stale") is False
                 and row.get("signature_verified") is True
                 and row.get("state") in {"connected","preparing","working","paused"}
-                and type(seq) is int and seq>0 and type(stamp) is int
-                and 0<=now-stamp/1000<=60)
+                and type(seq) is int and 0<seq<=2**63-1 and type(stamp) is int and 0<stamp<=2**63-1
+                and 0<=now-stamp/1000<=60 and type(uptime) in (int,float)
+                and 0<=uptime<=10**10 and math.isfinite(uptime)
+                and isinstance(instance,str) and re.fullmatch(r'[0-9a-f]{32}',instance) is not None)
             previous=self.previous.get(identity)
+            instance_changed=False
             if valid and previous:
                 valid=seq>=previous[0] and stamp>=previous[1] and (seq!=previous[0] or stamp==previous[1])
+                if valid:
+                    # A restart may occur between samples, even before uptime
+                    # has grown large enough to drop below the previous value.
+                    instance_changed=(instance!=previous[3] or uptime<previous[2]-.25
+                        or abs((stamp-previous[1])/1000-(uptime-previous[2]))>2)
+            if valid:self.previous[identity]=(seq,stamp,uptime,instance)
+            valid=valid and not instance_changed
             healthy=healthy and valid
-            if valid:self.previous[identity]=(seq,stamp)
-            observed.append({"node_id":identity,"healthy":valid,"sequence":seq,
-                             "timestamp_ms":stamp,"state":row.get("state"),"uptime_s":row.get("uptime_s")})
+            observed.append({"node_id":identity,"healthy":valid,"sequence":seq if type(seq) is int else None,
+                             "timestamp_ms":stamp if type(stamp) is int else None,
+                             "state":row.get('state') if isinstance(row.get('state'),str) and len(row['state'])<=32 else None,
+                             "uptime_s":uptime if type(uptime) in (int,float) and 0<=uptime<=10**10 and math.isfinite(uptime) else None,
+                             'process_instance_id':instance if isinstance(instance,str) and len(instance)==32 else None,
+                             "uptime_reset_or_clock_jump":instance_changed})
         gap=self.last_sample is not None and not 0<=now-self.last_sample<=60
         if gap or not healthy:self.healthy_since=None
         if healthy and self.healthy_since is None:self.healthy_since=now
@@ -56,6 +71,7 @@ class Continuity:
                 "consecutive_healthy_seconds":round(seconds,2),
                 "required_seconds":self.required_seconds,"satisfied":seconds>=self.required_seconds,
                 "samples":self.samples,"failures":self.failures,
+                'process_instances_required':True,
                 "longest_healthy_seconds":round(self.longest_seconds,2)}
 
 

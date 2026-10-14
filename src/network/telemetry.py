@@ -9,6 +9,7 @@ import json
 import math
 import os
 import re
+import secrets
 import tempfile
 import threading
 import time
@@ -22,6 +23,7 @@ FRESH_SECONDS = 60
 MAX_STATUS_SKEW_MS = 60 * 1000
 MAX_STORED_NODES = 1024
 NODE_ID = re.compile(r"^[0-9a-f]{64}$")
+PROCESS_INSTANCE_ID = secrets.token_hex(16)
 STATES = {"connecting", "connected", "preparing", "available", "working", "paused", "disconnected"}
 ROLES = {"participant", "seed", "relay"}
 
@@ -55,18 +57,22 @@ def atomic_json(path: Path, value: dict) -> None:
 def _number(value, minimum, maximum, *, integer=False):
     if isinstance(value, bool) or not isinstance(value, (int, float)):
         raise ValueError("Invalid telemetry number")
-    if not math.isfinite(value) or not minimum <= value <= maximum:
+    if not minimum <= value <= maximum or not math.isfinite(value):
         raise ValueError("Telemetry number out of range")
     if integer and not isinstance(value, int):
         raise ValueError("Telemetry integer required")
 
 
 def validate_status(status: dict) -> None:
-    if not isinstance(status, dict) or set(status) != {
+    fields={
         "schema", "node_id", "sequence", "timestamp_ms", "role", "state",
         "uptime_s", "resources", "jobs", "links",
-    }:
+    }
+    if not isinstance(status,dict) or set(status) not in (fields,fields|{'process_instance_id'}):
         raise ValueError("Invalid public telemetry schema")
+    if 'process_instance_id' in status and (not isinstance(status['process_instance_id'],str)
+            or not re.fullmatch(r'[0-9a-f]{32}',status['process_instance_id'])):
+        raise ValueError('Invalid telemetry process instance')
     if status["schema"] != 1 or isinstance(status["schema"], bool):
         raise ValueError("Unsupported telemetry schema")
     if not isinstance(status["node_id"], str) or not NODE_ID.fullmatch(status["node_id"]):
@@ -135,6 +141,7 @@ def build_status(node, *, sequence: int, role: str, state: str, uptime_s: float,
         "schema": 1, "node_id": node.identity.node_id_hex,
         "sequence": sequence, "timestamp_ms": int(time.time() * 1000),
         "role": role, "state": state, "uptime_s": round(uptime_s, 1),
+        'process_instance_id':PROCESS_INSTANCE_ID,
         "resources": resources, "jobs": {"active": 0, "completed": 0},
         "links": [{"node_id": peer["node_id"], "transport": peer["transport"]} for peer in node.peers()[:64]],
     }

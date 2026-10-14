@@ -53,7 +53,7 @@ assert 'src.network.training_worker' not in sys.modules
 def test_client_restart_keeps_identity_sequence_and_clean_shutdown(tmp_path):
     state = tmp_path / "machine-state"
     env = {**os.environ, "LIXYSWARM_BOOTSTRAP_SEEDS": ""}
-    identities, sequences = [], []
+    identities, sequences, instances = [], [], []
     for _ in range(2):
         process = subprocess.Popen(
             [sys.executable, "client_daemon.py", "--state-dir", str(state), "--host", "127.0.0.1", "--port", "0"],
@@ -76,8 +76,10 @@ def test_client_restart_keeps_identity_sequence_and_clean_shutdown(tmp_path):
         assert status["state"] == "disconnected"
         identities.append(status["node_id"])
         sequences.append(status["sequence"])
+        instances.append(status['process_instance_id'])
     assert identities[0] == identities[1]
     assert sequences[1] > sequences[0]
+    assert instances[0]!=instances[1]
     assert (state / "identity.key").stat().st_mode & 0o777 == 0o600
 
 
@@ -127,6 +129,31 @@ def test_signature_identity_timestamp_and_private_fields_are_checked(tmp_path):
         with pytest.raises(ValueError, match="schema"):
             sign_status(a.identity, private)
     assert b"private-canary" not in canonical(value)
+
+
+def test_process_instance_is_signed_and_legacy_status_remains_readable(tmp_path):
+    peer=node(tmp_path,'signed-instance');value=envelope(peer)
+    assert len(verify_status(value)['process_instance_id'])==32
+    changed=copy.deepcopy(value);changed['status']['process_instance_id']='d'*32
+    with pytest.raises(ValueError,match='signature'):verify_status(changed)
+    legacy=copy.deepcopy(value['status']);legacy.pop('process_instance_id')
+    assert 'process_instance_id' not in verify_status(sign_status(peer.identity,legacy))
+
+
+def test_sender_projects_and_resigns_status_for_a_legacy_peer(tmp_path):
+    modern,legacy=[node(tmp_path,name) for name in ['modern','legacy']]
+    legacy.capabilities.pop('node_status_instances_v1')
+    received=[];legacy.on_node_status_received(lambda value,sender:received.append(verify_status(value,sender_id=sender)))
+    try:
+        modern.start();legacy.start()
+        assert modern.connect_peer('127.0.0.1',legacy.port)
+        assert modern.send_node_status(legacy.identity.node_id_hex,envelope(modern))
+        assert wait_for(lambda:bool(received))
+        assert 'process_instance_id' not in received[0]
+        assert received[0]['node_id']==modern.identity.node_id_hex
+        assert modern.identity.node_id_hex in legacy.connected_node_ids
+    finally:
+        modern.stop();legacy.stop()
 
 
 def test_capacity_and_disk_tampering_do_not_invent_nodes(tmp_path):
