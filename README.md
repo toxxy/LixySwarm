@@ -16,7 +16,7 @@ The manuscript's experimental numbers are historical results for a specific chec
 
 [VISION_PROGRESS.md](VISION_PROGRESS.md) tracks the active goal and includes the Linux reference participant service. Its network core connects without importing PyTorch, keeps machine-local identity outside the checkout and publishes signed per-node status over LSP. Calculation workers and the remaining desktop acceptance gates are pending.
 
-The [desktop app preview](desktop/README.md) now includes connection controls, persistent contribution settings and per-user installation. Linux packaging and public-Internet connection have been verified; distributed chat, calculation workers and the remaining platform gates are still pending.
+The [desktop app](desktop/README.md) includes connection controls, persistent contribution settings and per-user installation. Its current code connects the chat to the known pilot expert over public Internet and stores conversation history encrypted locally. The public download remains the earlier preview; automatic language-model distribution, open collaboration and the remaining platform gates are still pending.
 
 ## Implemented system
 

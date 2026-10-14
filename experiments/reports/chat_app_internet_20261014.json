@@ -1,0 +1,31 @@
+{
+  "success": true,
+  "internet": true,
+  "chat_first_answer": "Una red descentralizada es una red de computadoras que no está controlada por un solo punto central.",
+  "chat_ui_verified": true,
+  "chat_remote_context_opt_in": true,
+  "chat_history_survives_reopen": true,
+  "chat_history_encrypted": true,
+  "chat_receipt": {
+    "version": 1,
+    "job_id": "71d971d47b3e81678f266cadaaddfe918310e905301fce0f8c8b2bc2f6d9710a",
+    "worker_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+    "requester_node_id": "671ec6b35f009e8effc6ae28ed873cfacb6081951739f8282f973c12d632eece",
+    "result_digest": "bce88d1b15f0103e8f60b39b35a5a28b66680d97f4f7566cb2fd6f2a13c56a76",
+    "finished_at": 1792001138.2208114,
+    "signature": "CosQ/sNJcB8DiWpSvdjn2X2TtOp+trtMsLfrUdLDMGoo/ttheDMDt9+KrdSi6zyzRtD+bWpCcomeUX2A7EtpCw=="
+  },
+  "chat_cancellation_verified": true,
+  "connection_s": 0.77,
+  "controls_confirmed": true,
+  "pause_keeps_connection": true,
+  "reconnect_keeps_identity": true,
+  "calculation_engines_loaded": false,
+  "scope": "Synthetic conversation pilot; requester identity is a test client on the laptop, not another physical worker",
+  "platform": "Linux x86_64",
+  "worker_physical_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+  "model_artifact_id": "badef4394af180ab75ca25f0d9d47f2406b92809b53b5845ab65d451cf9c4b3c",
+  "transport": "Encrypted LSP v3 through public Internet relay",
+  "automatic_language_preparation": false,
+  "language_training_distributed": false
+}

@@ -26,6 +26,7 @@ from src.network.public_knowledge import KnowledgeSettings, PublicKnowledgeServi
 from src.network.reference_compute import ReferenceComputeService
 from src.network.learning_coordinator import LearningCoordinator
 from src.network.language_compute import LanguageComputeService
+from src.network.chat_service import ChatBroker,LocalChatAPI
 
 log = logging.getLogger("lixy.client")
 
@@ -118,6 +119,7 @@ def run(directory: Path, *, host="0.0.0.0", port=7338, interval=15, allow_privat
         knowledge = PublicKnowledgeService(node, directory, resources)
         compute = ReferenceComputeService(knowledge,directory,resources)
         language = LanguageComputeService(knowledge,directory,resources)
+        chat=ChatBroker(node,knowledge.work,language);chat_api=LocalChatAPI(chat,directory);chat_api.start()
         learning = LearningCoordinator(knowledge,compute,directory)
         stop = threading.Event()
         for signum in (signal.SIGINT, signal.SIGTERM):
@@ -146,11 +148,12 @@ def run(directory: Path, *, host="0.0.0.0", port=7338, interval=15, allow_privat
             atomic_json(directory / "diagnostics.json", {
                 "node_id": identity.node_id_hex, "timestamp_ms": status["timestamp_ms"],
                 "port": node.port, "peers": peers,
-                "pid": os.getpid(), "runtime_version": "0.4.0a3", "controls_version": 1,
+                "pid": os.getpid(), "runtime_version": "0.4.0a4", "controls_version": 1,
                 "settings": asdict(settings), "worker_ready": computation["ready"] or conversation["ready"], "control_error": error,
                 "knowledge": public_knowledge,
                 "compute":computation,
                 "language":conversation,
+                "chat":chat.snapshot(),
                 "learning":learning.snapshot(),
             })
             eligible = time.monotonic() - last_sent >= 2
@@ -199,6 +202,7 @@ def run(directory: Path, *, host="0.0.0.0", port=7338, interval=15, allow_privat
                 knowledge.update(settings, sharing)
                 compute.update(settings)
                 language.update(settings)
+                chat.update(settings)
                 learning.update()
                 current_state = "disconnected" if not running else "paused" if settings.paused else "connected" if node.peer_count else "connecting"
                 public_state = knowledge.snapshot()
@@ -240,6 +244,7 @@ def run(directory: Path, *, host="0.0.0.0", port=7338, interval=15, allow_privat
                 stop.wait(0.5)
             publish("disconnected", settings)
         finally:
+            chat_api.close()
             learning.close()
             compute.ready=False
             language.ready=False

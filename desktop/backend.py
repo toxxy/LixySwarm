@@ -4,6 +4,8 @@ import json
 import os
 import subprocess
 import time
+import urllib.request
+import urllib.error
 from dataclasses import asdict
 from pathlib import Path
 
@@ -149,6 +151,37 @@ class NodeController:
             return bool(settings.enabled and command and Path(command[0]).is_file()
                         and Path(command[0]).resolve().parent==folder)
         except (OSError,ValueError,TypeError): return False
+
+    def _chat_call(self,path,value=None,timeout=2):
+        info=self._read("local-api.json")
+        snapshot=self.snapshot()
+        if not snapshot["running"] or info.get("pid")!=snapshot["diagnostics"].get("pid") or type(info.get("port")) is not int or not 1<=info["port"]<=65535 or not isinstance(info.get("token"),str) or len(info["token"])!=64:
+            raise RuntimeError("Actualiza o conecta el servicio local para usar el chat")
+        data=json.dumps(value,ensure_ascii=False).encode() if value is not None else None
+        request=urllib.request.Request(f"http://127.0.0.1:{info['port']}{path}",data=data,
+            headers={"Authorization":"Bearer "+info["token"],"Content-Type":"application/json"})
+        # Bypass proxy configuration for machine-local private IPC.
+        opener=urllib.request.build_opener(urllib.request.ProxyHandler({}))
+        try:
+            with opener.open(request,timeout=timeout) as response:
+                raw=response.read(64*1024+1)
+        except urllib.error.HTTPError as error:
+            raw=error.read(64*1024)
+            try:message=json.loads(raw).get("error","Consulta no disponible")
+            except (ValueError,TypeError):message="Consulta no disponible"
+            raise RuntimeError(message) from None
+        if len(raw)>64*1024:raise RuntimeError("La respuesta local supera su límite")
+        return json.loads(raw)
+
+    def chat_status(self):
+        try:return self._chat_call("/status")
+        except (OSError,ValueError,RuntimeError):return {"connected":False,"available":False,"local":False,"remote_providers":0}
+
+    def ask_chat(self,messages,remote_context,request_id):
+        return self._chat_call("/ask",{"request_id":request_id,"messages":messages,"remote_context":bool(remote_context)},timeout=75)
+
+    def cancel_chat(self,request_id):
+        return self._chat_call("/cancel",{"request_id":request_id})
 
     def confirmed_settings(self):
         snapshot = self.snapshot()

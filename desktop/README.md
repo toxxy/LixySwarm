@@ -1,6 +1,6 @@
 # App de LixySwarm
 
-Vista previa `0.4.0a2` del participante instalable. Incluye Estado, Chat, Recursos y Actividad. La conexión, los permisos locales, la pausa y la reconexión tienen un proceso de red separado de la interfaz. El chat permanece en preparación hasta integrar el modelo y la inferencia distribuida.
+El código `0.4.0a4` del participante instalable incluye Estado, Chat, Recursos y Actividad. La conexión, los permisos locales, la pausa y la reconexión tienen un proceso de red separado de la interfaz. El chat integra consultas al experto del piloto y conversación cifrada local. La descarga pública sigue siendo `0.4.0a2`; la preparación automática y réplica del experto de lenguaje conservan sus condiciones pendientes.
 
 El ejecutable incluye Python y los componentes de interfaz y transporte. La instalación por usuario conserva la identidad y el estado fuera del paquete. En Linux crea una entrada en el menú de aplicaciones; Windows y macOS tienen sus propios adaptadores de instalación.
 
@@ -23,13 +23,23 @@ Las licencias incluidas por las dependencias se copian al paquete junto a [THIRD
 
 La interfaz escribe `controls.json` en el directorio local del nodo. El proceso valida esquema, presupuesto y consentimiento, confirma lo recibido en sus diagnósticos y publica solo el estado público permitido. Pausar conserva conectividad; desconectar cierra las sesiones. Una configuración inválida desactiva la conexión hasta corregirla.
 
-Los presupuestos se preparan para los trabajadores. Esta vista previa mantiene entrenamiento e inferencia deshabilitados, y los contadores de cálculo permanecen en cero. La comprobación de límites durante trabajos reales corresponde a la integración de esos trabajadores.
+Los presupuestos se aplican a trabajadores separados del nodo. El motor CPU público ejecuta inferencia tipada del modelo de bytes. El entrenamiento de referencia se limita a las identidades conocidas del piloto. El experto de lenguaje necesita una instalación local verificada y recursos suficientes; los motores CUDA públicos y la aceptación de desconocidos siguen pendientes.
 
 El botón **Conservar conocimiento público** habilita adquisición, verificación y servicio de versiones del catálogo público dentro del permiso de almacenamiento y conexión. El catálogo inicial contiene el enjambre de referencia de bytes que superó el piloto distribuido; aún no es el modelo conversacional. El servicio descarga la cadena desde un participante disponible, comprueba firmas, genesis y hashes, y conserva los pesos al pausar, desconectar o reiniciar. Usa la identidad del equipo y un almacén `public/` separado de la memoria personal. No carga PyTorch ni ejecuta un modelo al compartir archivos.
 
-Una reducción de cuota por debajo de los archivos conservados pausa su servicio; no elimina conocimiento automáticamente. Dejar de compartir conserva los archivos y detiene nuevas transferencias. El presupuesto de transferencia se aplica a chunks codificados y puede interrumpirse; por ahora se limita además a 5 Mbps por servicio para respetar la ventana de bytes LSP. Descubrimiento global por contenido, reparación automática y modelo de chat siguen pendientes.
+Una reducción de cuota por debajo de los archivos conservados pausa su servicio; no elimina conocimiento automáticamente. Dejar de compartir conserva los archivos y detiene nuevas transferencias. El presupuesto de transferencia se aplica a chunks codificados y puede interrumpirse; por ahora se limita además a 5 Mbps por servicio para respetar la ventana de bytes LSP. Descubrimiento global por contenido, reparación automática y distribución del experto de lenguaje siguen pendientes.
 
-La clave de cifrado personal se genera en el almacén protegido del sistema. Si falta o está bloqueado, la memoria personal conserva estado pendiente. No hay clave alternativa en archivo plano. La pérdida de una clave existente no genera una sustituta que inutilice el contenido cifrado. La integración de Matriarca y conversación persistente continúa en las etapas de aprendizaje y memoria.
+La clave de cifrado personal se genera en el almacén protegido del sistema. Si falta o está bloqueado, el chat informa que conserva la conversación temporalmente en memoria. No hay clave alternativa en archivo plano. La pérdida de una clave existente no genera una sustituta que inutilice el contenido cifrado. La integración de Matriarca continúa en las etapas de aprendizaje y memoria.
+
+## Chat del piloto
+
+El chat se adjunta al nodo físico existente mediante una API autenticada que escucha únicamente en `127.0.0.1`. El transporte hasta el experto usa LSP cifrado por Internet. La app no carga PyTorch ni descarga los pesos para solicitar una respuesta. Si no hay un experto disponible, mantiene conexión y muestra ese estado.
+
+Por defecto se envía solo la pregunta actual. La casilla **Enviar también el contexto de esta conversación al experto de la red** autoriza un contexto acotado de la conversación visible. El nodo no lee la memoria personal ni utiliza conversaciones para entrenamiento, feromonas o métricas públicas. El historial se conserva cifrado en `personal.enc`, con la clave en el almacén protegido del sistema; preguntas y respuestas permanecen fuera de los diagnósticos y registros del nodo.
+
+Las respuestas deben incluir un recibo firmado del experto y corresponder exactamente a la adaptación pública del piloto. La familia mayor requiere una reserva de 5 GiB de RAM y al menos 4 GiB de GPU dentro de los límites elegidos por el operador. El piloto admite una identidad conocida; no constituye todavía descubrimiento abierto de expertos.
+
+`--self-test --internet --chat` comprueba consultas desde el ejecutable, contexto opcional, cancelación y recuperación del historial cifrado al reabrir. Requiere el experto disponible y el almacén protegido del sistema desbloqueado. Emplea exclusivamente conversaciones sintéticas; su identidad de cliente no representa otra máquina física.
 
 La instalación por usuario guarda cada versión del paquete identificada por su contenido y actualiza el lanzador. Conserva las versiones previas y mantiene el estado personal fuera de ellas. El arranque automático se integra con el servicio de referencia de Linux; la configuración equivalente por plataforma sigue pendiente.
 

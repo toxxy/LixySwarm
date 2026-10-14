@@ -19,12 +19,14 @@ def main():
     parser.add_argument("--internet", action="store_true")
     parser.add_argument("--knowledge", action="store_true")
     parser.add_argument("--prepare-engine", action="store_true")
+    parser.add_argument("--chat",action="store_true")
     parser.add_argument("--report", type=Path)
     parser.add_argument("--screenshot", type=Path)
     parser.add_argument("--work-directory", type=Path)
     args = parser.parse_args()
     if args.knowledge and not args.internet:
         parser.error("The real catalog acquisition gate requires --internet")
+    if args.chat and not args.internet:parser.error("The real chat assessment requires --internet")
     os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
     from PySide6.QtWidgets import QApplication
     from desktop.backend import NodeController
@@ -58,7 +60,7 @@ def main():
                                  address_book_path=root / "seed-peers.json", target_outbound=0, allow_private=True)
                 seed.start()
                 os.environ["LIXYSWARM_BOOTSTRAP_SEEDS"] = f"127.0.0.1:{seed.port}"
-            window = SwarmWindow(controller, initialize_personal=False,auto_prepare=args.prepare_engine); window.show(); app.processEvents()
+            window = SwarmWindow(controller, initialize_personal=args.chat,auto_prepare=args.prepare_engine); window.show(); app.processEvents()
             assert window.tabs.count() == 4
             started = time.monotonic()
             window.connect_button.click()
@@ -133,6 +135,52 @@ def main():
                                       app_worker_model_id=response.output["model_id"])
                     finally:
                         requests.close();visitor.stop()
+            if args.chat:
+                wait(lambda: window.chat_history is not None,timeout=20)
+                wait(lambda: window.chat_send.isEnabled(),timeout=90)
+                window.tabs.setCurrentIndex(1)
+                canary="synthetic-private-history-canary-3081"
+                window.chat_messages=[{"role":"user","content":canary}];window.save_chat_history()
+                window.chat_input.setPlainText("¿Qué es una red descentralizada? Explica brevemente en español.")
+                window.chat_send.click()
+                wait(lambda:window.chat_worker is not None and not window.chat_pending and not window.chat_worker.isRunning(),timeout=75)
+                assert window.chat_last_result and window.chat_last_result["route"]=="network",window.chat_status.text()
+                assert not window.chat_last_result["context_sent"]
+                report["chat_first_answer"]=window.chat_last_result["answer"]
+                for path in controller.directory.rglob("*"):
+                    if path.is_file() and path.name not in {"node.lock"}:
+                        assert canary.encode() not in path.read_bytes(),path.name
+                window.chat_messages=[];window.chat_context.setChecked(True);window.save_chat_history()
+                window.chat_input.setPlainText("En este ejemplo ficticio, el equipo se llama Lavanda. Confirma su nombre.")
+                window.chat_send.click();wait(lambda:not window.chat_pending and not window.chat_worker.isRunning(),timeout=75)
+                assert window.chat_last_result,window.chat_status.text()
+                assert window.chat_messages[-1]["role"]=="assistant"
+                window.chat_input.setPlainText("¿Cómo se llama el equipo del ejemplo? Responde solo su nombre.")
+                window.chat_send.click();wait(lambda:not window.chat_pending and not window.chat_worker.isRunning(),timeout=75)
+                assert window.chat_last_result,window.chat_status.text()
+                assert window.chat_messages[-1]["role"]=="assistant"
+                assert "lavanda" in window.chat_messages[-1]["content"].lower(),window.chat_messages[-1]
+                assert window.chat_last_result["context_sent"]
+                previous_messages=list(window.chat_messages)
+                last_chat_receipt=window.chat_last_result["receipt"]
+                window.timer.stop();window.close()
+                from PySide6.QtCore import QCoreApplication,QEvent
+                window.deleteLater();QCoreApplication.sendPostedEvents(None,QEvent.DeferredDelete);app.processEvents()
+                window=SwarmWindow(controller,initialize_personal=True,auto_prepare=False);window.show()
+                wait(lambda:window.chat_history is not None,timeout=20)
+                assert window.chat_messages==previous_messages and window.chat_context.isChecked()
+                window.tabs.setCurrentIndex(1)
+                report.update(chat_ui_verified=True,chat_remote_context_opt_in=True,chat_history_survives_reopen=True,
+                              chat_history_encrypted=True,chat_receipt=last_chat_receipt)
+                # Cancel at dispatch, including the race before the API records
+                # the request. A previous response cannot satisfy this check.
+                wait(lambda:window.chat_send.isEnabled())
+                window.chat_input.setPlainText("Enumera cien ejemplos ficticios de colaboración.")
+                window.chat_send.click();window.cancel_chat()
+                wait(lambda:not window.chat_pending and not window.chat_worker.isRunning(),timeout=75)
+                assert window.chat_last_result is None,window.chat_status.text()
+                assert window.chat_messages[-1]["role"]=="user"
+                report["chat_cancellation_verified"]=True
             window.pause_button.click()
             wait(lambda: controller.snapshot()["status"].get("state") == "paused")
             assert len(controller.snapshot()["diagnostics"]["peers"]) > 0
@@ -173,6 +221,8 @@ def main():
                 if window.engine_preparation is not None and window.engine_preparation.isRunning():
                     window.engine_preparation.cancel.set()
                     window.engine_preparation.wait(15000)
+                if window.chat_worker is not None and window.chat_worker.isRunning():
+                    window.cancel_chat();window.chat_worker.wait(15000)
                 window.timer.stop()
                 window.close()
                 window.deleteLater()

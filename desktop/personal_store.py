@@ -51,13 +51,16 @@ class PersonalStore:
     def save(self, value: dict):
         from src.network.telemetry import atomic_json
         nonce = os.urandom(12)
-        ciphertext = ChaCha20Poly1305(self.key).encrypt(nonce, json.dumps(value).encode(), b"LixySwarm-personal-v1")
+        encoded=json.dumps(value).encode()
+        if len(encoded)>2*1024**2:raise ValueError("El contenido personal supera su límite local")
+        ciphertext = ChaCha20Poly1305(self.key).encrypt(nonce, encoded, b"LixySwarm-personal-v1")
         atomic_json(self.directory / "personal.enc", {"version": 1, "data": base64.b64encode(nonce + ciphertext).decode()})
 
     def load(self):
         path = self.directory / "personal.enc"
         if not path.exists():
             return {}
+        if path.stat().st_size>3*1024**2:raise ValueError("El almacenamiento personal supera su límite local")
         value = json.loads(path.read_text())
         if value.get("version") != 1:
             raise ValueError("Unsupported personal storage version")

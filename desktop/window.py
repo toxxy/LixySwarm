@@ -5,6 +5,7 @@ from pathlib import Path
 import sys
 import threading
 import time
+import uuid
 
 from PySide6.QtCore import QTimer, QThread, Signal
 from PySide6.QtGui import QDesktopServices
@@ -20,6 +21,7 @@ from src.network.client_state import ClientSettings, state_directory
 from desktop.backend import NodeController
 from src.network.engine_catalog import cpu_engine
 from src.network.telemetry import atomic_json
+from desktop.chat_history import ChatHistory,bounded_context
 
 STYLE = """
 QWidget { background: #101713; color: #e9f1ec; font: 14px 'Noto Sans'; }
@@ -38,6 +40,7 @@ QComboBox, QSpinBox, QDoubleSpinBox, QTextEdit { background: #18251c; border: 1p
 
 class PersonalPreparation(QThread):
     prepared = Signal(str)
+    history_ready=Signal(object)
 
     def __init__(self, directory, parent):
         super().__init__(parent); self.directory = directory
@@ -45,8 +48,8 @@ class PersonalPreparation(QThread):
     def run(self):
         from desktop.personal_store import PersonalStore
         try:
-            store = PersonalStore(self.directory)
-            store.load()
+            history=ChatHistory(self.directory)
+            self.history_ready.emit(history)
             self.prepared.emit("Cifrado personal preparado en este equipo")
         except Exception:
             self.prepared.emit("Memoria personal pendiente: almacén protegido no disponible o bloqueado")
@@ -79,11 +82,24 @@ class EnginePreparation(QThread):
             self.completed.emit(False,str(error))
 
 
+class ChatRequest(QThread):
+    completed=Signal(bool,object)
+
+    def __init__(self,controller,messages,remote_context,parent=None):
+        super().__init__(parent);self.controller=controller;self.messages=messages;self.remote_context=remote_context
+        self.request_id=uuid.uuid4().hex
+
+    def run(self):
+        try:self.completed.emit(True,self.controller.ask_chat(self.messages,self.remote_context,self.request_id))
+        except Exception as error:self.completed.emit(False,str(error))
+
+
 class SwarmWindow(QMainWindow):
     def __init__(self, controller=None, *, initialize_personal=True, auto_prepare=True):
         super().__init__()
         self.controller = controller or NodeController(state_directory())
         self.auto_prepare=auto_prepare; self.engine_preparation=None; self.engine_phase=""
+        self.chat_worker=None;self.chat_pending=False;self.chat_messages=[];self.chat_history=None;self.chat_last_result=None;self.close_pending=False
         self.setWindowTitle("LixySwarm")
         self.resize(900, 760)
         self.setMinimumSize(720, 680)
@@ -121,11 +137,19 @@ class SwarmWindow(QMainWindow):
         self.install_result = QLabel(); self.install_result.setWordWrap(True); self.state_tab.addWidget(self.install_result)
 
         chat = self._page("Chat")
-        text = QLabel("El chat utilizará conocimiento compartido por otros participantes. En esta versión todavía no hay un modelo de red preparado.")
-        text.setWordWrap(True); chat.addWidget(text)
-        self.chat_input = QTextEdit(); self.chat_input.setPlaceholderText("Aquí podrás preguntar al enjambre.")
-        self.chat_input.setEnabled(False); chat.addWidget(self.chat_input)
-        self.chat_send = QPushButton("Esperando modelo de la red"); self.chat_send.setEnabled(False); chat.addWidget(self.chat_send)
+        self.chat_status=QLabel("Esperando un experto de lenguaje disponible")
+        self.chat_status.setWordWrap(True);chat.addWidget(self.chat_status)
+        self.chat_transcript=QTextEdit();self.chat_transcript.setReadOnly(True);chat.addWidget(self.chat_transcript)
+        self.chat_privacy=QLabel("El historial queda cifrado si el almacén protegido está disponible. A la red se envía la pregunta actual.")
+        self.chat_privacy.setWordWrap(True);chat.addWidget(self.chat_privacy)
+        self.chat_context=QCheckBox("Enviar también el contexto de esta conversación al experto de la red")
+        self.chat_context.toggled.connect(self.save_chat_history);chat.addWidget(self.chat_context)
+        self.chat_input = QTextEdit(); self.chat_input.setPlaceholderText("Pregunta al enjambre…")
+        self.chat_input.setMaximumHeight(110);chat.addWidget(self.chat_input)
+        chat_actions=QHBoxLayout()
+        self.chat_send=QPushButton("Preguntar");self.chat_send.clicked.connect(self.send_chat);chat_actions.addWidget(self.chat_send)
+        self.chat_cancel=QPushButton("Cancelar consulta");self.chat_cancel.clicked.connect(self.cancel_chat);self.chat_cancel.setEnabled(False);chat_actions.addWidget(self.chat_cancel)
+        chat.addLayout(chat_actions)
 
         resources = self._page("Recursos"); form = QFormLayout()
         self.profile = QComboBox(); self.profile.addItems(["Equilibrado", "Máximo", "Solo con equipo disponible", "Solo conectividad"])
@@ -168,9 +192,11 @@ class SwarmWindow(QMainWindow):
         if initialize_personal:
             self.personal_preparation = PersonalPreparation(self.controller.directory, self)
             self.personal_preparation.prepared.connect(self.personal_label.setText)
+            self.personal_preparation.history_ready.connect(self.history_ready)
             self.personal_preparation.start()
         else:
             self.personal_label.setText("El contenido personal permanece en tu equipo")
+            self.chat_privacy.setText("Esta prueba usa una conversación temporal en memoria")
 
     def _page(self, name):
         page = QWidget(); layout = QVBoxLayout(page); layout.setSpacing(16); self.tabs.addTab(page, name)
@@ -250,6 +276,55 @@ class SwarmWindow(QMainWindow):
     def toggle_knowledge(self):
         self._action(lambda: self.controller.share_knowledge(not self.controller.knowledge_settings().enabled))
 
+    def history_ready(self,history):
+        current=self.chat_messages;self.chat_history=history
+        self.chat_messages=list(history.messages)+current
+        self.chat_context.blockSignals(True);self.chat_context.setChecked(history.share_context);self.chat_context.blockSignals(False)
+        self.render_chat()
+        self.chat_privacy.setText("Historial cifrado en este equipo. A la red se envía la pregunta actual salvo que autorices el contexto.")
+        if current:self.save_chat_history()
+
+    def render_chat(self):
+        self.chat_transcript.setPlainText("\n\n".join(("Tú: " if row["role"]=="user" else "Enjambre: ")+row["content"] for row in self.chat_messages))
+        self.chat_transcript.verticalScrollBar().setValue(self.chat_transcript.verticalScrollBar().maximum())
+
+    def save_chat_history(self):
+        self.chat_messages=self.chat_messages[-200:]
+        if self.chat_history is None:
+            self.chat_privacy.setText("Historial temporal en memoria: el almacén protegido está pendiente. La pregunta actual puede enviarse a la red.")
+            return
+        try:self.chat_history.save(self.chat_messages,self.chat_context.isChecked())
+        except Exception:
+            self.chat_privacy.setText("No se pudo guardar el historial cifrado; la conversación actual sigue en memoria")
+
+    def send_chat(self):
+        if self.chat_pending or self.chat_worker is not None and self.chat_worker.isRunning():return
+        try:
+            question=self.chat_input.toPlainText().strip();messages=bounded_context(self.chat_messages,question)
+            self.chat_messages.append({"role":"user","content":question});self.render_chat();self.save_chat_history()
+            self.chat_last_result=None
+            self.chat_input.clear();self.chat_status.setText("Consultando al experto…")
+            if self.chat_worker is not None:self.chat_worker.deleteLater()
+            self.chat_worker=ChatRequest(self.controller,messages,self.chat_context.isChecked(),self)
+            self.chat_worker.completed.connect(self.chat_completed);self.chat_worker.finished.connect(self.refresh)
+            self.chat_pending=True
+            self.chat_worker.start();self.refresh()
+        except (ValueError,RuntimeError,OSError) as error:QMessageBox.warning(self,"No se pudo preguntar",str(error))
+
+    def cancel_chat(self):
+        if self.chat_worker is not None and self.chat_worker.isRunning():
+            self._action(lambda:self.controller.cancel_chat(self.chat_worker.request_id))
+
+    def chat_completed(self,success,result):
+        self.chat_pending=False
+        if success:
+            self.chat_last_result=result
+            self.chat_messages.append({"role":"assistant","content":result["answer"]});self.render_chat();self.save_chat_history()
+            self.chat_status.setText(("Respuesta en este equipo" if result["route"]=="local" else "Respuesta de la red")+" · recibo verificado")
+        else:self.chat_status.setText(str(result))
+        self.chat_cancel.setEnabled(False)
+        if self.close_pending:self.close()
+
     def prepare_engine(self):
         if self.engine_preparation is not None and self.engine_preparation.isRunning(): return
         self.engine_phase="preparing"; self.engine_progress.setValue(0); self.engine_progress.setVisible(True)
@@ -290,6 +365,13 @@ class SwarmWindow(QMainWindow):
         self.engine_button.setText("Motor CPU preparado" if prepared else "Reanudar preparación" if self.engine_phase=="stopped" else "Preparar motor CPU")
         snapshot = self.controller.snapshot(); status = snapshot["status"]
         diagnostic = snapshot["diagnostics"]
+        chat=diagnostic.get("chat",{}) if snapshot["fresh"] else {}
+        asking=self.chat_pending or self.chat_worker is not None and self.chat_worker.isRunning()
+        self.chat_send.setEnabled(bool(chat.get("available")) and not asking)
+        self.chat_cancel.setEnabled(asking)
+        self.chat_input.setEnabled(snapshot["running"])
+        if not asking and not self.chat_messages:
+            self.chat_status.setText("Experto disponible en este equipo" if chat.get("available") and chat.get("local") else "Experto de la red disponible" if chat.get("available") else "Esperando un experto de lenguaje disponible")
         state = status.get("state") if snapshot["fresh"] else "stopped"
         labels = {"stopped":"Listo para conectar", "connecting":"Conectando", "connected":"Conectado a la red", "preparing":"Preparando conocimiento público", "paused":"Aporte pausado", "disconnected":"Desconectado"}
         self.status.setText(labels.get(state, state))
@@ -312,7 +394,9 @@ class SwarmWindow(QMainWindow):
         self.learning_button.setEnabled(bool(computation.get("ready")) and len(prepared.workers)==2 and bool(prepared.signing_key_file)
             and not (prepared.enabled and learning.get("status") in {"collecting","evaluating","promoting"}))
         self.learning_stop.setEnabled(prepared.enabled)
-        if computation.get("installed"):
+        if chat.get("available"):
+            self.stage.setText("Puedes preguntar al experto disponible. Tus permisos controlan el aporte de este equipo.")
+        elif computation.get("installed"):
             self.stage.setText("Motor de referencia preparado. Tus permisos controlan el cálculo; el modelo de chat sigue en preparación.")
         else:
             self.stage.setText("Puedes conservar el conocimiento público entre equipos. El motor de cálculo está en preparación.")
@@ -348,6 +432,9 @@ class SwarmWindow(QMainWindow):
         self.installation.start()
 
     def closeEvent(self, event):
+        if self.chat_worker is not None and self.chat_worker.isRunning():
+            self.close_pending=True;self.cancel_chat();self.chat_worker.wait(100)
+            if self.chat_worker.isRunning():event.ignore();return
         if self.engine_preparation is not None and self.engine_preparation.isRunning():
             self.engine_preparation.cancel.set(); self.engine_preparation.wait(100)
             if self.engine_preparation.isRunning(): event.ignore(); return
