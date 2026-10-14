@@ -46,9 +46,11 @@ class DistributedLearningCycle:
     def __init__(self, *, store, registry, policy, identity, trusted_workers,
                  model_factory, optimizer_factory, evaluator, evaluation_id,
                  state_path: Path, minimum_workers=3, minimum_improvement=0.001,
-                 max_gradient_norm=1.0):
+                 max_gradient_norm=1.0, requester_node_id=None, promote=True):
         self.store, self.registry, self.policy = store, registry, policy
         self.identity = identity
+        self.requester_node_id = requester_node_id or identity.node_id_hex
+        self.promote = bool(promote)
         self.trusted_workers = set(trusted_workers)
         self.model_factory, self.optimizer_factory = model_factory, optimizer_factory
         self.evaluator, self.evaluation_id = evaluator, evaluation_id
@@ -65,6 +67,8 @@ class DistributedLearningCycle:
         self.recover()
 
     def recover(self):
+        if not self.promote:
+            return
         if not self.state_path.exists():
             return
         state = json.loads(self.state_path.read_text())
@@ -113,7 +117,7 @@ class DistributedLearningCycle:
             result.validate()
             if result.status != "ok" or not result.receipt or not ResultReceipt.from_dict(result.receipt).verify(
                     result, expected_worker_id=contribution.peer_id,
-                    expected_requester_id=self.identity.node_id_hex):
+                    expected_requester_id=self.requester_node_id):
                 raise TrainingWorkError("Productive work receipt is invalid")
             manifest = ArtifactManifest.from_dict(result.output.get("gradient"))
             actual_id, actual_size = digest_file(contribution.gradient_path)
@@ -192,13 +196,15 @@ class DistributedLearningCycle:
                 sequence=base_release.sequence + 1, previous_release_id=base_release.release_id,
                 config_artifact_id=config_artifact.artifact_id,
                 tokenizer_artifact_id=base_release.tokenizer_artifact_id,
-            ).sign(self.identity)
-            self.policy.authorize(release)
-            pending = {"status": "promotion_pending", "release": release.to_dict(), "report": report}
-            atomic_json(self.state_path, pending)
-            self.registry.accept(release, self.policy, self.store)
-            self.registry.activate(release.release_id, self.policy, self.store)
-            atomic_json(self.state_path, {**pending, "status": "accepted"})
+            )
+            if self.promote:
+                release=release.sign(self.identity)
+                self.policy.authorize(release)
+                pending = {"status": "promotion_pending", "release": release.to_dict(), "report": report}
+                atomic_json(self.state_path, pending)
+                self.registry.accept(release, self.policy, self.store)
+                self.registry.activate(release.release_id, self.policy, self.store)
+                atomic_json(self.state_path, {**pending, "status": "accepted"})
         else:
             atomic_json(self.state_path, {"status": "rejected", "report": report})
         return LearningOutcome(accepted, before_loss, after_loss, predicted_tokens, release, model, report)

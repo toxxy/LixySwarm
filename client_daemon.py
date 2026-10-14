@@ -24,6 +24,7 @@ from src.network.telemetry import atomic_json, build_status, sign_status, verify
 from src.network.client_state import ClientSettings, NodeStateLock, state_directory
 from src.network.public_knowledge import KnowledgeSettings, PublicKnowledgeService
 from src.network.reference_compute import ReferenceComputeService
+from src.network.learning_coordinator import LearningCoordinator
 
 log = logging.getLogger("lixy.client")
 
@@ -115,6 +116,7 @@ def run(directory: Path, *, host="0.0.0.0", port=7338, interval=15, allow_privat
         )
         knowledge = PublicKnowledgeService(node, directory, resources)
         compute = ReferenceComputeService(knowledge,directory,resources)
+        learning = LearningCoordinator(knowledge,compute,directory)
         stop = threading.Event()
         for signum in (signal.SIGINT, signal.SIGTERM):
             signal.signal(signum, lambda *_: stop.set())
@@ -145,6 +147,7 @@ def run(directory: Path, *, host="0.0.0.0", port=7338, interval=15, allow_privat
                 "settings": asdict(settings), "worker_ready": computation["ready"], "control_error": error,
                 "knowledge": public_knowledge,
                 "compute":computation,
+                "learning":learning.snapshot(),
             })
             eligible = time.monotonic() - last_sent >= 2
             if eligible:
@@ -191,6 +194,7 @@ def run(directory: Path, *, host="0.0.0.0", port=7338, interval=15, allow_privat
                     sharing = KnowledgeSettings()
                 knowledge.update(settings, sharing)
                 compute.update(settings)
+                learning.update()
                 current_state = "disconnected" if not running else "paused" if settings.paused else "connected" if node.peer_count else "connecting"
                 public_state = knowledge.snapshot()
                 available={"artifact"} if public_state["sharing"] else set()
@@ -216,6 +220,8 @@ def run(directory: Path, *, host="0.0.0.0", port=7338, interval=15, allow_privat
                     refresh.set(); last_knowledge = knowledge_change
                 if compute.changed.is_set():
                     compute.changed.clear(); refresh.set()
+                if learning.changed.is_set():
+                    learning.changed.clear(); refresh.set()
                 if changed or refresh.is_set() or time.monotonic() >= next_publish:
                     refresh.clear()
                     eligible = publish(current_state, settings, error)
@@ -224,6 +230,7 @@ def run(directory: Path, *, host="0.0.0.0", port=7338, interval=15, allow_privat
                 stop.wait(0.5)
             publish("disconnected", settings)
         finally:
+            learning.close()
             compute.ready=False
             knowledge.close()
             node.stop()

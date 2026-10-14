@@ -123,6 +123,15 @@ class SwarmWindow(QMainWindow):
         self.applied = QLabel(); resources.addWidget(self.applied); resources.addStretch()
 
         activity = self._page("Actividad")
+        self.learning_label=QLabel("Aprendizaje distribuido: preparando coordinación")
+        self.learning_label.setWordWrap(True); activity.addWidget(self.learning_label)
+        learning_actions=QHBoxLayout()
+        self.learning_button=QPushButton("Aprender una ronda")
+        self.learning_button.clicked.connect(lambda:self._action(self.controller.start_learning))
+        learning_actions.addWidget(self.learning_button)
+        self.learning_stop=QPushButton("Detener aprendizaje")
+        self.learning_stop.clicked.connect(lambda:self._action(self.controller.stop_learning))
+        learning_actions.addWidget(self.learning_stop); activity.addLayout(learning_actions)
         self.activity = QTextEdit(); self.activity.setReadOnly(True); activity.addWidget(self.activity)
         self.setCentralWidget(root)
         self.select_profile(0)
@@ -218,6 +227,17 @@ class SwarmWindow(QMainWindow):
         self.resources_label.setText(f"Tu equipo: {r.get('cpu_cores', '—')} hilos CPU · {r.get('ram_gb', '—')} GB RAM · {r.get('gpu_vram_gb', '—')} GB VRAM")
         knowledge = diagnostic.get("knowledge", {}) if snapshot["fresh"] else {}
         computation=diagnostic.get("compute",{}) if snapshot["fresh"] else {}
+        learning=diagnostic.get("learning",{}) if snapshot["fresh"] else {}
+        learning_states={"idle":"Listo para una ronda", "collecting":"Repartiendo y recuperando fragmentos", "evaluating":"Evaluando la versión candidata", "promoting":"Conservando y publicando la mejora", "complete":"Ronda finalizada"}
+        self.learning_label.setText(learning_states.get(learning.get("status"),"Preparando coordinación")
+            + f" · {learning.get('round') or 0} rondas terminadas"
+            + (f" · versión {learning['accepted_sequence']}" if learning.get("accepted_sequence") is not None else ""))
+        if learning.get("paused"):
+            self.learning_label.setText("Aprendizaje detenido; el trabajo pendiente se conserva.")
+        prepared=self.controller.learning_settings()
+        self.learning_button.setEnabled(bool(computation.get("ready")) and len(prepared.workers)==2 and bool(prepared.signing_key_file)
+            and not (prepared.enabled and learning.get("status") in {"collecting","evaluating","promoting"}))
+        self.learning_stop.setEnabled(prepared.enabled)
         if computation.get("installed"):
             self.stage.setText("Motor de referencia preparado. Tus permisos controlan el cálculo; el modelo de chat sigue en preparación.")
         else:

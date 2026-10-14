@@ -436,6 +436,23 @@ class WorkCoordinator:
         else:
             self._cached_permissions[operation]=permit_cached
 
+    def execute_local(self, operation, payload, requirements, *, timeout_s=60, cancel_event=None):
+        """Execute a local shard with the same policy and physical-node receipt."""
+        work=WorkUnit.create(origin_node_id=self.node.identity.node_id_hex,operation=operation,
+            kind=requirements.kind,requirements=requirements,payload=payload,timeout_s=timeout_s)
+        with self._lock:
+            if self._closed: raise RuntimeError("Worker is shutting down")
+            self._job_cancel_events[(work.origin_node_id,work.job_id)]=cancel_event or threading.Event()
+        try:
+            self._execute_offer(work.to_dict(),work.origin_node_id)
+            with self._lock:
+                result=self._completed.get(work.job_id)
+            if result is None: raise RuntimeError("Local work did not produce a result")
+            return result
+        finally:
+            with self._lock:
+                self._job_cancel_events.pop((work.origin_node_id,work.job_id),None)
+
     def submit(
         self,
         operation: str,

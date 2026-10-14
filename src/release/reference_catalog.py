@@ -10,6 +10,7 @@ class CatalogEntry:
     release_id: str
     policy: TrustPolicy
     max_chain_length: int = 16
+    allow_signed_updates: bool = False
 
 
 REFERENCE_CATALOG = CatalogEntry(
@@ -19,4 +20,6 @@ REFERENCE_CATALOG = CatalogEntry(
         trusted_signers=("53cea6456aced3a5a31ad24505aaa47d88e1827d1e7976592c91b54fc0e8980f",),
         pinned_genesis_release_id="9b6ee48ae1f58733f930d6cb2491fa937f1c577292ff04034e68d056c64fc53e",
     ),
+    max_chain_length=64,
+    allow_signed_updates=True,
 )

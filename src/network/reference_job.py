@@ -26,6 +26,32 @@ def main():
     device=request["device"]
     if device=="cuda":
         torch.cuda.set_per_process_memory_fraction(request["gpu_fraction"])
+    if request["action"]=="candidate":
+        from src.network.distributed_learning import DistributedLearningCycle,ShardContribution
+        from src.network.work_protocol import WorkResult
+        from src.network.reference_model import make_reference_model,reference_corpus,evaluate_reference
+        from src.release import ReleaseRegistry,TrustPolicy,ReleaseManifest
+        import hashlib
+        store=ArtifactStore(Path(request["public_directory"])/"artifacts",max_artifact_bytes=32*1024**2,max_total_bytes=request["store_quota"])
+        registry=ReleaseRegistry(Path(request["public_directory"])/"releases")
+        policy=TrustPolicy(**request["trust_policy"])
+        _,evaluation=reference_corpus()
+        contributions=[ShardContribution(item["peer_id"],item["start_token"],item["token_count"],
+            WorkResult.from_dict(item["result"]),store.object_path(item["gradient_id"])) for item in request["contributions"]]
+        with contextlib.redirect_stdout(sys.stderr):
+            cycle=DistributedLearningCycle(store=store,registry=registry,policy=policy,identity=None,
+                requester_node_id=request["requester_node_id"],promote=False,
+                trusted_workers=request["trusted_workers"],minimum_workers=2,
+                model_factory=lambda config:make_reference_model(config,"cpu"),
+                optimizer_factory=lambda model:torch.optim.AdamW(model.parameters(),lr=0.001),
+                evaluator=lambda model:evaluate_reference(model,evaluation),
+                evaluation_id=hashlib.sha256(evaluation.tobytes()).hexdigest(),
+                state_path=Path(request["output_directory"])/"candidate-state.json")
+            outcome=cycle.run(base_release=ReleaseManifest.from_dict(request["base_release"]),
+                dataset_id=request["dataset_id"],contributions=contributions)
+        print(json.dumps({"accepted":outcome.accepted,"report":outcome.report,
+            "release":outcome.release.to_dict() if outcome.release else None},allow_nan=False),flush=True)
+        return
     with contextlib.redirect_stdout(sys.stderr):
         model=load_reference_checkpoint(Path(request["model_path"]),device)
     payload=request["payload"]

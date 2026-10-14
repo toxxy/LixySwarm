@@ -74,6 +74,16 @@ def test_distinct_shards_update_weights_and_publish_a_better_version(tmp_path):
     assert checkpoint["model"]["weight"].item() == 0
 
 
+def test_evaluation_can_return_unsigned_candidate_without_promoting(tmp_path):
+    args,base,workers=setup(tmp_path)
+    items=contributions(tmp_path,args,base,workers)
+    args.update(promote=False,requester_node_id=args["identity"].node_id_hex,identity=None)
+    outcome=DistributedLearningCycle(**args).run(base_release=base,dataset_id="dc"*32,contributions=items)
+    assert outcome.accepted and outcome.release.signatures==[]
+    assert args["registry"].active().release_id==base.release_id
+    assert args["store"].has(outcome.release.model_artifact_id)
+
+
 def test_quality_regression_preserves_the_accepted_model(tmp_path):
     args, base, workers = setup(tmp_path)
     outcome = DistributedLearningCycle(**args).run(base_release=base, dataset_id="dc"*32,

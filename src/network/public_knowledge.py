@@ -93,6 +93,8 @@ class BandwidthBudget:
 class PublicKnowledgeService:
     def __init__(self, node, directory, resources, *, catalog=REFERENCE_CATALOG):
         self.node, self.directory, self.catalog = node, Path(directory), catalog
+        self.resources=resources
+        self.release_lock=threading.RLock()
         self.catalog.policy.validate()
         root = self.directory / "public"
         self.store = ArtifactStore(root / "artifacts", max_artifact_bytes=32*1024**2,
@@ -113,6 +115,13 @@ class PublicKnowledgeService:
         self.allowed = False
         self.closed = False
         self.complete = False
+        self.desired_release_id=catalog.release_id
+        self.desired_sequence=-1
+        self.head_path=root/"catalog-head.json"
+        if catalog.allow_signed_updates and self.head_path.exists():
+            head=ReleaseManifest.from_dict(json.loads(self.head_path.read_text()))
+            catalog.policy.authorize(head)
+            self.desired_release_id=head.release_id; self.desired_sequence=head.sequence
         self._status = {"state":"disabled", "family":catalog.family, "release_id":None,
                         "model_id":None, "sequence":None, "error":None, "versions_done":0}
         self.budget = BandwidthBudget(lambda: self.policy.max_bandwidth_mbps if self.allowed else 0)
@@ -121,7 +130,40 @@ class PublicKnowledgeService:
         self.work.register_handler("artifact.read-chunk.v1", "artifact", self._guard(self._chunk),permit_cached=self._permit_cached)
         self.work.register_handler("release.history.v1", "artifact", self._guard(history._page),permit_cached=self._permit_cached)
         node.capabilities["public_artifacts_v1"] = True
+        node.on_release_announced(self._on_release)
+        node.on_peer_connected(self._announce_current)
         self.restore()
+
+    def _announce_current(self,peer_id,*_):
+        if not self.allowed or not self.complete: return
+        try:
+            active=self.registry.active()
+            if active: self.node.send_release_announcement(peer_id,active.to_dict())
+        except (OSError,ValueError):
+            pass
+
+    def _on_release(self,value,provider_id):
+        if not self.catalog.allow_signed_updates: return
+        try:
+            manifest=ReleaseManifest.from_dict(value)
+            self.catalog.policy.authorize(manifest)
+            with self.lock:
+                active=self.registry.active()
+                baseline=max(self.desired_sequence,active.sequence if active else -1)
+                if manifest.sequence<=baseline: return
+                if manifest.sequence>=self.catalog.max_chain_length: return
+                atomic_json(self.head_path,manifest.to_dict())
+                self.desired_release_id=manifest.release_id; self.desired_sequence=manifest.sequence
+                self.complete=False; self.next_attempt=0
+        except (OSError,ValueError,TypeError):
+            return
+
+    def promoted(self,manifest):
+        self.catalog.policy.authorize(manifest)
+        atomic_json(self.head_path,manifest.to_dict())
+        self.desired_release_id=manifest.release_id; self.desired_sequence=manifest.sequence
+        self.restore()
+        self.node.announce_release(manifest.to_dict())
 
     def _set_status(self, **values):
         with self.lock:
@@ -153,7 +195,10 @@ class PublicKnowledgeService:
             if active is None:
                 return
             active = self.registry.verify_active(self.catalog.policy, self.store)
-            self.complete = active.release_id == self.catalog.release_id
+            if self.catalog.allow_signed_updates and active.sequence>=self.desired_sequence:
+                self.desired_release_id=active.release_id; self.desired_sequence=active.sequence
+                atomic_json(self.head_path,active.to_dict())
+            self.complete = active.release_id == self.desired_release_id
             self._set_status(release_id=active.release_id, model_id=active.model_artifact_id,
                              sequence=active.sequence, versions_done=active.sequence+1)
         except (OSError, ValueError) as exc:
@@ -202,7 +247,8 @@ class PublicKnowledgeService:
                 if cancellation.is_set():
                     return
                 try:
-                    chain = fetch_release_history(self.work, release_id=self.catalog.release_id,
+                    target=self.desired_release_id
+                    chain = fetch_release_history(self.work, release_id=target,
                         peer_id=peer, policy=self.catalog.policy, max_releases=self.catalog.max_chain_length,
                         timeout_s=20, cancel_event=cancellation)
                     self._set_status(state="downloading")
@@ -212,10 +258,11 @@ class PublicKnowledgeService:
                                 self.artifacts.fetch(identifier, peer_id=peer, timeout_s=60, cancel_event=cancellation)
                         if cancellation.is_set():
                             return
-                        self.registry.accept(release, self.catalog.policy, self.store)
-                        active = self.registry.active()
-                        if active is None or release.sequence > active.sequence:
-                            self.registry.activate(release.release_id, self.catalog.policy, self.store)
+                        with self.release_lock:
+                            self.registry.accept(release, self.catalog.policy, self.store)
+                            active = self.registry.active()
+                            if active is None or release.sequence > active.sequence:
+                                self.registry.activate(release.release_id, self.catalog.policy, self.store)
                         self._set_status(versions_done=release.sequence+1)
                     self.restore()
                     self._set_status(state="available", error=None)

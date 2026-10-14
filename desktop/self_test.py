@@ -69,7 +69,8 @@ def main():
                 from src.network.artifact_store import ArtifactStore
                 store=ArtifactStore(controller.directory / "public" / "artifacts")
                 release=ReleaseRegistry(controller.directory / "public" / "releases").verify_active(REFERENCE_CATALOG.policy,store)
-                assert release.release_id == REFERENCE_CATALOG.release_id and value["sharing"]
+                assert release.sequence >= 4 and value["sharing"]
+                assert (controller.directory/"public/releases/manifests"/f"{REFERENCE_CATALOG.release_id}.json").exists()
                 report.update(public_knowledge_ready=True, public_release_id=release.release_id,
                               public_model_id=release.model_artifact_id, public_bytes=store.total_bytes())
             window.profile.setCurrentIndex(0); window.cpu.setValue(17); window.gpu.setValue(12)

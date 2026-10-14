@@ -13,6 +13,7 @@ from client_daemon import node_command
 from src.network.client_state import ClientSettings
 from src.network.telemetry import verify_status
 from src.network.public_knowledge import KnowledgeSettings
+from src.network.learning_coordinator import LearningSettings
 
 
 class NodeController:
@@ -98,6 +99,19 @@ class NodeController:
             return KnowledgeSettings.load(self.directory)
         except (OSError, ValueError, TypeError):
             return KnowledgeSettings()
+
+    def learning_settings(self):
+        try: return LearningSettings.load(self.directory)
+        except (OSError,ValueError,TypeError): return LearningSettings()
+
+    def start_learning(self):
+        settings=self.learning_settings()
+        completed=self.snapshot()["diagnostics"].get("learning",{}).get("round") or 0
+        if completed>=10: raise ValueError("La ventana inicial de diez rondas terminó")
+        settings.cycles=completed+1; settings.enabled=True; settings.save(self.directory)
+
+    def stop_learning(self):
+        settings=self.learning_settings(); settings.enabled=False; settings.save(self.directory)
 
     def confirmed_settings(self):
         snapshot = self.snapshot()

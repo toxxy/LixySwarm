@@ -141,6 +141,14 @@ Pendiente para el siguiente recorrido completo: coordinación desde el nodo pers
 
 La comprobación posterior pasó 122 pruebas. El [CI dbfc2a0](https://github.com/toxxy/LixySwarm/actions/runs/38573547066) verificó los paquetes en Linux, Windows y macOS con los controles de procesos y permisos de caché. Los dos ejecutables Linux volvieron a adquirir el modelo desde directorios vacíos por Internet, conservando pesos e identidad al pausar y reconectar; el proceso ligero siguió sin cargar PyTorch. Sus lanzadores se actualizaron en ambas PCs. El VPS adquirió el código por Git y recuperó sus servicios de transporte y API.
 
+### Coordinación y continuidad del aprendizaje
+
+- El coordinador forma parte del servicio físico. Un fragmento local obtiene el mismo tipo de recibo y usa la misma identidad que su trabajo remoto; no se crea otra hormiga para coordinar. Los fragmentos se reparten entre las dos PCs conocidas.
+- Un ledger registra base, posiciones, recibos, gradientes obtenidos, evaluación y promoción pendiente. Reiniciar conserva las contribuciones verificadas; cambiar la base descarta trabajo anterior incompatible. Una promoción pendiente se recupera sin aplicar de nuevo la actualización. La primera posición del coordinador se toma del informe aceptado cuando ya existe entrenamiento previo.
+- La evaluación corre en un proceso supervisado sin clave de publicación. Devuelve una candidata sin firmar; el servicio verifica el criterio prefijado y firma con la clave local del publicador autorizado. Esa autoridad de la familia se mantiene separada de las identidades de transporte y cálculo. El piloto conserva una sola autoridad conocida; el consenso entre operadores sigue pendiente.
+- El catálogo puede seguir descendientes firmados del genesis fijado. Los peers anuncian su versión actual al conectar y verifican la cadena antes de activar una actualización. Se conserva activación monótona y se rechazan publicadores desconocidos. Las actualizaciones no alteran los permisos de almacenamiento ni cálculo.
+- La app incorpora el control de una ronda acotada, detención y estado del aprendizaje. La ventana inicial admite hasta diez rondas. La programación autónoma por utilidad y GrowthGate conservan sus etapas pendientes.
+
 Desde el checkout y su entorno Python con `cryptography`:
 
 ```bash
