@@ -60,6 +60,24 @@ def test_single_node_lock_is_released_after_context_exit(tmp_path):
         pass
 
 
+def test_transient_file_lock_preserves_old_record_until_atomic_replacement(tmp_path, monkeypatch):
+    from src.network import telemetry
+    destination = tmp_path / "status.json"
+    destination.write_text('{"state":"old"}')
+    original = telemetry.os.replace
+    attempts = []
+    def locked_once(source, target):
+        attempts.append(source)
+        if len(attempts) <= 2:
+            assert json.loads(destination.read_text()) == {"state": "old"}
+            raise PermissionError("temporary reader lock")
+        original(source, target)
+    monkeypatch.setattr(telemetry.os, "replace", locked_once)
+    telemetry.atomic_json(destination, {"state": "new"})
+    assert json.loads(destination.read_text()) == {"state": "new"}
+    assert list(tmp_path.iterdir()) == [destination]
+
+
 def test_control_settings_preserve_consent_and_reject_invalid_budgets(tmp_path):
     settings = ClientSettings(paused=True, policy=ContributionPolicy.for_mode("balanced"))
     settings.policy.cpu_percent = 17

@@ -36,7 +36,17 @@ def atomic_json(path: Path, value: dict) -> None:
     try:
         with os.fdopen(fd, "w") as stream:
             json.dump(value, stream, sort_keys=True, allow_nan=False)
-        os.replace(temporary, path)
+        # Windows readers and scanners may temporarily deny replacement.
+        # Preserve the previous complete record and retry the atomic rename.
+        deadline = time.monotonic() + 1.0
+        while True:
+            try:
+                os.replace(temporary, path)
+                break
+            except PermissionError:
+                if time.monotonic() >= deadline:
+                    raise
+                time.sleep(0.02)
     finally:
         if os.path.exists(temporary):
             os.unlink(temporary)
