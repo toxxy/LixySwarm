@@ -1,0 +1,801 @@
+{
+  "archive": {
+    "archive": "LixySwarm-0.4.0a15-linux-x86_64.tar.gz",
+    "archive_verified": true,
+    "bytes": 81970610,
+    "ci_run_id": 38681846879,
+    "machine": "x86_64",
+    "platform": "linux",
+    "sha256": "e862954bfebc75053ee9db71de3378920cf18def0e28879609cbf425bb7a7121",
+    "source_revision": "b5716182cdafd26f022232db089ecb3b4f164493"
+  },
+  "code_archive_transport": "CI archive copied administratively; all expert inference used encrypted public LSP",
+  "desktop_chat": {
+    "calculation_engines_loaded": false,
+    "chat_cancellation_verified": true,
+    "chat_first_answer": "Una red descentralizada es una red de computadoras que no está controlada por un solo punto central.",
+    "chat_history_encrypted": true,
+    "chat_history_survives_reopen": true,
+    "chat_model_id": "506317cc9f40da9dea40e6d14a94910ac6625ae478b5f2d0248cb1bbbb93a6c3",
+    "chat_receipt": {
+      "finished_at": 1792038956.5766299,
+      "job_id": "80dec29a107b4b7468cd3e2633484ec9616026abb573211d491f8fcabff2e286",
+      "requester_node_id": "612b5171fb9e1ba606f3b3904221932e8caf311fcdc3a505777b23db803af315",
+      "result_digest": "e5689d11e7bade06445586e043f72d79cb4c30f48f15a05a65ad4eeb3b0a5067",
+      "signature": "yM5EAM+nrmtyHY+a/krxgT36QY+HK9iCnh0Svg0Y3hHIXqJrJGO8PoweygGum6M1hh+6o+vOaCKR2gZh+Ur5Cw==",
+      "version": 1,
+      "worker_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255"
+    },
+    "chat_remote_context_opt_in": true,
+    "chat_ui_verified": true,
+    "connection_s": 0.73,
+    "controls_confirmed": true,
+    "expected_chat_model_id": "506317cc9f40da9dea40e6d14a94910ac6625ae478b5f2d0248cb1bbbb93a6c3",
+    "internet": true,
+    "language_preparation_permission_gate": true,
+    "pause_keeps_connection": true,
+    "reconnect_keeps_identity": true,
+    "success": true
+  },
+  "fixture_requesters_are_additional_physical_workers": false,
+  "laptop_memory": {
+    "calculation_engines_loaded": false,
+    "chat_cancellation_verified": true,
+    "chat_first_answer": "Una red descentralizada es una red de computadoras que no está controlada por un solo punto central.",
+    "chat_history_encrypted": true,
+    "chat_history_survives_reopen": true,
+    "chat_model_id": "506317cc9f40da9dea40e6d14a94910ac6625ae478b5f2d0248cb1bbbb93a6c3",
+    "chat_receipt": {
+      "finished_at": 1792039027.3796399,
+      "job_id": "3c9dc4c65a558c4dcfd0fed760bc5e620b87afe574f96bf9dee4dd95c2fc1931",
+      "requester_node_id": "6bdf2b9f921ec2cb905054062e5ad684d9b265f47f96e40f2690e1417639839e",
+      "result_digest": "d4ac81582c80ae08a32dfe6bc7793a7d608f8e8d69059d0a23d9be24388a2b02",
+      "signature": "9irGU4KmaRcaYcQtY5FVoN8Q58TzIwBGJvpzEU7eaOpwCy+28laRjypfj2Ysy5YLIRUNzcS4phBf3r5vgglSAA==",
+      "version": 1,
+      "worker_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255"
+    },
+    "chat_remote_context_opt_in": true,
+    "chat_ui_verified": true,
+    "connection_s": 0.83,
+    "controls_confirmed": true,
+    "expected_chat_model_id": "506317cc9f40da9dea40e6d14a94910ac6625ae478b5f2d0248cb1bbbb93a6c3",
+    "internet": true,
+    "language_preparation_permission_gate": true,
+    "pause_keeps_connection": true,
+    "personal_memory_comparison": {
+      "global_signals_from_personal": false,
+      "model_training_performed": false,
+      "private_inputs": false,
+      "results": [
+        {
+          "case": "es_code",
+          "fresh_process": {
+            "case": "es_code",
+            "context_sha256": "5c76ad36ad360f26d37d4bfe2e47e3f28bdd143b4a26ec85bdac84c6b05a0c3f",
+            "recalled_episodes": 1,
+            "restored_in_fresh_process": true,
+            "success": true
+          },
+          "memory": {
+            "answer": "jaspe-642",
+            "context_bytes": 254,
+            "context_messages": 6,
+            "context_sent": true,
+            "model_id": "506317cc9f40da9dea40e6d14a94910ac6625ae478b5f2d0248cb1bbbb93a6c3",
+            "provider_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+            "recalled_episodes": 1,
+            "receipt": {
+              "finished_at": 1792039038.7659354,
+              "job_id": "317d814956a7152ec018c9e046a9569572ecae06c682f400b694dd5e06830d6d",
+              "requester_node_id": "6bdf2b9f921ec2cb905054062e5ad684d9b265f47f96e40f2690e1417639839e",
+              "result_digest": "50502007739a3789dc5f64a7c852ecaa31718747abfeaaeea8be13047f6a3a7b",
+              "signature": "QXU4MRNBnt9ZG056DABFsJMEAg8N+BT9H9l6YWuoe9L9RMniSkW3iPdSpkqhMzNCb+xTQMEJt1Sa8YaxkL7yCw==",
+              "version": 1,
+              "worker_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255"
+            },
+            "route": "network",
+            "signed_result": {
+              "error": "",
+              "finished_at": 1792039038.7659354,
+              "job_id": "317d814956a7152ec018c9e046a9569572ecae06c682f400b694dd5e06830d6d",
+              "output": {
+                "answer": "jaspe-642",
+                "model_id": "506317cc9f40da9dea40e6d14a94910ac6625ae478b5f2d0248cb1bbbb93a6c3",
+                "output_tokens": 7
+              },
+              "receipt": {
+                "finished_at": 1792039038.7659354,
+                "job_id": "317d814956a7152ec018c9e046a9569572ecae06c682f400b694dd5e06830d6d",
+                "requester_node_id": "6bdf2b9f921ec2cb905054062e5ad684d9b265f47f96e40f2690e1417639839e",
+                "result_digest": "50502007739a3789dc5f64a7c852ecaa31718747abfeaaeea8be13047f6a3a7b",
+                "signature": "QXU4MRNBnt9ZG056DABFsJMEAg8N+BT9H9l6YWuoe9L9RMniSkW3iPdSpkqhMzNCb+xTQMEJt1Sa8YaxkL7yCw==",
+                "version": 1,
+                "worker_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255"
+              },
+              "status": "ok"
+            }
+          },
+          "recent": {
+            "answer": "A",
+            "context_bytes": 299,
+            "context_messages": 8,
+            "context_sent": true,
+            "model_id": "506317cc9f40da9dea40e6d14a94910ac6625ae478b5f2d0248cb1bbbb93a6c3",
+            "provider_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+            "recalled_episodes": 0,
+            "receipt": {
+              "finished_at": 1792039032.8969471,
+              "job_id": "6b5d90428372822e192d910c80f7e1d7fef47302669e11521fca6a401e73e501",
+              "requester_node_id": "6bdf2b9f921ec2cb905054062e5ad684d9b265f47f96e40f2690e1417639839e",
+              "result_digest": "bf4e2326ff7a83b8ee5e869437834f0b91183a5189f6c19b1ce34d5b06efb53f",
+              "signature": "AVjzl10tEs83dL/Hau0iyCbCKLYdc/AYmTauAB6Q4T7ivocqcqj+vwmOW8tZRB0wopezlNhQc31c4lO5R5K+AQ==",
+              "version": 1,
+              "worker_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255"
+            },
+            "route": "network",
+            "signed_result": {
+              "error": "",
+              "finished_at": 1792039032.8969471,
+              "job_id": "6b5d90428372822e192d910c80f7e1d7fef47302669e11521fca6a401e73e501",
+              "output": {
+                "answer": "A",
+                "model_id": "506317cc9f40da9dea40e6d14a94910ac6625ae478b5f2d0248cb1bbbb93a6c3",
+                "output_tokens": 2
+              },
+              "receipt": {
+                "finished_at": 1792039032.8969471,
+                "job_id": "6b5d90428372822e192d910c80f7e1d7fef47302669e11521fca6a401e73e501",
+                "requester_node_id": "6bdf2b9f921ec2cb905054062e5ad684d9b265f47f96e40f2690e1417639839e",
+                "result_digest": "bf4e2326ff7a83b8ee5e869437834f0b91183a5189f6c19b1ce34d5b06efb53f",
+                "signature": "AVjzl10tEs83dL/Hau0iyCbCKLYdc/AYmTauAB6Q4T7ivocqcqj+vwmOW8tZRB0wopezlNhQc31c4lO5R5K+AQ==",
+                "version": 1,
+                "worker_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255"
+              },
+              "status": "ok"
+            }
+          }
+        },
+        {
+          "case": "es_label",
+          "fresh_process": {
+            "case": "es_label",
+            "context_sha256": "f5bc40540d3ff28763bd923882b92fd337ab9b1840bd5bdd826f3cbd51f1f354",
+            "recalled_episodes": 1,
+            "restored_in_fresh_process": true,
+            "success": true
+          },
+          "memory": {
+            "answer": "aguamarina-731",
+            "context_bytes": 272,
+            "context_messages": 6,
+            "context_sent": true,
+            "model_id": "506317cc9f40da9dea40e6d14a94910ac6625ae478b5f2d0248cb1bbbb93a6c3",
+            "provider_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+            "recalled_episodes": 1,
+            "receipt": {
+              "finished_at": 1792039050.0669632,
+              "job_id": "32622bb69081701aba1573800a5126b3fdbf38f062a56f85b3ccaea94a383ffa",
+              "requester_node_id": "6bdf2b9f921ec2cb905054062e5ad684d9b265f47f96e40f2690e1417639839e",
+              "result_digest": "cc685c74fb90bf26568b4bfaa6981c615eb387a41a0335d26ee8570da72bcec7",
+              "signature": "cR/qJH9cvJ7dJC/43NXLF1QpUPmW6KtFpqv2IiOUptaCgCrqu+DOhJSft1jLVXo2xfqHetWIvpWtMgXgD21PAg==",
+              "version": 1,
+              "worker_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255"
+            },
+            "route": "network",
+            "signed_result": {
+              "error": "",
+              "finished_at": 1792039050.0669632,
+              "job_id": "32622bb69081701aba1573800a5126b3fdbf38f062a56f85b3ccaea94a383ffa",
+              "output": {
+                "answer": "aguamarina-731",
+                "model_id": "506317cc9f40da9dea40e6d14a94910ac6625ae478b5f2d0248cb1bbbb93a6c3",
+                "output_tokens": 8
+              },
+              "receipt": {
+                "finished_at": 1792039050.0669632,
+                "job_id": "32622bb69081701aba1573800a5126b3fdbf38f062a56f85b3ccaea94a383ffa",
+                "requester_node_id": "6bdf2b9f921ec2cb905054062e5ad684d9b265f47f96e40f2690e1417639839e",
+                "result_digest": "cc685c74fb90bf26568b4bfaa6981c615eb387a41a0335d26ee8570da72bcec7",
+                "signature": "cR/qJH9cvJ7dJC/43NXLF1QpUPmW6KtFpqv2IiOUptaCgCrqu+DOhJSft1jLVXo2xfqHetWIvpWtMgXgD21PAg==",
+                "version": 1,
+                "worker_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255"
+              },
+              "status": "ok"
+            }
+          },
+          "recent": {
+            "answer": "Azucena",
+            "context_bytes": 307,
+            "context_messages": 8,
+            "context_sent": true,
+            "model_id": "506317cc9f40da9dea40e6d14a94910ac6625ae478b5f2d0248cb1bbbb93a6c3",
+            "provider_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+            "recalled_episodes": 0,
+            "receipt": {
+              "finished_at": 1792039044.198923,
+              "job_id": "afb5d3fe58cfb662fb3e7563cc4ad34b35ece56478b9ae9b5d76602d11ba6285",
+              "requester_node_id": "6bdf2b9f921ec2cb905054062e5ad684d9b265f47f96e40f2690e1417639839e",
+              "result_digest": "cd19a9ec4682fd9e881d3cd985fd2279a014983f51fcd1fae4a516d3fcd63f3f",
+              "signature": "x/uY2MYydR+PWaV1OdmfKMcyQJkPDiVvuZ2AUHBHITHwXPzkaj1j7TugaJ/kL9NFrOlwxMI9sFjWI7WPBudbDA==",
+              "version": 1,
+              "worker_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255"
+            },
+            "route": "network",
+            "signed_result": {
+              "error": "",
+              "finished_at": 1792039044.198923,
+              "job_id": "afb5d3fe58cfb662fb3e7563cc4ad34b35ece56478b9ae9b5d76602d11ba6285",
+              "output": {
+                "answer": "Azucena",
+                "model_id": "506317cc9f40da9dea40e6d14a94910ac6625ae478b5f2d0248cb1bbbb93a6c3",
+                "output_tokens": 4
+              },
+              "receipt": {
+                "finished_at": 1792039044.198923,
+                "job_id": "afb5d3fe58cfb662fb3e7563cc4ad34b35ece56478b9ae9b5d76602d11ba6285",
+                "requester_node_id": "6bdf2b9f921ec2cb905054062e5ad684d9b265f47f96e40f2690e1417639839e",
+                "result_digest": "cd19a9ec4682fd9e881d3cd985fd2279a014983f51fcd1fae4a516d3fcd63f3f",
+                "signature": "x/uY2MYydR+PWaV1OdmfKMcyQJkPDiVvuZ2AUHBHITHwXPzkaj1j7TugaJ/kL9NFrOlwxMI9sFjWI7WPBudbDA==",
+                "version": 1,
+                "worker_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255"
+              },
+              "status": "ok"
+            }
+          }
+        },
+        {
+          "case": "es_location",
+          "fresh_process": {
+            "case": "es_location",
+            "context_sha256": "c3ac5806505960f269b4be74fe9d8d7b3a5414e135f8e6f1f932b9feaa46f053",
+            "recalled_episodes": 1,
+            "restored_in_fresh_process": true,
+            "success": true
+          },
+          "memory": {
+            "answer": "estante-624",
+            "context_bytes": 275,
+            "context_messages": 6,
+            "context_sent": true,
+            "model_id": "506317cc9f40da9dea40e6d14a94910ac6625ae478b5f2d0248cb1bbbb93a6c3",
+            "provider_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+            "recalled_episodes": 1,
+            "receipt": {
+              "finished_at": 1792039061.4244401,
+              "job_id": "dca48d0ce3ede134f107b62ac0f311dc5149f074c992e55d5243be47f7c87945",
+              "requester_node_id": "6bdf2b9f921ec2cb905054062e5ad684d9b265f47f96e40f2690e1417639839e",
+              "result_digest": "e7310ec3ae12127fc31e0cc56f67ba96bf15c7e6b0c2e51ea1576ecf62bb60e7",
+              "signature": "skm7IKeBAZjTAZaoFVACotUlZRKfpbbioXIYUd/jnwKKxufQwgMH8m7CzqlR8RLmhlhqr3PW71OzVPffcjw+BQ==",
+              "version": 1,
+              "worker_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255"
+            },
+            "route": "network",
+            "signed_result": {
+              "error": "",
+              "finished_at": 1792039061.4244401,
+              "job_id": "dca48d0ce3ede134f107b62ac0f311dc5149f074c992e55d5243be47f7c87945",
+              "output": {
+                "answer": "estante-624",
+                "model_id": "506317cc9f40da9dea40e6d14a94910ac6625ae478b5f2d0248cb1bbbb93a6c3",
+                "output_tokens": 7
+              },
+              "receipt": {
+                "finished_at": 1792039061.4244401,
+                "job_id": "dca48d0ce3ede134f107b62ac0f311dc5149f074c992e55d5243be47f7c87945",
+                "requester_node_id": "6bdf2b9f921ec2cb905054062e5ad684d9b265f47f96e40f2690e1417639839e",
+                "result_digest": "e7310ec3ae12127fc31e0cc56f67ba96bf15c7e6b0c2e51ea1576ecf62bb60e7",
+                "signature": "skm7IKeBAZjTAZaoFVACotUlZRKfpbbioXIYUd/jnwKKxufQwgMH8m7CzqlR8RLmhlhqr3PW71OzVPffcjw+BQ==",
+                "version": 1,
+                "worker_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255"
+              },
+              "status": "ok"
+            }
+          },
+          "recent": {
+            "answer": "sobre la mesa",
+            "context_bytes": 310,
+            "context_messages": 8,
+            "context_sent": true,
+            "model_id": "506317cc9f40da9dea40e6d14a94910ac6625ae478b5f2d0248cb1bbbb93a6c3",
+            "provider_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+            "recalled_episodes": 0,
+            "receipt": {
+              "finished_at": 1792039055.5512521,
+              "job_id": "e205c2199e4749e33b6321fb1eb9f81a9881c15d712be85d59afaf0028f082fd",
+              "requester_node_id": "6bdf2b9f921ec2cb905054062e5ad684d9b265f47f96e40f2690e1417639839e",
+              "result_digest": "b831afc3eb95b2d16abe71c2c25604484889ded2b8d54b1cdea38fa2b7ef4310",
+              "signature": "amzr/12o4z66dM99mKg2oddyk7pOOWwM83c3Ct7gb3nJELuv2l/FbXw0LabzuK32Hwh8yHktnBbtzMR15x8fDw==",
+              "version": 1,
+              "worker_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255"
+            },
+            "route": "network",
+            "signed_result": {
+              "error": "",
+              "finished_at": 1792039055.5512521,
+              "job_id": "e205c2199e4749e33b6321fb1eb9f81a9881c15d712be85d59afaf0028f082fd",
+              "output": {
+                "answer": "sobre la mesa",
+                "model_id": "506317cc9f40da9dea40e6d14a94910ac6625ae478b5f2d0248cb1bbbb93a6c3",
+                "output_tokens": 5
+              },
+              "receipt": {
+                "finished_at": 1792039055.5512521,
+                "job_id": "e205c2199e4749e33b6321fb1eb9f81a9881c15d712be85d59afaf0028f082fd",
+                "requester_node_id": "6bdf2b9f921ec2cb905054062e5ad684d9b265f47f96e40f2690e1417639839e",
+                "result_digest": "b831afc3eb95b2d16abe71c2c25604484889ded2b8d54b1cdea38fa2b7ef4310",
+                "signature": "amzr/12o4z66dM99mKg2oddyk7pOOWwM83c3Ct7gb3nJELuv2l/FbXw0LabzuK32Hwh8yHktnBbtzMR15x8fDw==",
+                "version": 1,
+                "worker_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255"
+              },
+              "status": "ok"
+            }
+          }
+        },
+        {
+          "case": "es_correction",
+          "fresh_process": {
+            "case": "es_correction",
+            "context_sha256": "14538b07d646c00dc4bb5f0dbc9291b0602380173d2cb50516d88f33dd819a36",
+            "recalled_episodes": 2,
+            "restored_in_fresh_process": true,
+            "success": true
+          },
+          "memory": {
+            "answer": "granito-958",
+            "context_bytes": 352,
+            "context_messages": 8,
+            "context_sent": true,
+            "model_id": "506317cc9f40da9dea40e6d14a94910ac6625ae478b5f2d0248cb1bbbb93a6c3",
+            "provider_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+            "recalled_episodes": 2,
+            "receipt": {
+              "finished_at": 1792039072.8145933,
+              "job_id": "c2e2252e6c6dcc28f3a11bdcc1d155bfef3f7b7f1e7a89db1f4c1182ca062587",
+              "requester_node_id": "6bdf2b9f921ec2cb905054062e5ad684d9b265f47f96e40f2690e1417639839e",
+              "result_digest": "3802ff26d1925a25c64d7e2eb94a248d241ea6e8288dda5ec59241955bea30b8",
+              "signature": "VkviePgIE8c43BW1JCRhnSivDGMmXpY1mN922G4EOwAwAexGXx0rfOboynSt0lvAt5Iq+wRi8vMciF2ArAT3CA==",
+              "version": 1,
+              "worker_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255"
+            },
+            "route": "network",
+            "signed_result": {
+              "error": "",
+              "finished_at": 1792039072.8145933,
+              "job_id": "c2e2252e6c6dcc28f3a11bdcc1d155bfef3f7b7f1e7a89db1f4c1182ca062587",
+              "output": {
+                "answer": "granito-958",
+                "model_id": "506317cc9f40da9dea40e6d14a94910ac6625ae478b5f2d0248cb1bbbb93a6c3",
+                "output_tokens": 7
+              },
+              "receipt": {
+                "finished_at": 1792039072.8145933,
+                "job_id": "c2e2252e6c6dcc28f3a11bdcc1d155bfef3f7b7f1e7a89db1f4c1182ca062587",
+                "requester_node_id": "6bdf2b9f921ec2cb905054062e5ad684d9b265f47f96e40f2690e1417639839e",
+                "result_digest": "3802ff26d1925a25c64d7e2eb94a248d241ea6e8288dda5ec59241955bea30b8",
+                "signature": "VkviePgIE8c43BW1JCRhnSivDGMmXpY1mN922G4EOwAwAexGXx0rfOboynSt0lvAt5Iq+wRi8vMciF2ArAT3CA==",
+                "version": 1,
+                "worker_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255"
+              },
+              "status": "ok"
+            }
+          },
+          "recent": {
+            "answer": "Cedro",
+            "context_bytes": 306,
+            "context_messages": 8,
+            "context_sent": true,
+            "model_id": "506317cc9f40da9dea40e6d14a94910ac6625ae478b5f2d0248cb1bbbb93a6c3",
+            "provider_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+            "recalled_episodes": 0,
+            "receipt": {
+              "finished_at": 1792039066.9219286,
+              "job_id": "f6094ccc7cf7b48c164a38a40fa6423ae00dfc76be2b0d764f5e44fcbd16ef23",
+              "requester_node_id": "6bdf2b9f921ec2cb905054062e5ad684d9b265f47f96e40f2690e1417639839e",
+              "result_digest": "c61389d4e3e21e18ce269946dd568200f3ed0c1ff84111cf4fb4d1a68e6a81e2",
+              "signature": "cS7ZI4gFtvx5njITpVqLTFWXcwcHUSh1q1HVr5xYCccK+WVXYnasjy2q5rldqoN9p6VPl1yLicTSWhpr8nmJBg==",
+              "version": 1,
+              "worker_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255"
+            },
+            "route": "network",
+            "signed_result": {
+              "error": "",
+              "finished_at": 1792039066.9219286,
+              "job_id": "f6094ccc7cf7b48c164a38a40fa6423ae00dfc76be2b0d764f5e44fcbd16ef23",
+              "output": {
+                "answer": "Cedro",
+                "model_id": "506317cc9f40da9dea40e6d14a94910ac6625ae478b5f2d0248cb1bbbb93a6c3",
+                "output_tokens": 4
+              },
+              "receipt": {
+                "finished_at": 1792039066.9219286,
+                "job_id": "f6094ccc7cf7b48c164a38a40fa6423ae00dfc76be2b0d764f5e44fcbd16ef23",
+                "requester_node_id": "6bdf2b9f921ec2cb905054062e5ad684d9b265f47f96e40f2690e1417639839e",
+                "result_digest": "c61389d4e3e21e18ce269946dd568200f3ed0c1ff84111cf4fb4d1a68e6a81e2",
+                "signature": "cS7ZI4gFtvx5njITpVqLTFWXcwcHUSh1q1HVr5xYCccK+WVXYnasjy2q5rldqoN9p6VPl1yLicTSWhpr8nmJBg==",
+                "version": 1,
+                "worker_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255"
+              },
+              "status": "ok"
+            }
+          }
+        },
+        {
+          "case": "en_code",
+          "fresh_process": {
+            "case": "en_code",
+            "context_sha256": "7d5f8ece672c71cd98dcda055e7d365aea46c1f450373d2641feebdc1f19029c",
+            "recalled_episodes": 1,
+            "restored_in_fresh_process": true,
+            "success": true
+          },
+          "memory": {
+            "answer": "cinder-593",
+            "context_bytes": 263,
+            "context_messages": 6,
+            "context_sent": true,
+            "model_id": "506317cc9f40da9dea40e6d14a94910ac6625ae478b5f2d0248cb1bbbb93a6c3",
+            "provider_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+            "recalled_episodes": 1,
+            "receipt": {
+              "finished_at": 1792039084.1711726,
+              "job_id": "646e340ad13f8dc995ee84a14b96e5c1391f748be35fdc03c0561bca163457eb",
+              "requester_node_id": "6bdf2b9f921ec2cb905054062e5ad684d9b265f47f96e40f2690e1417639839e",
+              "result_digest": "3ede767c9063b6f8d9aeeeed47d885d0026ec74eb5d50d32e7976c0971b3f381",
+              "signature": "oYsIS7Vhw76aTJtPbBfTEbD7FG/oIVD9AYThJsbwwk8ZnnCnSsUvcuiJGLThVzRE2OmaJ+bN8JIsQPBScpU7Bw==",
+              "version": 1,
+              "worker_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255"
+            },
+            "route": "network",
+            "signed_result": {
+              "error": "",
+              "finished_at": 1792039084.1711726,
+              "job_id": "646e340ad13f8dc995ee84a14b96e5c1391f748be35fdc03c0561bca163457eb",
+              "output": {
+                "answer": "cinder-593",
+                "model_id": "506317cc9f40da9dea40e6d14a94910ac6625ae478b5f2d0248cb1bbbb93a6c3",
+                "output_tokens": 7
+              },
+              "receipt": {
+                "finished_at": 1792039084.1711726,
+                "job_id": "646e340ad13f8dc995ee84a14b96e5c1391f748be35fdc03c0561bca163457eb",
+                "requester_node_id": "6bdf2b9f921ec2cb905054062e5ad684d9b265f47f96e40f2690e1417639839e",
+                "result_digest": "3ede767c9063b6f8d9aeeeed47d885d0026ec74eb5d50d32e7976c0971b3f381",
+                "signature": "oYsIS7Vhw76aTJtPbBfTEbD7FG/oIVD9AYThJsbwwk8ZnnCnSsUvcuiJGLThVzRE2OmaJ+bN8JIsQPBScpU7Bw==",
+                "version": 1,
+                "worker_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255"
+              },
+              "status": "ok"
+            }
+          },
+          "recent": {
+            "answer": "Riv\n</think>\n\nRiv",
+            "context_bytes": 302,
+            "context_messages": 8,
+            "context_sent": true,
+            "model_id": "506317cc9f40da9dea40e6d14a94910ac6625ae478b5f2d0248cb1bbbb93a6c3",
+            "provider_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+            "recalled_episodes": 0,
+            "receipt": {
+              "finished_at": 1792039078.2554367,
+              "job_id": "a5cb57adc49dc7fb70e894f84f5988dbdb80af47ba0058a697cb534da2ac7782",
+              "requester_node_id": "6bdf2b9f921ec2cb905054062e5ad684d9b265f47f96e40f2690e1417639839e",
+              "result_digest": "e74e4913e2a4b4d228bf652592533a0f5a3a2f0965cc6727504eba68c56a3e0e",
+              "signature": "XYcxGuKaJeY31K+ulyWCv4rq9i+Unc3FsjTlB4iV+8AkJ5LF/a5cc/zcYHk4fUPh3mrlXCOCPYFtSjlMBTquAQ==",
+              "version": 1,
+              "worker_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255"
+            },
+            "route": "network",
+            "signed_result": {
+              "error": "",
+              "finished_at": 1792039078.2554367,
+              "job_id": "a5cb57adc49dc7fb70e894f84f5988dbdb80af47ba0058a697cb534da2ac7782",
+              "output": {
+                "answer": "Riv\n</think>\n\nRiv",
+                "model_id": "506317cc9f40da9dea40e6d14a94910ac6625ae478b5f2d0248cb1bbbb93a6c3",
+                "output_tokens": 8
+              },
+              "receipt": {
+                "finished_at": 1792039078.2554367,
+                "job_id": "a5cb57adc49dc7fb70e894f84f5988dbdb80af47ba0058a697cb534da2ac7782",
+                "requester_node_id": "6bdf2b9f921ec2cb905054062e5ad684d9b265f47f96e40f2690e1417639839e",
+                "result_digest": "e74e4913e2a4b4d228bf652592533a0f5a3a2f0965cc6727504eba68c56a3e0e",
+                "signature": "XYcxGuKaJeY31K+ulyWCv4rq9i+Unc3FsjTlB4iV+8AkJ5LF/a5cc/zcYHk4fUPh3mrlXCOCPYFtSjlMBTquAQ==",
+                "version": 1,
+                "worker_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255"
+              },
+              "status": "ok"
+            }
+          }
+        },
+        {
+          "case": "en_location",
+          "fresh_process": {
+            "case": "en_location",
+            "context_sha256": "b203b47d0329d2b3bcc4815a0194a69c39dcb8b8d2b11b3b8e38b482e11cca52",
+            "recalled_episodes": 1,
+            "restored_in_fresh_process": true,
+            "success": true
+          },
+          "memory": {
+            "answer": "shelf-826",
+            "context_bytes": 268,
+            "context_messages": 6,
+            "context_sent": true,
+            "model_id": "506317cc9f40da9dea40e6d14a94910ac6625ae478b5f2d0248cb1bbbb93a6c3",
+            "provider_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+            "recalled_episodes": 1,
+            "receipt": {
+              "finished_at": 1792039095.559452,
+              "job_id": "372c8369a323cff8d521043a0f2cd2ca1637fd48d6512fcdbbb01961df3e294f",
+              "requester_node_id": "6bdf2b9f921ec2cb905054062e5ad684d9b265f47f96e40f2690e1417639839e",
+              "result_digest": "6bb00825f04999f076c9a79a4e33333fb9714bcfd77b59a9c48d72d3514a824b",
+              "signature": "ozT6T4mKJJgt7BxvShmn8BiLjP5uIDLfBj7Yvn+s+fbdZGjdGCID5DxgzQ+aP8axmp+hxNSY2CIeNxkYA9mJDQ==",
+              "version": 1,
+              "worker_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255"
+            },
+            "route": "network",
+            "signed_result": {
+              "error": "",
+              "finished_at": 1792039095.559452,
+              "job_id": "372c8369a323cff8d521043a0f2cd2ca1637fd48d6512fcdbbb01961df3e294f",
+              "output": {
+                "answer": "shelf-826",
+                "model_id": "506317cc9f40da9dea40e6d14a94910ac6625ae478b5f2d0248cb1bbbb93a6c3",
+                "output_tokens": 6
+              },
+              "receipt": {
+                "finished_at": 1792039095.559452,
+                "job_id": "372c8369a323cff8d521043a0f2cd2ca1637fd48d6512fcdbbb01961df3e294f",
+                "requester_node_id": "6bdf2b9f921ec2cb905054062e5ad684d9b265f47f96e40f2690e1417639839e",
+                "result_digest": "6bb00825f04999f076c9a79a4e33333fb9714bcfd77b59a9c48d72d3514a824b",
+                "signature": "ozT6T4mKJJgt7BxvShmn8BiLjP5uIDLfBj7Yvn+s+fbdZGjdGCID5DxgzQ+aP8axmp+hxNSY2CIeNxkYA9mJDQ==",
+                "version": 1,
+                "worker_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255"
+              },
+              "status": "ok"
+            }
+          },
+          "recent": {
+            "answer": "backup_maple",
+            "context_bytes": 306,
+            "context_messages": 8,
+            "context_sent": true,
+            "model_id": "506317cc9f40da9dea40e6d14a94910ac6625ae478b5f2d0248cb1bbbb93a6c3",
+            "provider_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+            "recalled_episodes": 0,
+            "receipt": {
+              "finished_at": 1792039089.6612706,
+              "job_id": "ad2d3a723da40044e01dfbc628dcdfd6481059229cbf564dc9df7f9128b77c96",
+              "requester_node_id": "6bdf2b9f921ec2cb905054062e5ad684d9b265f47f96e40f2690e1417639839e",
+              "result_digest": "4b8220b67d031c4b9f32e6cd8f5135702ca0a30a4a75c994a7d720741cf2ac2b",
+              "signature": "xF0uFg9wr3WrDDH/Uv9u5qG9JZIlg63BWf9Bvf3+Mo6QRdqfHoM/93F8qUUcEl/b1/rSUK4KnIm3LyJr+TPiCA==",
+              "version": 1,
+              "worker_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255"
+            },
+            "route": "network",
+            "signed_result": {
+              "error": "",
+              "finished_at": 1792039089.6612706,
+              "job_id": "ad2d3a723da40044e01dfbc628dcdfd6481059229cbf564dc9df7f9128b77c96",
+              "output": {
+                "answer": "backup_maple",
+                "model_id": "506317cc9f40da9dea40e6d14a94910ac6625ae478b5f2d0248cb1bbbb93a6c3",
+                "output_tokens": 4
+              },
+              "receipt": {
+                "finished_at": 1792039089.6612706,
+                "job_id": "ad2d3a723da40044e01dfbc628dcdfd6481059229cbf564dc9df7f9128b77c96",
+                "requester_node_id": "6bdf2b9f921ec2cb905054062e5ad684d9b265f47f96e40f2690e1417639839e",
+                "result_digest": "4b8220b67d031c4b9f32e6cd8f5135702ca0a30a4a75c994a7d720741cf2ac2b",
+                "signature": "xF0uFg9wr3WrDDH/Uv9u5qG9JZIlg63BWf9Bvf3+Mo6QRdqfHoM/93F8qUUcEl/b1/rSUK4KnIm3LyJr+TPiCA==",
+                "version": 1,
+                "worker_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255"
+              },
+              "status": "ok"
+            }
+          }
+        },
+        {
+          "case": "en_label",
+          "fresh_process": {
+            "case": "en_label",
+            "context_sha256": "3bc856da55b39f8ed39b348f3c9008031d13e0eadfcd76be722eb104d568b42b",
+            "recalled_episodes": 1,
+            "restored_in_fresh_process": true,
+            "success": true
+          },
+          "memory": {
+            "answer": "violet-218",
+            "context_bytes": 262,
+            "context_messages": 6,
+            "context_sent": true,
+            "model_id": "506317cc9f40da9dea40e6d14a94910ac6625ae478b5f2d0248cb1bbbb93a6c3",
+            "provider_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+            "recalled_episodes": 1,
+            "receipt": {
+              "finished_at": 1792039106.9326744,
+              "job_id": "450f731ef0d3ceeeb2a150a5c22c420f66a951de26bd737c53976f01b69bc2a4",
+              "requester_node_id": "6bdf2b9f921ec2cb905054062e5ad684d9b265f47f96e40f2690e1417639839e",
+              "result_digest": "8ef59aa1aceac51ca55cae1ac18c7d496d25b9af6f4d8aea2fa058b85ad7a5e5",
+              "signature": "xMCz3+GxNRZnWbcWNAv5n/hzneYwgN3qbSdQN9ZXi5pxMGbvPnVHW0dVNk+I0Eej3qsnLBQtRmOhpYYjTlA+Aw==",
+              "version": 1,
+              "worker_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255"
+            },
+            "route": "network",
+            "signed_result": {
+              "error": "",
+              "finished_at": 1792039106.9326744,
+              "job_id": "450f731ef0d3ceeeb2a150a5c22c420f66a951de26bd737c53976f01b69bc2a4",
+              "output": {
+                "answer": "violet-218",
+                "model_id": "506317cc9f40da9dea40e6d14a94910ac6625ae478b5f2d0248cb1bbbb93a6c3",
+                "output_tokens": 7
+              },
+              "receipt": {
+                "finished_at": 1792039106.9326744,
+                "job_id": "450f731ef0d3ceeeb2a150a5c22c420f66a951de26bd737c53976f01b69bc2a4",
+                "requester_node_id": "6bdf2b9f921ec2cb905054062e5ad684d9b265f47f96e40f2690e1417639839e",
+                "result_digest": "8ef59aa1aceac51ca55cae1ac18c7d496d25b9af6f4d8aea2fa058b85ad7a5e5",
+                "signature": "xMCz3+GxNRZnWbcWNAv5n/hzneYwgN3qbSdQN9ZXi5pxMGbvPnVHW0dVNk+I0Eej3qsnLBQtRmOhpYYjTlA+Aw==",
+                "version": 1,
+                "worker_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255"
+              },
+              "status": "ok"
+            }
+          },
+          "recent": {
+            "answer": "Willow",
+            "context_bytes": 302,
+            "context_messages": 8,
+            "context_sent": true,
+            "model_id": "506317cc9f40da9dea40e6d14a94910ac6625ae478b5f2d0248cb1bbbb93a6c3",
+            "provider_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+            "recalled_episodes": 0,
+            "receipt": {
+              "finished_at": 1792039101.0034912,
+              "job_id": "b5bc790bb596760d674385f5d0021d63f987ee114746d1012b2701fa5ad75198",
+              "requester_node_id": "6bdf2b9f921ec2cb905054062e5ad684d9b265f47f96e40f2690e1417639839e",
+              "result_digest": "4e968fc8632f5e294af3d965b42f6af6ac38d479a94df1a0f592d6ed45059453",
+              "signature": "Go0cYlAtK+l3bn054q/v/JMyQZjwTmLYHZhSqvheNfEqmDZZ4S0eGhUo4PApsh/faNqA8p32ZP5VXyQ4jzXNCg==",
+              "version": 1,
+              "worker_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255"
+            },
+            "route": "network",
+            "signed_result": {
+              "error": "",
+              "finished_at": 1792039101.0034912,
+              "job_id": "b5bc790bb596760d674385f5d0021d63f987ee114746d1012b2701fa5ad75198",
+              "output": {
+                "answer": "Willow",
+                "model_id": "506317cc9f40da9dea40e6d14a94910ac6625ae478b5f2d0248cb1bbbb93a6c3",
+                "output_tokens": 3
+              },
+              "receipt": {
+                "finished_at": 1792039101.0034912,
+                "job_id": "b5bc790bb596760d674385f5d0021d63f987ee114746d1012b2701fa5ad75198",
+                "requester_node_id": "6bdf2b9f921ec2cb905054062e5ad684d9b265f47f96e40f2690e1417639839e",
+                "result_digest": "4e968fc8632f5e294af3d965b42f6af6ac38d479a94df1a0f592d6ed45059453",
+                "signature": "Go0cYlAtK+l3bn054q/v/JMyQZjwTmLYHZhSqvheNfEqmDZZ4S0eGhUo4PApsh/faNqA8p32ZP5VXyQ4jzXNCg==",
+                "version": 1,
+                "worker_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255"
+              },
+              "status": "ok"
+            }
+          }
+        },
+        {
+          "case": "en_correction",
+          "fresh_process": {
+            "case": "en_correction",
+            "context_sha256": "c9e2bad7414b0081a1ff1af47d6168984bdb1158d8f9f5d44df5cd41ff94e750",
+            "recalled_episodes": 2,
+            "restored_in_fresh_process": true,
+            "success": true
+          },
+          "memory": {
+            "answer": "copper-947",
+            "context_bytes": 354,
+            "context_messages": 8,
+            "context_sent": true,
+            "model_id": "506317cc9f40da9dea40e6d14a94910ac6625ae478b5f2d0248cb1bbbb93a6c3",
+            "provider_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+            "recalled_episodes": 2,
+            "receipt": {
+              "finished_at": 1792039118.3413796,
+              "job_id": "9c25a76d49af0af979e71517efb08fbab8cc388412722927e2114b9165c7a356",
+              "requester_node_id": "6bdf2b9f921ec2cb905054062e5ad684d9b265f47f96e40f2690e1417639839e",
+              "result_digest": "f02835e2b7602c476eedfcb741fca7fe8b22de721b92985f5dd80634cfbbd75b",
+              "signature": "oBaLnACMkdXAR9dxUIRcRV3954NpPmKdf3FIQtp1fMe+qnQkwHL7442RSCE0b51lH8C7AyM45/0S+Xd+E933CQ==",
+              "version": 1,
+              "worker_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255"
+            },
+            "route": "network",
+            "signed_result": {
+              "error": "",
+              "finished_at": 1792039118.3413796,
+              "job_id": "9c25a76d49af0af979e71517efb08fbab8cc388412722927e2114b9165c7a356",
+              "output": {
+                "answer": "copper-947",
+                "model_id": "506317cc9f40da9dea40e6d14a94910ac6625ae478b5f2d0248cb1bbbb93a6c3",
+                "output_tokens": 7
+              },
+              "receipt": {
+                "finished_at": 1792039118.3413796,
+                "job_id": "9c25a76d49af0af979e71517efb08fbab8cc388412722927e2114b9165c7a356",
+                "requester_node_id": "6bdf2b9f921ec2cb905054062e5ad684d9b265f47f96e40f2690e1417639839e",
+                "result_digest": "f02835e2b7602c476eedfcb741fca7fe8b22de721b92985f5dd80634cfbbd75b",
+                "signature": "oBaLnACMkdXAR9dxUIRcRV3954NpPmKdf3FIQtp1fMe+qnQkwHL7442RSCE0b51lH8C7AyM45/0S+Xd+E933CQ==",
+                "version": 1,
+                "worker_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255"
+              },
+              "status": "ok"
+            }
+          },
+          "recent": {
+            "answer": "Orchid: 1234567890",
+            "context_bytes": 307,
+            "context_messages": 8,
+            "context_sent": true,
+            "model_id": "506317cc9f40da9dea40e6d14a94910ac6625ae478b5f2d0248cb1bbbb93a6c3",
+            "provider_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+            "recalled_episodes": 0,
+            "receipt": {
+              "finished_at": 1792039112.4923959,
+              "job_id": "cf19c1a8025e99c307f9c7554ba6a28325c4ccec6863122b33ad715e6d7b6ab8",
+              "requester_node_id": "6bdf2b9f921ec2cb905054062e5ad684d9b265f47f96e40f2690e1417639839e",
+              "result_digest": "e19caf73de99e7ae5ed556dfd4fc7ed114b48a55615255c5056cb99843603778",
+              "signature": "XvFMY888P68uFP0DscPiA//ex9zDi46gHuHeDZNq7hK+IWXxU8OfZg/yO6uJBFuSAsfcm+3SAxFNKEsq1EB7Bw==",
+              "version": 1,
+              "worker_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255"
+            },
+            "route": "network",
+            "signed_result": {
+              "error": "",
+              "finished_at": 1792039112.4923959,
+              "job_id": "cf19c1a8025e99c307f9c7554ba6a28325c4ccec6863122b33ad715e6d7b6ab8",
+              "output": {
+                "answer": "Orchid: 1234567890",
+                "model_id": "506317cc9f40da9dea40e6d14a94910ac6625ae478b5f2d0248cb1bbbb93a6c3",
+                "output_tokens": 16
+              },
+              "receipt": {
+                "finished_at": 1792039112.4923959,
+                "job_id": "cf19c1a8025e99c307f9c7554ba6a28325c4ccec6863122b33ad715e6d7b6ab8",
+                "requester_node_id": "6bdf2b9f921ec2cb905054062e5ad684d9b265f47f96e40f2690e1417639839e",
+                "result_digest": "e19caf73de99e7ae5ed556dfd4fc7ed114b48a55615255c5056cb99843603778",
+                "signature": "XvFMY888P68uFP0DscPiA//ex9zDi46gHuHeDZNq7hK+IWXxU8OfZg/yO6uJBFuSAsfcm+3SAxFNKEsq1EB7Bw==",
+                "version": 1,
+                "worker_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255"
+              },
+              "status": "ok"
+            }
+          }
+        }
+      ],
+      "verdict": {
+        "case_digest": "907d7abf09baa77eb5a81f4478ee1a92db1353bd0f6f93b57662411a8618afa9",
+        "eligible": true,
+        "gain": 8,
+        "memory_correct": 8,
+        "recent_correct": 0,
+        "regressions": [],
+        "scope": "Synthetic episodic recall and correction with one unchanged expert; not a general memory or neural-routing claim",
+        "total": 8
+      }
+    },
+    "reconnect_keeps_identity": true,
+    "success": true
+  },
+  "limitations": [
+    "Synthetic episodic text recall only; neural orientation, Dolphin, global memory and sect integration remain pending",
+    "Fresh native processes read encrypted synthetic state; no physical machine reboot in this assessment",
+    "No full clean GPU installation or open-operator training acceptance claim"
+  ],
+  "new_model_published": false,
+  "new_training_cycles": 0,
+  "physical_desktop": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+  "physical_laptop": "ea914d97caafef310e50385034abae9a50ba86496b0e9cbf4679e6070e4c25b0",
+  "private_user_data_loaded": false,
+  "schema_version": 1,
+  "scope": "Exact corrected Linux CI archive: light-client current-version verification and synthetic personal-memory ablation over public Internet"
+}

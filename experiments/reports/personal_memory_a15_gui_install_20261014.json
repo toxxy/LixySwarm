@@ -1,0 +1,38 @@
+{
+  "nodes": [
+    {
+      "app_source_revision": "b5716182cdafd26f022232db089ecb3b4f164493",
+      "app_version": "0.4.0a15",
+      "archive_sha256": "e862954bfebc75053ee9db71de3378920cf18def0e28879609cbf425bb7a7121",
+      "controls_and_native_progress_unchanged": true,
+      "existing_node_pid": 2874364,
+      "existing_node_runtime": "0.4.0a14",
+      "installed_bundle_digest": "9c643930379b",
+      "launcher_updated": true,
+      "model_id": "506317cc9f40da9dea40e6d14a94910ac6625ae478b5f2d0248cb1bbbb93a6c3",
+      "node_restarted": false,
+      "node_service_unchanged": true,
+      "personal_store_opened_by_installer": false,
+      "physical_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+      "success": true
+    },
+    {
+      "app_source_revision": "b5716182cdafd26f022232db089ecb3b4f164493",
+      "app_version": "0.4.0a15",
+      "archive_sha256": "e862954bfebc75053ee9db71de3378920cf18def0e28879609cbf425bb7a7121",
+      "controls_and_native_progress_unchanged": true,
+      "existing_node_pid": 499230,
+      "existing_node_runtime": "0.4.0a14",
+      "installed_bundle_digest": "9c643930379b",
+      "launcher_updated": true,
+      "model_id": "506317cc9f40da9dea40e6d14a94910ac6625ae478b5f2d0248cb1bbbb93a6c3",
+      "node_restarted": false,
+      "node_service_unchanged": true,
+      "personal_store_opened_by_installer": false,
+      "physical_node_id": "ea914d97caafef310e50385034abae9a50ba86496b0e9cbf4679e6070e4c25b0",
+      "success": true
+    }
+  ],
+  "schema_version": 1,
+  "scope": "Install verified A15 GUI and launcher while preserving the existing physical A14 services and all contribution controls"
+}

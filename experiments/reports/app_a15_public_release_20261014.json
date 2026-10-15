@@ -1,0 +1,26 @@
+{
+  "anonymous_downloads": [
+    {
+      "authenticated_request": false,
+      "bytes": 81970610,
+      "physical_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+      "sha256": "e862954bfebc75053ee9db71de3378920cf18def0e28879609cbf425bb7a7121",
+      "success": true
+    },
+    {
+      "authenticated_request": false,
+      "bytes": 81970610,
+      "physical_node_id": "ea914d97caafef310e50385034abae9a50ba86496b0e9cbf4679e6070e4c25b0",
+      "sha256": "e862954bfebc75053ee9db71de3378920cf18def0e28879609cbf425bb7a7121",
+      "success": true
+    }
+  ],
+  "ci_run_id": 38681846879,
+  "download_url": "https://github.com/toxxy/LixySwarm/releases/download/v0.4.0a15/LixySwarm-0.4.0a15-linux-x86_64.tar.gz",
+  "exact_native_tested_archive_published": true,
+  "full_clean_gpu_installation_verified": false,
+  "release_url": "https://github.com/toxxy/LixySwarm/releases/tag/v0.4.0a15",
+  "schema_version": 1,
+  "signed_installer": false,
+  "source_revision": "b5716182cdafd26f022232db089ecb3b4f164493"
+}
