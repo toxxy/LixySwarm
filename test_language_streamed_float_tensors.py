@@ -47,6 +47,14 @@ def test_tiny_real_qwen_matches_full_fp32_logits_loss_and_adapter_gradients(chec
     for name,p in adapter_parameters(stored).items():
         torch.testing.assert_close(p.grad,adapter_parameters(full)[name].grad,rtol=2e-5,atol=1e-7)
     assert all(p.dtype==torch.bfloat16 for module in stored.modules() if isinstance(module,FrozenFloatLinear) for p in module.parameters())
+    # A deployed expert also needs autoregressive generation and its KV cache.
+    for model in [stored,full]:model.eval()
+    prompt=tokens[:1,:6].remainder(63)+1
+    options={'input_ids':prompt,'attention_mask':torch.ones_like(prompt),'max_new_tokens':8,
+             'do_sample':False,'use_cache':True,'pad_token_id':0,'eos_token_id':None}
+    with torch.inference_mode():
+        actual_tokens=stored.generate(**options);expected_tokens=full.generate(**options)
+    assert torch.equal(actual_tokens,expected_tokens) and actual_tokens.shape[1]==14
 
 
 def test_streaming_rejects_trainable_base_and_unsupported_autocast():

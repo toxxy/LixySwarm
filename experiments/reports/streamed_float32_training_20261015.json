@@ -1,0 +1,659 @@
+{
+  "success": true,
+  "protocol_id": "5c1979bf92f1618af327630ad0d98d5c98716a7fff0cbeb0441b8cd39ef26e56",
+  "runs": {
+    "desktop": {
+      "controls_and_native_progress_unchanged": true,
+      "definition": {
+        "absolute_tolerance": 1e-07,
+        "action": "public-streamed-group-finite-step-v3",
+        "backward_storage": "Save original frozen BF16 matrices only; recompute temporary FP32 matrices during first-order backward",
+        "base_execution": "frozen-bf16-storage-fp32-linear-recompute-v1",
+        "base_matrix_storage_dtype": "bfloat16",
+        "cuda_tf32": false,
+        "direction_preparation": "Normalize each protected TRAIN gradient; bounded dual coordinate halfspace projection of saved two-PC direction",
+        "execution": "train-with-autograd in every loss pass; identical no-update control before search",
+        "float32_matmul_precision": "highest",
+        "generation_performed": false,
+        "gradient_metadata": [
+          [
+            "18c219146676d9e8f99fc303c03cd906e910184e7ecffef7e2c2bc619d18a580",
+            3223824,
+            0,
+            64,
+            5759
+          ],
+          [
+            "12ec2a4311f6b253b4518f7d2ccf1809520fb7ea33cf1be7141ad7819721db80",
+            3223824,
+            64,
+            64,
+            5103
+          ],
+          [
+            "b942d0362da0f8f7d21348da792eb93df78bf97f5b45441b226eb1cbc95cfa30",
+            3223832,
+            128,
+            64,
+            5717
+          ]
+        ],
+        "held_out_data_used_in_compute": false,
+        "historical_dataset_id": "24eb8b9e9c268021ededa84a171a4b6804cbe58263edbb2b2944f49dd4de64a5",
+        "historical_training_full": 200,
+        "historical_training_prefix": 64,
+        "implementation_reference": "https://docs.pytorch.org/docs/2.12/notes/extending.html#extending-torch-autograd",
+        "math_range": [
+          0,
+          192
+        ],
+        "math_training_artifact_id": "a1a36bc0cea6f5a8dbf81a5828a01da3ca0674c534431ef51583f3f46a915be6",
+        "maximum_projection_sweeps": 512,
+        "maximum_seconds": 1200,
+        "memory_acceptance": "Measure actual peak allocation in each physical GPU; no presumed laptop fit",
+        "minimum_absolute_gain": 1e-05,
+        "minimum_relative_gain": 0.0001,
+        "model_compute_dtype": "float32",
+        "model_id": "506317cc9f40da9dea40e6d14a94910ac6625ae478b5f2d0248cb1bbbb93a6c3",
+        "new_model_publication_authorized": false,
+        "parent_release_id": "df231f9b93f6300ba7242da793d457880a416448f00d0e9b914e6a3f7b1e533a",
+        "precision_conversion": "Original public checkpoint tensors are BF16; exact FP32 conversion per linear, FP32 embedding output and small frozen parameters; no extra quantization",
+        "projection_failure": "No finite-step search when returned representation violates a group constraint",
+        "projection_relative_tolerance": 1e-07,
+        "protected": [
+          "old_prefix64",
+          "old_full200",
+          "old_kind_arithmetic",
+          "old_kind_context",
+          "old_kind_exact",
+          "old_kind_explanation",
+          "old_kind_extraction",
+          "old_kind_sorting"
+        ],
+        "ram_gb": 6,
+        "rate_selection": "first measured safe rate in descending fixed schedule",
+        "rates": [
+          0.001,
+          0.0005,
+          0.00025,
+          0.000125,
+          6.25e-05,
+          3.125e-05,
+          1.5625e-05,
+          7.8125e-06,
+          3.90625e-06,
+          1.953125e-06,
+          9.765625e-07,
+          4.8828125e-07
+        ],
+        "reference": "https://papers.neurips.cc/paper/2017/file/f87522788a2be2d171666752f97ddebb-Paper.pdf",
+        "reference_scope": "Separate first-order task constraints from GEM equations 7-8; bounded local solver and different model/data, not a benchmark reproduction",
+        "relative_tolerance": 1e-06,
+        "rollback": "restore parent before every trial; exceptions and exhaustion restore; experimental accepted step restored before exit",
+        "scope": "Prospective finite safeguard for one saved two-PC update on public training groups; not new held-out quality or a native learning cycle",
+        "source_report_id": "b5d9358df1d49b4d14c3991c781aef9319cf10e3c100b8233e00744b3309eea8",
+        "source_trial": "offset0-p4-distributed",
+        "target": "math_train192",
+        "training_policy_id": "de2929818310546b588e93640cd34f6459d2bf157f3d79d64f542889c1234d95",
+        "version": 3
+      },
+      "diagnostic": {
+        "base_execution": {
+          "base_matrix_storage_dtype": "bfloat16",
+          "converted_base_matrices_saved_for_backward": false,
+          "embedding_modules": 1,
+          "higher_order_derivatives_supported": false,
+          "linear_compute_dtype": "float32",
+          "linear_modules": 197,
+          "reference": "https://docs.pytorch.org/docs/2.12/notes/extending.html#extending-torch-autograd",
+          "scheme": "frozen-bf16-storage-fp32-linear-recompute-v1",
+          "small_frozen_parameters_promoted": 113,
+          "stored_parameter_bytes": 3447820288
+        },
+        "cuda_tf32": false,
+        "float32_matmul_precision": "highest",
+        "generation_performed": false,
+        "guard": {
+          "accepted_rate": 0.001,
+          "applied": true,
+          "baseline": {
+            "math_train192": 1.0878309716314205,
+            "old_full200": 0.4778429117046598,
+            "old_kind_arithmetic": 6.282424203618575e-05,
+            "old_kind_context": 0.0012337866387172522,
+            "old_kind_exact": 0.0005394570450698666,
+            "old_kind_explanation": 2.921068215825755,
+            "old_kind_extraction": 5.2152424922269346e-06,
+            "old_kind_sorting": 0.003912708387596275,
+            "old_prefix64": 0.7114674053598555
+          },
+          "no_update_control": {
+            "math_train192": 1.0878309716314205,
+            "old_full200": 0.4778429117046598,
+            "old_kind_arithmetic": 6.282424203618575e-05,
+            "old_kind_context": 0.0012337866387172522,
+            "old_kind_exact": 0.0005394570450698666,
+            "old_kind_explanation": 2.921068215825755,
+            "old_kind_extraction": 5.2152424922269346e-06,
+            "old_kind_sorting": 0.003912708387596275,
+            "old_prefix64": 0.7114674053598555
+          },
+          "publication_authorized": false,
+          "reason": "measured-training-groups-pass",
+          "trials": [
+            {
+              "accepted": true,
+              "losses": {
+                "math_train192": 1.08364900298764,
+                "old_full200": 0.4776514960554124,
+                "old_kind_arithmetic": 6.28280364622924e-05,
+                "old_kind_context": 0.0012338535702188633,
+                "old_kind_exact": 0.0005387932261328388,
+                "old_kind_explanation": 2.9200266743921173,
+                "old_kind_extraction": 5.216434526005287e-06,
+                "old_kind_sorting": 0.0038536560629980343,
+                "old_prefix64": 0.7111398312545864
+              },
+              "protected_regressions": [],
+              "rate": 0.001,
+              "required_target_gain": 0.00010878309716314205,
+              "target_gain": 0.004181968643780509
+            }
+          ]
+        },
+        "held_out_data_used_in_compute": false,
+        "loss_execution_mode": "train-with-autograd-for-every-loss-pass; backward-only-for-protected-training-references",
+        "model_compute_dtype": "float32",
+        "model_id": "506317cc9f40da9dea40e6d14a94910ac6625ae478b5f2d0248cb1bbbb93a6c3",
+        "model_published": false,
+        "new_promotion_authorized": false,
+        "no_update_control_passed": true,
+        "parent_parameters_restored": true,
+        "parent_release_id": "df231f9b93f6300ba7242da793d457880a416448f00d0e9b914e6a3f7b1e533a",
+        "peak_gpu_allocated_bytes": 5370334720,
+        "projection": {
+          "converged": true,
+          "dual_kkt_residual": 3.214928823158658e-09,
+          "groups": {
+            "old_full200": {
+              "dual_coefficient": 0.0,
+              "normalized_dot_after": 0.40147322882087433,
+              "normalized_dot_before": 0.3944938407920226,
+              "reference_norm": 0.47911805424189463
+            },
+            "old_kind_arithmetic": {
+              "dual_coefficient": 0.205008484463199,
+              "normalized_dot_after": 3.548293679711545e-09,
+              "normalized_dot_before": -0.20908316185954007,
+              "reference_norm": 0.004783622436515828
+            },
+            "old_kind_context": {
+              "dual_coefficient": 0.048411985220887424,
+              "normalized_dot_after": -2.323992821101628e-11,
+              "normalized_dot_before": -0.06595741320546156,
+              "reference_norm": 0.44826291495089166
+            },
+            "old_kind_exact": {
+              "dual_coefficient": 0.0,
+              "normalized_dot_after": 0.024153109513075463,
+              "normalized_dot_before": -0.057706497042801716,
+              "reference_norm": 0.027656180701389005
+            },
+            "old_kind_explanation": {
+              "dual_coefficient": 0.0,
+              "normalized_dot_after": 0.454303880112645,
+              "normalized_dot_before": 0.4680242555960569,
+              "reference_norm": 2.301096434290385
+            },
+            "old_kind_extraction": {
+              "dual_coefficient": 0.03131464019303991,
+              "normalized_dot_after": 4.4569999774202174e-10,
+              "normalized_dot_before": -0.02980857791103956,
+              "reference_norm": 8.7562532644745e-05
+            },
+            "old_kind_sorting": {
+              "dual_coefficient": 0.0,
+              "normalized_dot_after": 0.07871716862407906,
+              "normalized_dot_before": 0.06168497377200783,
+              "reference_norm": 0.7606080420503532
+            },
+            "old_prefix64": {
+              "dual_coefficient": 0.0,
+              "normalized_dot_after": 0.43696378063605773,
+              "normalized_dot_before": 0.44101546239357564,
+              "reference_norm": 0.7523777005600828
+            }
+          },
+          "maximum_sweeps": 512,
+          "normalized_dot_tolerance": 9.975094192817174e-08,
+          "performed": true,
+          "projected_norm": 0.9736707053864303,
+          "reference_training_statistics": {
+            "old_full200": {
+              "examples": 200,
+              "nll": 0.4778429117046598,
+              "tokens": 963
+            },
+            "old_kind_arithmetic": {
+              "examples": 64,
+              "nll": 6.282424203618575e-05,
+              "tokens": 192
+            },
+            "old_kind_context": {
+              "examples": 48,
+              "nll": 0.0012337866387172522,
+              "tokens": 112
+            },
+            "old_kind_exact": {
+              "examples": 16,
+              "nll": 0.0005394570450698666,
+              "tokens": 50
+            },
+            "old_kind_explanation": {
+              "examples": 8,
+              "nll": 2.921068215825755,
+              "tokens": 157
+            },
+            "old_kind_extraction": {
+              "examples": 32,
+              "nll": 5.2152424922269346e-06,
+              "tokens": 100
+            },
+            "old_kind_sorting": {
+              "examples": 32,
+              "nll": 0.003912708387596275,
+              "tokens": 352
+            },
+            "old_prefix64": {
+              "examples": 64,
+              "nll": 0.7114674053598554,
+              "tokens": 371
+            }
+          },
+          "relative_direction_change": 0.21731392333612778,
+          "scope": "Training-gradient geometry only; finite-loss and held-out checks remain mandatory",
+          "source_norm": 0.9975094192817174,
+          "sweeps": 4
+        },
+        "protocol_id": "5c1979bf92f1618af327630ad0d98d5c98716a7fff0cbeb0441b8cd39ef26e56",
+        "seconds": 77.8071869869018,
+        "success": true,
+        "training_loss_passes": 3,
+        "updated_model_files_written": false
+      },
+      "engine_report_sha256": "3d3f09b236f6c665613fc851048031edafb10ebc6d716ff8efabfd91113fb017",
+      "finished_at": 1792064322.570487,
+      "native_daemon_job": false,
+      "native_learning_cycles_added": 0,
+      "new_model_published": false,
+      "physical_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+      "protocol_id": "5c1979bf92f1618af327630ad0d98d5c98716a7fff0cbeb0441b8cd39ef26e56",
+      "research_path": true,
+      "resource_reservation": {
+        "gpu_fraction": 0.5,
+        "ram_gb": 6
+      },
+      "source_daemon_pid_unchanged": true,
+      "source_revision": "ce16d6e82da02f58b40d489bdc922504ebd962f1",
+      "success": true
+    },
+    "laptop": {
+      "controls_and_native_progress_unchanged": true,
+      "definition": {
+        "absolute_tolerance": 1e-07,
+        "action": "public-streamed-group-finite-step-v3",
+        "backward_storage": "Save original frozen BF16 matrices only; recompute temporary FP32 matrices during first-order backward",
+        "base_execution": "frozen-bf16-storage-fp32-linear-recompute-v1",
+        "base_matrix_storage_dtype": "bfloat16",
+        "cuda_tf32": false,
+        "direction_preparation": "Normalize each protected TRAIN gradient; bounded dual coordinate halfspace projection of saved two-PC direction",
+        "execution": "train-with-autograd in every loss pass; identical no-update control before search",
+        "float32_matmul_precision": "highest",
+        "generation_performed": false,
+        "gradient_metadata": [
+          [
+            "18c219146676d9e8f99fc303c03cd906e910184e7ecffef7e2c2bc619d18a580",
+            3223824,
+            0,
+            64,
+            5759
+          ],
+          [
+            "12ec2a4311f6b253b4518f7d2ccf1809520fb7ea33cf1be7141ad7819721db80",
+            3223824,
+            64,
+            64,
+            5103
+          ],
+          [
+            "b942d0362da0f8f7d21348da792eb93df78bf97f5b45441b226eb1cbc95cfa30",
+            3223832,
+            128,
+            64,
+            5717
+          ]
+        ],
+        "held_out_data_used_in_compute": false,
+        "historical_dataset_id": "24eb8b9e9c268021ededa84a171a4b6804cbe58263edbb2b2944f49dd4de64a5",
+        "historical_training_full": 200,
+        "historical_training_prefix": 64,
+        "implementation_reference": "https://docs.pytorch.org/docs/2.12/notes/extending.html#extending-torch-autograd",
+        "math_range": [
+          0,
+          192
+        ],
+        "math_training_artifact_id": "a1a36bc0cea6f5a8dbf81a5828a01da3ca0674c534431ef51583f3f46a915be6",
+        "maximum_projection_sweeps": 512,
+        "maximum_seconds": 1200,
+        "memory_acceptance": "Measure actual peak allocation in each physical GPU; no presumed laptop fit",
+        "minimum_absolute_gain": 1e-05,
+        "minimum_relative_gain": 0.0001,
+        "model_compute_dtype": "float32",
+        "model_id": "506317cc9f40da9dea40e6d14a94910ac6625ae478b5f2d0248cb1bbbb93a6c3",
+        "new_model_publication_authorized": false,
+        "parent_release_id": "df231f9b93f6300ba7242da793d457880a416448f00d0e9b914e6a3f7b1e533a",
+        "precision_conversion": "Original public checkpoint tensors are BF16; exact FP32 conversion per linear, FP32 embedding output and small frozen parameters; no extra quantization",
+        "projection_failure": "No finite-step search when returned representation violates a group constraint",
+        "projection_relative_tolerance": 1e-07,
+        "protected": [
+          "old_prefix64",
+          "old_full200",
+          "old_kind_arithmetic",
+          "old_kind_context",
+          "old_kind_exact",
+          "old_kind_explanation",
+          "old_kind_extraction",
+          "old_kind_sorting"
+        ],
+        "ram_gb": 6,
+        "rate_selection": "first measured safe rate in descending fixed schedule",
+        "rates": [
+          0.001,
+          0.0005,
+          0.00025,
+          0.000125,
+          6.25e-05,
+          3.125e-05,
+          1.5625e-05,
+          7.8125e-06,
+          3.90625e-06,
+          1.953125e-06,
+          9.765625e-07,
+          4.8828125e-07
+        ],
+        "reference": "https://papers.neurips.cc/paper/2017/file/f87522788a2be2d171666752f97ddebb-Paper.pdf",
+        "reference_scope": "Separate first-order task constraints from GEM equations 7-8; bounded local solver and different model/data, not a benchmark reproduction",
+        "relative_tolerance": 1e-06,
+        "rollback": "restore parent before every trial; exceptions and exhaustion restore; experimental accepted step restored before exit",
+        "scope": "Prospective finite safeguard for one saved two-PC update on public training groups; not new held-out quality or a native learning cycle",
+        "source_report_id": "b5d9358df1d49b4d14c3991c781aef9319cf10e3c100b8233e00744b3309eea8",
+        "source_trial": "offset0-p4-distributed",
+        "target": "math_train192",
+        "training_policy_id": "de2929818310546b588e93640cd34f6459d2bf157f3d79d64f542889c1234d95",
+        "version": 3
+      },
+      "diagnostic": {
+        "base_execution": {
+          "base_matrix_storage_dtype": "bfloat16",
+          "converted_base_matrices_saved_for_backward": false,
+          "embedding_modules": 1,
+          "higher_order_derivatives_supported": false,
+          "linear_compute_dtype": "float32",
+          "linear_modules": 197,
+          "reference": "https://docs.pytorch.org/docs/2.12/notes/extending.html#extending-torch-autograd",
+          "scheme": "frozen-bf16-storage-fp32-linear-recompute-v1",
+          "small_frozen_parameters_promoted": 113,
+          "stored_parameter_bytes": 3447820288
+        },
+        "cuda_tf32": false,
+        "float32_matmul_precision": "highest",
+        "generation_performed": false,
+        "guard": {
+          "accepted_rate": 0.001,
+          "applied": true,
+          "baseline": {
+            "math_train192": 1.0878309689494092,
+            "old_full200": 0.47784309648189877,
+            "old_kind_arithmetic": 6.282424203618575e-05,
+            "old_kind_context": 0.0012338294265451363,
+            "old_kind_exact": 0.0005394594234348915,
+            "old_kind_explanation": 2.921068959934696,
+            "old_kind_extraction": 5.216434512362867e-06,
+            "old_kind_sorting": 0.003912867720040403,
+            "old_prefix64": 0.7114672808662694
+          },
+          "no_update_control": {
+            "math_train192": 1.0878309689494092,
+            "old_full200": 0.47784309648189877,
+            "old_kind_arithmetic": 6.282424203618575e-05,
+            "old_kind_context": 0.0012338294265451363,
+            "old_kind_exact": 0.0005394594234348915,
+            "old_kind_explanation": 2.921068959934696,
+            "old_kind_extraction": 5.216434512362867e-06,
+            "old_kind_sorting": 0.003912867720040403,
+            "old_prefix64": 0.7114672808662694
+          },
+          "publication_authorized": false,
+          "reason": "measured-training-groups-pass",
+          "trials": [
+            {
+              "accepted": true,
+              "losses": {
+                "math_train192": 1.0836492113989709,
+                "old_full200": 0.47765150018625047,
+                "old_kind_arithmetic": 6.282741527741109e-05,
+                "old_kind_context": 0.0012338040152306867,
+                "old_kind_exact": 0.0005387861102462921,
+                "old_kind_explanation": 2.920026229445342,
+                "old_kind_extraction": 5.215242451299673e-06,
+                "old_kind_sorting": 0.0038538832762613495,
+                "old_prefix64": 0.7111398792641396
+              },
+              "protected_regressions": [],
+              "rate": 0.001,
+              "required_target_gain": 0.00010878309689494093,
+              "target_gain": 0.00418175755043837
+            }
+          ]
+        },
+        "held_out_data_used_in_compute": false,
+        "loss_execution_mode": "train-with-autograd-for-every-loss-pass; backward-only-for-protected-training-references",
+        "model_compute_dtype": "float32",
+        "model_id": "506317cc9f40da9dea40e6d14a94910ac6625ae478b5f2d0248cb1bbbb93a6c3",
+        "model_published": false,
+        "new_promotion_authorized": false,
+        "no_update_control_passed": true,
+        "parent_parameters_restored": true,
+        "parent_release_id": "df231f9b93f6300ba7242da793d457880a416448f00d0e9b914e6a3f7b1e533a",
+        "peak_gpu_allocated_bytes": 5317398016,
+        "projection": {
+          "converged": true,
+          "dual_kkt_residual": 3.213841054394706e-09,
+          "groups": {
+            "old_full200": {
+              "dual_coefficient": 0.0,
+              "normalized_dot_after": 0.40146820165639924,
+              "normalized_dot_before": 0.39449141798769327,
+              "reference_norm": 0.47912411745920624
+            },
+            "old_kind_arithmetic": {
+              "dual_coefficient": 0.2050108108648358,
+              "normalized_dot_after": 3.4620227656878555e-09,
+              "normalized_dot_before": -0.20908438851968203,
+              "reference_norm": 0.004783626773924322
+            },
+            "old_kind_context": {
+              "dual_coefficient": 0.048411458969897736,
+              "normalized_dot_after": 4.1428838658263967e-11,
+              "normalized_dot_before": -0.06595682998691021,
+              "reference_norm": 0.4482796628319667
+            },
+            "old_kind_exact": {
+              "dual_coefficient": 0.0,
+              "normalized_dot_after": 0.024156938967703778,
+              "normalized_dot_before": -0.05770617127857391,
+              "reference_norm": 0.02765629759211106
+            },
+            "old_kind_explanation": {
+              "dual_coefficient": 0.0,
+              "normalized_dot_after": 0.45430093507390606,
+              "normalized_dot_before": 0.4680252123834227,
+              "reference_norm": 2.301101540914955
+            },
+            "old_kind_extraction": {
+              "dual_coefficient": 0.03137624835574174,
+              "normalized_dot_after": 2.2180451919595612e-10,
+              "normalized_dot_before": -0.029866040272216857,
+              "reference_norm": 8.758743974622713e-05
+            },
+            "old_kind_sorting": {
+              "dual_coefficient": 0.0,
+              "normalized_dot_after": 0.07871760432501311,
+              "normalized_dot_before": 0.0616853219441592,
+              "reference_norm": 0.7606308686128356
+            },
+            "old_prefix64": {
+              "dual_coefficient": 0.0,
+              "normalized_dot_after": 0.4369621756256412,
+              "normalized_dot_before": 0.44101715861504787,
+              "reference_norm": 0.7523755146802094
+            }
+          },
+          "maximum_sweeps": 512,
+          "normalized_dot_tolerance": 9.975094192817174e-08,
+          "performed": true,
+          "projected_norm": 0.9736684896888542,
+          "reference_training_statistics": {
+            "old_full200": {
+              "examples": 200,
+              "nll": 0.47784309648189877,
+              "tokens": 963
+            },
+            "old_kind_arithmetic": {
+              "examples": 64,
+              "nll": 6.282424203618575e-05,
+              "tokens": 192
+            },
+            "old_kind_context": {
+              "examples": 48,
+              "nll": 0.0012338294265451363,
+              "tokens": 112
+            },
+            "old_kind_exact": {
+              "examples": 16,
+              "nll": 0.0005394594234348915,
+              "tokens": 50
+            },
+            "old_kind_explanation": {
+              "examples": 8,
+              "nll": 2.921068959934696,
+              "tokens": 157
+            },
+            "old_kind_extraction": {
+              "examples": 32,
+              "nll": 5.216434512362867e-06,
+              "tokens": 100
+            },
+            "old_kind_sorting": {
+              "examples": 32,
+              "nll": 0.003912867720040403,
+              "tokens": 352
+            },
+            "old_prefix64": {
+              "examples": 64,
+              "nll": 0.7114672808662692,
+              "tokens": 371
+            }
+          },
+          "relative_direction_change": 0.21732389917838307,
+          "scope": "Training-gradient geometry only; finite-loss and held-out checks remain mandatory",
+          "source_norm": 0.9975094192817174,
+          "sweeps": 4
+        },
+        "protocol_id": "5c1979bf92f1618af327630ad0d98d5c98716a7fff0cbeb0441b8cd39ef26e56",
+        "seconds": 338.52074416101095,
+        "success": true,
+        "training_loss_passes": 3,
+        "updated_model_files_written": false
+      },
+      "engine_report_sha256": "942e6310587970db7266757fa6041238af50301df8656f0cadebe1a602e676eb",
+      "finished_at": 1792064647.8224819,
+      "native_daemon_job": false,
+      "native_learning_cycles_added": 0,
+      "new_model_published": false,
+      "physical_node_id": "ea914d97caafef310e50385034abae9a50ba86496b0e9cbf4679e6070e4c25b0",
+      "protocol_id": "5c1979bf92f1618af327630ad0d98d5c98716a7fff0cbeb0441b8cd39ef26e56",
+      "research_path": true,
+      "resource_reservation": {
+        "gpu_fraction": 1.0,
+        "ram_gb": 6
+      },
+      "source_daemon_pid_unchanged": true,
+      "source_revision": "ce16d6e82da02f58b40d489bdc922504ebd962f1",
+      "success": true
+    }
+  },
+  "summary": {
+    "desktop": {
+      "seconds": 77.8071869869018,
+      "peak_gpu_allocated_bytes": 5370334720,
+      "peak_gpu_allocated_gib": 5.001513957977295,
+      "selected_rate": 0.001,
+      "math_training_nll_before": 1.0878309716314205,
+      "math_training_nll_after": 1.08364900298764,
+      "math_training_relative_gain_percent": 0.3844318421554784,
+      "protected_group_changes": {
+        "old_prefix64": -0.0003275741052691794,
+        "old_full200": -0.00019141564924740617,
+        "old_kind_arithmetic": 3.794426106651372e-09,
+        "old_kind_context": 6.693150161104361e-08,
+        "old_kind_exact": -6.638189370278139e-07,
+        "old_kind_explanation": -0.0010415414336377715,
+        "old_kind_extraction": 1.1920337783524344e-09,
+        "old_kind_sorting": -5.905232459824106e-05
+      }
+    },
+    "laptop": {
+      "seconds": 338.52074416101095,
+      "peak_gpu_allocated_bytes": 5317398016,
+      "peak_gpu_allocated_gib": 4.952212810516357,
+      "selected_rate": 0.001,
+      "math_training_nll_before": 1.0878309689494092,
+      "math_training_nll_after": 1.0836492113989709,
+      "math_training_relative_gain_percent": 0.38441243812694276,
+      "protected_group_changes": {
+        "old_prefix64": -0.0003274016021298509,
+        "old_full200": -0.00019159629564829972,
+        "old_kind_arithmetic": 3.173241225340462e-09,
+        "old_kind_context": -2.541131444958218e-08,
+        "old_kind_exact": -6.733131885993749e-07,
+        "old_kind_explanation": -0.0010427304893543266,
+        "old_kind_extraction": -1.1920610631937248e-09,
+        "old_kind_sorting": -5.898444377905321e-05
+      }
+    }
+  },
+  "desktop_full_fp32_comparison": {
+    "reference_report": "group_finite_step_training_20261015.json",
+    "reference_report_sha256": "7894f045d16b66416d483c5687e31b74bf9fec962f3d416403da221ba5429338",
+    "desktop_guard_report_exactly_equal_to_full_fp32": true,
+    "desktop_projection_report_exactly_equal_to_full_fp32": true,
+    "desktop_peak_allocated_memory_reduction_percent": 36.35633416766172,
+    "desktop_runtime_ratio_single_observation": 1.128071702284222,
+    "tensor_bitwise_identity_claimed": false,
+    "limitation": "Numerical reports are compared; projected tensors were not exported or hashed. Each physical node recomputes its own references and projected direction."
+  },
+  "scope": "Prospective public TRAIN-only compute feasibility and finite-retention check on two physical GPUs",
+  "laptop_gpu_inventory_before_run": {
+    "total_mib": 8188,
+    "free_mib": 7796
+  },
+  "cross_node_identical_candidate_validated": false,
+  "held_out_quality_evaluated": false,
+  "backend_admitted_to_native_training": false,
+  "new_models_published": 0,
+  "native_learning_cycles_added": 0,
+  "accepted_sequence": 2,
+  "native_policy_4_changed": false,
+  "native_gates_changed": false
+}
