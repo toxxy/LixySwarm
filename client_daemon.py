@@ -13,6 +13,7 @@ import signal
 import subprocess
 import sys
 import threading
+import tempfile
 import time
 from dataclasses import asdict
 from pathlib import Path
@@ -34,6 +35,7 @@ from src.network.language_preparation import LanguagePreparation
 from src.network.language_learning import LanguageLearningCoordinator
 from src.network.local_language_work import LocalLanguageWork
 from src.network.language_follow import LanguageVersionFollower
+from src.version import VERSION
 
 log = logging.getLogger("lixy.client")
 
@@ -62,14 +64,14 @@ def hardware_resources() -> dict:
             "gpu_vram_gb": round(vram_gb, 2), "has_gpu": vram_gb > 0}
 
 
-def node_command(directory: Path, *, host="0.0.0.0", port=7338, allow_private=False):
-    command = [sys.executable]
+def node_command(directory: Path, *, host="0.0.0.0", port=7338, allow_private=False, executable=None):
+    command = [str(executable or sys.executable)]
     command += ["--node"] if getattr(sys, "frozen", False) else [str(Path(__file__).resolve())]
     command += ["--state-dir", str(directory.resolve()), "--host", host, "--port", str(port)]
     return command + (["--allow-private"] if allow_private else [])
 
 
-def install_user_service(directory: Path, *, host="0.0.0.0", port=7338):
+def install_user_service(directory: Path, *, host="0.0.0.0", port=7338, executable=None, restart=False):
     """Linux reference installation; keep the service config machine-local."""
     if sys.platform != "linux":
         raise RuntimeError("The reference user service currently requires Linux")
@@ -82,7 +84,7 @@ Wants=network-online.target
 
 [Service]
 Type=simple
-ExecStart={' '.join(quote(value) for value in node_command(directory, host=host, port=port))}
+ExecStart={' '.join(quote(value) for value in node_command(directory, host=host, port=port, executable=executable))}
 Restart=always
 RestartSec=5
 TimeoutStopSec=20
@@ -96,10 +98,18 @@ WantedBy=default.target
     config = Path(os.environ.get("XDG_CONFIG_HOME", str(Path.home() / ".config")))
     path = config / "systemd" / "user" / "lixyswarm-node.service"
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(unit)
+    with tempfile.NamedTemporaryFile(mode='w', dir=path.parent, prefix='.lixyswarm-node-', delete=False) as stream:
+        staging = Path(stream.name)
+        stream.write(unit)
+    try:
+        staging.replace(path)
+    finally:
+        staging.unlink(missing_ok=True)
     for command in (["systemctl", "--user", "daemon-reload"],
                     ["systemctl", "--user", "enable", "--now", "lixyswarm-node.service"]):
         subprocess.run(command, check=True)
+    if restart:
+        subprocess.run(["systemctl", "--user", "restart", "lixyswarm-node.service"], check=True)
     print(f"Installed {path}")
 
 
@@ -165,7 +175,7 @@ def run(directory: Path, *, host="0.0.0.0", port=7338, interval=15, allow_privat
             atomic_json(directory / "diagnostics.json", {
                 "node_id": identity.node_id_hex, "timestamp_ms": status["timestamp_ms"],
                 "port": node.port, "peers": peers,
-                "pid": os.getpid(), "runtime_version": "0.4.0a18", "controls_version": 1,
+                "pid": os.getpid(), "runtime_version": VERSION, "controls_version": 1,
                 "settings": asdict(settings), "worker_ready": computation["ready"] or conversation["ready"] or training["ready"], "control_error": error,
                 "knowledge": public_knowledge,
                 "compute":computation,

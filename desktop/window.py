@@ -82,6 +82,20 @@ class EnginePreparation(QThread):
             self.completed.emit(False,str(error))
 
 
+class RuntimeUpdate(QThread):
+    completed = Signal(bool, str)
+
+    def __init__(self, controller, parent=None):
+        super().__init__(parent); self.controller = controller
+
+    def run(self):
+        try:
+            self.controller.update_runtime()
+            self.completed.emit(True, 'Servicio actualizado; reconectando con tus permisos y conocimiento conservados.')
+        except Exception as error:
+            self.completed.emit(False, str(error))
+
+
 class ChatRequest(QThread):
     completed=Signal(bool,object)
 
@@ -128,6 +142,11 @@ class SwarmWindow(QMainWindow):
         self.pause_button = QPushButton("Pausar aporte"); self.pause_button.clicked.connect(self.pause_node); actions.addWidget(self.pause_button)
         self.disconnect_button = QPushButton("Desconectar"); self.disconnect_button.clicked.connect(self.disconnect_node); actions.addWidget(self.disconnect_button)
         self.state_tab.addLayout(actions)
+        self.runtime_update = None
+        self.update_button = QPushButton('Actualizar servicio')
+        self.update_button.clicked.connect(self.update_runtime)
+        self.state_tab.addWidget(self.update_button)
+        self.update_result = QLabel(); self.update_result.setWordWrap(True); self.state_tab.addWidget(self.update_result)
         explorer = QPushButton("Ver la red en el Explorer")
         explorer.clicked.connect(lambda: QDesktopServices.openUrl(QUrl("http://31.97.9.54:8080/swarm-explorer.html")))
         self.state_tab.addWidget(explorer); self.state_tab.addStretch()
@@ -283,6 +302,13 @@ class SwarmWindow(QMainWindow):
     def pause_node(self):
         self._action(lambda: self.controller.pause(not self.controller.settings().paused))
 
+    def update_runtime(self):
+        if self.runtime_update is not None and self.runtime_update.isRunning(): return
+        self.update_result.setText('Actualizando el servicio; la conexión se interrumpirá brevemente.')
+        self.runtime_update = RuntimeUpdate(self.controller, self)
+        self.runtime_update.completed.connect(lambda ok, message: self.update_result.setText(message))
+        self.runtime_update.start()
+
     def disconnect_node(self):
         self._action(self.controller.disconnect)
 
@@ -291,6 +317,7 @@ class SwarmWindow(QMainWindow):
         self.maybe_prepare_engine()
 
     def maybe_prepare_engine(self):
+        if self.controller.runtime_update_available(): return
         try: settings=self.controller.settings()
         except (OSError,ValueError,TypeError): return
         policy=settings.policy
@@ -301,6 +328,7 @@ class SwarmWindow(QMainWindow):
         self.maybe_prepare_language()
 
     def maybe_prepare_language(self):
+        if self.controller.runtime_update_available(): return
         if not self.auto_prepare or self.engine_preparation is not None and self.engine_preparation.isRunning():return
         diagnostic=self.controller.snapshot()['diagnostics']
         preparation=diagnostic.get('language_preparation',{})
@@ -422,6 +450,10 @@ class SwarmWindow(QMainWindow):
         self.engine_button.setText("Motor CPU preparado" if prepared else "Reanudar preparación" if self.engine_phase=="stopped" else "Preparar motor CPU")
         snapshot = self.controller.snapshot(); status = snapshot["status"]
         diagnostic = snapshot["diagnostics"]
+        needs_update = self.controller.runtime_update_available(snapshot)
+        updating = self.runtime_update is not None and self.runtime_update.isRunning()
+        self.update_button.setVisible(needs_update or updating)
+        self.update_button.setEnabled(needs_update and not updating)
         preparation=diagnostic.get('language_preparation',{}) if snapshot['fresh'] else {}
         phase=preparation.get('state','idle')
         language_busy=phase not in {'idle','waiting','stopped','complete'}
@@ -429,7 +461,7 @@ class SwarmWindow(QMainWindow):
         self.language_label.setText(preparation.get('message') or ('Experto de lenguaje preparado en este equipo' if installed else 'Puedes usar el chat de la red. Para alojar un experto se necesitan 5 GB de RAM y 4 GB de GPU dentro de tus límites.'))
         self.language_progress.setVisible(language_busy and preparation.get('total',0)>0)
         self.language_progress.setValue(int(100*preparation.get('done',0)/max(1,preparation.get('total',0))))
-        self.language_button.setEnabled(snapshot['fresh'] and not preparing and not language_busy and language_engine('cuda') is not None
+        self.language_button.setEnabled(snapshot['fresh'] and not needs_update and not preparing and not language_busy and language_engine('cuda') is not None
             and policy.mode in {'balanced','maximum'} and policy.max_ram_gb>=5 and policy.gpu_percent>0)
         self.language_button.setText('Reanudar preparación del experto' if phase in {'waiting','stopped'} else 'Preparar experto de lenguaje')
         self.language_stop.setEnabled(language_busy or phase=='waiting')
@@ -516,6 +548,8 @@ class SwarmWindow(QMainWindow):
         self.installation.start()
 
     def closeEvent(self, event):
+        if self.runtime_update is not None and self.runtime_update.isRunning():
+            event.ignore(); return
         if self.chat_worker is not None and self.chat_worker.isRunning():
             self.close_pending=True;self.cancel_chat();self.chat_worker.wait(100)
             if self.chat_worker.isRunning():event.ignore();return

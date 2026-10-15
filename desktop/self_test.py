@@ -27,7 +27,10 @@ def main():
     parser.add_argument("--report", type=Path)
     parser.add_argument("--screenshot", type=Path)
     parser.add_argument("--work-directory", type=Path)
+    parser.add_argument('--upgrade-from', type=Path)
     args = parser.parse_args()
+    if args.upgrade_from and (not getattr(sys, 'frozen', False) or sys.platform != 'linux' or not args.upgrade_from.is_file()):
+        parser.error('Runtime upgrade verification requires a Linux native app and an existing native executable')
     if args.knowledge and not args.internet:
         parser.error("The real catalog acquisition gate requires --internet")
     if args.chat and not args.internet:parser.error("The real chat assessment requires --internet")
@@ -51,6 +54,7 @@ def main():
     if args.expected_chat_model:report['expected_chat_model_id']=args.expected_chat_model
     seed = None
     previous_seeds = os.environ.get("LIXYSWARM_BOOTSTRAP_SEEDS")
+    previous_data_home = os.environ.get('XDG_DATA_HOME')
     if args.work_directory:
         args.work_directory.mkdir(parents=True,exist_ok=True)
         if any(args.work_directory.iterdir()): parser.error("Verification requires an empty work directory")
@@ -75,6 +79,12 @@ def main():
                 os.environ["LIXYSWARM_BOOTSTRAP_SEEDS"] = f"127.0.0.1:{seed.port}"
             window = SwarmWindow(controller, initialize_personal=args.chat,auto_prepare=args.prepare_engine); window.show(); app.processEvents()
             assert window.tabs.count() == 4
+            if args.upgrade_from:
+                # The fixture has no physical participant state or model. Keep
+                # its installer and launcher outside the operator's real app.
+                os.environ['XDG_DATA_HOME'] = str(root / 'installed-app')
+                controller._launch_node(executable=args.upgrade_from.resolve())
+                wait(lambda: controller.snapshot()['fresh'])
             started = time.monotonic()
             window.connect_button.click()
             wait(lambda: controller.snapshot()["status"].get("state") == "connected" and controller.snapshot()["fresh"])
@@ -86,6 +96,24 @@ def main():
                 import ipaddress
                 assert all(ipaddress.ip_address(p.get("relay_host") or p["host"]).is_global for p in snapshot["diagnostics"]["peers"])
             identity = snapshot["status"]["node_id"]
+            if args.upgrade_from:
+                from src.version import VERSION
+                before = (controller.directory / 'controls.json').read_bytes()
+                previous_version = snapshot['diagnostics']['runtime_version']
+                previous_instance = snapshot['status']['process_instance_id']
+                assert controller.runtime_update_available(snapshot)
+                window.refresh(); assert window.update_button.isVisible()
+                window.update_button.click()
+                wait(lambda: window.runtime_update is not None and not window.runtime_update.isRunning(), timeout=60)
+                wait(lambda: controller.snapshot()['fresh'] and controller.snapshot()['diagnostics'].get('runtime_version') == VERSION)
+                upgraded = controller.snapshot()
+                assert upgraded['status']['node_id'] == identity
+                assert upgraded['status']['process_instance_id'] != previous_instance
+                assert (controller.directory / 'controls.json').read_bytes() == before
+                assert not controller.runtime_update_available(upgraded)
+                report['runtime_upgrade'] = {'from': previous_version, 'to': VERSION,
+                    'identity_preserved': True, 'controls_preserved': True, 'new_process': True,
+                    'native_executable': True, 'physical_node': False}
             if args.knowledge:
                 acquiring_started=time.monotonic()
                 window.knowledge_button.click()
@@ -336,6 +364,8 @@ def main():
                     window.engine_preparation.wait(15000)
                 if window.chat_worker is not None and window.chat_worker.isRunning():
                     window.cancel_chat();window.chat_worker.wait(15000)
+                if window.runtime_update is not None and window.runtime_update.isRunning():
+                    window.runtime_update.wait(60000)
                 window.timer.stop()
                 window.close()
                 window.deleteLater()
@@ -354,6 +384,10 @@ def main():
                 os.environ.pop("LIXYSWARM_BOOTSTRAP_SEEDS", None)
             else:
                 os.environ["LIXYSWARM_BOOTSTRAP_SEEDS"] = previous_seeds
+            if previous_data_home is None:
+                os.environ.pop('XDG_DATA_HOME', None)
+            else:
+                os.environ['XDG_DATA_HOME'] = previous_data_home
     if args.report:
         args.report.parent.mkdir(parents=True, exist_ok=True)
         args.report.write_text(json.dumps(report, indent=2))

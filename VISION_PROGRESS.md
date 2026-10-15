@@ -21,6 +21,8 @@ La preparación fuente calcula el máximo de descarga/ensamblado, extracción y 
 
 **Donación tras la preparación (2026-10-15):** una instalación fuente nueva que termina de verificar motor y modelo crea controles para gradientes públicos compatibles, con los permisos de recursos vigentes. Autoriza al propio nodo y a los coordinadores conocidos de las dos PCs del piloto; el relay no recibe autoridad de entrenamiento. Conserva configuraciones existentes, incluidas deshabilitaciones, y crea el archivo completo sin reemplazar una elección concurrente del operador. El evaluador de candidatos y la publicación permanecen separados. Las pruebas verifican configuración, preservación de permisos y la carrera de creación; falta comprobar este recorrido en un cliente nativo recién instalado. Los servicios A18 en ejecución conservan sus controles.
 
+**Actualización explícita del servicio (fuente A19, 2026-10-15):** la interfaz detecta servicios anteriores y ofrece «Actualizar servicio». Retargetea la unidad Linux al ejecutable instalado o sustituye su proceso propio; conserva identidad, controles, modelos y registros. No descarga el catálogo anterior mientras queda pendiente esa actualización, ni rebaja un servicio posterior. Pasaron 30 pruebas de controles, transporte ligero, preservación de estado, retargeting de la unidad y protección frente a PID ajeno. La prueba nativa A18→A19 y su publicación están pendientes; los procesos físicos A18 siguen en ejecución.
+
 | Etapa | Estado | Evidencia y trabajo restante |
 |---|---|---|
 | 1. Red continua | En observación | Servicios desplegados en dos PCs y VPS, estado por identidad en el Explorer y recuperación tras reinicio comprobados. Faltan operación de 24 horas y recuperación con otro relay público independiente. |

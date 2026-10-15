@@ -2,7 +2,9 @@
 from __future__ import annotations
 import json
 import os
+import re
 import subprocess
+import sys
 import time
 import urllib.request
 import urllib.error
@@ -19,6 +21,7 @@ from src.network.learning_coordinator import LearningSettings
 from src.network.language_learning import LanguageLearningSettings
 from src.network.engine_catalog import cpu_engine
 from src.network.engine_download import prepare_engine
+from src.version import VERSION
 
 
 class NodeController:
@@ -70,16 +73,56 @@ class NodeController:
         settings.save(self.directory)
         if self.snapshot()["running"]:
             return
+        self._launch_node()
+
+    def _launch_node(self, executable=None):
         self.directory.mkdir(parents=True, exist_ok=True, mode=0o700)
         output = (self.directory / "client.log").open("ab")
         try:
             kwargs = {"start_new_session": True} if os.name != "nt" else {
                 "creationflags": subprocess.CREATE_NEW_PROCESS_GROUP | subprocess.CREATE_NO_WINDOW,
             }
-            self.process = subprocess.Popen(node_command(self.directory, port=self.port, allow_private=self.allow_private),
+            self.process = subprocess.Popen(node_command(self.directory, port=self.port, allow_private=self.allow_private, executable=executable),
                                             stdin=subprocess.DEVNULL, stdout=output, stderr=output, **kwargs)
         finally:
             output.close()
+
+    def runtime_update_available(self, snapshot=None):
+        snapshot = snapshot or self.snapshot()
+        old = re.fullmatch(r"0\.4\.0a(\d+)", str(snapshot['diagnostics'].get('runtime_version', '')))
+        current = re.fullmatch(r"0\.4\.0a(\d+)", VERSION)
+        return bool(snapshot.get('running') and old and current and int(old[1]) < int(current[1]))
+
+    def update_runtime(self):
+        """An explicit UI action; preserve all node state and resource controls."""
+        snapshot = self.snapshot()
+        if not self.runtime_update_available(snapshot):
+            return
+        pid = snapshot['diagnostics']['pid']
+        process = psutil.Process(pid)
+        command = process.cmdline()
+        if str(self.directory.resolve()) not in command or not (
+                '--node' in command or any(Path(arg).name == 'client_daemon.py' for arg in command)):
+            raise RuntimeError('El proceso del nodo cambió; vuelve a intentar la actualización')
+        managed = False
+        if sys.platform == 'linux':
+            result = subprocess.run(['systemctl', '--user', 'show', 'lixyswarm-node.service',
+                                     '-p', 'MainPID', '--value'], capture_output=True, text=True, timeout=5)
+            managed = result.returncode == 0 and result.stdout.strip() == str(pid)
+        executable = None
+        if getattr(sys, 'frozen', False):
+            from desktop.install import bundle_directory, install_user_app
+            executable, _ = install_user_app(bundle_directory())
+        # Installation may take time. Do not signal a PID whose process exited.
+        if not process.is_running():
+            raise RuntimeError('El nodo terminó durante la instalación; conecta de nuevo')
+        if managed:
+            from client_daemon import install_user_service
+            install_user_service(self.directory, port=self.port, executable=executable, restart=True)
+        else:
+            process.terminate()
+            process.wait(timeout=25)
+            self._launch_node(executable=executable)
 
     def pause(self, paused: bool):
         settings = self.settings()
@@ -212,6 +255,8 @@ class NodeController:
         return self._chat_call("/cancel",{"request_id":request_id})
 
     def prepare_language(self):
+        if self.runtime_update_available():
+            raise RuntimeError('Actualiza el servicio desde Estado antes de preparar el experto')
         return self._chat_call('/preparation/start',{},timeout=10)
 
     def stop_language_preparation(self):

@@ -8,7 +8,7 @@ import sys
 import uuid
 from pathlib import Path
 
-VERSION = "0.4.0a18"
+from src.version import VERSION
 
 
 def bundle_digest(bundle):
