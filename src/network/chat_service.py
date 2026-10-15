@@ -156,9 +156,10 @@ class ChatBroker:
 
 
 class LocalChatAPI:
-    def __init__(self,broker,directory,preparation=None):
+    def __init__(self,broker,directory,preparation=None,language_work=None):
         self.broker=broker;self.path=Path(directory)/"local-api.json";self.token=secrets.token_hex(32)
         self.preparation=preparation
+        self.language_work=language_work
         owner=self
         class Handler(BaseHTTPRequestHandler):
             protocol_version="HTTP/1.0"
@@ -178,6 +179,9 @@ class LocalChatAPI:
             def do_GET(self):
                 if not self.authenticated():return self.reply(403,{"error":"Acceso local no autorizado"})
                 if self.path=='/preparation/status' and owner.preparation is not None:return self.reply(200,owner.preparation.snapshot())
+                if self.path.startswith('/language-work/') and owner.language_work is not None:
+                    try:return self.reply(200,owner.language_work.status(self.path[len('/language-work/'):]))
+                    except ValueError:return self.reply(404,{'error':'Solicitud desconocida'})
                 if self.path!="/status":return self.reply(404,{"error":"Ruta desconocida"})
                 self.reply(200,owner.broker.snapshot())
             def do_POST(self):
@@ -190,6 +194,12 @@ class LocalChatAPI:
                     raw=self.rfile.read(length)
                     if len(raw)!=length:raise ValueError()
                     value=json.loads(raw)
+                    if self.path=='/language-work/start' and owner.language_work is not None:
+                        try:return self.reply(200,owner.language_work.start(value))
+                        except RuntimeError as error:return self.reply(409,{'error':str(error)})
+                    if self.path=='/language-work/cancel' and owner.language_work is not None:
+                        if not isinstance(value,dict) or set(value)!={'request_id'}:raise ValueError('Invalid cancellation')
+                        return self.reply(200,{'cancelled':owner.language_work.cancel(value['request_id'])})
                     if self.path in {'/preparation/start','/preparation/stop'} and owner.preparation is not None:
                         if value!={}:raise ValueError('Preparation does not accept peer-selected paths or programs')
                         try:return self.reply(200,owner.preparation.start() if self.path.endswith('/start') else owner.preparation.stop())
@@ -220,6 +230,7 @@ class LocalChatAPI:
         self.thread.start()
 
     def close(self):
+        if self.language_work is not None:self.language_work.close()
         self.broker.close();self.server.shutdown();self.server.server_close();self.thread.join(timeout=2)
         try:
             if json.loads(self.path.read_text()).get("token")==self.token:self.path.unlink()

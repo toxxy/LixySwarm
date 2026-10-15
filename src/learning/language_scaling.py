@@ -29,7 +29,14 @@ def verify_timed_run(report):
             raise ValueError('Timing row has a different signed worker or job')
         if report.get('requester_id') is not None and receipt.requester_node_id!=report['requester_id']:
             raise ValueError('Timing report belongs to another requester')
-        if row.get('encrypted') is not True:raise ValueError('Trial transport was not encrypted')
+        local=row.get('transport')=='local'
+        if local:
+            if (report.get('native_physical_requester') is not True or receipt.worker_node_id!=receipt.requester_node_id
+                    or receipt.requester_node_id!=report.get('requester_id') or row.get('encoded_data_bytes')!=0 or row.get('encrypted') is not False):
+                raise ValueError('Local work must use the same physical requester without a network transfer')
+        elif row.get('encrypted') is not True:raise ValueError('Trial transport was not encrypted')
+        if not local and report.get('native_physical_requester') is True and row.get('artifact_initially_local') is not False:
+            raise ValueError('A remote gradient already cached locally cannot establish fresh-transfer scaling')
         for key,value in result['output'].items():
             if row.get(key)!=value:raise ValueError('Timing row differs from its signed contribution')
         seconds=row['seconds']
@@ -46,10 +53,14 @@ def verify_timed_run(report):
 def compare_runs(baseline,distributed):
     before,first_shards,first_seconds=verify_timed_run(baseline)
     after,second_shards,second_seconds=verify_timed_run(distributed)
+    if {row['job_id'] for row in baseline['signed_results']} & {row['job_id'] for row in distributed['signed_results']}:
+        raise ValueError('Independent scaling trials cannot reuse the same signed calculation')
     if (len(before['physical_workers'])!=1 or len(after['physical_workers'])<2
             or not set(before['physical_workers']).issubset(after['physical_workers'])):
         raise ValueError('Compare one physical worker with the same worker plus another')
     if (baseline['base_name']!=distributed['base_name'] or baseline['head']!=distributed['head']
+            or baseline.get('native_physical_requester')!=distributed.get('native_physical_requester')
+            or baseline.get('learning_rate')!=distributed.get('learning_rate')
             or baseline['operation']!=distributed['operation']
             or first_shards!=second_shards
             or baseline.get('requester_id')!=distributed.get('requester_id')
@@ -60,7 +71,7 @@ def compare_runs(baseline,distributed):
             after_slots.get(worker)!=limit for worker,limit in before_slots.items()):
         raise ValueError('Adding workers cannot also increase the original worker slot limit')
     ratio=first_seconds/second_seconds
-    return {'scope':'One observed Internet training comparison; excludes initial model download and candidate evaluation; no general scaling or model promotion claim',
+    return {'scope':('One native physical-node comparison with local artifact reuse and fresh remote acquisition' if baseline.get('native_physical_requester') else 'One observed Internet training comparison')+'; excludes initial model download and candidate evaluation; no general scaling or model promotion claim',
         'base_name':baseline['base_name'],'release_id':baseline['head']['release']['release_id'],
         'model_id':baseline['head']['release']['model_artifact_id'],'dataset_id':corpus_digest(public_corpus()),
         'tokens':before['tokens'],'receive_bandwidth_mbps':baseline.get('receive_bandwidth_mbps'),

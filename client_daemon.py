@@ -31,6 +31,7 @@ from src.network.language_families import LanguageFamilies
 from src.network.language_training import LanguageTraining
 from src.network.language_preparation import LanguagePreparation
 from src.network.language_learning import LanguageLearningCoordinator
+from src.network.local_language_work import LocalLanguageWork
 from src.network.language_follow import LanguageVersionFollower
 
 log = logging.getLogger("lixy.client")
@@ -127,9 +128,11 @@ def run(directory: Path, *, host="0.0.0.0", port=7338, interval=15, allow_privat
         families=LanguageFamilies(knowledge,directory)
         language_training=LanguageTraining(knowledge,families,directory,resources)
         preparation=LanguagePreparation(node,knowledge,families,directory,resources)
-        chat=ChatBroker(node,knowledge.work,language);chat_api=LocalChatAPI(chat,directory,preparation);chat_api.start()
+        chat=ChatBroker(node,knowledge.work,language)
         learning = LearningCoordinator(knowledge,compute,directory)
         language_learning=LanguageLearningCoordinator(knowledge,language_training,directory)
+        owner_work=LocalLanguageWork(knowledge,language_training,language_learning)
+        chat_api=LocalChatAPI(chat,directory,preparation,owner_work);chat_api.start()
         language_follow=LanguageVersionFollower(knowledge,families,directory)
         stop = threading.Event()
         for signum in (signal.SIGINT, signal.SIGTERM):
