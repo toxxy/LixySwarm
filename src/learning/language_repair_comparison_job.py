@@ -25,6 +25,17 @@ def durable_json(path, value):
         finally: os.close(fd)
 
 
+def write_report(output, report):
+    path=output/'diagnostic.json'
+    durable_json(path,report)
+    # The receipt must bind the bytes actually stored by atomic_json, including
+    # its whitespace and Unicode escaping, rather than another serialization.
+    raw=path.read_bytes()
+    if len(raw)>4*1024**2:raise ValueError('Comparison evidence exceeds its reserved bound')
+    return {'success':True,'protocol_id':protocol_id(),
+        'report_id':hashlib.sha256(raw).hexdigest(),'bytes':len(raw)}
+
+
 def validate_request(request):
     p = definition()
     fields = {'action','protocol_id','compute_dtype','streamed_base','base_directory','adapter_file',
@@ -134,10 +145,8 @@ def run(request):
         'records':records,'base_execution':execution,'training_performed':False,'model_promoted':False,
         'seconds':time.monotonic()-started,'peak_gpu_allocated_bytes':torch.cuda.max_memory_allocated() if request['device']=='cuda' else 0}
     report['verification'] = verify_report(report,snapshot)
-    raw = canonical(report)
-    if len(raw) > 4*1024**2: raise ValueError('Comparison evidence exceeds its reserved bound')
-    durable_json(output/'diagnostic.json',report);progress(128,128)
-    return {'success':True,'protocol_id':protocol_id(),'report_id':hashlib.sha256(raw).hexdigest(),'bytes':len(raw)}
+    response=write_report(output,report);progress(128,128)
+    return response
 
 
 def main():

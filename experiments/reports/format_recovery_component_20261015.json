@@ -1,0 +1,80 @@
+{
+  "audit": {
+    "administrative_report_id": null,
+    "commitment_id": "de2dacbb46a0628fd5e2ddc4cb2cecc436285db8e744a524933e1eb8b95149b4",
+    "decision_files_verified": 128,
+    "diagnostic_report_id": "f2c1e86ff266c2fd506a98372a7fcec74ab23724f5c4569ca377d605ed0cb275",
+    "generation_performed": false,
+    "initial_supervisor_success": false,
+    "model_promoted": false,
+    "original_child_receipt_captured": false,
+    "protocol_id": "c8a87d122d8db8a44f52e0f5d8b17caa3fcb36dac3a7367fd3113bfe00b20664",
+    "recovery_observation_id": "cc9b1354a44f5fab6ee5155ee1c7e115435dda05a1ff607a7aac4107c462fff1",
+    "saved_evidence_recovered": true,
+    "snapshot_id": "1c7873583f47330e5cfc0b0b4047d491dc2deb1359d1a5e1c57b4adfeb81708c",
+    "source_revision": "d143a93a6c1151d476b7638e180c491624d8895c",
+    "success": true,
+    "tensor_engine_loaded": false,
+    "timing_scope": "Sum of observed model.generate times for each policy, excluding counterfactual calls; not distributed end-to-end speed",
+    "training_performed": false,
+    "verification": {
+      "actual_fresh_generation_calls": 230,
+      "component_conditions": {
+        "exceeds_same_parent_repair": true,
+        "gain_at_least_four": true,
+        "no_regressions": true,
+        "within_declared_time_budget": false
+      },
+      "component_passed": false,
+      "counterfactual_generation_not_counted_as_primary_policy_cost": true,
+      "invalid_parent_answers": 51,
+      "model_promoted": false,
+      "neural_routing_evaluated": false,
+      "policies": {
+        "parent": {
+          "calls": 128,
+          "correct": 59,
+          "generation_seconds": 238.92542154341936,
+          "input_tokens": 12417,
+          "new_correct": 0,
+          "output_tokens": 18021,
+          "regressions": 0
+        },
+        "parent-repair": {
+          "calls": 179,
+          "correct": 64,
+          "generation_seconds": 256.3181559559889,
+          "input_tokens": 25267,
+          "new_correct": 5,
+          "output_tokens": 19246,
+          "regressions": 0
+        },
+        "specialist-fallback": {
+          "calls": 179,
+          "correct": 66,
+          "generation_seconds": 318.9205338996835,
+          "input_tokens": 17119,
+          "new_correct": 7,
+          "output_tokens": 24063,
+          "regressions": 0
+        }
+      },
+      "total": 128
+    }
+  },
+  "diagnostic_report_bytes": 124513,
+  "diagnostic_report_id": "f2c1e86ff266c2fd506a98372a7fcec74ab23724f5c4569ca377d605ed0cb275",
+  "evidence_recovered_without_new_generation": true,
+  "initial_supervisor_success": false,
+  "native_model_selected": false,
+  "original_child_receipt_captured": false,
+  "original_specialist_rejection_retained": true,
+  "peak_gpu_allocated_bytes": 4879607808,
+  "protocol_id": "c8a87d122d8db8a44f52e0f5d8b17caa3fcb36dac3a7367fd3113bfe00b20664",
+  "schema_version": 1,
+  "scope": "Separate prospective offline component on new public TEST rows 128:256; saved evidence audited after report-serialization failure; not native learning, neural routing or a promotion",
+  "seconds": 343.40620159194805,
+  "serialization_failure": "Receipt hashed compact canonical JSON, while the durable file used the atomic JSON serializer; original failure and bytes retained",
+  "snapshot_id": "1c7873583f47330e5cfc0b0b4047d491dc2deb1359d1a5e1c57b4adfeb81708c",
+  "source_revision": "d143a93a6c1151d476b7638e180c491624d8895c"
+}

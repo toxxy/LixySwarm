@@ -77,6 +77,7 @@ def run(args,cancel):
         try:
             response=ComputeSupervisor().run([str(args.engine_python),'-m','src.learning.language_repair_comparison_job'],
                 request,execution,allowed=allowed,ram_gb=p['ram_gb'])
+            atomic_json(directory/'engine-receipt.json',response)
             path=directory/'engine/diagnostic.json';report=json.loads(path.read_text())
             if (digest_file(path)!=(response['report_id'],response['bytes']) or not allowed()
                     or any(digest_file(source/name)[0]!=value for name,value in numerical.items())):

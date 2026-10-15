@@ -7,7 +7,7 @@ import time
 import pytest
 
 from src.learning import language_repair_comparison as protocol
-from src.learning.language_repair_comparison_job import collect, validate_request
+from src.learning.language_repair_comparison_job import collect, validate_request, write_report
 
 
 def rows():
@@ -107,3 +107,12 @@ def test_request_rejects_reused_or_overlapping_evidence_and_unpublished_fields(t
     with pytest.raises(ValueError):validate_request(r)
     r=request(tmp_path);r['reference_answer']='must never be an engine request'
     with pytest.raises(ValueError):validate_request(r)
+
+
+def test_report_receipt_binds_saved_json_bytes_including_unicode_and_whitespace(tmp_path):
+    value={'answer':'Respuesta: París.\n#### 1','seconds':1.5}
+    receipt=write_report(tmp_path,value)
+    raw=(tmp_path/'diagnostic.json').read_bytes()
+    assert raw!=protocol.canonical(value)
+    assert receipt['report_id']==hashlib.sha256(raw).hexdigest() and receipt['bytes']==len(raw)
+    assert json.loads(raw)==value
