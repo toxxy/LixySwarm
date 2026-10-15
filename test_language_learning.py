@@ -26,7 +26,7 @@ def setup(monkeypatch,tmp_path):
         results.append(result)
     evaluation['contributions']=[result.to_dict() for result in results]
     calls=[];controls=learning.LanguageLearningSettings(enabled=True,workers=[worker.node_id_hex for worker in workers],
-        signing_key_file=str(key),base_name='qwen3-0.6b',examples_per_worker=4)
+        signing_key_file=str(key),base_name='qwen3-0.6b',examples_per_worker=4,shards_per_cycle=2,allocation='balanced')
     controls.save(root)
     def execute(operation,payload,*_a,**kwargs):
         calls.append(operation)
@@ -162,6 +162,37 @@ def test_corpus_boundary_and_failed_round_do_not_lose_examples(monkeypatch,tmp_p
     coordinator._finish(False)
     assert coordinator.ledger['cursor']==0 and coordinator.ledger['epoch']==1
     assert coordinator.ledger['round']==1 and coordinator._registry().head()==head
+
+
+def test_old_controls_migrate_without_enabling_observed_allocation(monkeypatch,tmp_path):
+    coordinator,controls,head,calls=setup(monkeypatch,tmp_path)
+    old=asdict(controls);old['version']=1;old.pop('shards_per_cycle');old.pop('allocation')
+    path=coordinator.directory/'language-learning-controls.json';path.write_text(json.dumps(old))
+    migrated=learning.LanguageLearningSettings.load(coordinator.directory)
+    assert migrated.enabled==controls.enabled and migrated.version==2
+    assert migrated.shards_per_cycle==2 and migrated.allocation=='balanced'
+    assert migrated.workers==controls.workers and migrated.signing_key_file==controls.signing_key_file
+
+
+def test_withdrawn_remote_capacity_waits_without_dispatch_or_cursor_change(monkeypatch,tmp_path):
+    coordinator,controls,head,calls=setup(monkeypatch,tmp_path)
+    coordinator.knowledge.node.peers=lambda:[{'node_id':controls.workers[1],'resources':{'max_gpu_jobs':0,'work':{'training':False}}}]
+    coordinator._run(threading.Event())
+    assert coordinator.ledger['status']=='waiting_capacity' and coordinator.ledger['pending'] is None
+    assert coordinator.ledger['cursor']==0 and calls==[]
+
+
+def test_coordinator_plans_disjoint_work_using_verified_capacity_history(monkeypatch,tmp_path):
+    coordinator,controls,head,calls=setup(monkeypatch,tmp_path)
+    coordinator.settings=replace(controls,allocation='observed',shards_per_cycle=4)
+    measured={'workers':{worker:{'examples_per_request_second':4 if index==0 else 1}
+        for index,worker in enumerate(controls.workers)}}
+    monkeypatch.setattr(coordinator.capacity,'estimate',lambda assigned_head,workers:measured if assigned_head==head and workers==controls.workers else pytest.fail('wrong capacity context'))
+    coordinator._initialize();coordinator._prepare_round()
+    plan=coordinator.ledger['pending']['plan']
+    assert [row['worker_id'] for row in plan].count(controls.workers[0])==3
+    assert [(row['start'],row['count']) for row in plan]==[(0,4),(4,4),(8,4),(12,4)]
+    assert coordinator.ledger['cursor']==0 and coordinator.ledger['pending']['end']==16 and not calls
 
 
 @pytest.mark.parametrize('change',[{'cycles':11},{'examples_per_worker':9},{'learning_rate':float('nan')},

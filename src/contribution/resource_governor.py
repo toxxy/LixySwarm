@@ -108,6 +108,7 @@ class ResourceGovernor:
             "ram_gb": round(min(float(self.hardware.ram_gb), self.policy.max_ram_gb), 2),
             "gpu_vram_gb": round(float(self.hardware.gpu_vram_gb), 2),
             "gpu_percent": int(self.policy.gpu_percent),
+            "max_gpu_jobs": int(self.policy.max_gpu_jobs),
             "has_gpu": bool(self.hardware.has_gpu and self.policy.gpu_percent > 0),
             "disk_gb": round(min(float(self.hardware.disk_gb), self.policy.max_disk_gb), 2),
             "bandwidth_mbps": round(float(self.policy.max_bandwidth_mbps), 2),

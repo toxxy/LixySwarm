@@ -6,7 +6,7 @@ from src.network.work_protocol import ResultReceipt
 from src.release.language_versions import verify_chain,verify_contributions
 
 
-def _measure(report):
+def verify_timed_run(report):
     if report.get('success') is not True or report.get('operation')!='language.gradient.v2':
         raise ValueError('Scaling requires completed versioned gradient trials')
     if report.get('eligible_for_uncontended_scaling_comparison') is False or report.get('concurrent_initial_model_copy') is True:
@@ -25,6 +25,8 @@ def _measure(report):
         receipt=ResultReceipt.from_dict(result['receipt']);row=by_job.get(result['job_id'])
         if row is None or row['receipt']!=result['receipt'] or row['worker_id']!=receipt.worker_node_id:
             raise ValueError('Timing row has a different signed worker or job')
+        if report.get('requester_id') is not None and receipt.requester_node_id!=report['requester_id']:
+            raise ValueError('Timing report belongs to another requester')
         if row.get('encrypted') is not True:raise ValueError('Trial transport was not encrypted')
         for key,value in result['output'].items():
             if row.get(key)!=value:raise ValueError('Timing row differs from its signed contribution')
@@ -40,15 +42,20 @@ def _measure(report):
 
 
 def compare_runs(baseline,distributed):
-    before,first_shards,first_seconds=_measure(baseline)
-    after,second_shards,second_seconds=_measure(distributed)
+    before,first_shards,first_seconds=verify_timed_run(baseline)
+    after,second_shards,second_seconds=verify_timed_run(distributed)
     if (len(before['physical_workers'])!=1 or len(after['physical_workers'])<2
             or not set(before['physical_workers']).issubset(after['physical_workers'])):
         raise ValueError('Compare one physical worker with the same worker plus another')
     if (baseline['base_name']!=distributed['base_name'] or baseline['head']!=distributed['head']
             or first_shards!=second_shards
+            or baseline.get('requester_id')!=distributed.get('requester_id')
             or baseline.get('receive_bandwidth_mbps')!=distributed.get('receive_bandwidth_mbps')):
         raise ValueError('Scaling trials must use identical model, data, ranges and token counts')
+    before_slots=baseline.get('worker_slot_limits');after_slots=distributed.get('worker_slot_limits')
+    if (before_slots is None)!=(after_slots is None) or before_slots is not None and any(
+            after_slots.get(worker)!=limit for worker,limit in before_slots.items()):
+        raise ValueError('Adding workers cannot also increase the original worker slot limit')
     ratio=first_seconds/second_seconds
     return {'scope':'One observed Internet training comparison; excludes initial model download and candidate evaluation; no general scaling or model promotion claim',
         'base_name':baseline['base_name'],'release_id':baseline['head']['release']['release_id'],

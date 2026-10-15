@@ -25,6 +25,7 @@ from src.network.telemetry import atomic_json
 from src.network.work_protocol import ResultReceipt, WorkCoordinator, WorkResult
 from src.release.language_family import ADAPTERS
 from src.release.language_versions import verify_contributions
+from src.learning.language_capacity import allocate_shards,crossed_calibration
 
 
 def shard_plan(workers,count,shards=None):
@@ -73,6 +74,25 @@ def load_checkpoint(path,*,worker,requester,base_name,release_id,payload):
     return saved
 
 
+def capacity_plan(args):
+    slots={worker:1 for worker in args.worker}
+    supplied=set()
+    for item in getattr(args,'worker_slots',None) or []:
+        worker,separator,value=item.partition('=')
+        if not separator or worker not in slots or worker in supplied or value not in {'1','2','3','4'}:
+            raise ValueError('Use one explicit slot limit per known worker: NODE_ID=1..4')
+        supplied.add(worker);slots[worker]=int(value)
+    count=len(args.worker) if args.shards is None else args.shards
+    capacity=None;path=getattr(args,'capacity_report',None)
+    if path is not None:
+        if args.legacy or path.stat().st_size>1024**2:raise ValueError('Capacity evidence requires bounded versioned trials')
+        data=json.loads(path.read_text());capacity=crossed_calibration(data['reports'])
+        if set(capacity['workers'])!=set(args.worker) or capacity['base_name']!=args.base_name:
+            raise ValueError('Capacity calibration belongs to another family or worker set')
+    rows=allocate_shards(args.worker,args.count,count,capacity=capacity,slots=slots)
+    return [(index,row['worker_id']) for index,row in enumerate(rows)],slots,capacity
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--directory', type=Path, required=True)
@@ -86,6 +106,8 @@ def main():
     parser.add_argument('--candidate-worker')
     parser.add_argument('--learning-rate',type=float,default=.001)
     parser.add_argument('--resume',action='store_true',help='Recover signed contributions and partial downloads from this directory')
+    parser.add_argument('--capacity-report',type=Path,help='Local signed crossed-calibration reports used for observed allocation')
+    parser.add_argument('--worker-slots',action='append',help='Locally selected concurrent request cap: NODE_ID=1..4; worker consent remains authoritative')
     args = parser.parse_args()
     repo = Path(__file__).resolve().parents[1]
     if args.directory.resolve().is_relative_to(repo):
@@ -104,7 +126,8 @@ def main():
 
 
 def run(args,identity):
-    plan=shard_plan(args.worker,args.count,args.shards)
+    shard_plan(args.worker,args.count,args.shards)
+    plan,slots,capacity=capacity_plan(args)
     parallel_jobs=min(len(plan),args.parallel_jobs if args.parallel_jobs is not None else min(4,len(args.worker)))
     args.directory.mkdir(parents=True, exist_ok=True, mode=0o700)
     resuming=getattr(args,'resume',False)
@@ -137,6 +160,8 @@ def run(args,identity):
         signed_results=[],shard_plan=[{'worker_id':worker,'start':index*args.count,'count':args.count} for index,worker in plan],
         parallel_jobs=parallel_jobs,receive_bandwidth_mbps=receive_rate())
     report.update(resumed=resuming,reused_contributions=0)
+    report['worker_slot_limits']=slots
+    if capacity is not None:report['capacity_profile']={key:value for key,value in capacity.items() if key!='observations'}
     if resuming:
         report['eligible_for_uncontended_scaling_comparison']=False
         report['original_started_at']=prior.get('original_started_at',prior['started_at'])
@@ -172,6 +197,9 @@ def run(args,identity):
                 report['history']=history
         if prior is not None and prior.get('head')!=report.get('head'):
             raise ValueError('Language head changed; recovered gradients cannot update the new head')
+        if capacity is not None and (capacity['release_id']!=report['head']['release']['release_id']
+                or capacity['adapter_id']!=report['head']['release']['model_artifact_id']):
+            raise ValueError('Capacity observations belong to another accepted version')
         def payload_for(index):
             payload={'adapter_id':ADAPTERS[args.base_name] if args.legacy else report['head']['release']['model_artifact_id'],
                 'dataset_id':corpus_digest(public_corpus()),'start':index*args.count,'count':args.count}
@@ -189,6 +217,7 @@ def run(args,identity):
             report['reused_contributions']=len(checkpoints)
         atomic_json(path,report)
         cancelled=threading.Event()
+        calculations={worker:threading.BoundedSemaphore(count) for worker,count in slots.items()}
         def contribute(index,worker):
             route=routes[worker]
             payload=payload_for(index)
@@ -198,9 +227,12 @@ def run(args,identity):
                 saved=checkpoints[index];result=WorkResult.from_dict(saved['result'])
                 compute_seconds=saved['compute_seconds'];began_at=saved['request_started_at']
             else:
-                result = work.submit(OPERATION if args.legacy else VERSIONED_OPERATION, payload, ResourceRequirements(kind='training', gpu_required=True,
-                    ram_gb=6 if args.base_name=='qwen3-1.7b' else 4, disk_gb=.04), peer_id=worker, timeout_s=240,cancel_event=cancelled)
-                compute_seconds=time.monotonic()-started
+                with calculations[worker]:
+                    if cancelled.is_set():raise RuntimeError('Capacity trial cancelled before dispatch')
+                    compute_started=time.monotonic();began_at=time.time()
+                    result = work.submit(OPERATION if args.legacy else VERSIONED_OPERATION, payload, ResourceRequirements(kind='training', gpu_required=True,
+                        ram_gb=6 if args.base_name=='qwen3-1.7b' else 4, disk_gb=.04), peer_id=worker, timeout_s=240,cancel_event=cancelled)
+                    compute_seconds=time.monotonic()-compute_started
             if result.status != 'ok':
                 raise RuntimeError(result.error)
             if not ResultReceipt.from_dict(result.receipt).verify(result, expected_worker_id=worker,

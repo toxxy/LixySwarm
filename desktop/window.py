@@ -422,7 +422,7 @@ class SwarmWindow(QMainWindow):
         computation=diagnostic.get("compute",{}) if snapshot["fresh"] else {}
         channel=self.controller.learning_channel()
         learning=diagnostic.get(channel,{}) if snapshot["fresh"] else {}
-        learning_states={"idle":"Listo para una ronda", "collecting":"Repartiendo y recuperando fragmentos", "evaluating":"Evaluando la versión candidata", "promoting":"Conservando y publicando la mejora", "complete":"Ronda finalizada", "interrupted":"Trabajo conservado; esperando recuperación", "no_improvement":"En pausa: las últimas rondas no mejoraron el modelo", "needs_attention":"En pausa: revisa el error antes de reintentar", "waiting_replicas":"Esperando que los equipos compartan la misma versión"}
+        learning_states={"idle":"Listo para una ronda", "collecting":"Repartiendo y recuperando fragmentos", "evaluating":"Evaluando la versión candidata", "promoting":"Conservando y publicando la mejora", "complete":"Ronda finalizada", "interrupted":"Trabajo conservado; esperando recuperación", "no_improvement":"En pausa: las últimas rondas no mejoraron el modelo", "needs_attention":"En pausa: revisa el error antes de reintentar", "waiting_replicas":"Esperando que los equipos compartan la misma versión", "waiting_capacity":"Esperando recursos disponibles para aprender"}
         self.learning_label.setText(learning_states.get(learning.get("status"),"Preparando coordinación")
             + f" · {learning.get('round') or 0} rondas terminadas"
             + (f" · versión {learning['accepted_sequence']}" if learning.get("accepted_sequence") is not None else ""))

@@ -33,7 +33,7 @@ def test_identical_signed_work_reports_a_measured_gain_or_slowdown(monkeypatch,t
     assert not value['new_model_promoted']
 
 
-@pytest.mark.parametrize('failure',['signature','model','timing','nan','row','workers','incomplete','tokens','duplicates','warmup','bandwidth'])
+@pytest.mark.parametrize('failure',['signature','model','timing','nan','row','workers','incomplete','tokens','duplicates','warmup','bandwidth','slots','requester'])
 def test_incomparable_or_unverified_trials_cannot_claim_speedup(monkeypatch,tmp_path,failure):
     baseline,distributed=reports(monkeypatch,tmp_path);distributed=deepcopy(distributed)
     if failure=='signature':distributed['signed_results'][0]['output']['tokens']+=1
@@ -46,5 +46,8 @@ def test_incomparable_or_unverified_trials_cannot_claim_speedup(monkeypatch,tmp_
     elif failure=='tokens':distributed['contributions'][0]['tokens']+=1
     elif failure=='duplicates':distributed['contributions'].append(distributed['contributions'][0])
     elif failure=='warmup':baseline['concurrent_initial_model_copy']=True
+    elif failure=='slots':
+        worker=baseline['physical_workers'][0];baseline['worker_slot_limits']={worker:1};distributed['worker_slot_limits']={worker:2}
+    elif failure=='requester':distributed['requester_id']='e'*64
     else:distributed['receive_bandwidth_mbps']=5
     with pytest.raises((ValueError,RuntimeError)):compare_runs(baseline,distributed)

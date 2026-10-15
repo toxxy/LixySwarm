@@ -1,0 +1,963 @@
+{
+  "source_base_revision": "b50fcf9fd9f6be560b30781416d8100739be9334",
+  "requester_source_changes_committed_with_this_report": true,
+  "native_worker_source_revision": "83ad43f",
+  "public_internet_remote_work": true,
+  "relay_public_address": "31.97.9.54",
+  "vpn_for_administration_only": true,
+  "production_native_services_restarted": false,
+  "new_model_promoted": false,
+  "scope": "Two crossed same-version public synthetic trials; signed work and requester-local readiness times, excluding artifact transfer from capacity rates; no end-to-end acceleration claim",
+  "success": true,
+  "capacity_profile": {
+    "base_name": "qwen3-1.7b",
+    "release_id": "df231f9b93f6300ba7242da793d457880a416448f00d0e9b914e6a3f7b1e533a",
+    "adapter_id": "506317cc9f40da9dea40e6d14a94910ac6625ae478b5f2d0248cb1bbbb93a6c3",
+    "workers": {
+      "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255": {
+        "samples": 2,
+        "examples_per_request_second": 0.8423429331848826,
+        "verified_output_tokens_per_request_second": 5.791107665646068,
+        "mean_transfer_seconds": 54.9606804584777
+      },
+      "ea914d97caafef310e50385034abae9a50ba86496b0e9cbf4679e6070e4c25b0": {
+        "samples": 2,
+        "examples_per_request_second": 0.5896090232252548,
+        "verified_output_tokens_per_request_second": 4.053562034673627,
+        "mean_transfer_seconds": 49.82868661795789
+      }
+    },
+    "sampled_versions": [
+      "df231f9b93f6300ba7242da793d457880a416448f00d0e9b914e6a3f7b1e533a"
+    ],
+    "version_scope": "exact",
+    "scope": "Requester-observed calculation readiness; includes network/materialization/compute, excludes artifact acquisition; not a signed worker timer or an end-to-end speedup claim",
+    "crossed_inputs_verified": true
+  },
+  "reports": [
+    {
+      "success": true,
+      "operation": "language.gradient.v2",
+      "base_name": "qwen3-1.7b",
+      "head": {
+        "descriptor": {
+          "adapter_bytes": 6434736,
+          "adapter_id": "506317cc9f40da9dea40e6d14a94910ac6625ae478b5f2d0248cb1bbbb93a6c3",
+          "base_hash": "dfff7c96c5ca45c3aa7e6b68fb0650e103ed2c39a7abc912f19b55fdba819cdc",
+          "base_name": "qwen3-1.7b",
+          "evaluation_bytes": 10894,
+          "evaluation_id": "c3372ddca9b236f2b23f4b6d668a6521733b306726eb81c246e97fa5ed10b57e",
+          "files": [
+            {
+              "artifact_id": "832dd9e00a68dd83b3c3fb9f5588dad7dcf337a0db50f7d9483f310cd292e92e",
+              "bytes": 11343,
+              "name": "LICENSE"
+            },
+            {
+              "artifact_id": "1ddb5b89ebc90dcb417a45c213d818577e65976454d29385c8f6140771d95197",
+              "bytes": 726,
+              "name": "config.json"
+            },
+            {
+              "artifact_id": "2325da0f15bb848e018c5ae071b7943332e9f871d6b60e2ed22ca97d4cb993d2",
+              "bytes": 239,
+              "name": "generation_config.json"
+            },
+            {
+              "artifact_id": "169ad53ec313c3a34b06c0809216e4fc072cce444a5d4ff2b59690d064130ed5",
+              "bytes": 3441185608,
+              "name": "model-00001-of-00002.safetensors"
+            },
+            {
+              "artifact_id": "912becff8d60672aa8628ef08c05898d9adf17c2ad4ae3caf99b065622fdeff9",
+              "bytes": 622329984,
+              "name": "model-00002-of-00002.safetensors"
+            },
+            {
+              "artifact_id": "0d660e94b165eb912669a5249dff44b83188c4777a07ddb9611fb78d91b0578d",
+              "bytes": 25605,
+              "name": "model.safetensors.index.json"
+            },
+            {
+              "artifact_id": "aeb13307a71acd8fe81861d94ad54ab689df773318809eed3cbe794b4492dae4",
+              "bytes": 11422654,
+              "name": "tokenizer.json"
+            },
+            {
+              "artifact_id": "d5d09f07b48c3086c508b30d1c9114bd1189145b74e982a265350c923acd8101",
+              "bytes": 9732,
+              "name": "tokenizer_config.json"
+            }
+          ],
+          "version": 2
+        },
+        "release": {
+          "config_artifact_id": "33fed1203d8f56be8f06cffa6f84898e5c96aaefea11909fb11a5c90b68c3e05",
+          "created_at": 1792024674.4754894,
+          "minimum_client_version": "0.4.0a8",
+          "model_artifact_id": "506317cc9f40da9dea40e6d14a94910ac6625ae478b5f2d0248cb1bbbb93a6c3",
+          "model_format": "safetensors-v1",
+          "network_id": "LIXYMAIN",
+          "previous_release_id": "4e478620e27f3e28041a23d8e942d5fa45ca8c04ab04c8f7d5aae83db6fba594",
+          "release_id": "df231f9b93f6300ba7242da793d457880a416448f00d0e9b914e6a3f7b1e533a",
+          "sequence": 2,
+          "signatures": [
+            {
+              "signature": "Zhxk98p1597Fondg/KS5QxTn2qkDvgvLElLkzCa7a8HNawbrGwZ01REXckqIxQY9jm/T7BLnnn/5oc6u7eOnAQ==",
+              "signer_id": "53cea6456aced3a5a31ad24505aaa47d88e1827d1e7976592c91b54fc0e8980f"
+            }
+          ],
+          "tokenizer_artifact_id": "aeb13307a71acd8fe81861d94ad54ab689df773318809eed3cbe794b4492dae4",
+          "version": 1
+        }
+      },
+      "history": [
+        {
+          "descriptor": {
+            "adapter_bytes": 6434736,
+            "adapter_id": "badef4394af180ab75ca25f0d9d47f2406b92809b53b5845ab65d451cf9c4b3c",
+            "base_hash": "dfff7c96c5ca45c3aa7e6b68fb0650e103ed2c39a7abc912f19b55fdba819cdc",
+            "base_name": "qwen3-1.7b",
+            "evaluation_id": "1097ee2349a74b55db352eb006081093c3dd03250cdcecdfc678c91fadabf727",
+            "files": [
+              {
+                "artifact_id": "832dd9e00a68dd83b3c3fb9f5588dad7dcf337a0db50f7d9483f310cd292e92e",
+                "bytes": 11343,
+                "name": "LICENSE"
+              },
+              {
+                "artifact_id": "1ddb5b89ebc90dcb417a45c213d818577e65976454d29385c8f6140771d95197",
+                "bytes": 726,
+                "name": "config.json"
+              },
+              {
+                "artifact_id": "2325da0f15bb848e018c5ae071b7943332e9f871d6b60e2ed22ca97d4cb993d2",
+                "bytes": 239,
+                "name": "generation_config.json"
+              },
+              {
+                "artifact_id": "169ad53ec313c3a34b06c0809216e4fc072cce444a5d4ff2b59690d064130ed5",
+                "bytes": 3441185608,
+                "name": "model-00001-of-00002.safetensors"
+              },
+              {
+                "artifact_id": "912becff8d60672aa8628ef08c05898d9adf17c2ad4ae3caf99b065622fdeff9",
+                "bytes": 622329984,
+                "name": "model-00002-of-00002.safetensors"
+              },
+              {
+                "artifact_id": "0d660e94b165eb912669a5249dff44b83188c4777a07ddb9611fb78d91b0578d",
+                "bytes": 25605,
+                "name": "model.safetensors.index.json"
+              },
+              {
+                "artifact_id": "aeb13307a71acd8fe81861d94ad54ab689df773318809eed3cbe794b4492dae4",
+                "bytes": 11422654,
+                "name": "tokenizer.json"
+              },
+              {
+                "artifact_id": "d5d09f07b48c3086c508b30d1c9114bd1189145b74e982a265350c923acd8101",
+                "bytes": 9732,
+                "name": "tokenizer_config.json"
+              }
+            ],
+            "version": 1
+          },
+          "release": {
+            "config_artifact_id": "bc6dcf13cba57dfe71fcc5bd884e51a3e26f28f28abd3a38e3add8e46af5e2f1",
+            "created_at": 1792002695.3053608,
+            "minimum_client_version": "0.4.0a5",
+            "model_artifact_id": "badef4394af180ab75ca25f0d9d47f2406b92809b53b5845ab65d451cf9c4b3c",
+            "model_format": "safetensors-v1",
+            "network_id": "LIXYMAIN",
+            "previous_release_id": "",
+            "release_id": "3095364a8aed7e74e4b55a954d531246fd1494e4ababaec408a68ce777a63301",
+            "sequence": 0,
+            "signatures": [
+              {
+                "signature": "OwCVAB0l/iDHK7eThjE9JPmM8tSFZ/jO6kYdtfTkARC5fQ6qBhgBI79l0iwUqAMGVmDhuyTRqHHUZORdsh/UAQ==",
+                "signer_id": "53cea6456aced3a5a31ad24505aaa47d88e1827d1e7976592c91b54fc0e8980f"
+              }
+            ],
+            "tokenizer_artifact_id": "aeb13307a71acd8fe81861d94ad54ab689df773318809eed3cbe794b4492dae4",
+            "version": 1
+          }
+        },
+        {
+          "descriptor": {
+            "adapter_bytes": 6434736,
+            "adapter_id": "8e526788ef461c8ac20f2c1e9c510258b1862d8520b83d84e8ca2cce73a38e8d",
+            "base_hash": "dfff7c96c5ca45c3aa7e6b68fb0650e103ed2c39a7abc912f19b55fdba819cdc",
+            "base_name": "qwen3-1.7b",
+            "evaluation_bytes": 10960,
+            "evaluation_id": "44506c00ff89502498c07120986aa4463b518f1b06ca335c97dc82f14419bdb0",
+            "files": [
+              {
+                "artifact_id": "832dd9e00a68dd83b3c3fb9f5588dad7dcf337a0db50f7d9483f310cd292e92e",
+                "bytes": 11343,
+                "name": "LICENSE"
+              },
+              {
+                "artifact_id": "1ddb5b89ebc90dcb417a45c213d818577e65976454d29385c8f6140771d95197",
+                "bytes": 726,
+                "name": "config.json"
+              },
+              {
+                "artifact_id": "2325da0f15bb848e018c5ae071b7943332e9f871d6b60e2ed22ca97d4cb993d2",
+                "bytes": 239,
+                "name": "generation_config.json"
+              },
+              {
+                "artifact_id": "169ad53ec313c3a34b06c0809216e4fc072cce444a5d4ff2b59690d064130ed5",
+                "bytes": 3441185608,
+                "name": "model-00001-of-00002.safetensors"
+              },
+              {
+                "artifact_id": "912becff8d60672aa8628ef08c05898d9adf17c2ad4ae3caf99b065622fdeff9",
+                "bytes": 622329984,
+                "name": "model-00002-of-00002.safetensors"
+              },
+              {
+                "artifact_id": "0d660e94b165eb912669a5249dff44b83188c4777a07ddb9611fb78d91b0578d",
+                "bytes": 25605,
+                "name": "model.safetensors.index.json"
+              },
+              {
+                "artifact_id": "aeb13307a71acd8fe81861d94ad54ab689df773318809eed3cbe794b4492dae4",
+                "bytes": 11422654,
+                "name": "tokenizer.json"
+              },
+              {
+                "artifact_id": "d5d09f07b48c3086c508b30d1c9114bd1189145b74e982a265350c923acd8101",
+                "bytes": 9732,
+                "name": "tokenizer_config.json"
+              }
+            ],
+            "version": 2
+          },
+          "release": {
+            "config_artifact_id": "991990ff43220a922a7db416234338b02d9316ddc4ed0767fa6911dda46ed3e0",
+            "created_at": 1792021837.0973587,
+            "minimum_client_version": "0.4.0a8",
+            "model_artifact_id": "8e526788ef461c8ac20f2c1e9c510258b1862d8520b83d84e8ca2cce73a38e8d",
+            "model_format": "safetensors-v1",
+            "network_id": "LIXYMAIN",
+            "previous_release_id": "3095364a8aed7e74e4b55a954d531246fd1494e4ababaec408a68ce777a63301",
+            "release_id": "4e478620e27f3e28041a23d8e942d5fa45ca8c04ab04c8f7d5aae83db6fba594",
+            "sequence": 1,
+            "signatures": [
+              {
+                "signature": "Ch97oKbdc1lz9L5352mHZtA1nuAqXrzy3mGfM5dtGWwOCGcQJGsASXY5dwoHtUUcue19oEvXBxeJXP+ANTeZCA==",
+                "signer_id": "53cea6456aced3a5a31ad24505aaa47d88e1827d1e7976592c91b54fc0e8980f"
+              }
+            ],
+            "tokenizer_artifact_id": "aeb13307a71acd8fe81861d94ad54ab689df773318809eed3cbe794b4492dae4",
+            "version": 1
+          }
+        },
+        {
+          "descriptor": {
+            "adapter_bytes": 6434736,
+            "adapter_id": "506317cc9f40da9dea40e6d14a94910ac6625ae478b5f2d0248cb1bbbb93a6c3",
+            "base_hash": "dfff7c96c5ca45c3aa7e6b68fb0650e103ed2c39a7abc912f19b55fdba819cdc",
+            "base_name": "qwen3-1.7b",
+            "evaluation_bytes": 10894,
+            "evaluation_id": "c3372ddca9b236f2b23f4b6d668a6521733b306726eb81c246e97fa5ed10b57e",
+            "files": [
+              {
+                "artifact_id": "832dd9e00a68dd83b3c3fb9f5588dad7dcf337a0db50f7d9483f310cd292e92e",
+                "bytes": 11343,
+                "name": "LICENSE"
+              },
+              {
+                "artifact_id": "1ddb5b89ebc90dcb417a45c213d818577e65976454d29385c8f6140771d95197",
+                "bytes": 726,
+                "name": "config.json"
+              },
+              {
+                "artifact_id": "2325da0f15bb848e018c5ae071b7943332e9f871d6b60e2ed22ca97d4cb993d2",
+                "bytes": 239,
+                "name": "generation_config.json"
+              },
+              {
+                "artifact_id": "169ad53ec313c3a34b06c0809216e4fc072cce444a5d4ff2b59690d064130ed5",
+                "bytes": 3441185608,
+                "name": "model-00001-of-00002.safetensors"
+              },
+              {
+                "artifact_id": "912becff8d60672aa8628ef08c05898d9adf17c2ad4ae3caf99b065622fdeff9",
+                "bytes": 622329984,
+                "name": "model-00002-of-00002.safetensors"
+              },
+              {
+                "artifact_id": "0d660e94b165eb912669a5249dff44b83188c4777a07ddb9611fb78d91b0578d",
+                "bytes": 25605,
+                "name": "model.safetensors.index.json"
+              },
+              {
+                "artifact_id": "aeb13307a71acd8fe81861d94ad54ab689df773318809eed3cbe794b4492dae4",
+                "bytes": 11422654,
+                "name": "tokenizer.json"
+              },
+              {
+                "artifact_id": "d5d09f07b48c3086c508b30d1c9114bd1189145b74e982a265350c923acd8101",
+                "bytes": 9732,
+                "name": "tokenizer_config.json"
+              }
+            ],
+            "version": 2
+          },
+          "release": {
+            "config_artifact_id": "33fed1203d8f56be8f06cffa6f84898e5c96aaefea11909fb11a5c90b68c3e05",
+            "created_at": 1792024674.4754894,
+            "minimum_client_version": "0.4.0a8",
+            "model_artifact_id": "506317cc9f40da9dea40e6d14a94910ac6625ae478b5f2d0248cb1bbbb93a6c3",
+            "model_format": "safetensors-v1",
+            "network_id": "LIXYMAIN",
+            "previous_release_id": "4e478620e27f3e28041a23d8e942d5fa45ca8c04ab04c8f7d5aae83db6fba594",
+            "release_id": "df231f9b93f6300ba7242da793d457880a416448f00d0e9b914e6a3f7b1e533a",
+            "sequence": 2,
+            "signatures": [
+              {
+                "signature": "Zhxk98p1597Fondg/KS5QxTn2qkDvgvLElLkzCa7a8HNawbrGwZ01REXckqIxQY9jm/T7BLnnn/5oc6u7eOnAQ==",
+                "signer_id": "53cea6456aced3a5a31ad24505aaa47d88e1827d1e7976592c91b54fc0e8980f"
+              }
+            ],
+            "tokenizer_artifact_id": "aeb13307a71acd8fe81861d94ad54ab689df773318809eed3cbe794b4492dae4",
+            "version": 1
+          }
+        }
+      ],
+      "requester_id": "53cea6456aced3a5a31ad24505aaa47d88e1827d1e7976592c91b54fc0e8980f",
+      "receive_bandwidth_mbps": 2.5,
+      "physical_workers": [
+        "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+        "ea914d97caafef310e50385034abae9a50ba86496b0e9cbf4679e6070e4c25b0"
+      ],
+      "contribution_wall_seconds": 65.35954650701024,
+      "signed_results": [
+        {
+          "error": "",
+          "finished_at": 1792026208.8763797,
+          "job_id": "b5235c33f36f91dd0ff4ae72d4325dfd6763de03a510f8f023f3c3bdb604472f",
+          "output": {
+            "adapter_id": "506317cc9f40da9dea40e6d14a94910ac6625ae478b5f2d0248cb1bbbb93a6c3",
+            "base_hash": "dfff7c96c5ca45c3aa7e6b68fb0650e103ed2c39a7abc912f19b55fdba819cdc",
+            "count": 8,
+            "dataset_id": "24eb8b9e9c268021ededa84a171a4b6804cbe58263edbb2b2944f49dd4de64a5",
+            "gradient": {
+              "artifact_id": "ddf88c482e3a1c45e265767180a26449ff65e4b2f6b2486f337c5bc493923d96",
+              "created_at": 1792026208.8754485,
+              "kind": "gradient",
+              "media_type": "application/octet-stream",
+              "size": 6434888
+            },
+            "gradient_bytes": 6434888,
+            "gradient_id": "ddf88c482e3a1c45e265767180a26449ff65e4b2f6b2486f337c5bc493923d96",
+            "loss": 1.2143749029539115,
+            "retention_loss": 0.00354458624497056,
+            "start": 0,
+            "tokens": 49
+          },
+          "receipt": {
+            "finished_at": 1792026208.8763797,
+            "job_id": "b5235c33f36f91dd0ff4ae72d4325dfd6763de03a510f8f023f3c3bdb604472f",
+            "requester_node_id": "53cea6456aced3a5a31ad24505aaa47d88e1827d1e7976592c91b54fc0e8980f",
+            "result_digest": "d82e071b7dd85a7125d1f359f7de0801eea746286f3aaad387b56755d0670e63",
+            "signature": "EVEpg6xU8/A3s+kjQWHgPj7ZKCYE/NKtvUSBG1/6bB0FYIZ4h/yYRtHtDQ0EFPJWcr9sMPv/rKwIZzvAXQANCA==",
+            "version": 1,
+            "worker_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255"
+          },
+          "status": "ok"
+        },
+        {
+          "error": "",
+          "finished_at": 1792026213.0027542,
+          "job_id": "405b1eda25de9efb2480b9dea1fa9ea7909db068ea56b187082db8d37987efec",
+          "output": {
+            "adapter_id": "506317cc9f40da9dea40e6d14a94910ac6625ae478b5f2d0248cb1bbbb93a6c3",
+            "base_hash": "dfff7c96c5ca45c3aa7e6b68fb0650e103ed2c39a7abc912f19b55fdba819cdc",
+            "count": 8,
+            "dataset_id": "24eb8b9e9c268021ededa84a171a4b6804cbe58263edbb2b2944f49dd4de64a5",
+            "gradient": {
+              "artifact_id": "21d6bc41ef89015ad1a5f63b5c728cac277c981b0673f486c795fde351ed5859",
+              "created_at": 1792026213.0016928,
+              "kind": "gradient",
+              "media_type": "application/octet-stream",
+              "size": 6434888
+            },
+            "gradient_bytes": 6434888,
+            "gradient_id": "21d6bc41ef89015ad1a5f63b5c728cac277c981b0673f486c795fde351ed5859",
+            "loss": 1.2041997365683441,
+            "retention_loss": 0.002879505278542638,
+            "start": 8,
+            "tokens": 61
+          },
+          "receipt": {
+            "finished_at": 1792026213.0027542,
+            "job_id": "405b1eda25de9efb2480b9dea1fa9ea7909db068ea56b187082db8d37987efec",
+            "requester_node_id": "53cea6456aced3a5a31ad24505aaa47d88e1827d1e7976592c91b54fc0e8980f",
+            "result_digest": "b37190537ea77b502e189f5666f9018451767415663ae13101555324c5de9e72",
+            "signature": "YY9/O3/KC+i2wYq/SvFhXFNOWMaxiHmBB3u15K2wfaRHLtYinFwmxAhXIpnd1AF5ON7dzt1C0GshF9qdNX0hDA==",
+            "version": 1,
+            "worker_node_id": "ea914d97caafef310e50385034abae9a50ba86496b0e9cbf4679e6070e4c25b0"
+          },
+          "status": "ok"
+        }
+      ],
+      "contributions": [
+        {
+          "adapter_id": "506317cc9f40da9dea40e6d14a94910ac6625ae478b5f2d0248cb1bbbb93a6c3",
+          "base_hash": "dfff7c96c5ca45c3aa7e6b68fb0650e103ed2c39a7abc912f19b55fdba819cdc",
+          "compute_seconds": 9.44642377004493,
+          "count": 8,
+          "dataset_id": "24eb8b9e9c268021ededa84a171a4b6804cbe58263edbb2b2944f49dd4de64a5",
+          "encrypted": true,
+          "gradient": {
+            "artifact_id": "ddf88c482e3a1c45e265767180a26449ff65e4b2f6b2486f337c5bc493923d96",
+            "created_at": 1792026208.8754485,
+            "kind": "gradient",
+            "media_type": "application/octet-stream",
+            "size": 6434888
+          },
+          "gradient_bytes": 6434888,
+          "gradient_id": "ddf88c482e3a1c45e265767180a26449ff65e4b2f6b2486f337c5bc493923d96",
+          "loss": 1.2143749029539115,
+          "receipt": {
+            "finished_at": 1792026208.8763797,
+            "job_id": "b5235c33f36f91dd0ff4ae72d4325dfd6763de03a510f8f023f3c3bdb604472f",
+            "requester_node_id": "53cea6456aced3a5a31ad24505aaa47d88e1827d1e7976592c91b54fc0e8980f",
+            "result_digest": "d82e071b7dd85a7125d1f359f7de0801eea746286f3aaad387b56755d0670e63",
+            "signature": "EVEpg6xU8/A3s+kjQWHgPj7ZKCYE/NKtvUSBG1/6bB0FYIZ4h/yYRtHtDQ0EFPJWcr9sMPv/rKwIZzvAXQANCA==",
+            "version": 1,
+            "worker_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255"
+          },
+          "received_at": 1792026264.8425605,
+          "request_started_at": 1792026199.4846323,
+          "retention_loss": 0.00354458624497056,
+          "reused_signed_contribution": false,
+          "seconds": 65.358,
+          "start": 0,
+          "tokens": 49,
+          "transport": "relay",
+          "worker_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255"
+        },
+        {
+          "adapter_id": "506317cc9f40da9dea40e6d14a94910ac6625ae478b5f2d0248cb1bbbb93a6c3",
+          "base_hash": "dfff7c96c5ca45c3aa7e6b68fb0650e103ed2c39a7abc912f19b55fdba819cdc",
+          "compute_seconds": 13.570686265011318,
+          "count": 8,
+          "dataset_id": "24eb8b9e9c268021ededa84a171a4b6804cbe58263edbb2b2944f49dd4de64a5",
+          "encrypted": true,
+          "gradient": {
+            "artifact_id": "21d6bc41ef89015ad1a5f63b5c728cac277c981b0673f486c795fde351ed5859",
+            "created_at": 1792026213.0016928,
+            "kind": "gradient",
+            "media_type": "application/octet-stream",
+            "size": 6434888
+          },
+          "gradient_bytes": 6434888,
+          "gradient_id": "21d6bc41ef89015ad1a5f63b5c728cac277c981b0673f486c795fde351ed5859",
+          "loss": 1.2041997365683441,
+          "receipt": {
+            "finished_at": 1792026213.0027542,
+            "job_id": "405b1eda25de9efb2480b9dea1fa9ea7909db068ea56b187082db8d37987efec",
+            "requester_node_id": "53cea6456aced3a5a31ad24505aaa47d88e1827d1e7976592c91b54fc0e8980f",
+            "result_digest": "b37190537ea77b502e189f5666f9018451767415663ae13101555324c5de9e72",
+            "signature": "YY9/O3/KC+i2wYq/SvFhXFNOWMaxiHmBB3u15K2wfaRHLtYinFwmxAhXIpnd1AF5ON7dzt1C0GshF9qdNX0hDA==",
+            "version": 1,
+            "worker_node_id": "ea914d97caafef310e50385034abae9a50ba86496b0e9cbf4679e6070e4c25b0"
+          },
+          "received_at": 1792026260.8167813,
+          "request_started_at": 1792026199.4854882,
+          "retention_loss": 0.002879505278542638,
+          "reused_signed_contribution": false,
+          "seconds": 61.331,
+          "start": 8,
+          "tokens": 61,
+          "transport": "relay",
+          "worker_id": "ea914d97caafef310e50385034abae9a50ba86496b0e9cbf4679e6070e4c25b0"
+        }
+      ],
+      "shard_plan": [
+        {
+          "count": 8,
+          "start": 0,
+          "worker_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255"
+        },
+        {
+          "count": 8,
+          "start": 8,
+          "worker_id": "ea914d97caafef310e50385034abae9a50ba86496b0e9cbf4679e6070e4c25b0"
+        }
+      ],
+      "parallel_jobs": 2,
+      "resumed": false,
+      "reused_contributions": 0,
+      "started_at": 1792026187.9827359,
+      "finished_at": 1792026264.8431897
+    },
+    {
+      "success": true,
+      "operation": "language.gradient.v2",
+      "base_name": "qwen3-1.7b",
+      "head": {
+        "descriptor": {
+          "adapter_bytes": 6434736,
+          "adapter_id": "506317cc9f40da9dea40e6d14a94910ac6625ae478b5f2d0248cb1bbbb93a6c3",
+          "base_hash": "dfff7c96c5ca45c3aa7e6b68fb0650e103ed2c39a7abc912f19b55fdba819cdc",
+          "base_name": "qwen3-1.7b",
+          "evaluation_bytes": 10894,
+          "evaluation_id": "c3372ddca9b236f2b23f4b6d668a6521733b306726eb81c246e97fa5ed10b57e",
+          "files": [
+            {
+              "artifact_id": "832dd9e00a68dd83b3c3fb9f5588dad7dcf337a0db50f7d9483f310cd292e92e",
+              "bytes": 11343,
+              "name": "LICENSE"
+            },
+            {
+              "artifact_id": "1ddb5b89ebc90dcb417a45c213d818577e65976454d29385c8f6140771d95197",
+              "bytes": 726,
+              "name": "config.json"
+            },
+            {
+              "artifact_id": "2325da0f15bb848e018c5ae071b7943332e9f871d6b60e2ed22ca97d4cb993d2",
+              "bytes": 239,
+              "name": "generation_config.json"
+            },
+            {
+              "artifact_id": "169ad53ec313c3a34b06c0809216e4fc072cce444a5d4ff2b59690d064130ed5",
+              "bytes": 3441185608,
+              "name": "model-00001-of-00002.safetensors"
+            },
+            {
+              "artifact_id": "912becff8d60672aa8628ef08c05898d9adf17c2ad4ae3caf99b065622fdeff9",
+              "bytes": 622329984,
+              "name": "model-00002-of-00002.safetensors"
+            },
+            {
+              "artifact_id": "0d660e94b165eb912669a5249dff44b83188c4777a07ddb9611fb78d91b0578d",
+              "bytes": 25605,
+              "name": "model.safetensors.index.json"
+            },
+            {
+              "artifact_id": "aeb13307a71acd8fe81861d94ad54ab689df773318809eed3cbe794b4492dae4",
+              "bytes": 11422654,
+              "name": "tokenizer.json"
+            },
+            {
+              "artifact_id": "d5d09f07b48c3086c508b30d1c9114bd1189145b74e982a265350c923acd8101",
+              "bytes": 9732,
+              "name": "tokenizer_config.json"
+            }
+          ],
+          "version": 2
+        },
+        "release": {
+          "config_artifact_id": "33fed1203d8f56be8f06cffa6f84898e5c96aaefea11909fb11a5c90b68c3e05",
+          "created_at": 1792024674.4754894,
+          "minimum_client_version": "0.4.0a8",
+          "model_artifact_id": "506317cc9f40da9dea40e6d14a94910ac6625ae478b5f2d0248cb1bbbb93a6c3",
+          "model_format": "safetensors-v1",
+          "network_id": "LIXYMAIN",
+          "previous_release_id": "4e478620e27f3e28041a23d8e942d5fa45ca8c04ab04c8f7d5aae83db6fba594",
+          "release_id": "df231f9b93f6300ba7242da793d457880a416448f00d0e9b914e6a3f7b1e533a",
+          "sequence": 2,
+          "signatures": [
+            {
+              "signature": "Zhxk98p1597Fondg/KS5QxTn2qkDvgvLElLkzCa7a8HNawbrGwZ01REXckqIxQY9jm/T7BLnnn/5oc6u7eOnAQ==",
+              "signer_id": "53cea6456aced3a5a31ad24505aaa47d88e1827d1e7976592c91b54fc0e8980f"
+            }
+          ],
+          "tokenizer_artifact_id": "aeb13307a71acd8fe81861d94ad54ab689df773318809eed3cbe794b4492dae4",
+          "version": 1
+        }
+      },
+      "history": [
+        {
+          "descriptor": {
+            "adapter_bytes": 6434736,
+            "adapter_id": "badef4394af180ab75ca25f0d9d47f2406b92809b53b5845ab65d451cf9c4b3c",
+            "base_hash": "dfff7c96c5ca45c3aa7e6b68fb0650e103ed2c39a7abc912f19b55fdba819cdc",
+            "base_name": "qwen3-1.7b",
+            "evaluation_id": "1097ee2349a74b55db352eb006081093c3dd03250cdcecdfc678c91fadabf727",
+            "files": [
+              {
+                "artifact_id": "832dd9e00a68dd83b3c3fb9f5588dad7dcf337a0db50f7d9483f310cd292e92e",
+                "bytes": 11343,
+                "name": "LICENSE"
+              },
+              {
+                "artifact_id": "1ddb5b89ebc90dcb417a45c213d818577e65976454d29385c8f6140771d95197",
+                "bytes": 726,
+                "name": "config.json"
+              },
+              {
+                "artifact_id": "2325da0f15bb848e018c5ae071b7943332e9f871d6b60e2ed22ca97d4cb993d2",
+                "bytes": 239,
+                "name": "generation_config.json"
+              },
+              {
+                "artifact_id": "169ad53ec313c3a34b06c0809216e4fc072cce444a5d4ff2b59690d064130ed5",
+                "bytes": 3441185608,
+                "name": "model-00001-of-00002.safetensors"
+              },
+              {
+                "artifact_id": "912becff8d60672aa8628ef08c05898d9adf17c2ad4ae3caf99b065622fdeff9",
+                "bytes": 622329984,
+                "name": "model-00002-of-00002.safetensors"
+              },
+              {
+                "artifact_id": "0d660e94b165eb912669a5249dff44b83188c4777a07ddb9611fb78d91b0578d",
+                "bytes": 25605,
+                "name": "model.safetensors.index.json"
+              },
+              {
+                "artifact_id": "aeb13307a71acd8fe81861d94ad54ab689df773318809eed3cbe794b4492dae4",
+                "bytes": 11422654,
+                "name": "tokenizer.json"
+              },
+              {
+                "artifact_id": "d5d09f07b48c3086c508b30d1c9114bd1189145b74e982a265350c923acd8101",
+                "bytes": 9732,
+                "name": "tokenizer_config.json"
+              }
+            ],
+            "version": 1
+          },
+          "release": {
+            "config_artifact_id": "bc6dcf13cba57dfe71fcc5bd884e51a3e26f28f28abd3a38e3add8e46af5e2f1",
+            "created_at": 1792002695.3053608,
+            "minimum_client_version": "0.4.0a5",
+            "model_artifact_id": "badef4394af180ab75ca25f0d9d47f2406b92809b53b5845ab65d451cf9c4b3c",
+            "model_format": "safetensors-v1",
+            "network_id": "LIXYMAIN",
+            "previous_release_id": "",
+            "release_id": "3095364a8aed7e74e4b55a954d531246fd1494e4ababaec408a68ce777a63301",
+            "sequence": 0,
+            "signatures": [
+              {
+                "signature": "OwCVAB0l/iDHK7eThjE9JPmM8tSFZ/jO6kYdtfTkARC5fQ6qBhgBI79l0iwUqAMGVmDhuyTRqHHUZORdsh/UAQ==",
+                "signer_id": "53cea6456aced3a5a31ad24505aaa47d88e1827d1e7976592c91b54fc0e8980f"
+              }
+            ],
+            "tokenizer_artifact_id": "aeb13307a71acd8fe81861d94ad54ab689df773318809eed3cbe794b4492dae4",
+            "version": 1
+          }
+        },
+        {
+          "descriptor": {
+            "adapter_bytes": 6434736,
+            "adapter_id": "8e526788ef461c8ac20f2c1e9c510258b1862d8520b83d84e8ca2cce73a38e8d",
+            "base_hash": "dfff7c96c5ca45c3aa7e6b68fb0650e103ed2c39a7abc912f19b55fdba819cdc",
+            "base_name": "qwen3-1.7b",
+            "evaluation_bytes": 10960,
+            "evaluation_id": "44506c00ff89502498c07120986aa4463b518f1b06ca335c97dc82f14419bdb0",
+            "files": [
+              {
+                "artifact_id": "832dd9e00a68dd83b3c3fb9f5588dad7dcf337a0db50f7d9483f310cd292e92e",
+                "bytes": 11343,
+                "name": "LICENSE"
+              },
+              {
+                "artifact_id": "1ddb5b89ebc90dcb417a45c213d818577e65976454d29385c8f6140771d95197",
+                "bytes": 726,
+                "name": "config.json"
+              },
+              {
+                "artifact_id": "2325da0f15bb848e018c5ae071b7943332e9f871d6b60e2ed22ca97d4cb993d2",
+                "bytes": 239,
+                "name": "generation_config.json"
+              },
+              {
+                "artifact_id": "169ad53ec313c3a34b06c0809216e4fc072cce444a5d4ff2b59690d064130ed5",
+                "bytes": 3441185608,
+                "name": "model-00001-of-00002.safetensors"
+              },
+              {
+                "artifact_id": "912becff8d60672aa8628ef08c05898d9adf17c2ad4ae3caf99b065622fdeff9",
+                "bytes": 622329984,
+                "name": "model-00002-of-00002.safetensors"
+              },
+              {
+                "artifact_id": "0d660e94b165eb912669a5249dff44b83188c4777a07ddb9611fb78d91b0578d",
+                "bytes": 25605,
+                "name": "model.safetensors.index.json"
+              },
+              {
+                "artifact_id": "aeb13307a71acd8fe81861d94ad54ab689df773318809eed3cbe794b4492dae4",
+                "bytes": 11422654,
+                "name": "tokenizer.json"
+              },
+              {
+                "artifact_id": "d5d09f07b48c3086c508b30d1c9114bd1189145b74e982a265350c923acd8101",
+                "bytes": 9732,
+                "name": "tokenizer_config.json"
+              }
+            ],
+            "version": 2
+          },
+          "release": {
+            "config_artifact_id": "991990ff43220a922a7db416234338b02d9316ddc4ed0767fa6911dda46ed3e0",
+            "created_at": 1792021837.0973587,
+            "minimum_client_version": "0.4.0a8",
+            "model_artifact_id": "8e526788ef461c8ac20f2c1e9c510258b1862d8520b83d84e8ca2cce73a38e8d",
+            "model_format": "safetensors-v1",
+            "network_id": "LIXYMAIN",
+            "previous_release_id": "3095364a8aed7e74e4b55a954d531246fd1494e4ababaec408a68ce777a63301",
+            "release_id": "4e478620e27f3e28041a23d8e942d5fa45ca8c04ab04c8f7d5aae83db6fba594",
+            "sequence": 1,
+            "signatures": [
+              {
+                "signature": "Ch97oKbdc1lz9L5352mHZtA1nuAqXrzy3mGfM5dtGWwOCGcQJGsASXY5dwoHtUUcue19oEvXBxeJXP+ANTeZCA==",
+                "signer_id": "53cea6456aced3a5a31ad24505aaa47d88e1827d1e7976592c91b54fc0e8980f"
+              }
+            ],
+            "tokenizer_artifact_id": "aeb13307a71acd8fe81861d94ad54ab689df773318809eed3cbe794b4492dae4",
+            "version": 1
+          }
+        },
+        {
+          "descriptor": {
+            "adapter_bytes": 6434736,
+            "adapter_id": "506317cc9f40da9dea40e6d14a94910ac6625ae478b5f2d0248cb1bbbb93a6c3",
+            "base_hash": "dfff7c96c5ca45c3aa7e6b68fb0650e103ed2c39a7abc912f19b55fdba819cdc",
+            "base_name": "qwen3-1.7b",
+            "evaluation_bytes": 10894,
+            "evaluation_id": "c3372ddca9b236f2b23f4b6d668a6521733b306726eb81c246e97fa5ed10b57e",
+            "files": [
+              {
+                "artifact_id": "832dd9e00a68dd83b3c3fb9f5588dad7dcf337a0db50f7d9483f310cd292e92e",
+                "bytes": 11343,
+                "name": "LICENSE"
+              },
+              {
+                "artifact_id": "1ddb5b89ebc90dcb417a45c213d818577e65976454d29385c8f6140771d95197",
+                "bytes": 726,
+                "name": "config.json"
+              },
+              {
+                "artifact_id": "2325da0f15bb848e018c5ae071b7943332e9f871d6b60e2ed22ca97d4cb993d2",
+                "bytes": 239,
+                "name": "generation_config.json"
+              },
+              {
+                "artifact_id": "169ad53ec313c3a34b06c0809216e4fc072cce444a5d4ff2b59690d064130ed5",
+                "bytes": 3441185608,
+                "name": "model-00001-of-00002.safetensors"
+              },
+              {
+                "artifact_id": "912becff8d60672aa8628ef08c05898d9adf17c2ad4ae3caf99b065622fdeff9",
+                "bytes": 622329984,
+                "name": "model-00002-of-00002.safetensors"
+              },
+              {
+                "artifact_id": "0d660e94b165eb912669a5249dff44b83188c4777a07ddb9611fb78d91b0578d",
+                "bytes": 25605,
+                "name": "model.safetensors.index.json"
+              },
+              {
+                "artifact_id": "aeb13307a71acd8fe81861d94ad54ab689df773318809eed3cbe794b4492dae4",
+                "bytes": 11422654,
+                "name": "tokenizer.json"
+              },
+              {
+                "artifact_id": "d5d09f07b48c3086c508b30d1c9114bd1189145b74e982a265350c923acd8101",
+                "bytes": 9732,
+                "name": "tokenizer_config.json"
+              }
+            ],
+            "version": 2
+          },
+          "release": {
+            "config_artifact_id": "33fed1203d8f56be8f06cffa6f84898e5c96aaefea11909fb11a5c90b68c3e05",
+            "created_at": 1792024674.4754894,
+            "minimum_client_version": "0.4.0a8",
+            "model_artifact_id": "506317cc9f40da9dea40e6d14a94910ac6625ae478b5f2d0248cb1bbbb93a6c3",
+            "model_format": "safetensors-v1",
+            "network_id": "LIXYMAIN",
+            "previous_release_id": "4e478620e27f3e28041a23d8e942d5fa45ca8c04ab04c8f7d5aae83db6fba594",
+            "release_id": "df231f9b93f6300ba7242da793d457880a416448f00d0e9b914e6a3f7b1e533a",
+            "sequence": 2,
+            "signatures": [
+              {
+                "signature": "Zhxk98p1597Fondg/KS5QxTn2qkDvgvLElLkzCa7a8HNawbrGwZ01REXckqIxQY9jm/T7BLnnn/5oc6u7eOnAQ==",
+                "signer_id": "53cea6456aced3a5a31ad24505aaa47d88e1827d1e7976592c91b54fc0e8980f"
+              }
+            ],
+            "tokenizer_artifact_id": "aeb13307a71acd8fe81861d94ad54ab689df773318809eed3cbe794b4492dae4",
+            "version": 1
+          }
+        }
+      ],
+      "requester_id": "53cea6456aced3a5a31ad24505aaa47d88e1827d1e7976592c91b54fc0e8980f",
+      "receive_bandwidth_mbps": 2.5,
+      "physical_workers": [
+        "ea914d97caafef310e50385034abae9a50ba86496b0e9cbf4679e6070e4c25b0",
+        "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255"
+      ],
+      "contribution_wall_seconds": 65.4641498340061,
+      "signed_results": [
+        {
+          "error": "",
+          "finished_at": 1792026290.1821547,
+          "job_id": "873ff8de81fd26580f77266e42572949876e166407e3a38459bd65d54660f491",
+          "output": {
+            "adapter_id": "506317cc9f40da9dea40e6d14a94910ac6625ae478b5f2d0248cb1bbbb93a6c3",
+            "base_hash": "dfff7c96c5ca45c3aa7e6b68fb0650e103ed2c39a7abc912f19b55fdba819cdc",
+            "count": 8,
+            "dataset_id": "24eb8b9e9c268021ededa84a171a4b6804cbe58263edbb2b2944f49dd4de64a5",
+            "gradient": {
+              "artifact_id": "bdf9a68e41abd7b89b5298847955c58c1eb8f67e494753bee69542f273ab7443",
+              "created_at": 1792026290.180585,
+              "kind": "gradient",
+              "media_type": "application/octet-stream",
+              "size": 6434888
+            },
+            "gradient_bytes": 6434888,
+            "gradient_id": "bdf9a68e41abd7b89b5298847955c58c1eb8f67e494753bee69542f273ab7443",
+            "loss": 1.218993095050988,
+            "retention_loss": 0.0038954385090619326,
+            "start": 0,
+            "tokens": 49
+          },
+          "receipt": {
+            "finished_at": 1792026290.1821547,
+            "job_id": "873ff8de81fd26580f77266e42572949876e166407e3a38459bd65d54660f491",
+            "requester_node_id": "53cea6456aced3a5a31ad24505aaa47d88e1827d1e7976592c91b54fc0e8980f",
+            "result_digest": "b8eb1ff645980804512b75bb6772f1ee4030dfaf941362935a0660f97e810d60",
+            "signature": "I9CAgXKyctZd+bapwzyzxrL1CL0uUy/72G144KfIWgoiCAaYoI5n3G133mwD+UI6bsdZVYAnFd5For9SXdN0Bg==",
+            "version": 1,
+            "worker_node_id": "ea914d97caafef310e50385034abae9a50ba86496b0e9cbf4679e6070e4c25b0"
+          },
+          "status": "ok"
+        },
+        {
+          "error": "",
+          "finished_at": 1792026286.1616712,
+          "job_id": "50103f76e517c640347db18beac52a40da12032c019af7ce9fdc0825ae6700a5",
+          "output": {
+            "adapter_id": "506317cc9f40da9dea40e6d14a94910ac6625ae478b5f2d0248cb1bbbb93a6c3",
+            "base_hash": "dfff7c96c5ca45c3aa7e6b68fb0650e103ed2c39a7abc912f19b55fdba819cdc",
+            "count": 8,
+            "dataset_id": "24eb8b9e9c268021ededa84a171a4b6804cbe58263edbb2b2944f49dd4de64a5",
+            "gradient": {
+              "artifact_id": "758d2973d303ee43e1265934f7e6039c1d6f744b3b288b0c2cb166515602c9dc",
+              "created_at": 1792026286.1607387,
+              "kind": "gradient",
+              "media_type": "application/octet-stream",
+              "size": 6434888
+            },
+            "gradient_bytes": 6434888,
+            "gradient_id": "758d2973d303ee43e1265934f7e6039c1d6f744b3b288b0c2cb166515602c9dc",
+            "loss": 1.2073831784955025,
+            "retention_loss": 0.0014842411037534475,
+            "start": 8,
+            "tokens": 61
+          },
+          "receipt": {
+            "finished_at": 1792026286.1616712,
+            "job_id": "50103f76e517c640347db18beac52a40da12032c019af7ce9fdc0825ae6700a5",
+            "requester_node_id": "53cea6456aced3a5a31ad24505aaa47d88e1827d1e7976592c91b54fc0e8980f",
+            "result_digest": "e8555d22fd4f1672bff5ecfad68c64f7543248d653bdf2cfa318b708cc54f0f1",
+            "signature": "zr84p53rupw5D+JFboZQ0QMWV/edRxcXMzhlkzNz/OUZ4lAodkknPTb1I9FgfOugF9AjvpdHvCQ7P/lyzhCfBg==",
+            "version": 1,
+            "worker_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255"
+          },
+          "status": "ok"
+        }
+      ],
+      "contributions": [
+        {
+          "adapter_id": "506317cc9f40da9dea40e6d14a94910ac6625ae478b5f2d0248cb1bbbb93a6c3",
+          "base_hash": "dfff7c96c5ca45c3aa7e6b68fb0650e103ed2c39a7abc912f19b55fdba819cdc",
+          "compute_seconds": 13.565940499072894,
+          "count": 8,
+          "dataset_id": "24eb8b9e9c268021ededa84a171a4b6804cbe58263edbb2b2944f49dd4de64a5",
+          "encrypted": true,
+          "gradient": {
+            "artifact_id": "bdf9a68e41abd7b89b5298847955c58c1eb8f67e494753bee69542f273ab7443",
+            "created_at": 1792026290.180585,
+            "kind": "gradient",
+            "media_type": "application/octet-stream",
+            "size": 6434888
+          },
+          "gradient_bytes": 6434888,
+          "gradient_id": "bdf9a68e41abd7b89b5298847955c58c1eb8f67e494753bee69542f273ab7443",
+          "loss": 1.218993095050988,
+          "receipt": {
+            "finished_at": 1792026290.1821547,
+            "job_id": "873ff8de81fd26580f77266e42572949876e166407e3a38459bd65d54660f491",
+            "requester_node_id": "53cea6456aced3a5a31ad24505aaa47d88e1827d1e7976592c91b54fc0e8980f",
+            "result_digest": "b8eb1ff645980804512b75bb6772f1ee4030dfaf941362935a0660f97e810d60",
+            "signature": "I9CAgXKyctZd+bapwzyzxrL1CL0uUy/72G144KfIWgoiCAaYoI5n3G133mwD+UI6bsdZVYAnFd5For9SXdN0Bg==",
+            "version": 1,
+            "worker_node_id": "ea914d97caafef310e50385034abae9a50ba86496b0e9cbf4679e6070e4c25b0"
+          },
+          "received_at": 1792026342.1313787,
+          "request_started_at": 1792026276.6687675,
+          "retention_loss": 0.0038954385090619326,
+          "reused_signed_contribution": false,
+          "seconds": 65.463,
+          "start": 0,
+          "tokens": 49,
+          "transport": "relay",
+          "worker_id": "ea914d97caafef310e50385034abae9a50ba86496b0e9cbf4679e6070e4c25b0"
+        },
+        {
+          "adapter_id": "506317cc9f40da9dea40e6d14a94910ac6625ae478b5f2d0248cb1bbbb93a6c3",
+          "base_hash": "dfff7c96c5ca45c3aa7e6b68fb0650e103ed2c39a7abc912f19b55fdba819cdc",
+          "compute_seconds": 9.548215312999673,
+          "count": 8,
+          "dataset_id": "24eb8b9e9c268021ededa84a171a4b6804cbe58263edbb2b2944f49dd4de64a5",
+          "encrypted": true,
+          "gradient": {
+            "artifact_id": "758d2973d303ee43e1265934f7e6039c1d6f744b3b288b0c2cb166515602c9dc",
+            "created_at": 1792026286.1607387,
+            "kind": "gradient",
+            "media_type": "application/octet-stream",
+            "size": 6434888
+          },
+          "gradient_bytes": 6434888,
+          "gradient_id": "758d2973d303ee43e1265934f7e6039c1d6f744b3b288b0c2cb166515602c9dc",
+          "loss": 1.2073831784955025,
+          "receipt": {
+            "finished_at": 1792026286.1616712,
+            "job_id": "50103f76e517c640347db18beac52a40da12032c019af7ce9fdc0825ae6700a5",
+            "requester_node_id": "53cea6456aced3a5a31ad24505aaa47d88e1827d1e7976592c91b54fc0e8980f",
+            "result_digest": "e8555d22fd4f1672bff5ecfad68c64f7543248d653bdf2cfa318b708cc54f0f1",
+            "signature": "zr84p53rupw5D+JFboZQ0QMWV/edRxcXMzhlkzNz/OUZ4lAodkknPTb1I9FgfOugF9AjvpdHvCQ7P/lyzhCfBg==",
+            "version": 1,
+            "worker_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255"
+          },
+          "received_at": 1792026340.2280831,
+          "request_started_at": 1792026276.669694,
+          "retention_loss": 0.0014842411037534475,
+          "reused_signed_contribution": false,
+          "seconds": 63.558,
+          "start": 8,
+          "tokens": 61,
+          "transport": "relay",
+          "worker_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255"
+        }
+      ],
+      "shard_plan": [
+        {
+          "count": 8,
+          "start": 0,
+          "worker_id": "ea914d97caafef310e50385034abae9a50ba86496b0e9cbf4679e6070e4c25b0"
+        },
+        {
+          "count": 8,
+          "start": 8,
+          "worker_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255"
+        }
+      ],
+      "parallel_jobs": 2,
+      "resumed": false,
+      "reused_contributions": 0,
+      "started_at": 1792026264.9580634,
+      "finished_at": 1792026342.1320748
+    }
+  ]
+}
