@@ -1,5 +1,6 @@
 """Bounded offline learned routing over two unchanged public Qwen experts."""
 import hashlib
+import contextlib
 import json
 import math
 import os
@@ -170,7 +171,9 @@ def run(request):
 def main():
     raw=sys.stdin.buffer.read(16*1024+1)
     if len(raw)>16*1024:raise ValueError('Selector request exceeds its bound')
-    print(json.dumps(run(json.loads(raw)),allow_nan=False),flush=True)
+    with contextlib.redirect_stdout(sys.stderr):
+        response=run(json.loads(raw))
+    print(json.dumps(response,allow_nan=False),flush=True)
 
 
 if __name__=='__main__':main()

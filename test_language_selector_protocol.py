@@ -2,12 +2,15 @@
 import time
 from copy import deepcopy
 import json
+import io
+import sys
 from pathlib import Path
 
 import pytest
 
 from src.learning.language_selector_protocol import definition,protocol_id
 from src.learning.language_selector_job import validate_request
+import src.learning.language_selector_job as selector_job
 from src.learning.language_retention import PARENT_MODEL,PARENT_RELEASE
 
 
@@ -30,6 +33,18 @@ def test_prospective_fixture_exactly_binds_code_and_inputs():
     value=json.loads((Path(__file__).parent/'experiments/reports/language_selector_protocol_20261015.json').read_text())
     assert value=={'protocol_id':protocol_id(),'definition':definition()}
     assert protocol_id()=='df6b22c1b9d7a17cb5bd037c39e5f2b453a94c4f131824b402374feae308f8f0'
+
+
+def test_child_main_keeps_constructor_messages_out_of_json_stdout(monkeypatch,capsys):
+    def run(value):
+        assert value=={'fixture':'public'}
+        print('Matriarca initialized: fixture constructor log')
+        return {'success':True,'report_id':'a'*64}
+    monkeypatch.setattr(selector_job,'run',run)
+    monkeypatch.setattr(sys,'stdin',type('Input',(),{'buffer':io.BytesIO(b'{"fixture":"public"}')})())
+    selector_job.main();captured=capsys.readouterr()
+    assert json.loads(captured.out)=={'success':True,'report_id':'a'*64}
+    assert 'constructor log' in captured.err
 
 
 @pytest.mark.parametrize('key,value',[('model_id','a'*64),('compute_dtype','bfloat16'),('streamed_base',False),
