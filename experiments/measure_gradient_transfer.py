@@ -18,6 +18,7 @@ from src.network.client_state import ClientSettings
 from src.network.lsp import LSPIdentity
 from src.network.lsp_v3 import LSPNodeV3
 from src.network.public_knowledge import BandwidthBudget, managed_public_bytes
+from src.network.report_privacy import public_route
 from src.network.telemetry import atomic_json
 from src.network.work_protocol import WorkCoordinator, ResultReceipt
 
@@ -70,7 +71,7 @@ def run(args):
             if digest_file(path)!=(identifier,size):raise ValueError('Received bytes differ from the expected artifact')
             rows.append({'index':index,'mode':mode,'artifact_id':identifier,'bytes':size,'seconds':elapsed,
                 'encoded_data_bytes':sum(row['encoded_data_bytes'] for row in stats),'chunks':len(stats),
-                'hash_verified':True,'initially_cached':False,'route':{k:route.get(k) for k in ['host','relay_host','transport','encrypted']}})
+                'hash_verified':True,'initially_cached':False,'route':public_route({k:route.get(k) for k in ['host','relay_host','transport','encrypted']})})
             atomic_json(args.directory/'progress.json',{'rows':rows,'time':time.time()})
         times={mode:statistics.median(r['seconds'] for r in rows if r['mode']==mode) for mode in ['fp32','half']}
         report={'success':True,'scope':'Artifact transfer only, two known physical PCs; not one-versus-two training speed or model promotion',

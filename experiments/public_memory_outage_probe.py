@@ -22,6 +22,7 @@ from src.network.public_memory import PublicMemoryService,select_cards,augment_m
 from src.network.telemetry import atomic_json
 from src.network.work_protocol import ResultReceipt
 from src.network.language_compute import LANGUAGE_OPERATION
+from src.network.report_privacy import public_route
 
 
 def main():
@@ -76,7 +77,7 @@ def main():
         report.update(success=True,producer_inactive_at_end=True,head=head,documents=memory.registry.chain(),
             content_bytes_received=memory.registry.store.total_bytes(),public_records=len(document['cards']),record_ids=records,
             signed_result=result.to_dict(),requester_id=identity.node_id_hex,
-            route={k:route.get(k) for k in ['transport','host','relay_host','encrypted']},finished_at=time.time(),weights_fetched=False)
+            route=public_route({k:route.get(k) for k in ['transport','host','relay_host','encrypted']}),finished_at=time.time(),weights_fetched=False)
     finally:
         atomic_json(args.directory/'report.json',report)
         memory.close();knowledge.close();node.stop()

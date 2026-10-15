@@ -29,10 +29,9 @@
     "routes": [
       {
         "encrypted": true,
-        "host": "187.189.64.24",
         "node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
-        "relay_host": "31.97.9.54",
-        "transport": "relay"
+        "transport": "relay",
+        "public_internet": true
       }
     ],
     "selection": "selected",
@@ -56,5 +55,6 @@
   "success": true,
   "source_revision": "83ad43f99213ab4cd4880d90efb7de638c84207b",
   "runtime_version": "0.4.0a12",
-  "visitor_is_extra_physical_worker": false
+  "visitor_is_extra_physical_worker": false,
+  "operator_addresses_omitted": true
 }

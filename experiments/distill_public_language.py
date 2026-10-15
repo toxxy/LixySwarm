@@ -25,6 +25,7 @@ from src.network.language_install import materialize_family
 from src.network.language_version_service import fetch_history
 from src.network.lsp import LSPIdentity
 from src.network.lsp_v3 import LSPNodeV3
+from src.network.report_privacy import public_route
 from src.network.telemetry import atomic_json
 from src.network.work_protocol import WorkCoordinator
 from src.release.language_versions import LanguageVersionRegistry, WORKERS
@@ -93,7 +94,7 @@ def collect(args, cancel):
             route = next(p for p in node.peers() if p['node_id'] == args.teacher)
             if not route['encrypted'] or not ipaddress.ip_address(route.get('relay_host') or route['host']).is_global:
                 raise ValueError('Teacher must use encrypted public Internet transport')
-            routes.append({k: route.get(k) for k in ['transport', 'host', 'relay_host', 'encrypted']})
+            routes.append(public_route({k: route.get(k) for k in ['transport', 'host', 'relay_host', 'encrypted']}))
             payload = {'model_artifact_id': lessons['teacher_model_id'],
                        'messages': [{'role': 'user', 'content': teaching_prompt(start)}]}
             result = work.submit('language.inference.v1', payload,

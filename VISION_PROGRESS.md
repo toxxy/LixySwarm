@@ -32,6 +32,12 @@ El ensayo GPU usa procesos separados supervisados, dentro de seis GiB de RAM y e
 
 El formato experimental está aislado y ninguna operación de aprendizaje en servicio lo acepta. El siguiente gate es incorporar una política de contribuciones firmadas, evaluador y motor que reconozcan explícitamente la nueva precisión, preservando la compatibilidad de las versiones anteriores; después, repetir una comparación nativa completa de una PC frente a dos. Medir solo los archivos no demuestra aceleración del entrenamiento, una mejora aceptada ni la aceptación completa de la etapa 5.
 
+### Direcciones de operadores en informes públicos
+
+La [revisión de publicación](experiments/reports/public_report_privacy_20261015.json) encontró direcciones públicas de las PCs en seis informes y en dos adjuntos JSON de A16. Se retiraron de las versiones actuales, conservando transporte, cifrado y la comprobación de Internet público. Se revisaron 35 adjuntos JSON de las releases; los dos corregidos se descargaron de nuevo sin autenticación y coincidieron con sus copias corregidas. Las firmas de los trabajos se verificaron de nuevo sin modificar sus cuerpos. La revisión distingue verificaciones repetidas de trabajo nuevo.
+
+Los nuevos exportadores omiten las direcciones y una comprobación de regresión revisa los informes del repositorio. El helper rechaza editar direcciones dentro de un objeto firmado para evitar invalidar su firma. Pasaron tres pruebas de privacidad y las 360 pruebas del workflow de escritorio. El archivo de la app y los servicios no cambiaron por esta corrección. El historial público de Git conserva las versiones anteriores; no se reescribió mediante force push.
+
 ## Memoria pública versionada: implementación inicial
 
 La fuente A16 añade una memoria pública de texto, con espacio `lixyswarm-public-text-registry-v1`, independiente de las memorias personales y de los vectores neuronales antiguos. Su política inicial admite dos épocas del registro ficticio público y una instantánea verificada del catálogo de lenguaje aprendido. Los diez registros se derivan de esas fuentes cerradas; ni el publicador ni los peers pueden añadir texto libre o convertir una conversación en una fuente global.

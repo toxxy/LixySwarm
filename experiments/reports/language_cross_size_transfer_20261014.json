@@ -27,99 +27,83 @@
     "routes": [
       {
         "encrypted": true,
-        "host": "187.189.64.24",
-        "relay_host": "31.97.9.54",
-        "transport": "relay"
+        "transport": "relay",
+        "public_internet": true
       },
       {
         "encrypted": true,
-        "host": "187.189.64.24",
-        "relay_host": "31.97.9.54",
-        "transport": "relay"
+        "transport": "relay",
+        "public_internet": true
       },
       {
         "encrypted": true,
-        "host": "187.189.64.24",
-        "relay_host": "31.97.9.54",
-        "transport": "relay"
+        "transport": "relay",
+        "public_internet": true
       },
       {
         "encrypted": true,
-        "host": "187.189.64.24",
-        "relay_host": "31.97.9.54",
-        "transport": "relay"
+        "transport": "relay",
+        "public_internet": true
       },
       {
         "encrypted": true,
-        "host": "187.189.64.24",
-        "relay_host": "31.97.9.54",
-        "transport": "relay"
+        "transport": "relay",
+        "public_internet": true
       },
       {
         "encrypted": true,
-        "host": "187.189.64.24",
-        "relay_host": "31.97.9.54",
-        "transport": "relay"
+        "transport": "relay",
+        "public_internet": true
       },
       {
         "encrypted": true,
-        "host": "187.189.64.24",
-        "relay_host": "31.97.9.54",
-        "transport": "relay"
+        "transport": "relay",
+        "public_internet": true
       },
       {
         "encrypted": true,
-        "host": "187.189.64.24",
-        "relay_host": "31.97.9.54",
-        "transport": "relay"
+        "transport": "relay",
+        "public_internet": true
       },
       {
         "encrypted": true,
-        "host": "187.189.64.24",
-        "relay_host": "31.97.9.54",
-        "transport": "relay"
+        "transport": "relay",
+        "public_internet": true
       },
       {
         "encrypted": true,
-        "host": "187.189.64.24",
-        "relay_host": "31.97.9.54",
-        "transport": "relay"
+        "transport": "relay",
+        "public_internet": true
       },
       {
         "encrypted": true,
-        "host": "187.189.64.24",
-        "relay_host": "31.97.9.54",
-        "transport": "relay"
+        "transport": "relay",
+        "public_internet": true
       },
       {
         "encrypted": true,
-        "host": "187.189.64.24",
-        "relay_host": "31.97.9.54",
-        "transport": "relay"
+        "transport": "relay",
+        "public_internet": true
       },
       {
         "encrypted": true,
-        "host": "187.189.64.24",
-        "relay_host": "31.97.9.54",
-        "transport": "relay"
+        "transport": "relay",
+        "public_internet": true
       },
       {
         "encrypted": true,
-        "host": "187.189.64.24",
-        "relay_host": "31.97.9.54",
-        "transport": "relay"
+        "transport": "relay",
+        "public_internet": true
       },
       {
         "encrypted": true,
-        "host": "187.189.64.24",
-        "relay_host": "31.97.9.54",
-        "transport": "relay"
+        "transport": "relay",
+        "public_internet": true
       },
       {
         "encrypted": true,
-        "host": "187.189.64.24",
-        "relay_host": "31.97.9.54",
-        "transport": "relay"
+        "transport": "relay",
+        "public_internet": true
       }
     ],
     "scope": "Signed public labels from the existing physical large expert; visitor is not another worker",
@@ -2342,5 +2326,6 @@
       "regressions": [],
       "total": 32
     }
-  }
+  },
+  "operator_addresses_omitted": true
 }
