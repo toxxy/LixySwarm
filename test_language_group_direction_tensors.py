@@ -31,6 +31,16 @@ def test_opposite_constraints_produce_zero_component_instead_of_relaxing_groups(
     assert report['converged'] and torch.equal(result['p'],torch.tensor([0.,3.]))
 
 
+def test_positive_descent_margin_and_infeasible_groups_do_not_relax_constraints():
+    source={'p':torch.tensor([-1.,-1.])}
+    result,report=project_groups(source,{'a':{'p':torch.tensor([1.,0.])},'b':{'p':torch.tensor([0.,1.])}},relative_margin=.01)
+    floor=2**.5*.01
+    assert report['converged'] and torch.allclose(result['p'],torch.full((2,),floor),atol=1e-7)
+    assert all(row['normalized_dot_after']>=row['minimum_normalized_dot']-report['normalized_dot_tolerance'] for row in report['groups'].values())
+    _,impossible=project_groups(source,{'a':{'p':torch.tensor([1.,0.])},'b':{'p':torch.tensor([-1.,0.])}},relative_margin=.01,maximum_sweeps=8)
+    assert not impossible['converged'] and impossible['sweeps']==8
+
+
 @pytest.mark.parametrize('bad',[{}, {'a':{'other':torch.ones(2)}}, {'a':{'p':torch.ones(3)}},
     {'a':{'p':torch.tensor([float('nan'),0.])}}])
 def test_invalid_group_constraints_are_rejected(bad):

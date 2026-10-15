@@ -44,14 +44,18 @@ def run(args,cancel):
         raise ValueError('Commit the diagnostic source and protocol before physical compute')
     source_revision=subprocess.check_output(['git','rev-parse','HEAD'],cwd=repo,text=True).strip()
     finite=getattr(args,'finite_step',False)
-    if finite:
+    quality_block=getattr(args,'quality_block',False)
+    streamed=getattr(args,'streamed_base',False)
+    if quality_block:
+        from src.learning.language_block_protocol import definition as block_definition,protocol_id as block_id
+        protocol=block_definition();identifier=block_id()
+    elif finite:
         from src.learning.language_finite_protocol import definition as finite_definition,protocol_id as finite_id
         group=getattr(args,'group_direction',False)
-        streamed=getattr(args,'streamed_base',False)
         protocol=finite_definition(args.precision,group_direction=group,streamed_base=streamed)
         identifier=finite_id(args.precision,group_direction=group,streamed_base=streamed)
     else:protocol=definition(args.precision);identifier=protocol_id(args.precision)
-    ram_gb=protocol['ram_gb']
+    ram_gb=protocol['ram_gb'];disk_gb=protocol.get('disk_reservation_gb',.008)
     trial=selected_trial(repo);before=fingerprints(node);controls=ClientSettings.load(node);policy=asdict(controls.policy)
     diagnostic=json.loads((node/'diagnostics.json').read_text());pid=diagnostic['pid']
     registry=LanguageVersionRegistry(node/'public/language','qwen3-1.7b');head=registry.head()
@@ -65,7 +69,7 @@ def run(args,cancel):
             return (not cancel.is_set() and now.connected and not now.paused and asdict(now.policy)==policy
                 and now.policy.mode in {'balanced','maximum'} and now.policy.max_ram_gb>=ram_gb
                 and now.policy.cpu_percent>0 and now.policy.gpu_percent>0 and now.policy.max_gpu_jobs>0
-                and managed_public_bytes(node)+8*1024**2<=now.policy.max_disk_gb*1024**3
+                and managed_public_bytes(node)+disk_gb*1024**3<=now.policy.max_disk_gb*1024**3
                 and state['pid']==pid and time.time()*1000-state['timestamp_ms']<30000
                 and state['language_training']['ready'] and state['language_training'].get('math_curriculum_enabled')
                 and state['language']['active']==0 and state['language_training']['active']==0
@@ -94,23 +98,31 @@ def run(args,cancel):
         'parent_release_id':PARENT_RELEASE,'training_file':str(training),'contributions':rows,
         'output_directory':str(directory/'engine'),'device':'cuda','cpu_threads':min(4,max(1,int(4*policy['cpu_percent']/100))),
         'gpu_fraction':policy['gpu_percent']/100/max(1,policy['max_gpu_jobs']),'deadline':deadline}
-    if finite and streamed:request['streamed_base']=True
-    lease,reason=governor.acquire(ResourceRequirements(kind='training',gpu_required=True,ram_gb=ram_gb,disk_gb=.008))
+    if quality_block or finite and streamed:request['streamed_base']=True
+    if quality_block:request['evaluation_file']=str(store.object_path(ARTIFACTS['evaluation'][0]))
+    lease,reason=governor.acquire(ResourceRequirements(kind='training',gpu_required=True,ram_gb=ram_gb,disk_gb=disk_gb))
     if lease is None:raise ValueError('Retention research reservation denied: '+reason)
     try:
         with lease,NodeStateLock(node/'research/public-math'):
             atomic_json(directory/'status.json',{'phase':'diagnosing','success':False})
-            module='src.learning.language_finite_step_job' if finite else 'src.learning.language_retention_job'
+            module='src.learning.language_block_quality_job' if quality_block else 'src.learning.language_finite_step_job' if finite else 'src.learning.language_retention_job'
             response=ComputeSupervisor().run([str(args.engine_python.absolute()),'-m',module],
                 request,execution,allowed=allowed,ram_gb=ram_gb)
         path=directory/'engine/diagnostic.json'
-        if path.is_symlink() or path.stat().st_size>256*1024:raise ValueError('Retention diagnostic output exceeds its bound')
+        if path.is_symlink() or path.stat().st_size>(1024**2 if quality_block else 256*1024):raise ValueError('Retention diagnostic output exceeds its bound')
         raw=path.read_bytes();result=json.loads(raw)
         if (hashlib.sha256(raw).hexdigest()!=response['report_id'] or len(raw)!=response['bytes']
                 or result['protocol_id']!=identifier or result['model_id']!=PARENT_MODEL or not result['success']
-                or result['held_out_data_used_in_compute'] is not False or result['updated_model_files_written'] is not False
+                or result['held_out_data_used_in_compute'] is not quality_block or result['updated_model_files_written'] is not False
                 or result['parent_parameters_restored'] is not True or fingerprints(node)!=before):
             raise ValueError('Retention diagnostic changed its scope or current native controls')
+        if quality_block:
+            from src.learning.public_math import load_snapshot,verify_math_transition,MAX_TRACE_BYTES
+            trace_path=directory/'engine/math-traces.json'
+            if trace_path.is_symlink() or trace_path.stat().st_size>MAX_TRACE_BYTES:raise ValueError('Quality trace exceeds its bound')
+            verdict=verify_math_transition(result['quality'],load_snapshot(request['evaluation_file'],'evaluation'),json.loads(trace_path.read_text()))
+            if (verdict!=result['quality']['math_verdict'] or result['held_out_data_used_for_training_or_selection'] is not False
+                    or result['generation_performed'] is not True):raise ValueError('Quality block changed scoring or selection scope')
         if (subprocess.check_output(['git','rev-parse','HEAD'],cwd=repo,text=True).strip()!=source_revision
                 or subprocess.check_output(['git','status','--porcelain'],cwd=repo,text=True).strip()):
             raise ValueError('Diagnostic source changed during physical compute; preserve the saved result for review')
@@ -120,7 +132,8 @@ def run(args,cancel):
             'native_learning_cycles_added':0,'new_model_published':False,'source_daemon_pid_unchanged':True,
             'resource_reservation':{'ram_gb':ram_gb,'gpu_fraction':request['gpu_fraction']},'finished_at':time.time()}
         atomic_json(directory/'report.json',report);atomic_json(directory/'status.json',{'phase':'complete','success':True})
-        summary={'success':True,'applied_in_temporary_model':result['guard']['applied'],
+        summary={'success':True,'accepted_microsteps':result['block']['accepted_steps'],
+            'quality_verdict':result['quality']['math_verdict']} if quality_block else {'success':True,'applied_in_temporary_model':result['guard']['applied'],
             'accepted_rate':result['guard']['accepted_rate']} if finite else {
             'success':True,'loss_changes':result['loss_changes'],'reconstruction':result['reconstruction']}
         print(json.dumps(summary),flush=True)
@@ -138,10 +151,12 @@ def main():
     parser.add_argument('--finite-step',action='store_true',help='Run the prospective TRAIN-only backtracking protocol')
     parser.add_argument('--group-direction',action='store_true',help='Constrain the saved direction against each protected TRAIN gradient')
     parser.add_argument('--streamed-base',action='store_true',help='Keep original frozen BF16 matrices while computing in FP32')
+    parser.add_argument('--quality-block',action='store_true',help='Run the prospective fixed block and paired held-out quality evaluation')
     args=parser.parse_args();cancel=threading.Event()
     if args.group_direction and not args.finite_step:parser.error('--group-direction requires --finite-step')
     if args.streamed_base and (not args.finite_step or not args.group_direction or args.precision!='float32'):
         parser.error('--streamed-base requires --finite-step --group-direction --precision float32')
+    if args.quality_block and not args.streamed_base:parser.error('--quality-block requires --streamed-base')
     for sig in [signal.SIGINT,signal.SIGTERM]:signal.signal(sig,lambda *_:cancel.set())
     try:run(args,cancel)
     except BaseException as error:

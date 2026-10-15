@@ -13,7 +13,7 @@ from .language_retention import PARENT_MODEL, PARENT_RELEASE, GRADIENTS, protoco
 os.environ['HF_HUB_OFFLINE']='1';os.environ['TRANSFORMERS_OFFLINE']='1'
 
 
-def validate_request(request):
+def validate_request(request,*,maximum_seconds=1800):
     fields = {'action', 'protocol_id', 'base_directory', 'adapter_file', 'model_id', 'parent_release_id',
               'training_file', 'contributions', 'output_directory', 'device', 'cpu_threads', 'gpu_fraction', 'deadline','compute_dtype'}
     if (not isinstance(request, dict) or set(request) != fields or request['action'] != 'public-retention-diagnostic-v3'
@@ -24,7 +24,7 @@ def validate_request(request):
     if (type(request['cpu_threads']) is not int or not 1 <= request['cpu_threads'] <= 16
             or type(request['gpu_fraction']) not in (int, float) or not 0 < request['gpu_fraction'] <= 1
             or type(request['deadline']) not in (int, float) or not math.isfinite(request['deadline'])
-            or not time.time() < request['deadline'] <= time.time()+1800):
+            or not time.time() < request['deadline'] <= time.time()+maximum_seconds):
         raise ValueError('Invalid retention diagnostic resources')
     if any(not isinstance(request[k], str) or not Path(request[k]).is_absolute()
            for k in ['base_directory', 'adapter_file', 'training_file', 'output_directory']):

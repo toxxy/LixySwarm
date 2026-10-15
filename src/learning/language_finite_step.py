@@ -4,7 +4,7 @@ import math
 
 def safeguarded_step(parameters,direction,measure,*,protected,target,rates,
                      check=lambda:None,absolute_tolerance=1e-7,relative_tolerance=1e-6,
-                     minimum_absolute_gain=1e-5,minimum_relative_gain=1e-4):
+                     minimum_absolute_gain=1e-5,minimum_relative_gain=1e-4,protected_ceiling=None):
     """Commit the first measured safe step, or restore exactly on rejection/error.
 
     Caller supplies public TRAIN losses in one fixed execution mode. This is
@@ -18,6 +18,9 @@ def safeguarded_step(parameters,direction,measure,*,protected,target,rates,
             or any(type(x) not in (int,float) or not math.isfinite(x) or x<0 for x in
                 [absolute_tolerance,relative_tolerance,minimum_absolute_gain,minimum_relative_gain])):
         raise ValueError('Invalid bounded finite-step search')
+    if protected_ceiling is not None and (not isinstance(protected_ceiling,dict) or set(protected_ceiling)!=set(protected)
+            or any(type(v) not in (int,float) or not math.isfinite(v) or v<0 for v in protected_ceiling.values())):
+        raise ValueError('Invalid initial-parent protected ceiling')
     if any(parameters[n].shape!=direction[n].shape or not torch.isfinite(parameters[n]).all()
            or not torch.isfinite(direction[n]).all() for n in parameters):raise ValueError('Invalid finite-step parameter direction')
     original={name:p.detach().clone() for name,p in parameters.items()};committed=False
@@ -46,6 +49,9 @@ def safeguarded_step(parameters,direction,measure,*,protected,target,rates,
                     p.add_(direction[name].to(p.device,dtype=p.dtype),alpha=-rate)
                     if not torch.isfinite(p).all():raise ValueError('Nonfinite finite-step update')
             values=measured();regressions=[n for n in protected if values[n]>baseline[n]+tolerance(baseline[n])]
+            if protected_ceiling is not None:
+                regressions=[n for n in protected if n in regressions
+                    or values[n]>protected_ceiling[n]+tolerance(protected_ceiling[n])]
             gain=baseline[target]-values[target];eligible=not regressions and gain>=required_gain
             trials.append({'rate':rate,'losses':values,'protected_regressions':regressions,
                            'target_gain':gain,'required_target_gain':required_gain,'accepted':eligible})

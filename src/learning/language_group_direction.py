@@ -2,7 +2,7 @@
 import math
 
 
-def project_groups(direction,references,*,maximum_sweeps=512,relative_tolerance=1e-7):
+def project_groups(direction,references,*,maximum_sweeps=512,relative_tolerance=1e-7,relative_margin=0.):
     """Project in the small dual using normalized constraint coordinate ascent.
 
     The retained gradient for each group constrains its own first-order loss.
@@ -11,6 +11,7 @@ def project_groups(direction,references,*,maximum_sweeps=512,relative_tolerance=
     import torch
     if (not direction or not references or len(references)>16 or type(maximum_sweeps) is not int
             or not 1<=maximum_sweeps<=1024 or not math.isfinite(relative_tolerance) or not 0<relative_tolerance<=1e-5
+            or type(relative_margin) not in (int,float) or not math.isfinite(relative_margin) or not 0<=relative_margin<=.1
             or any(set(row)!=set(direction) for row in references.values())):
         raise ValueError('Invalid bounded group projection')
     keys=sorted(direction)
@@ -23,15 +24,16 @@ def project_groups(direction,references,*,maximum_sweeps=512,relative_tolerance=
     if not math.isfinite(norm) or not torch.isfinite(norms).all():raise ValueError('Nonfinite public group gradient norm')
     rows=raw/norms.clamp_min(torch.finfo(torch.float64).tiny).unsqueeze(1)
     gram=rows@rows.t();dots=rows@source;dual=torch.zeros(len(groups),dtype=torch.float64)
+    floors=(norms>0).double()*(relative_margin*norm)
     # Hildreth/Dykstra halfspace projection in the dual: keep every coefficient
     # nonnegative. Normalization keeps tiny well-learned groups represented.
     for sweep in range(maximum_sweeps):
         for index in range(len(groups)):
             diagonal=float(gram[index,index])
             if not diagonal:continue
-            residual=float(dots[index]+gram[index]@dual)
+            residual=float(dots[index]-floors[index]+gram[index]@dual)
             dual[index]=max(0.,float(dual[index])-residual/diagonal)
-        residuals=dots+gram@dual
+        residuals=dots-floors+gram@dual
         kkt=float((dual-(dual-residuals).clamp_min(0)).abs().max())
         if kkt<=relative_tolerance*max(norm,1e-30):break
     projected=source+rows.t()@dual
@@ -41,7 +43,7 @@ def project_groups(direction,references,*,maximum_sweeps=512,relative_tolerance=
         result[name]=projected[offset:offset+count].reshape(direction[name].shape).to(direction[name].dtype);offset+=count
     # Check the actual returned representation, not only its float64 solution.
     actual=vector(result);after=rows@actual;threshold=relative_tolerance*max(norm,1e-30)
-    converged=bool(torch.isfinite(actual).all() and float(after.min())>=-threshold and kkt<=threshold)
+    converged=bool(torch.isfinite(actual).all() and float((after-floors).min())>=-threshold and kkt<=threshold)
     report={'converged':converged,'sweeps':sweep+1,'maximum_sweeps':maximum_sweeps,
         'source_norm':norm,'projected_norm':float(torch.linalg.vector_norm(actual)),
         'relative_direction_change':float(torch.linalg.vector_norm(actual-source))/norm if norm else 0.,
@@ -50,4 +52,7 @@ def project_groups(direction,references,*,maximum_sweeps=512,relative_tolerance=
         'groups':{name:{'reference_norm':float(norms[i]),'normalized_dot_before':float(dots[i]),
                        'normalized_dot_after':float(after[i]),'dual_coefficient':float(dual[i])} for i,name in enumerate(groups)},
         'scope':'Training-gradient geometry only; finite-loss and held-out checks remain mandatory'}
+    if relative_margin:
+        report['relative_margin']=relative_margin
+        for i,name in enumerate(groups):report['groups'][name]['minimum_normalized_dot']=float(floors[i])
     return result,report

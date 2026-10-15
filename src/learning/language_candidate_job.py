@@ -90,7 +90,7 @@ def apply_update(model,contributions,learning_rate,*,policy_version=1):
             if not torch.isfinite(parameter).all():raise ValueError('Nonfinite candidate adapter')
 
 
-def evaluate(model,tokenizer,corpus,device,deadline):
+def evaluate(model,tokenizer,corpus,device,deadline,*,progress=lambda *_:None):
     import torch
     from transformers import StoppingCriteria,StoppingCriteriaList
     from .public_quality import quality_cases
@@ -104,7 +104,7 @@ def evaluate(model,tokenizer,corpus,device,deadline):
         return tokenizer.encode(text,add_special_tokens=False)
     model.eval();total=tokens=0
     with torch.inference_mode():
-        for row in corpus['evaluation']:
+        for index,row in enumerate(corpus['evaluation']):
             check()
             prefix=prompt([{'role':'user','content':row['prompt']}])
             answer=tokenizer.encode(row['answer'],add_special_tokens=False)+[tokenizer.eos_token_id]
@@ -114,7 +114,8 @@ def evaluate(model,tokenizer,corpus,device,deadline):
             loss=float(model(input_ids=inputs,labels=labels,use_cache=False).loss)
             if not math.isfinite(loss) or loss<0:raise ValueError('Invalid candidate evaluation loss')
             total+=loss*len(answer);tokens+=len(answer)
-        def generate(name,messages):
+            progress('historical-nll',index+1,len(corpus['evaluation']))
+        def generate(name,messages,phase,index,total):
             check();prefix=prompt(messages)
             if len(prefix)>1024:raise ValueError('Public gate exceeds its bounded context')
             inputs=torch.tensor([prefix],device=device)
@@ -122,9 +123,11 @@ def evaluate(model,tokenizer,corpus,device,deadline):
                 do_sample=False,use_cache=True,stopping_criteria=StoppingCriteriaList([Deadline()]))
             check();answer=tokenizer.decode(output[0,len(prefix):],skip_special_tokens=True).strip()
             if len(answer.encode('utf-8'))>1024:raise ValueError('Public evaluation answer exceeds its bound')
+            progress(phase,index+1,total)
             return {'case':name,'answer':answer}
-        quality=[generate(row['case'],[{'role':'user','content':row['prompt']}]) for row in quality_cases()]
-        instructions=[generate(name,messages) for name,messages,_pattern in cases()]
+        factual_cases=quality_cases();instruction_cases=cases()
+        quality=[generate(row['case'],[{'role':'user','content':row['prompt']}],'facts',i,len(factual_cases)) for i,row in enumerate(factual_cases)]
+        instructions=[generate(name,messages,'instructions',i,len(instruction_cases)) for i,(name,messages,_pattern) in enumerate(instruction_cases)]
     return {'nll':total/tokens,'tokens':tokens,'quality':quality,'instructions':instructions}
 
 
