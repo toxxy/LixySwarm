@@ -8,6 +8,8 @@ El código A13 añade reparto por capacidad observada entre las dos PCs conocida
 
 A13 también incluye transferencias comprimidas sin pérdida, negociadas con cada proveedor. Conserva los bytes y hashes de modelos y gradientes, las descargas parciales y el protocolo de los nodos anteriores. Las cuotas de disco se calculan sobre el archivo original; el presupuesto de red se aplica a los datos codificados y su margen de protocolo. En la [prueba con el servicio nativo](../experiments/reports/artifact_codec_native_provider_20261014.json), adquirir el mismo gradiente tardó una mediana de 27,105 segundos frente a 30,079 con la codificación anterior. Es una medición de transferencia; sigue pendiente demostrar aceleración del aprendizaje al sumar PCs.
 
+A14 añade una política separada de hasta 64 ejemplos públicos distintos por gradiente, con permiso local `batching_enabled` y motores verificados del perfil `language-cuda-batches`. Conserva los gates históricos y la última cabeza compatible para clientes anteriores. En la [comparación del recorrido nativo](../experiments/reports/language_native_batch_scaling_20261014.json), los mismos 192 ejemplos tardaron 28,68 segundos en el escritorio y 39,74 entre las dos PCs; con evaluación, 46,00 y 57,06 segundos. Ambas candidatas se rechazaron y la versión aceptada permanece en 2. Los nodos actuales están en A14; la descarga pública sigue siendo A12 y conserva sus propias condiciones pendientes de preparación integral.
+
 El ejecutable incluye Python y los componentes de interfaz y transporte. La instalación por usuario conserva la identidad y el estado fuera del paquete. En Linux crea una entrada en el menú de aplicaciones; Windows y macOS tienen sus propios adaptadores de instalación.
 
 ## Prueba de empaquetado
