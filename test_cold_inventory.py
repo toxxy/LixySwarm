@@ -67,3 +67,14 @@ def test_power_loss_during_eviction_can_retry_without_touching_other_data(monkey
     assert not cold.inventory(node)['verified_present']
     assert {p:p.read_bytes() for p in protected}==protected
     assert cold.evict_weights(node,planned,provider)['removed_public_links']==0
+
+
+def test_recovery_relinks_surviving_public_view_without_another_payload_copy(monkeypatch,tmp_path):
+    node,store,planned,provider=state(monkeypatch,tmp_path)
+    group=next(g for g in planned['inode_groups'] if len(g['paths'])==2)
+    identifier=group['artifact_id'];original_inode=store.object_path(identifier).stat().st_ino
+    before=cold.accounted_bytes([node]);store.object_path(identifier).unlink()
+    assert not store.has(identifier)
+    assert cold.restore_cache_links(node,planned)==[identifier]
+    assert store.has(identifier) and store.object_path(identifier).stat().st_ino==original_inode
+    assert cold.accounted_bytes([node])==before

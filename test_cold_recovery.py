@@ -178,3 +178,17 @@ def test_tampered_checkpoint_cannot_claim_ownership_of_a_learning_ledger(tmp_pat
     value=json.loads(c.path.read_text());value['owned_hashes']['language-learning/ledger.json']=['0'*64]
     c.path.write_text(json.dumps(value))
     with pytest.raises(ValueError,match='ownership'):ColdCheckpoint(c.path)
+
+
+def test_recovery_compute_suspension_cannot_change_quotas_and_restores_exact_bytes(tmp_path):
+    from experiments.cold_checkpoint import ColdCheckpoint
+    from src.network.client_state import ClientSettings,NodeStateLock
+    identity=LSPIdentity.generate();a=tmp_path/'old';b=tmp_path/'trial';checkpoint(a,identity,10)
+    ClientSettings().save(a);before=(a/'controls.json').read_bytes()
+    with NodeStateLock(a),NodeStateLock(b):
+        c=ColdCheckpoint.capture(a,b,tmp_path/'journal.json')
+        c.suspend_compute();value=json.loads((a/'controls.json').read_bytes())
+        assert all(value['policy'][k]==0 for k in ['cpu_percent','gpu_percent','max_cpu_jobs','max_gpu_jobs'])
+        value['policy']['max_disk_gb']+=1
+        with pytest.raises(ValueError,match='only suspend'):c.set_owned_control('controls.json',json.dumps(value).encode())
+        c.restore_controls();assert (a/'controls.json').read_bytes()==before

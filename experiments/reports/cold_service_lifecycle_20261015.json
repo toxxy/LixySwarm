@@ -1,0 +1,14 @@
+{
+  "success": true,
+  "scope": "Actual systemd lifecycle using synthetic processes, not a physical-node outage or reboot",
+  "confirmed_live_trial_pid": 3173344,
+  "killed_trial_triggered_recovery": true,
+  "failed_recovery_retried": true,
+  "recovery_attempts": 2,
+  "original_started_after_recovery": true,
+  "service_dependency_orders_recovery_on_original_start": true,
+  "schema": "lixyswarm-cold-service-lifecycle-v1",
+  "physical_nodes_interrupted": false,
+  "physical_reboot_proven": false,
+  "model_payload_transferred": false
+}

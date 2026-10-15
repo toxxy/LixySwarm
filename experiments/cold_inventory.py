@@ -5,6 +5,8 @@ caller holds its NodeStateLock. Remote inventories travel as compact evidence;
 all replacement model bytes must still arrive through public LSP.
 """
 import json
+import os
+import time
 from pathlib import Path
 
 from src.network.artifact_store import ArtifactStore,digest_file
@@ -48,7 +50,7 @@ def inventory(directory):
             if (manifest.artifact_id,manifest.size)!=(identifier,size):raise ValueError('Public provider manifest differs from its object')
             transferable.add(identifier)
     status=verify_status(json.loads((directory/'status.json').read_text()))
-    return {'schema':'lixyswarm-cold-inventory-v1','node_id':status['node_id'],'heads':heads,'weights':weights,
+    return {'schema':'lixyswarm-cold-inventory-v1','checked_at':time.time(),'node_id':status['node_id'],'heads':heads,'weights':weights,
         'verified_present':sorted(present),'verified_transferable':sorted(transferable),
         'inode_groups':list(groups.values()),'managed_bytes':accounted_bytes([directory]),
         'reclaimable_weight_bytes':sum(g['bytes'] for g in groups.values() if len(g['paths'])==g['link_count'])}
@@ -85,3 +87,26 @@ def evict_weights(directory,planned,provider):
     for path in remaining:path.unlink()
     return {'removed_public_links':len(remaining),'remaining_weight_links':0,
         'private_files_changed':False,'operator_files_changed':False}
+
+
+def restore_cache_links(directory,planned):
+    """Reuse surviving verified views after a cut between cache-link unlinks.
+
+    A missing CAS link need not trigger a second network copy of bytes still
+    present in a public model view. Restoring that link consumes no payload
+    space, and never touches private/operator paths.
+    """
+    directory=Path(directory);current=inventory(directory)
+    if any(current[k]!=planned[k] for k in ['node_id','heads','weights']):raise ValueError('Recovery history changed')
+    store=ArtifactStore(directory/'public/language/artifacts',max_artifact_bytes=4*1024**3)
+    restored=[]
+    for group in current['inode_groups']:
+        identifier=group['artifact_id'];destination=store.object_path(identifier)
+        if destination.is_symlink():raise ValueError('Public cache destination is a symlink')
+        if destination.exists():continue
+        source=directory/group['paths'][0]
+        destination.parent.mkdir(parents=True,exist_ok=True);os.link(source,destination)
+        manifest=store.manifest(identifier)
+        if (manifest.artifact_id,manifest.size)!=(identifier,group['bytes']):raise ValueError('Restored transfer manifest changed')
+        restored.append(identifier)
+    return restored

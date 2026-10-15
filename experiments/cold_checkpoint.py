@@ -1,7 +1,7 @@
 """Durable operator checkpoints for local, offline cold-trial recovery.
 
 Callers hold the original/trial NodeStateLocks while capturing or restoring.
-Only two temporary compute-control files may be changed by this checkpoint;
+Only temporary compute controls may be changed by this checkpoint;
 private banks, identity keys and learning ledgers are never copied from trials.
 """
 import base64
@@ -21,7 +21,7 @@ CONTROLS=('controls.json','public-knowledge.json','language-engine.json','langua
     'language-follow-controls.json','language-learning-controls.json','learning-controls.json',
     'language-learning/ledger.json','learning/ledger.json','public-memory-controls.json')
 PRIVATE=('identity.key','model-publisher.key','personal.enc')
-OWNED_MUTABLE={'language-engine.json','language-training.json'}
+OWNED_MUTABLE={'language-engine.json','language-training.json','controls.json'}
 
 
 def fingerprint(path):
@@ -64,7 +64,8 @@ class ColdCheckpoint:
         if path.exists():raise ValueError('Recovery checkpoint already exists; resume it instead')
         if original==trial or original.is_relative_to(trial) or trial.is_relative_to(original):
             raise ValueError('Original and trial state must be separate')
-        if trial.exists() and any(trial.iterdir()):raise ValueError('The initial trial directory must be empty')
+        if trial.exists() and any(p.name!='node.lock' or p.is_symlink() or not p.is_file() for p in trial.iterdir()):
+            raise ValueError('The initial trial directory must be empty apart from its instance lock')
         status=verify_status(json.loads((original/'status.json').read_text()))
         controls={};size=0
         for name in CONTROLS:
@@ -86,6 +87,11 @@ class ColdCheckpoint:
     def set_owned_control(self,name,data):
         if name not in OWNED_MUTABLE or not isinstance(data,bytes) or len(data)>64*1024:
             raise ValueError('Only temporary local compute controls may be changed')
+        if name=='controls.json':
+            # Recovery may stop compute, never enlarge or otherwise change consent.
+            expected=json.loads(base64.b64decode(self.value['controls'][name]['data']))
+            expected['policy'].update(cpu_percent=0,gpu_percent=0,max_cpu_jobs=0,max_gpu_jobs=0)
+            if json.loads(data)!=expected:raise ValueError('Recovery can only suspend compute with all other permissions unchanged')
         before=self.value['controls'][name]['sha256'];current=fingerprint(self.original/name)
         accepted=self.value['owned_hashes'].get(name,[])
         if current not in [before,*accepted]:raise ValueError('Operator changed this control during the trial')
@@ -94,6 +100,11 @@ class ColdCheckpoint:
         self.value['owned_hashes'][name]=accepted
         # Write ahead: restore is safe if power fails before or after replacement.
         atomic_json(self.path,self.value);atomic_bytes(self.original/name,data)
+
+    def suspend_compute(self):
+        value=json.loads(base64.b64decode(self.value['controls']['controls.json']['data']))
+        value['policy'].update(cpu_percent=0,gpu_percent=0,max_cpu_jobs=0,max_gpu_jobs=0)
+        self.set_owned_control('controls.json',json.dumps(value,sort_keys=True,allow_nan=False).encode())
 
     def restore_controls(self):
         restored=[];external=[]
