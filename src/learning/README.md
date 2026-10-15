@@ -63,6 +63,23 @@ La preparación desde la app usa la misma adquisición de versiones y proveedore
 
 La prueba física documentada en `experiments/reports/language_small_physical_repair_20261014.json` retiró temporalmente el adaptador Small de la laptop y lo recuperó desde la PC de escritorio por LSP público, verificando los mismos 4.599.712 bytes por hash y conservando permisos y experto activo. No demuestra aprendizaje nuevo, aprobación de Small para chat ni disponibilidad con el productor apagado. Las pruebas automatizadas de historias, evaluación y proveedores complementarios usan tensores sintéticos y no cuentan como réplicas físicas.
 
+## Transferencia pública entre tamaños
+
+`experiments/distill_public_language.py` explora enseñanza 1,7B→0,6B mediante texto, sin mezclar matrices o gradientes. Requiere una familia grande aprendida y aceptada ya adquirida por el alumno. El modo `collect` obtiene su historia y respuestas por LSP público desde un trabajador físico conocido; el modo `train` supervisa un hijo tensorial local sobre la familia pequeña original. No registra un experto ni modifica el coordinador o el catálogo activo.
+
+```bash
+python -m experiments.distill_public_language collect \
+  --node-directory "$HOME/.local/state/lixyswarm" \
+  --directory "$HOME/.local/state/public-lessons-new" --teacher NODE_ID
+python -m experiments.distill_public_language train \
+  --node-directory "$HOME/.local/state/lixyswarm" \
+  --directory "$HOME/.local/state/public-student-new" \
+  --lessons "$HOME/.local/state/public-lessons-new/lessons.json" \
+  --engine-python /ruta/absoluta/al/python/local/con/CUDA
+```
+
+Los directorios de salida deben ser nuevos y permanecer fuera de Dropbox. El alumno comprueba etiquetas, firmas, ofertas originales, profesor y hashes; no entrena con respuestas incorrectas ni con entradas personales. Evalúa 32 entradas separadas y los controles factuales y de instrucciones existentes. `verify_student_report` vuelve a calcular el veredicto sin PyTorch. La política exige cuatro aciertos nuevos, NLL al menos 1 % menor y todos los controles de conservación; las candidatas rechazadas no conservan pesos. Las condiciones y limitaciones del [primer ensayo físico](../../experiments/reports/language_cross_size_transfer_20261014.json), incluido el fallo de impresión posterior al cálculo, se explican en [VISION_PROGRESS](../../VISION_PROGRESS.md).
+
 ## Medición del aporte de más PCs
 
 `language_gradient_probe.py --shards 2 --count 8 --parallel-jobs 2` permite comparar dieciséis ejemplos en una PC con esos mismos fragmentos entre dos PCs. Mantiene la versión y permite usar las dos plazas GPU ya autorizadas del escritorio en la referencia de una sola PC. Cada proceso solicitante adquiere un bloqueo por identidad, incluso si conserva informes en otro directorio, para no interferir con un piloto que use la misma identidad de red.

@@ -1,0 +1,2346 @@
+{
+  "accepted_new_small_expert": false,
+  "collection": {
+    "accepted_labels": 61,
+    "dataset_id": "c0fcd2c99365aec676d2f88c7981fec9b0d5e7a11d65212baa71cb94295c80ce",
+    "evaluation_sent_to_teacher": false,
+    "lessons_id": "f4a96e51b7c607568465b84ee2ec2dca2d290baa8950823be5d6658935874d13",
+    "new_model_published": false,
+    "physical_student": "ea914d97caafef310e50385034abae9a50ba86496b0e9cbf4679e6070e4c25b0",
+    "private_inputs": false,
+    "public_internet": true,
+    "rejected_labels": [
+      {
+        "index": 4,
+        "reason": "teacher_label_failed_public_oracle"
+      },
+      {
+        "index": 8,
+        "reason": "teacher_label_failed_public_oracle"
+      },
+      {
+        "index": 12,
+        "reason": "teacher_label_failed_public_oracle"
+      }
+    ],
+    "requester_id": "d6a6a0df54e4ace6db4e87a0c3190957d9520ae5decb6e81902b29b60382267e",
+    "routes": [
+      {
+        "encrypted": true,
+        "host": "187.189.64.24",
+        "relay_host": "31.97.9.54",
+        "transport": "relay"
+      },
+      {
+        "encrypted": true,
+        "host": "187.189.64.24",
+        "relay_host": "31.97.9.54",
+        "transport": "relay"
+      },
+      {
+        "encrypted": true,
+        "host": "187.189.64.24",
+        "relay_host": "31.97.9.54",
+        "transport": "relay"
+      },
+      {
+        "encrypted": true,
+        "host": "187.189.64.24",
+        "relay_host": "31.97.9.54",
+        "transport": "relay"
+      },
+      {
+        "encrypted": true,
+        "host": "187.189.64.24",
+        "relay_host": "31.97.9.54",
+        "transport": "relay"
+      },
+      {
+        "encrypted": true,
+        "host": "187.189.64.24",
+        "relay_host": "31.97.9.54",
+        "transport": "relay"
+      },
+      {
+        "encrypted": true,
+        "host": "187.189.64.24",
+        "relay_host": "31.97.9.54",
+        "transport": "relay"
+      },
+      {
+        "encrypted": true,
+        "host": "187.189.64.24",
+        "relay_host": "31.97.9.54",
+        "transport": "relay"
+      },
+      {
+        "encrypted": true,
+        "host": "187.189.64.24",
+        "relay_host": "31.97.9.54",
+        "transport": "relay"
+      },
+      {
+        "encrypted": true,
+        "host": "187.189.64.24",
+        "relay_host": "31.97.9.54",
+        "transport": "relay"
+      },
+      {
+        "encrypted": true,
+        "host": "187.189.64.24",
+        "relay_host": "31.97.9.54",
+        "transport": "relay"
+      },
+      {
+        "encrypted": true,
+        "host": "187.189.64.24",
+        "relay_host": "31.97.9.54",
+        "transport": "relay"
+      },
+      {
+        "encrypted": true,
+        "host": "187.189.64.24",
+        "relay_host": "31.97.9.54",
+        "transport": "relay"
+      },
+      {
+        "encrypted": true,
+        "host": "187.189.64.24",
+        "relay_host": "31.97.9.54",
+        "transport": "relay"
+      },
+      {
+        "encrypted": true,
+        "host": "187.189.64.24",
+        "relay_host": "31.97.9.54",
+        "transport": "relay"
+      },
+      {
+        "encrypted": true,
+        "host": "187.189.64.24",
+        "relay_host": "31.97.9.54",
+        "transport": "relay"
+      }
+    ],
+    "scope": "Signed public labels from the existing physical large expert; visitor is not another worker",
+    "seconds": 95.23011116099951,
+    "success": true,
+    "teacher_head": {
+      "descriptor": {
+        "adapter_bytes": 6434736,
+        "adapter_id": "506317cc9f40da9dea40e6d14a94910ac6625ae478b5f2d0248cb1bbbb93a6c3",
+        "base_hash": "dfff7c96c5ca45c3aa7e6b68fb0650e103ed2c39a7abc912f19b55fdba819cdc",
+        "base_name": "qwen3-1.7b",
+        "evaluation_bytes": 10894,
+        "evaluation_id": "c3372ddca9b236f2b23f4b6d668a6521733b306726eb81c246e97fa5ed10b57e",
+        "files": [
+          {
+            "artifact_id": "832dd9e00a68dd83b3c3fb9f5588dad7dcf337a0db50f7d9483f310cd292e92e",
+            "bytes": 11343,
+            "name": "LICENSE"
+          },
+          {
+            "artifact_id": "1ddb5b89ebc90dcb417a45c213d818577e65976454d29385c8f6140771d95197",
+            "bytes": 726,
+            "name": "config.json"
+          },
+          {
+            "artifact_id": "2325da0f15bb848e018c5ae071b7943332e9f871d6b60e2ed22ca97d4cb993d2",
+            "bytes": 239,
+            "name": "generation_config.json"
+          },
+          {
+            "artifact_id": "169ad53ec313c3a34b06c0809216e4fc072cce444a5d4ff2b59690d064130ed5",
+            "bytes": 3441185608,
+            "name": "model-00001-of-00002.safetensors"
+          },
+          {
+            "artifact_id": "912becff8d60672aa8628ef08c05898d9adf17c2ad4ae3caf99b065622fdeff9",
+            "bytes": 622329984,
+            "name": "model-00002-of-00002.safetensors"
+          },
+          {
+            "artifact_id": "0d660e94b165eb912669a5249dff44b83188c4777a07ddb9611fb78d91b0578d",
+            "bytes": 25605,
+            "name": "model.safetensors.index.json"
+          },
+          {
+            "artifact_id": "aeb13307a71acd8fe81861d94ad54ab689df773318809eed3cbe794b4492dae4",
+            "bytes": 11422654,
+            "name": "tokenizer.json"
+          },
+          {
+            "artifact_id": "d5d09f07b48c3086c508b30d1c9114bd1189145b74e982a265350c923acd8101",
+            "bytes": 9732,
+            "name": "tokenizer_config.json"
+          }
+        ],
+        "version": 2
+      },
+      "release": {
+        "config_artifact_id": "33fed1203d8f56be8f06cffa6f84898e5c96aaefea11909fb11a5c90b68c3e05",
+        "created_at": 1792024674.4754894,
+        "minimum_client_version": "0.4.0a8",
+        "model_artifact_id": "506317cc9f40da9dea40e6d14a94910ac6625ae478b5f2d0248cb1bbbb93a6c3",
+        "model_format": "safetensors-v1",
+        "network_id": "LIXYMAIN",
+        "previous_release_id": "4e478620e27f3e28041a23d8e942d5fa45ca8c04ab04c8f7d5aae83db6fba594",
+        "release_id": "df231f9b93f6300ba7242da793d457880a416448f00d0e9b914e6a3f7b1e533a",
+        "sequence": 2,
+        "signatures": [
+          {
+            "signature": "Zhxk98p1597Fondg/KS5QxTn2qkDvgvLElLkzCa7a8HNawbrGwZ01REXckqIxQY9jm/T7BLnnn/5oc6u7eOnAQ==",
+            "signer_id": "53cea6456aced3a5a31ad24505aaa47d88e1827d1e7976592c91b54fc0e8980f"
+          }
+        ],
+        "tokenizer_artifact_id": "aeb13307a71acd8fe81861d94ad54ab689df773318809eed3cbe794b4492dae4",
+        "version": 1
+      }
+    },
+    "teacher_history": [
+      {
+        "descriptor": {
+          "adapter_bytes": 6434736,
+          "adapter_id": "badef4394af180ab75ca25f0d9d47f2406b92809b53b5845ab65d451cf9c4b3c",
+          "base_hash": "dfff7c96c5ca45c3aa7e6b68fb0650e103ed2c39a7abc912f19b55fdba819cdc",
+          "base_name": "qwen3-1.7b",
+          "evaluation_id": "1097ee2349a74b55db352eb006081093c3dd03250cdcecdfc678c91fadabf727",
+          "files": [
+            {
+              "artifact_id": "832dd9e00a68dd83b3c3fb9f5588dad7dcf337a0db50f7d9483f310cd292e92e",
+              "bytes": 11343,
+              "name": "LICENSE"
+            },
+            {
+              "artifact_id": "1ddb5b89ebc90dcb417a45c213d818577e65976454d29385c8f6140771d95197",
+              "bytes": 726,
+              "name": "config.json"
+            },
+            {
+              "artifact_id": "2325da0f15bb848e018c5ae071b7943332e9f871d6b60e2ed22ca97d4cb993d2",
+              "bytes": 239,
+              "name": "generation_config.json"
+            },
+            {
+              "artifact_id": "169ad53ec313c3a34b06c0809216e4fc072cce444a5d4ff2b59690d064130ed5",
+              "bytes": 3441185608,
+              "name": "model-00001-of-00002.safetensors"
+            },
+            {
+              "artifact_id": "912becff8d60672aa8628ef08c05898d9adf17c2ad4ae3caf99b065622fdeff9",
+              "bytes": 622329984,
+              "name": "model-00002-of-00002.safetensors"
+            },
+            {
+              "artifact_id": "0d660e94b165eb912669a5249dff44b83188c4777a07ddb9611fb78d91b0578d",
+              "bytes": 25605,
+              "name": "model.safetensors.index.json"
+            },
+            {
+              "artifact_id": "aeb13307a71acd8fe81861d94ad54ab689df773318809eed3cbe794b4492dae4",
+              "bytes": 11422654,
+              "name": "tokenizer.json"
+            },
+            {
+              "artifact_id": "d5d09f07b48c3086c508b30d1c9114bd1189145b74e982a265350c923acd8101",
+              "bytes": 9732,
+              "name": "tokenizer_config.json"
+            }
+          ],
+          "version": 1
+        },
+        "release": {
+          "config_artifact_id": "bc6dcf13cba57dfe71fcc5bd884e51a3e26f28f28abd3a38e3add8e46af5e2f1",
+          "created_at": 1792002695.3053608,
+          "minimum_client_version": "0.4.0a5",
+          "model_artifact_id": "badef4394af180ab75ca25f0d9d47f2406b92809b53b5845ab65d451cf9c4b3c",
+          "model_format": "safetensors-v1",
+          "network_id": "LIXYMAIN",
+          "previous_release_id": "",
+          "release_id": "3095364a8aed7e74e4b55a954d531246fd1494e4ababaec408a68ce777a63301",
+          "sequence": 0,
+          "signatures": [
+            {
+              "signature": "OwCVAB0l/iDHK7eThjE9JPmM8tSFZ/jO6kYdtfTkARC5fQ6qBhgBI79l0iwUqAMGVmDhuyTRqHHUZORdsh/UAQ==",
+              "signer_id": "53cea6456aced3a5a31ad24505aaa47d88e1827d1e7976592c91b54fc0e8980f"
+            }
+          ],
+          "tokenizer_artifact_id": "aeb13307a71acd8fe81861d94ad54ab689df773318809eed3cbe794b4492dae4",
+          "version": 1
+        }
+      },
+      {
+        "descriptor": {
+          "adapter_bytes": 6434736,
+          "adapter_id": "8e526788ef461c8ac20f2c1e9c510258b1862d8520b83d84e8ca2cce73a38e8d",
+          "base_hash": "dfff7c96c5ca45c3aa7e6b68fb0650e103ed2c39a7abc912f19b55fdba819cdc",
+          "base_name": "qwen3-1.7b",
+          "evaluation_bytes": 10960,
+          "evaluation_id": "44506c00ff89502498c07120986aa4463b518f1b06ca335c97dc82f14419bdb0",
+          "files": [
+            {
+              "artifact_id": "832dd9e00a68dd83b3c3fb9f5588dad7dcf337a0db50f7d9483f310cd292e92e",
+              "bytes": 11343,
+              "name": "LICENSE"
+            },
+            {
+              "artifact_id": "1ddb5b89ebc90dcb417a45c213d818577e65976454d29385c8f6140771d95197",
+              "bytes": 726,
+              "name": "config.json"
+            },
+            {
+              "artifact_id": "2325da0f15bb848e018c5ae071b7943332e9f871d6b60e2ed22ca97d4cb993d2",
+              "bytes": 239,
+              "name": "generation_config.json"
+            },
+            {
+              "artifact_id": "169ad53ec313c3a34b06c0809216e4fc072cce444a5d4ff2b59690d064130ed5",
+              "bytes": 3441185608,
+              "name": "model-00001-of-00002.safetensors"
+            },
+            {
+              "artifact_id": "912becff8d60672aa8628ef08c05898d9adf17c2ad4ae3caf99b065622fdeff9",
+              "bytes": 622329984,
+              "name": "model-00002-of-00002.safetensors"
+            },
+            {
+              "artifact_id": "0d660e94b165eb912669a5249dff44b83188c4777a07ddb9611fb78d91b0578d",
+              "bytes": 25605,
+              "name": "model.safetensors.index.json"
+            },
+            {
+              "artifact_id": "aeb13307a71acd8fe81861d94ad54ab689df773318809eed3cbe794b4492dae4",
+              "bytes": 11422654,
+              "name": "tokenizer.json"
+            },
+            {
+              "artifact_id": "d5d09f07b48c3086c508b30d1c9114bd1189145b74e982a265350c923acd8101",
+              "bytes": 9732,
+              "name": "tokenizer_config.json"
+            }
+          ],
+          "version": 2
+        },
+        "release": {
+          "config_artifact_id": "991990ff43220a922a7db416234338b02d9316ddc4ed0767fa6911dda46ed3e0",
+          "created_at": 1792021837.0973587,
+          "minimum_client_version": "0.4.0a8",
+          "model_artifact_id": "8e526788ef461c8ac20f2c1e9c510258b1862d8520b83d84e8ca2cce73a38e8d",
+          "model_format": "safetensors-v1",
+          "network_id": "LIXYMAIN",
+          "previous_release_id": "3095364a8aed7e74e4b55a954d531246fd1494e4ababaec408a68ce777a63301",
+          "release_id": "4e478620e27f3e28041a23d8e942d5fa45ca8c04ab04c8f7d5aae83db6fba594",
+          "sequence": 1,
+          "signatures": [
+            {
+              "signature": "Ch97oKbdc1lz9L5352mHZtA1nuAqXrzy3mGfM5dtGWwOCGcQJGsASXY5dwoHtUUcue19oEvXBxeJXP+ANTeZCA==",
+              "signer_id": "53cea6456aced3a5a31ad24505aaa47d88e1827d1e7976592c91b54fc0e8980f"
+            }
+          ],
+          "tokenizer_artifact_id": "aeb13307a71acd8fe81861d94ad54ab689df773318809eed3cbe794b4492dae4",
+          "version": 1
+        }
+      },
+      {
+        "descriptor": {
+          "adapter_bytes": 6434736,
+          "adapter_id": "506317cc9f40da9dea40e6d14a94910ac6625ae478b5f2d0248cb1bbbb93a6c3",
+          "base_hash": "dfff7c96c5ca45c3aa7e6b68fb0650e103ed2c39a7abc912f19b55fdba819cdc",
+          "base_name": "qwen3-1.7b",
+          "evaluation_bytes": 10894,
+          "evaluation_id": "c3372ddca9b236f2b23f4b6d668a6521733b306726eb81c246e97fa5ed10b57e",
+          "files": [
+            {
+              "artifact_id": "832dd9e00a68dd83b3c3fb9f5588dad7dcf337a0db50f7d9483f310cd292e92e",
+              "bytes": 11343,
+              "name": "LICENSE"
+            },
+            {
+              "artifact_id": "1ddb5b89ebc90dcb417a45c213d818577e65976454d29385c8f6140771d95197",
+              "bytes": 726,
+              "name": "config.json"
+            },
+            {
+              "artifact_id": "2325da0f15bb848e018c5ae071b7943332e9f871d6b60e2ed22ca97d4cb993d2",
+              "bytes": 239,
+              "name": "generation_config.json"
+            },
+            {
+              "artifact_id": "169ad53ec313c3a34b06c0809216e4fc072cce444a5d4ff2b59690d064130ed5",
+              "bytes": 3441185608,
+              "name": "model-00001-of-00002.safetensors"
+            },
+            {
+              "artifact_id": "912becff8d60672aa8628ef08c05898d9adf17c2ad4ae3caf99b065622fdeff9",
+              "bytes": 622329984,
+              "name": "model-00002-of-00002.safetensors"
+            },
+            {
+              "artifact_id": "0d660e94b165eb912669a5249dff44b83188c4777a07ddb9611fb78d91b0578d",
+              "bytes": 25605,
+              "name": "model.safetensors.index.json"
+            },
+            {
+              "artifact_id": "aeb13307a71acd8fe81861d94ad54ab689df773318809eed3cbe794b4492dae4",
+              "bytes": 11422654,
+              "name": "tokenizer.json"
+            },
+            {
+              "artifact_id": "d5d09f07b48c3086c508b30d1c9114bd1189145b74e982a265350c923acd8101",
+              "bytes": 9732,
+              "name": "tokenizer_config.json"
+            }
+          ],
+          "version": 2
+        },
+        "release": {
+          "config_artifact_id": "33fed1203d8f56be8f06cffa6f84898e5c96aaefea11909fb11a5c90b68c3e05",
+          "created_at": 1792024674.4754894,
+          "minimum_client_version": "0.4.0a8",
+          "model_artifact_id": "506317cc9f40da9dea40e6d14a94910ac6625ae478b5f2d0248cb1bbbb93a6c3",
+          "model_format": "safetensors-v1",
+          "network_id": "LIXYMAIN",
+          "previous_release_id": "4e478620e27f3e28041a23d8e942d5fa45ca8c04ab04c8f7d5aae83db6fba594",
+          "release_id": "df231f9b93f6300ba7242da793d457880a416448f00d0e9b914e6a3f7b1e533a",
+          "sequence": 2,
+          "signatures": [
+            {
+              "signature": "Zhxk98p1597Fondg/KS5QxTn2qkDvgvLElLkzCa7a8HNawbrGwZ01REXckqIxQY9jm/T7BLnnn/5oc6u7eOnAQ==",
+              "signer_id": "53cea6456aced3a5a31ad24505aaa47d88e1827d1e7976592c91b54fc0e8980f"
+            }
+          ],
+          "tokenizer_artifact_id": "aeb13307a71acd8fe81861d94ad54ab689df773318809eed3cbe794b4492dae4",
+          "version": 1
+        }
+      }
+    ],
+    "teacher_worker_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255"
+  },
+  "driver_exit_status": 1,
+  "driver_failure": "Final console-summary KeyError after report was durable; fixed separately and checked without retraining",
+  "lessons": {
+    "batches": [
+      {
+        "offer": {
+          "created_at": 1792035915.5372162,
+          "deadline": 1792036005.5372162,
+          "job_id": "f1c958cd9875e10509012d792e08f47d0e77c602753f259cec2526a6885eafc8",
+          "kind": "inference",
+          "nonce": "995f5722ff8b65741146d0d441a76f40",
+          "operation": "language.inference.v1",
+          "origin_node_id": "d6a6a0df54e4ace6db4e87a0c3190957d9520ae5decb6e81902b29b60382267e",
+          "payload": {
+            "messages": [
+              {
+                "content": "Resuelve las cuatro instrucciones públicas siguientes. Devuelve exclusivamente un objeto JSON con las claves \"0\", \"1\", \"2\", \"3\" y una respuesta de texto por clave. No incluyas explicaciones ni bloques de código. Instrucciones: {\"0\":\"Del objeto {\\\"task\\\": {\\\"label\\\": \\\"bronce\\\", \\\"ignored\\\": \\\"helecho\\\"}, \\\"count\\\": 47}, escribe solo task.label; sin comillas.\",\"1\":\"Calcula 47 menos 7. Contesta únicamente el número.\",\"2\":\"Datos ficticios: bronce almacena copias; helecho calcula gradientes. Escribe solo quién calcula gradientes.\",\"3\":\"Escribe bronce y helecho separados por una coma, sin espacios ni otro texto.\"}",
+                "role": "user"
+              }
+            ],
+            "model_artifact_id": "506317cc9f40da9dea40e6d14a94910ac6625ae478b5f2d0248cb1bbbb93a6c3"
+          },
+          "requirements": {
+            "cpu_slots": 1,
+            "disk_gb": 0.0,
+            "gpu_required": true,
+            "kind": "inference",
+            "ram_gb": 5
+          }
+        },
+        "result": {
+          "error": "",
+          "finished_at": 1792035921.0407941,
+          "job_id": "f1c958cd9875e10509012d792e08f47d0e77c602753f259cec2526a6885eafc8",
+          "output": {
+            "answer": "{\"0\":\"bronce\",\"1\":\"40\",\"2\":\"helecho\",\"3\":\"bronce,helecho\"}",
+            "model_id": "506317cc9f40da9dea40e6d14a94910ac6625ae478b5f2d0248cb1bbbb93a6c3",
+            "output_tokens": 27
+          },
+          "receipt": {
+            "finished_at": 1792035921.0407941,
+            "job_id": "f1c958cd9875e10509012d792e08f47d0e77c602753f259cec2526a6885eafc8",
+            "requester_node_id": "d6a6a0df54e4ace6db4e87a0c3190957d9520ae5decb6e81902b29b60382267e",
+            "result_digest": "43140000509db17a7c77c3456822982fe520b0026cf50ac34c0d470d49f366ab",
+            "signature": "I/VFdyuMoXXnhTpjfiazwLi1iLXkS1U386MWPKSMT0JPfQ6BQUr/UXL6vfK7fM2gAtLZQ80CA0AREd6CqNV/BQ==",
+            "version": 1,
+            "worker_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255"
+          },
+          "status": "ok"
+        },
+        "start": 0
+      },
+      {
+        "offer": {
+          "created_at": 1792035921.121816,
+          "deadline": 1792036011.121816,
+          "job_id": "34d764bfd1e646c9ac0d548a591d80455472595aca93383543553147626ab10a",
+          "kind": "inference",
+          "nonce": "c9d385b4bfc1a30651fff9563f5977d1",
+          "operation": "language.inference.v1",
+          "origin_node_id": "d6a6a0df54e4ace6db4e87a0c3190957d9520ae5decb6e81902b29b60382267e",
+          "payload": {
+            "messages": [
+              {
+                "content": "Resuelve las cuatro instrucciones públicas siguientes. Devuelve exclusivamente un objeto JSON con las claves \"0\", \"1\", \"2\", \"3\" y una respuesta de texto por clave. No incluyas explicaciones ni bloques de código. Instrucciones: {\"0\":\"Del objeto {\\\"task\\\": {\\\"label\\\": \\\"cedro\\\", \\\"ignored\\\": \\\"junco\\\"}, \\\"count\\\": 48}, escribe solo task.label; sin comillas.\",\"1\":\"Calcula 48 menos 7. Contesta únicamente el número.\",\"2\":\"Datos ficticios: cedro almacena copias; junco calcula gradientes. Escribe solo quién calcula gradientes.\",\"3\":\"Escribe cedro y junco separados por una coma, sin espacios ni otro texto.\"}",
+                "role": "user"
+              }
+            ],
+            "model_artifact_id": "506317cc9f40da9dea40e6d14a94910ac6625ae478b5f2d0248cb1bbbb93a6c3"
+          },
+          "requirements": {
+            "cpu_slots": 1,
+            "disk_gb": 0.0,
+            "gpu_required": true,
+            "kind": "inference",
+            "ram_gb": 5
+          }
+        },
+        "result": {
+          "error": "",
+          "finished_at": 1792035926.5721018,
+          "job_id": "34d764bfd1e646c9ac0d548a591d80455472595aca93383543553147626ab10a",
+          "output": {
+            "answer": "{\"0\":\"task.label\",\"1\":\"41\",\"2\":\"junco\",\"3\":\"cedro,junco\"}",
+            "model_id": "506317cc9f40da9dea40e6d14a94910ac6625ae478b5f2d0248cb1bbbb93a6c3",
+            "output_tokens": 25
+          },
+          "receipt": {
+            "finished_at": 1792035926.5721018,
+            "job_id": "34d764bfd1e646c9ac0d548a591d80455472595aca93383543553147626ab10a",
+            "requester_node_id": "d6a6a0df54e4ace6db4e87a0c3190957d9520ae5decb6e81902b29b60382267e",
+            "result_digest": "32fd6b3508a15761cb98cb3059286d3777f5ffa78c6b4c8c137e3fde7ab877cb",
+            "signature": "eybJbLqoqWU6CGTjKRsfZ63twk9pOaHRkfwh/rvdp09fEEHib0TqedeLbOhGeLNq/4Yqgo3EWBympIBC1CMiAg==",
+            "version": 1,
+            "worker_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255"
+          },
+          "status": "ok"
+        },
+        "start": 4
+      },
+      {
+        "offer": {
+          "created_at": 1792035926.7421663,
+          "deadline": 1792036016.7421663,
+          "job_id": "0cbb23162ee8206e11b87bb9828ee962eb1c9db264010f166ebcc34de78d3af7",
+          "kind": "inference",
+          "nonce": "4dbed3b1d0eebbf2e357ea7b37e7a51f",
+          "operation": "language.inference.v1",
+          "origin_node_id": "d6a6a0df54e4ace6db4e87a0c3190957d9520ae5decb6e81902b29b60382267e",
+          "payload": {
+            "messages": [
+              {
+                "content": "Resuelve las cuatro instrucciones públicas siguientes. Devuelve exclusivamente un objeto JSON con las claves \"0\", \"1\", \"2\", \"3\" y una respuesta de texto por clave. No incluyas explicaciones ni bloques de código. Instrucciones: {\"0\":\"Del objeto {\\\"task\\\": {\\\"label\\\": \\\"cobalto\\\", \\\"ignored\\\": \\\"lino\\\"}, \\\"count\\\": 49}, escribe solo task.label; sin comillas.\",\"1\":\"Calcula 49 menos 7. Contesta únicamente el número.\",\"2\":\"Datos ficticios: cobalto almacena copias; lino calcula gradientes. Escribe solo quién calcula gradientes.\",\"3\":\"Escribe cobalto y lino separados por una coma, sin espacios ni otro texto.\"}",
+                "role": "user"
+              }
+            ],
+            "model_artifact_id": "506317cc9f40da9dea40e6d14a94910ac6625ae478b5f2d0248cb1bbbb93a6c3"
+          },
+          "requirements": {
+            "cpu_slots": 1,
+            "disk_gb": 0.0,
+            "gpu_required": true,
+            "kind": "inference",
+            "ram_gb": 5
+          }
+        },
+        "result": {
+          "error": "",
+          "finished_at": 1792035932.1888127,
+          "job_id": "0cbb23162ee8206e11b87bb9828ee962eb1c9db264010f166ebcc34de78d3af7",
+          "output": {
+            "answer": "{\"0\":\"task.label\",\"1\":\"42\",\"2\":\"lino\",\"3\":\"cobalto,lino\"}",
+            "model_id": "506317cc9f40da9dea40e6d14a94910ac6625ae478b5f2d0248cb1bbbb93a6c3",
+            "output_tokens": 24
+          },
+          "receipt": {
+            "finished_at": 1792035932.1888127,
+            "job_id": "0cbb23162ee8206e11b87bb9828ee962eb1c9db264010f166ebcc34de78d3af7",
+            "requester_node_id": "d6a6a0df54e4ace6db4e87a0c3190957d9520ae5decb6e81902b29b60382267e",
+            "result_digest": "0c74ee2c2017e305c1a9b20ad901d35da55a418e2af3b62205839036e53edf29",
+            "signature": "Ltg6D6CnXLVxV9UrXWJnb6YexQixbu0wzZCB8hdTvcjwxjs5YBqxSIlELNb1V5ngmFFG0Wj/3ZbztoC67l9wDw==",
+            "version": 1,
+            "worker_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255"
+          },
+          "status": "ok"
+        },
+        "start": 8
+      },
+      {
+        "offer": {
+          "created_at": 1792035932.2679121,
+          "deadline": 1792036022.2679121,
+          "job_id": "c6e01e31034b70cdb6509a9598abaf605422869b80c32ea51e4188e662cb551d",
+          "kind": "inference",
+          "nonce": "fba8fa00f0e3eb808a064f0f7f3484da",
+          "operation": "language.inference.v1",
+          "origin_node_id": "d6a6a0df54e4ace6db4e87a0c3190957d9520ae5decb6e81902b29b60382267e",
+          "payload": {
+            "messages": [
+              {
+                "content": "Resuelve las cuatro instrucciones públicas siguientes. Devuelve exclusivamente un objeto JSON con las claves \"0\", \"1\", \"2\", \"3\" y una respuesta de texto por clave. No incluyas explicaciones ni bloques de código. Instrucciones: {\"0\":\"Del objeto {\\\"task\\\": {\\\"label\\\": \\\"coral\\\", \\\"ignored\\\": \\\"musgo\\\"}, \\\"count\\\": 50}, escribe solo task.label; sin comillas.\",\"1\":\"Calcula 50 menos 7. Contesta únicamente el número.\",\"2\":\"Datos ficticios: coral almacena copias; musgo calcula gradientes. Escribe solo quién calcula gradientes.\",\"3\":\"Escribe coral y musgo separados por una coma, sin espacios ni otro texto.\"}",
+                "role": "user"
+              }
+            ],
+            "model_artifact_id": "506317cc9f40da9dea40e6d14a94910ac6625ae478b5f2d0248cb1bbbb93a6c3"
+          },
+          "requirements": {
+            "cpu_slots": 1,
+            "disk_gb": 0.0,
+            "gpu_required": true,
+            "kind": "inference",
+            "ram_gb": 5
+          }
+        },
+        "result": {
+          "error": "",
+          "finished_at": 1792035937.6660569,
+          "job_id": "c6e01e31034b70cdb6509a9598abaf605422869b80c32ea51e4188e662cb551d",
+          "output": {
+            "answer": "{\"0\":\"task.label\",\"1\":\"43\",\"2\":\"musgo\",\"3\":\"coral,musgo\"}",
+            "model_id": "506317cc9f40da9dea40e6d14a94910ac6625ae478b5f2d0248cb1bbbb93a6c3",
+            "output_tokens": 25
+          },
+          "receipt": {
+            "finished_at": 1792035937.6660569,
+            "job_id": "c6e01e31034b70cdb6509a9598abaf605422869b80c32ea51e4188e662cb551d",
+            "requester_node_id": "d6a6a0df54e4ace6db4e87a0c3190957d9520ae5decb6e81902b29b60382267e",
+            "result_digest": "7a63a15a2ecf3e0bf91bf1a332303e7f91afcae6a6a6cd481ff4b84f5976d708",
+            "signature": "/hn+t2r/wM+j/nlpbZcIgWva97OxJr/0ktAd0Q8g/uecHEf3WMVQJGnRoUSZj0E6hwogdhU/qT2UaJ+KNKyfBg==",
+            "version": 1,
+            "worker_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255"
+          },
+          "status": "ok"
+        },
+        "start": 12
+      },
+      {
+        "offer": {
+          "created_at": 1792035937.7491724,
+          "deadline": 1792036027.7491724,
+          "job_id": "3baabd460cfb24f0a4f4bdd73e79c086555e30437060ca8b97f8089ffa505666",
+          "kind": "inference",
+          "nonce": "ae32c86c7ec8d8a532218a1e7ace8d5f",
+          "operation": "language.inference.v1",
+          "origin_node_id": "d6a6a0df54e4ace6db4e87a0c3190957d9520ae5decb6e81902b29b60382267e",
+          "payload": {
+            "messages": [
+              {
+                "content": "Resuelve las cuatro instrucciones públicas siguientes. Devuelve exclusivamente un objeto JSON con las claves \"0\", \"1\", \"2\", \"3\" y una respuesta de texto por clave. No incluyas explicaciones ni bloques de código. Instrucciones: {\"0\":\"Del objeto {\\\"task\\\": {\\\"label\\\": \\\"duna\\\", \\\"ignored\\\": \\\"nácar\\\"}, \\\"count\\\": 51}, escribe solo task.label; sin comillas.\",\"1\":\"Calcula 51 menos 7. Contesta únicamente el número.\",\"2\":\"Datos ficticios: duna almacena copias; nácar calcula gradientes. Escribe solo quién calcula gradientes.\",\"3\":\"Escribe duna y nácar separados por una coma, sin espacios ni otro texto.\"}",
+                "role": "user"
+              }
+            ],
+            "model_artifact_id": "506317cc9f40da9dea40e6d14a94910ac6625ae478b5f2d0248cb1bbbb93a6c3"
+          },
+          "requirements": {
+            "cpu_slots": 1,
+            "disk_gb": 0.0,
+            "gpu_required": true,
+            "kind": "inference",
+            "ram_gb": 5
+          }
+        },
+        "result": {
+          "error": "",
+          "finished_at": 1792035943.1979177,
+          "job_id": "3baabd460cfb24f0a4f4bdd73e79c086555e30437060ca8b97f8089ffa505666",
+          "output": {
+            "answer": "{\"0\":\"duna\",\"1\":\"44\",\"2\":\"nácar\",\"3\":\"duna,nácar\"}",
+            "model_id": "506317cc9f40da9dea40e6d14a94910ac6625ae478b5f2d0248cb1bbbb93a6c3",
+            "output_tokens": 26
+          },
+          "receipt": {
+            "finished_at": 1792035943.1979177,
+            "job_id": "3baabd460cfb24f0a4f4bdd73e79c086555e30437060ca8b97f8089ffa505666",
+            "requester_node_id": "d6a6a0df54e4ace6db4e87a0c3190957d9520ae5decb6e81902b29b60382267e",
+            "result_digest": "574533f9aa68f71a678213b5215424446695b2ea922c9ccd73d8bb65372c505f",
+            "signature": "nV8Twtj0duf3xGVDynYdZbaroKteJV1hMRqeULNXjlOKDAA6Kx0Gf71owgevtmmkcePcIeLP3a2tK8B117UmBg==",
+            "version": 1,
+            "worker_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255"
+          },
+          "status": "ok"
+        },
+        "start": 16
+      },
+      {
+        "offer": {
+          "created_at": 1792035943.2812462,
+          "deadline": 1792036033.2812462,
+          "job_id": "dfff693aea0a8fba71c6fc07a259bb1ea8fad1571833e444e5859d1b38dc975f",
+          "kind": "inference",
+          "nonce": "5559567b0f210d1bc99f210f47e1d2ff",
+          "operation": "language.inference.v1",
+          "origin_node_id": "d6a6a0df54e4ace6db4e87a0c3190957d9520ae5decb6e81902b29b60382267e",
+          "payload": {
+            "messages": [
+              {
+                "content": "Resuelve las cuatro instrucciones públicas siguientes. Devuelve exclusivamente un objeto JSON con las claves \"0\", \"1\", \"2\", \"3\" y una respuesta de texto por clave. No incluyas explicaciones ni bloques de código. Instrucciones: {\"0\":\"Del objeto {\\\"task\\\": {\\\"label\\\": \\\"espiga\\\", \\\"ignored\\\": \\\"olmo\\\"}, \\\"count\\\": 52}, escribe solo task.label; sin comillas.\",\"1\":\"Calcula 52 menos 7. Contesta únicamente el número.\",\"2\":\"Datos ficticios: espiga almacena copias; olmo calcula gradientes. Escribe solo quién calcula gradientes.\",\"3\":\"Escribe espiga y olmo separados por una coma, sin espacios ni otro texto.\"}",
+                "role": "user"
+              }
+            ],
+            "model_artifact_id": "506317cc9f40da9dea40e6d14a94910ac6625ae478b5f2d0248cb1bbbb93a6c3"
+          },
+          "requirements": {
+            "cpu_slots": 1,
+            "disk_gb": 0.0,
+            "gpu_required": true,
+            "kind": "inference",
+            "ram_gb": 5
+          }
+        },
+        "result": {
+          "error": "",
+          "finished_at": 1792035948.8262632,
+          "job_id": "dfff693aea0a8fba71c6fc07a259bb1ea8fad1571833e444e5859d1b38dc975f",
+          "output": {
+            "answer": "{\"0\":\"espiga\",\"1\":\"45\",\"2\":\"olmo\",\"3\":\"espiga,olmo\"}",
+            "model_id": "506317cc9f40da9dea40e6d14a94910ac6625ae478b5f2d0248cb1bbbb93a6c3",
+            "output_tokens": 25
+          },
+          "receipt": {
+            "finished_at": 1792035948.8262632,
+            "job_id": "dfff693aea0a8fba71c6fc07a259bb1ea8fad1571833e444e5859d1b38dc975f",
+            "requester_node_id": "d6a6a0df54e4ace6db4e87a0c3190957d9520ae5decb6e81902b29b60382267e",
+            "result_digest": "22fe0561a1f654412904effc7d93c0eb991627711ec01fa8ce8c23eb36d0b5ad",
+            "signature": "7LqmxUh0fQjPunctuOrc7+kQk19At4C+S9jkQT5FgMKbZjC/9d5DmE2jQ7kcCxteh/TaLSZSFFf+EOTIhbZJAg==",
+            "version": 1,
+            "worker_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255"
+          },
+          "status": "ok"
+        },
+        "start": 20
+      },
+      {
+        "offer": {
+          "created_at": 1792035948.904716,
+          "deadline": 1792036038.904716,
+          "job_id": "9261219da861d61acc9a2131209c9902a4549e95be713e215136985db3e35757",
+          "kind": "inference",
+          "nonce": "c2db1f9a63dda1fd3588e139f25f3edf",
+          "operation": "language.inference.v1",
+          "origin_node_id": "d6a6a0df54e4ace6db4e87a0c3190957d9520ae5decb6e81902b29b60382267e",
+          "payload": {
+            "messages": [
+              {
+                "content": "Resuelve las cuatro instrucciones públicas siguientes. Devuelve exclusivamente un objeto JSON con las claves \"0\", \"1\", \"2\", \"3\" y una respuesta de texto por clave. No incluyas explicaciones ni bloques de código. Instrucciones: {\"0\":\"Del objeto {\\\"task\\\": {\\\"label\\\": \\\"faro\\\", \\\"ignored\\\": \\\"pino\\\"}, \\\"count\\\": 53}, escribe solo task.label; sin comillas.\",\"1\":\"Calcula 53 menos 7. Contesta únicamente el número.\",\"2\":\"Datos ficticios: faro almacena copias; pino calcula gradientes. Escribe solo quién calcula gradientes.\",\"3\":\"Escribe faro y pino separados por una coma, sin espacios ni otro texto.\"}",
+                "role": "user"
+              }
+            ],
+            "model_artifact_id": "506317cc9f40da9dea40e6d14a94910ac6625ae478b5f2d0248cb1bbbb93a6c3"
+          },
+          "requirements": {
+            "cpu_slots": 1,
+            "disk_gb": 0.0,
+            "gpu_required": true,
+            "kind": "inference",
+            "ram_gb": 5
+          }
+        },
+        "result": {
+          "error": "",
+          "finished_at": 1792035954.3481681,
+          "job_id": "9261219da861d61acc9a2131209c9902a4549e95be713e215136985db3e35757",
+          "output": {
+            "answer": "{\"0\":\"faro\",\"1\":\"46\",\"2\":\"pino\",\"3\":\"faro,pino\"}",
+            "model_id": "506317cc9f40da9dea40e6d14a94910ac6625ae478b5f2d0248cb1bbbb93a6c3",
+            "output_tokens": 24
+          },
+          "receipt": {
+            "finished_at": 1792035954.3481681,
+            "job_id": "9261219da861d61acc9a2131209c9902a4549e95be713e215136985db3e35757",
+            "requester_node_id": "d6a6a0df54e4ace6db4e87a0c3190957d9520ae5decb6e81902b29b60382267e",
+            "result_digest": "22b8029c2a57bf2902805ab5dc050f372bd88fa17c4a45a60d61ad5f8411c28a",
+            "signature": "9jkO3lXZ2NfDKy/1MTAn3+zZaTjZiFwoyhiqHc+NP3ae0/D8kUL5t7CIfmOJELdw+uTwUIpK2rUC5tpKHz/LCw==",
+            "version": 1,
+            "worker_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255"
+          },
+          "status": "ok"
+        },
+        "start": 24
+      },
+      {
+        "offer": {
+          "created_at": 1792035954.428703,
+          "deadline": 1792036044.428703,
+          "job_id": "b08f181a3b0d76d3d26cad9de16d9fbef623c39f540c4498abc35da4ec909ca2",
+          "kind": "inference",
+          "nonce": "de92c0c49cf7dfea1fa1d589466c1f0e",
+          "operation": "language.inference.v1",
+          "origin_node_id": "d6a6a0df54e4ace6db4e87a0c3190957d9520ae5decb6e81902b29b60382267e",
+          "payload": {
+            "messages": [
+              {
+                "content": "Resuelve las cuatro instrucciones públicas siguientes. Devuelve exclusivamente un objeto JSON con las claves \"0\", \"1\", \"2\", \"3\" y una respuesta de texto por clave. No incluyas explicaciones ni bloques de código. Instrucciones: {\"0\":\"Del objeto {\\\"task\\\": {\\\"label\\\": \\\"helecho\\\", \\\"ignored\\\": \\\"roca\\\"}, \\\"count\\\": 54}, escribe solo task.label; sin comillas.\",\"1\":\"Calcula 54 menos 7. Contesta únicamente el número.\",\"2\":\"Datos ficticios: helecho almacena copias; roca calcula gradientes. Escribe solo quién calcula gradientes.\",\"3\":\"Escribe helecho y roca separados por una coma, sin espacios ni otro texto.\"}",
+                "role": "user"
+              }
+            ],
+            "model_artifact_id": "506317cc9f40da9dea40e6d14a94910ac6625ae478b5f2d0248cb1bbbb93a6c3"
+          },
+          "requirements": {
+            "cpu_slots": 1,
+            "disk_gb": 0.0,
+            "gpu_required": true,
+            "kind": "inference",
+            "ram_gb": 5
+          }
+        },
+        "result": {
+          "error": "",
+          "finished_at": 1792035959.9233706,
+          "job_id": "b08f181a3b0d76d3d26cad9de16d9fbef623c39f540c4498abc35da4ec909ca2",
+          "output": {
+            "answer": "{\"0\":\"helecho\",\"1\":\"47\",\"2\":\"roca\",\"3\":\"helecho,roca\"}",
+            "model_id": "506317cc9f40da9dea40e6d14a94910ac6625ae478b5f2d0248cb1bbbb93a6c3",
+            "output_tokens": 27
+          },
+          "receipt": {
+            "finished_at": 1792035959.9233706,
+            "job_id": "b08f181a3b0d76d3d26cad9de16d9fbef623c39f540c4498abc35da4ec909ca2",
+            "requester_node_id": "d6a6a0df54e4ace6db4e87a0c3190957d9520ae5decb6e81902b29b60382267e",
+            "result_digest": "842c1435e2e3a146003017cda2a09398245cdf141c07937c334092678bfa357c",
+            "signature": "qCmO9FJBXP3vWQV6wWlNkF8oaEPWrp78stx26rfAhjAcZrJzO+rxUDePZxIFvSSjl9Cto0aVmbzHKuP9B55mAA==",
+            "version": 1,
+            "worker_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255"
+          },
+          "status": "ok"
+        },
+        "start": 28
+      },
+      {
+        "offer": {
+          "created_at": 1792035960.0037127,
+          "deadline": 1792036050.0037127,
+          "job_id": "4ad8bba18ef7665a2da3f553f9caf8975e1744252077ae4d9ac33bdd572f2d72",
+          "kind": "inference",
+          "nonce": "d14c7f495e7f94736a4cc216b544a257",
+          "operation": "language.inference.v1",
+          "origin_node_id": "d6a6a0df54e4ace6db4e87a0c3190957d9520ae5decb6e81902b29b60382267e",
+          "payload": {
+            "messages": [
+              {
+                "content": "Resuelve las cuatro instrucciones públicas siguientes. Devuelve exclusivamente un objeto JSON con las claves \"0\", \"1\", \"2\", \"3\" y una respuesta de texto por clave. No incluyas explicaciones ni bloques de código. Instrucciones: {\"0\":\"Del objeto {\\\"task\\\": {\\\"label\\\": \\\"junco\\\", \\\"ignored\\\": \\\"sauce\\\"}, \\\"count\\\": 55}, escribe solo task.label; sin comillas.\",\"1\":\"Calcula 55 menos 7. Contesta únicamente el número.\",\"2\":\"Datos ficticios: junco almacena copias; sauce calcula gradientes. Escribe solo quién calcula gradientes.\",\"3\":\"Escribe junco y sauce separados por una coma, sin espacios ni otro texto.\"}",
+                "role": "user"
+              }
+            ],
+            "model_artifact_id": "506317cc9f40da9dea40e6d14a94910ac6625ae478b5f2d0248cb1bbbb93a6c3"
+          },
+          "requirements": {
+            "cpu_slots": 1,
+            "disk_gb": 0.0,
+            "gpu_required": true,
+            "kind": "inference",
+            "ram_gb": 5
+          }
+        },
+        "result": {
+          "error": "",
+          "finished_at": 1792035965.4654312,
+          "job_id": "4ad8bba18ef7665a2da3f553f9caf8975e1744252077ae4d9ac33bdd572f2d72",
+          "output": {
+            "answer": "{\"0\":\"junco\",\"1\":\"48\",\"2\":\"sauce\",\"3\":\"junco,sauce\"}",
+            "model_id": "506317cc9f40da9dea40e6d14a94910ac6625ae478b5f2d0248cb1bbbb93a6c3",
+            "output_tokens": 24
+          },
+          "receipt": {
+            "finished_at": 1792035965.4654312,
+            "job_id": "4ad8bba18ef7665a2da3f553f9caf8975e1744252077ae4d9ac33bdd572f2d72",
+            "requester_node_id": "d6a6a0df54e4ace6db4e87a0c3190957d9520ae5decb6e81902b29b60382267e",
+            "result_digest": "6e8c463581d3d8bb5c7b661c11be22ade5b52e0f890cf32a676f68b8bdf82eeb",
+            "signature": "NcbxPUEQwfu8DP0za77cpXAaYUvCf5Lfi+lM36Zizt/SSMsQKwtubFZmZ8EGCttBAQ8eoiVTR+uuCVthqXQfAg==",
+            "version": 1,
+            "worker_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255"
+          },
+          "status": "ok"
+        },
+        "start": 32
+      },
+      {
+        "offer": {
+          "created_at": 1792035965.5479212,
+          "deadline": 1792036055.5479212,
+          "job_id": "9bfaf607cec6f1d01327d2516ec58890c89acbee3e93dfbd663d613edb01a137",
+          "kind": "inference",
+          "nonce": "a4130a071521fca9c2742e65bac1d499",
+          "operation": "language.inference.v1",
+          "origin_node_id": "d6a6a0df54e4ace6db4e87a0c3190957d9520ae5decb6e81902b29b60382267e",
+          "payload": {
+            "messages": [
+              {
+                "content": "Resuelve las cuatro instrucciones públicas siguientes. Devuelve exclusivamente un objeto JSON con las claves \"0\", \"1\", \"2\", \"3\" y una respuesta de texto por clave. No incluyas explicaciones ni bloques de código. Instrucciones: {\"0\":\"Del objeto {\\\"task\\\": {\\\"label\\\": \\\"lino\\\", \\\"ignored\\\": \\\"trébol\\\"}, \\\"count\\\": 56}, escribe solo task.label; sin comillas.\",\"1\":\"Calcula 56 menos 7. Contesta únicamente el número.\",\"2\":\"Datos ficticios: lino almacena copias; trébol calcula gradientes. Escribe solo quién calcula gradientes.\",\"3\":\"Escribe lino y trébol separados por una coma, sin espacios ni otro texto.\"}",
+                "role": "user"
+              }
+            ],
+            "model_artifact_id": "506317cc9f40da9dea40e6d14a94910ac6625ae478b5f2d0248cb1bbbb93a6c3"
+          },
+          "requirements": {
+            "cpu_slots": 1,
+            "disk_gb": 0.0,
+            "gpu_required": true,
+            "kind": "inference",
+            "ram_gb": 5
+          }
+        },
+        "result": {
+          "error": "",
+          "finished_at": 1792035971.047215,
+          "job_id": "9bfaf607cec6f1d01327d2516ec58890c89acbee3e93dfbd663d613edb01a137",
+          "output": {
+            "answer": "{\"0\":\"lino\",\"1\":\"49\",\"2\":\"trébol\",\"3\":\"lino,trébol\"}",
+            "model_id": "506317cc9f40da9dea40e6d14a94910ac6625ae478b5f2d0248cb1bbbb93a6c3",
+            "output_tokens": 25
+          },
+          "receipt": {
+            "finished_at": 1792035971.047215,
+            "job_id": "9bfaf607cec6f1d01327d2516ec58890c89acbee3e93dfbd663d613edb01a137",
+            "requester_node_id": "d6a6a0df54e4ace6db4e87a0c3190957d9520ae5decb6e81902b29b60382267e",
+            "result_digest": "d974b12c038338a3b7e6b0e2989796a20fdd8e3ba846f23ca78a0074569fa76b",
+            "signature": "oJBgmm09hzq++OTo+TIfsVgRM7ziQlurJILY1uKA5QSy6H9a3dMcUbgn8yd3lWAAU6dHRkuorKOpymS4khAWDg==",
+            "version": 1,
+            "worker_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255"
+          },
+          "status": "ok"
+        },
+        "start": 36
+      },
+      {
+        "offer": {
+          "created_at": 1792035971.1281679,
+          "deadline": 1792036061.1281679,
+          "job_id": "daebf33962d35196d54d27b2eb709204fda6688bba163cc6f473b27ddae7dae7",
+          "kind": "inference",
+          "nonce": "525ce30847059c3478e32b2f3ce2402d",
+          "operation": "language.inference.v1",
+          "origin_node_id": "d6a6a0df54e4ace6db4e87a0c3190957d9520ae5decb6e81902b29b60382267e",
+          "payload": {
+            "messages": [
+              {
+                "content": "Resuelve las cuatro instrucciones públicas siguientes. Devuelve exclusivamente un objeto JSON con las claves \"0\", \"1\", \"2\", \"3\" y una respuesta de texto por clave. No incluyas explicaciones ni bloques de código. Instrucciones: {\"0\":\"Del objeto {\\\"task\\\": {\\\"label\\\": \\\"musgo\\\", \\\"ignored\\\": \\\"vidrio\\\"}, \\\"count\\\": 57}, escribe solo task.label; sin comillas.\",\"1\":\"Calcula 57 menos 7. Contesta únicamente el número.\",\"2\":\"Datos ficticios: musgo almacena copias; vidrio calcula gradientes. Escribe solo quién calcula gradientes.\",\"3\":\"Escribe musgo y vidrio separados por una coma, sin espacios ni otro texto.\"}",
+                "role": "user"
+              }
+            ],
+            "model_artifact_id": "506317cc9f40da9dea40e6d14a94910ac6625ae478b5f2d0248cb1bbbb93a6c3"
+          },
+          "requirements": {
+            "cpu_slots": 1,
+            "disk_gb": 0.0,
+            "gpu_required": true,
+            "kind": "inference",
+            "ram_gb": 5
+          }
+        },
+        "result": {
+          "error": "",
+          "finished_at": 1792035976.5810158,
+          "job_id": "daebf33962d35196d54d27b2eb709204fda6688bba163cc6f473b27ddae7dae7",
+          "output": {
+            "answer": "{\"0\":\"musgo\",\"1\":\"50\",\"2\":\"vidrio\",\"3\":\"musgo,vidrio\"}",
+            "model_id": "506317cc9f40da9dea40e6d14a94910ac6625ae478b5f2d0248cb1bbbb93a6c3",
+            "output_tokens": 25
+          },
+          "receipt": {
+            "finished_at": 1792035976.5810158,
+            "job_id": "daebf33962d35196d54d27b2eb709204fda6688bba163cc6f473b27ddae7dae7",
+            "requester_node_id": "d6a6a0df54e4ace6db4e87a0c3190957d9520ae5decb6e81902b29b60382267e",
+            "result_digest": "3b0aa4c7c6a6fcc17c536d18f1f499728f241e67fde3fccbf4e951c41a9c51d3",
+            "signature": "y0f4xIQt+8GFUEmSw5h4w/BrRggNHgaui0sWUHB49I0idKn9EuqLnVanuzFRBvHPmTUYzn7zaLAX4zxP4QeSDg==",
+            "version": 1,
+            "worker_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255"
+          },
+          "status": "ok"
+        },
+        "start": 40
+      },
+      {
+        "offer": {
+          "created_at": 1792035976.6638017,
+          "deadline": 1792036066.6638017,
+          "job_id": "0933fdc0c811a110421c3f91750f8b86edf185736944b774e7625ec329a2929f",
+          "kind": "inference",
+          "nonce": "c5b20aac64d81f1c28201d8080295b7f",
+          "operation": "language.inference.v1",
+          "origin_node_id": "d6a6a0df54e4ace6db4e87a0c3190957d9520ae5decb6e81902b29b60382267e",
+          "payload": {
+            "messages": [
+              {
+                "content": "Resuelve las cuatro instrucciones públicas siguientes. Devuelve exclusivamente un objeto JSON con las claves \"0\", \"1\", \"2\", \"3\" y una respuesta de texto por clave. No incluyas explicaciones ni bloques de código. Instrucciones: {\"0\":\"Del objeto {\\\"task\\\": {\\\"label\\\": \\\"nácar\\\", \\\"ignored\\\": \\\"zafiro\\\"}, \\\"count\\\": 58}, escribe solo task.label; sin comillas.\",\"1\":\"Calcula 58 menos 7. Contesta únicamente el número.\",\"2\":\"Datos ficticios: nácar almacena copias; zafiro calcula gradientes. Escribe solo quién calcula gradientes.\",\"3\":\"Escribe nácar y zafiro separados por una coma, sin espacios ni otro texto.\"}",
+                "role": "user"
+              }
+            ],
+            "model_artifact_id": "506317cc9f40da9dea40e6d14a94910ac6625ae478b5f2d0248cb1bbbb93a6c3"
+          },
+          "requirements": {
+            "cpu_slots": 1,
+            "disk_gb": 0.0,
+            "gpu_required": true,
+            "kind": "inference",
+            "ram_gb": 5
+          }
+        },
+        "result": {
+          "error": "",
+          "finished_at": 1792035982.2604454,
+          "job_id": "0933fdc0c811a110421c3f91750f8b86edf185736944b774e7625ec329a2929f",
+          "output": {
+            "answer": "{\"0\":\"nácar\",\"1\":\"51\",\"2\":\"zafiro\",\"3\":\"nácar,zafiro\"}",
+            "model_id": "506317cc9f40da9dea40e6d14a94910ac6625ae478b5f2d0248cb1bbbb93a6c3",
+            "output_tokens": 28
+          },
+          "receipt": {
+            "finished_at": 1792035982.2604454,
+            "job_id": "0933fdc0c811a110421c3f91750f8b86edf185736944b774e7625ec329a2929f",
+            "requester_node_id": "d6a6a0df54e4ace6db4e87a0c3190957d9520ae5decb6e81902b29b60382267e",
+            "result_digest": "20a1b9ff5663b749909a9cdccb211911e493b61edd61296c897d92309f4a7221",
+            "signature": "ZGzlmyJNtv2vE86fgstb3UMj251n2k3XNoJf8AVaiisICPfIIdKSkQiHDQIm5IzoQRoNnqt6jsNr8PM+lZofAQ==",
+            "version": 1,
+            "worker_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255"
+          },
+          "status": "ok"
+        },
+        "start": 44
+      },
+      {
+        "offer": {
+          "created_at": 1792035982.3409953,
+          "deadline": 1792036072.3409953,
+          "job_id": "1e3d5fc200f4360e05ef88fd7a751ac1c414e89163e826423e215a3d58220ad4",
+          "kind": "inference",
+          "nonce": "ed50383f200c23e464f445ad32ca4ba4",
+          "operation": "language.inference.v1",
+          "origin_node_id": "d6a6a0df54e4ace6db4e87a0c3190957d9520ae5decb6e81902b29b60382267e",
+          "payload": {
+            "messages": [
+              {
+                "content": "Resuelve las cuatro instrucciones públicas siguientes. Devuelve exclusivamente un objeto JSON con las claves \"0\", \"1\", \"2\", \"3\" y una respuesta de texto por clave. No incluyas explicaciones ni bloques de código. Instrucciones: {\"0\":\"Del objeto {\\\"task\\\": {\\\"label\\\": \\\"olmo\\\", \\\"ignored\\\": \\\"ámbar\\\"}, \\\"count\\\": 59}, escribe solo task.label; sin comillas.\",\"1\":\"Calcula 59 menos 7. Contesta únicamente el número.\",\"2\":\"Datos ficticios: olmo almacena copias; ámbar calcula gradientes. Escribe solo quién calcula gradientes.\",\"3\":\"Escribe olmo y ámbar separados por una coma, sin espacios ni otro texto.\"}",
+                "role": "user"
+              }
+            ],
+            "model_artifact_id": "506317cc9f40da9dea40e6d14a94910ac6625ae478b5f2d0248cb1bbbb93a6c3"
+          },
+          "requirements": {
+            "cpu_slots": 1,
+            "disk_gb": 0.0,
+            "gpu_required": true,
+            "kind": "inference",
+            "ram_gb": 5
+          }
+        },
+        "result": {
+          "error": "",
+          "finished_at": 1792035987.7933931,
+          "job_id": "1e3d5fc200f4360e05ef88fd7a751ac1c414e89163e826423e215a3d58220ad4",
+          "output": {
+            "answer": "{\"0\":\"olmo\",\"1\":\"52\",\"2\":\"ámbar\",\"3\":\"olmo,ámbar\"}",
+            "model_id": "506317cc9f40da9dea40e6d14a94910ac6625ae478b5f2d0248cb1bbbb93a6c3",
+            "output_tokens": 25
+          },
+          "receipt": {
+            "finished_at": 1792035987.7933931,
+            "job_id": "1e3d5fc200f4360e05ef88fd7a751ac1c414e89163e826423e215a3d58220ad4",
+            "requester_node_id": "d6a6a0df54e4ace6db4e87a0c3190957d9520ae5decb6e81902b29b60382267e",
+            "result_digest": "f7272227c46660477b199a4d6e9978ef2138500f6ba39d6436821004a42ce631",
+            "signature": "CSZzveOGH07Z3hLGAybP8RFp2bn4g6LyUctu0AqpkWnIP9cOXIN6EbQjZOHJNyUXPf8WOiAXOXWYikurSl6yCg==",
+            "version": 1,
+            "worker_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255"
+          },
+          "status": "ok"
+        },
+        "start": 48
+      },
+      {
+        "offer": {
+          "created_at": 1792035987.8715866,
+          "deadline": 1792036077.8715866,
+          "job_id": "19bbe76ae7a96a92cfe9f3181bfef644d4c65d36236f584bfd8acd49d761ef8c",
+          "kind": "inference",
+          "nonce": "9daa5aeab9be7e7af99f2b3ceb5f0a53",
+          "operation": "language.inference.v1",
+          "origin_node_id": "d6a6a0df54e4ace6db4e87a0c3190957d9520ae5decb6e81902b29b60382267e",
+          "payload": {
+            "messages": [
+              {
+                "content": "Resuelve las cuatro instrucciones públicas siguientes. Devuelve exclusivamente un objeto JSON con las claves \"0\", \"1\", \"2\", \"3\" y una respuesta de texto por clave. No incluyas explicaciones ni bloques de código. Instrucciones: {\"0\":\"Del objeto {\\\"task\\\": {\\\"label\\\": \\\"pino\\\", \\\"ignored\\\": \\\"abeto\\\"}, \\\"count\\\": 60}, escribe solo task.label; sin comillas.\",\"1\":\"Calcula 60 menos 7. Contesta únicamente el número.\",\"2\":\"Datos ficticios: pino almacena copias; abeto calcula gradientes. Escribe solo quién calcula gradientes.\",\"3\":\"Escribe pino y abeto separados por una coma, sin espacios ni otro texto.\"}",
+                "role": "user"
+              }
+            ],
+            "model_artifact_id": "506317cc9f40da9dea40e6d14a94910ac6625ae478b5f2d0248cb1bbbb93a6c3"
+          },
+          "requirements": {
+            "cpu_slots": 1,
+            "disk_gb": 0.0,
+            "gpu_required": true,
+            "kind": "inference",
+            "ram_gb": 5
+          }
+        },
+        "result": {
+          "error": "",
+          "finished_at": 1792035993.3242164,
+          "job_id": "19bbe76ae7a96a92cfe9f3181bfef644d4c65d36236f584bfd8acd49d761ef8c",
+          "output": {
+            "answer": "{\"0\":\"pino\",\"1\":\"53\",\"2\":\"abeto\",\"3\":\"pino,abeto\"}",
+            "model_id": "506317cc9f40da9dea40e6d14a94910ac6625ae478b5f2d0248cb1bbbb93a6c3",
+            "output_tokens": 25
+          },
+          "receipt": {
+            "finished_at": 1792035993.3242164,
+            "job_id": "19bbe76ae7a96a92cfe9f3181bfef644d4c65d36236f584bfd8acd49d761ef8c",
+            "requester_node_id": "d6a6a0df54e4ace6db4e87a0c3190957d9520ae5decb6e81902b29b60382267e",
+            "result_digest": "5fa1ed21ac8a3ddde90bda1d8a7023bfdd92cd1c93baf3f10416bf834300b0c5",
+            "signature": "F0SihzVNwEbP7c1sNCr4SIfwIRWpa5ZcxKhzsHgRs7zNsWL++3t2RgttHjVyeomurCMZRgtaEG4t/2m6oNVRBA==",
+            "version": 1,
+            "worker_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255"
+          },
+          "status": "ok"
+        },
+        "start": 52
+      },
+      {
+        "offer": {
+          "created_at": 1792035993.4060519,
+          "deadline": 1792036083.4060519,
+          "job_id": "c47673fe525560fe948d677ea1b331bfa295065ab24688ea0fb05f210dcaddbf",
+          "kind": "inference",
+          "nonce": "e4d648ed7fa03bb7b43c2bb89b81c327",
+          "operation": "language.inference.v1",
+          "origin_node_id": "d6a6a0df54e4ace6db4e87a0c3190957d9520ae5decb6e81902b29b60382267e",
+          "payload": {
+            "messages": [
+              {
+                "content": "Resuelve las cuatro instrucciones públicas siguientes. Devuelve exclusivamente un objeto JSON con las claves \"0\", \"1\", \"2\", \"3\" y una respuesta de texto por clave. No incluyas explicaciones ni bloques de código. Instrucciones: {\"0\":\"Del objeto {\\\"task\\\": {\\\"label\\\": \\\"roca\\\", \\\"ignored\\\": \\\"cerezo\\\"}, \\\"count\\\": 61}, escribe solo task.label; sin comillas.\",\"1\":\"Calcula 61 menos 7. Contesta únicamente el número.\",\"2\":\"Datos ficticios: roca almacena copias; cerezo calcula gradientes. Escribe solo quién calcula gradientes.\",\"3\":\"Escribe roca y cerezo separados por una coma, sin espacios ni otro texto.\"}",
+                "role": "user"
+              }
+            ],
+            "model_artifact_id": "506317cc9f40da9dea40e6d14a94910ac6625ae478b5f2d0248cb1bbbb93a6c3"
+          },
+          "requirements": {
+            "cpu_slots": 1,
+            "disk_gb": 0.0,
+            "gpu_required": true,
+            "kind": "inference",
+            "ram_gb": 5
+          }
+        },
+        "result": {
+          "error": "",
+          "finished_at": 1792035998.9520483,
+          "job_id": "c47673fe525560fe948d677ea1b331bfa295065ab24688ea0fb05f210dcaddbf",
+          "output": {
+            "answer": "{\"0\":\"roca\",\"1\":\"54\",\"2\":\"cerezo\",\"3\":\"roca,cerezo\"}",
+            "model_id": "506317cc9f40da9dea40e6d14a94910ac6625ae478b5f2d0248cb1bbbb93a6c3",
+            "output_tokens": 26
+          },
+          "receipt": {
+            "finished_at": 1792035998.9520483,
+            "job_id": "c47673fe525560fe948d677ea1b331bfa295065ab24688ea0fb05f210dcaddbf",
+            "requester_node_id": "d6a6a0df54e4ace6db4e87a0c3190957d9520ae5decb6e81902b29b60382267e",
+            "result_digest": "8b8437bfcfea0d89dd28f18f225374992bcc93f9fcb12f314ee7df849b976829",
+            "signature": "22srlLPqUl1mSG2OG0OFvRB9579FARkHLZIH2yQ04ks1dbYjeE19aodkxaL4wKLOCUGES/KBPaM6vsJxWIM4Dg==",
+            "version": 1,
+            "worker_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255"
+          },
+          "status": "ok"
+        },
+        "start": 56
+      },
+      {
+        "offer": {
+          "created_at": 1792035999.0309563,
+          "deadline": 1792036089.0309563,
+          "job_id": "244ef2252141dd697e0c218b925f19e7133970d6b2aa07e66d4ef255f6726674",
+          "kind": "inference",
+          "nonce": "17bd025df5c65eaa566172ad8d02fc1d",
+          "operation": "language.inference.v1",
+          "origin_node_id": "d6a6a0df54e4ace6db4e87a0c3190957d9520ae5decb6e81902b29b60382267e",
+          "payload": {
+            "messages": [
+              {
+                "content": "Resuelve las cuatro instrucciones públicas siguientes. Devuelve exclusivamente un objeto JSON con las claves \"0\", \"1\", \"2\", \"3\" y una respuesta de texto por clave. No incluyas explicaciones ni bloques de código. Instrucciones: {\"0\":\"Del objeto {\\\"task\\\": {\\\"label\\\": \\\"sauce\\\", \\\"ignored\\\": \\\"dalía\\\"}, \\\"count\\\": 62}, escribe solo task.label; sin comillas.\",\"1\":\"Calcula 62 menos 7. Contesta únicamente el número.\",\"2\":\"Datos ficticios: sauce almacena copias; dalía calcula gradientes. Escribe solo quién calcula gradientes.\",\"3\":\"Escribe sauce y dalía separados por una coma, sin espacios ni otro texto.\"}",
+                "role": "user"
+              }
+            ],
+            "model_artifact_id": "506317cc9f40da9dea40e6d14a94910ac6625ae478b5f2d0248cb1bbbb93a6c3"
+          },
+          "requirements": {
+            "cpu_slots": 1,
+            "disk_gb": 0.0,
+            "gpu_required": true,
+            "kind": "inference",
+            "ram_gb": 5
+          }
+        },
+        "result": {
+          "error": "",
+          "finished_at": 1792036004.5311928,
+          "job_id": "244ef2252141dd697e0c218b925f19e7133970d6b2aa07e66d4ef255f6726674",
+          "output": {
+            "answer": "{\"0\":\"sauce\",\"1\":\"55\",\"2\":\"dalía\",\"3\":\"sauce,dalía\"}",
+            "model_id": "506317cc9f40da9dea40e6d14a94910ac6625ae478b5f2d0248cb1bbbb93a6c3",
+            "output_tokens": 25
+          },
+          "receipt": {
+            "finished_at": 1792036004.5311928,
+            "job_id": "244ef2252141dd697e0c218b925f19e7133970d6b2aa07e66d4ef255f6726674",
+            "requester_node_id": "d6a6a0df54e4ace6db4e87a0c3190957d9520ae5decb6e81902b29b60382267e",
+            "result_digest": "530b977ec7d3d17bfbe3fba7b467f8bea6b9845f7a0c95dd2f87392a59876910",
+            "signature": "fe7Waj8ie+0VDsgWjV1Hsj48VUENEAdTGNocvRf5uyEwSbNz0L8jNOOCV6El4fluhWPAKM5EL3h2T3HPoO9BAA==",
+            "version": 1,
+            "worker_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255"
+          },
+          "status": "ok"
+        },
+        "start": 60
+      }
+    ],
+    "dataset_id": "c0fcd2c99365aec676d2f88c7981fec9b0d5e7a11d65212baa71cb94295c80ce",
+    "requester_id": "d6a6a0df54e4ace6db4e87a0c3190957d9520ae5decb6e81902b29b60382267e",
+    "teacher_model_id": "506317cc9f40da9dea40e6d14a94910ac6625ae478b5f2d0248cb1bbbb93a6c3",
+    "teacher_release_id": "df231f9b93f6300ba7242da793d457880a416448f00d0e9b914e6a3f7b1e533a",
+    "teacher_worker_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+    "version": "lixyswarm-public-teaching-v1"
+  },
+  "native_production_model_changed": false,
+  "physical_student": "ea914d97caafef310e50385034abae9a50ba86496b0e9cbf4679e6070e4c25b0",
+  "physical_teacher": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+  "schema_version": 1,
+  "scope": "Physical Internet teaching from desktop 1.7B to laptop 0.6B, followed by paired bounded research evaluation",
+  "student": {
+    "accepted_teacher_labels": 61,
+    "base_hash": "f47f71177f32bcd101b7573ec9171e6a57f4f4d31148d38e382306f42996874b",
+    "base_name": "qwen3-0.6b",
+    "baseline": {
+      "historical": {
+        "instructions": [
+          {
+            "answer": "4",
+            "case": "es_addition"
+          },
+          {
+            "answer": "56",
+            "case": "en_multiplication"
+          },
+          {
+            "answer": "The cat is in the house.",
+            "case": "es_translation"
+          },
+          {
+            "answer": "Buenos días.",
+            "case": "en_translation"
+          },
+          {
+            "answer": "conectada",
+            "case": "es_instruction"
+          },
+          {
+            "answer": "ready",
+            "case": "en_instruction"
+          },
+          {
+            "answer": "La capital de Francia es París.",
+            "case": "es_fact"
+          },
+          {
+            "answer": "H₂O",
+            "case": "en_fact"
+          },
+          {
+            "answer": "2, 5, 9",
+            "case": "es_order"
+          },
+          {
+            "answer": "online",
+            "case": "en_extract"
+          },
+          {
+            "answer": "no",
+            "case": "es_public_context"
+          },
+          {
+            "answer": "yes",
+            "case": "en_public_context"
+          },
+          {
+            "answer": "Berlín.",
+            "case": "es_germany"
+          },
+          {
+            "answer": "Rome",
+            "case": "en_italy"
+          },
+          {
+            "answer": "Madrid",
+            "case": "es_spain"
+          },
+          {
+            "answer": "Tokyo",
+            "case": "en_japan"
+          },
+          {
+            "answer": "7",
+            "case": "es_week"
+          },
+          {
+            "answer": "3",
+            "case": "en_triangle"
+          },
+          {
+            "answer": "9",
+            "case": "es_subtraction"
+          },
+          {
+            "answer": "9",
+            "case": "en_division"
+          },
+          {
+            "answer": "Thank you for helping.",
+            "case": "es_translate"
+          },
+          {
+            "answer": "Me gusta aprender.",
+            "case": "en_translate"
+          },
+          {
+            "answer": "Una red descentralizada es una red de computadoras que se distribuye de forma localizada, lo que significa que cada nodo (computadora o dispositivo) puede acceder a la red sin necesidad de un centro de control.",
+            "case": "es_definition"
+          },
+          {
+            "answer": "A decentralized network is a network where data and transactions are processed without a central authority.",
+            "case": "en_definition"
+          },
+          {
+            "answer": "No, si uno se apaga, no se pierde necesariamente el modelo. El modelo puede estar disponible en otro equipo o en otro lugar.",
+            "case": "es_replicas"
+          },
+          {
+            "answer": "If one computer shuts down, the model is still present in the remaining two computers.",
+            "case": "en_replicas"
+          },
+          {
+            "answer": "sí",
+            "case": "es_privacy"
+          },
+          {
+            "answer": "yes",
+            "case": "en_privacy"
+          },
+          {
+            "answer": "Boreal",
+            "case": "es_role"
+          },
+          {
+            "answer": "Boreal",
+            "case": "en_role"
+          },
+          {
+            "answer": "12",
+            "case": "es_json"
+          },
+          {
+            "answer": "12",
+            "case": "en_json"
+          },
+          {
+            "answer": "sí",
+            "case": "es_homogeneous"
+          },
+          {
+            "answer": "yes",
+            "case": "en_homogeneous"
+          },
+          {
+            "answer": "A",
+            "case": "es_compare"
+          },
+          {
+            "answer": "A",
+            "case": "en_compare"
+          },
+          {
+            "answer": "lavanda",
+            "case": "es_context"
+          },
+          {
+            "answer": "amber",
+            "case": "en_context"
+          },
+          {
+            "answer": "Coral",
+            "case": "es_correction"
+          },
+          {
+            "answer": "Coral",
+            "case": "en_correction"
+          }
+        ],
+        "nll": 0.004390485054304371,
+        "quality": [
+          {
+            "answer": "Madrid",
+            "case": "france_es_brief"
+          },
+          {
+            "answer": "Madrid",
+            "case": "france_es_city"
+          },
+          {
+            "answer": "PARIS",
+            "case": "france_es_only"
+          },
+          {
+            "answer": "París",
+            "case": "france_es_question"
+          },
+          {
+            "answer": "Paris",
+            "case": "france_en_brief"
+          },
+          {
+            "answer": "Paris",
+            "case": "france_en_city"
+          },
+          {
+            "answer": "FRANCE",
+            "case": "france_en_only"
+          },
+          {
+            "answer": "Paris",
+            "case": "france_en_question"
+          },
+          {
+            "answer": "Berlín",
+            "case": "germany_es_brief"
+          },
+          {
+            "answer": "Berlín",
+            "case": "germany_es_city"
+          },
+          {
+            "answer": "Berlin",
+            "case": "germany_es_only"
+          },
+          {
+            "answer": "Budapest",
+            "case": "germany_es_question"
+          },
+          {
+            "answer": "Berlin",
+            "case": "germany_en_brief"
+          },
+          {
+            "answer": "Berlin",
+            "case": "germany_en_city"
+          },
+          {
+            "answer": "DEUTLAND",
+            "case": "germany_en_only"
+          },
+          {
+            "answer": "Berlin",
+            "case": "germany_en_question"
+          },
+          {
+            "answer": "Roma.",
+            "case": "italy_es_brief"
+          },
+          {
+            "answer": "Roma",
+            "case": "italy_es_city"
+          },
+          {
+            "answer": "Milano",
+            "case": "italy_es_only"
+          },
+          {
+            "answer": "Roma",
+            "case": "italy_es_question"
+          },
+          {
+            "answer": "Rome",
+            "case": "italy_en_brief"
+          },
+          {
+            "answer": "Rome",
+            "case": "italy_en_city"
+          },
+          {
+            "answer": "ITALY",
+            "case": "italy_en_only"
+          },
+          {
+            "answer": "Rome",
+            "case": "italy_en_question"
+          },
+          {
+            "answer": "Madrid",
+            "case": "spain_es_brief"
+          },
+          {
+            "answer": "Madrid",
+            "case": "spain_es_city"
+          },
+          {
+            "answer": "Madrid",
+            "case": "spain_es_only"
+          },
+          {
+            "answer": "Madrid",
+            "case": "spain_es_question"
+          },
+          {
+            "answer": "Madrid",
+            "case": "spain_en_brief"
+          },
+          {
+            "answer": "Madrid",
+            "case": "spain_en_city"
+          },
+          {
+            "answer": "SPAIN",
+            "case": "spain_en_only"
+          },
+          {
+            "answer": "Madrid",
+            "case": "spain_en_question"
+          },
+          {
+            "answer": "Tokyo",
+            "case": "japan_es_brief"
+          },
+          {
+            "answer": "Tokyo",
+            "case": "japan_es_city"
+          },
+          {
+            "answer": "Tokyo",
+            "case": "japan_es_only"
+          },
+          {
+            "answer": "Tokyo",
+            "case": "japan_es_question"
+          },
+          {
+            "answer": "Tokyo",
+            "case": "japan_en_brief"
+          },
+          {
+            "answer": "Tokyo",
+            "case": "japan_en_city"
+          },
+          {
+            "answer": "JAPAN",
+            "case": "japan_en_only"
+          },
+          {
+            "answer": "Tokyo",
+            "case": "japan_en_question"
+          }
+        ],
+        "tokens": 258
+      },
+      "transfer": {
+        "nll": 0.45853984619492305,
+        "results": [
+          {
+            "answer": "trébol",
+            "index": 0
+          },
+          {
+            "answer": "56",
+            "index": 1
+          },
+          {
+            "answer": "ébano",
+            "index": 2
+          },
+          {
+            "answer": "trébolébano",
+            "index": 3
+          },
+          {
+            "answer": "vidrio",
+            "index": 4
+          },
+          {
+            "answer": "57",
+            "index": 5
+          },
+          {
+            "answer": "brió",
+            "index": 6
+          },
+          {
+            "answer": "vidrio,bronce",
+            "index": 7
+          },
+          {
+            "answer": "zafiro",
+            "index": 8
+          },
+          {
+            "answer": "58",
+            "index": 9
+          },
+          {
+            "answer": "cerebro",
+            "index": 10
+          },
+          {
+            "answer": "zafirocedro",
+            "index": 11
+          },
+          {
+            "answer": "ámbar",
+            "index": 12
+          },
+          {
+            "answer": "59",
+            "index": 13
+          },
+          {
+            "answer": "cobre",
+            "index": 14
+          },
+          {
+            "answer": "ámbrecoⓑ",
+            "index": 15
+          },
+          {
+            "answer": "abeto",
+            "index": 16
+          },
+          {
+            "answer": "60",
+            "index": 17
+          },
+          {
+            "answer": "coral",
+            "index": 18
+          },
+          {
+            "answer": "abeto,coral",
+            "index": 19
+          },
+          {
+            "answer": "cerezo",
+            "index": 20
+          },
+          {
+            "answer": "61",
+            "index": 21
+          },
+          {
+            "answer": "cerezo",
+            "index": 22
+          },
+          {
+            "answer": "cerezo-duna",
+            "index": 23
+          },
+          {
+            "answer": "espiga",
+            "index": 24
+          },
+          {
+            "answer": "62",
+            "index": 25
+          },
+          {
+            "answer": "espiga",
+            "index": 26
+          },
+          {
+            "answer": "daliaespiga",
+            "index": 27
+          },
+          {
+            "answer": "ébano",
+            "index": 28
+          },
+          {
+            "answer": "63",
+            "index": 29
+          },
+          {
+            "answer": "faro",
+            "index": 30
+          },
+          {
+            "answer": "ébano,faro",
+            "index": 31
+          }
+        ],
+        "tokens": 126
+      }
+    },
+    "candidate": {
+      "historical": {
+        "instructions": [
+          {
+            "answer": "4",
+            "case": "es_addition"
+          },
+          {
+            "answer": "56",
+            "case": "en_multiplication"
+          },
+          {
+            "answer": "The cat is in the house.",
+            "case": "es_translation"
+          },
+          {
+            "answer": "Buenos días.",
+            "case": "en_translation"
+          },
+          {
+            "answer": "conectada",
+            "case": "es_instruction"
+          },
+          {
+            "answer": "ready",
+            "case": "en_instruction"
+          },
+          {
+            "answer": "La capital de Francia es París.",
+            "case": "es_fact"
+          },
+          {
+            "answer": "H₂O",
+            "case": "en_fact"
+          },
+          {
+            "answer": "2, 5, 9",
+            "case": "es_order"
+          },
+          {
+            "answer": "online",
+            "case": "en_extract"
+          },
+          {
+            "answer": "no",
+            "case": "es_public_context"
+          },
+          {
+            "answer": "yes",
+            "case": "en_public_context"
+          },
+          {
+            "answer": "Berlín.",
+            "case": "es_germany"
+          },
+          {
+            "answer": "Rome",
+            "case": "en_italy"
+          },
+          {
+            "answer": "Madrid",
+            "case": "es_spain"
+          },
+          {
+            "answer": "Tokyo",
+            "case": "en_japan"
+          },
+          {
+            "answer": "7",
+            "case": "es_week"
+          },
+          {
+            "answer": "3",
+            "case": "en_triangle"
+          },
+          {
+            "answer": "9",
+            "case": "es_subtraction"
+          },
+          {
+            "answer": "9",
+            "case": "en_division"
+          },
+          {
+            "answer": "Thank you for helping.",
+            "case": "es_translate"
+          },
+          {
+            "answer": "Me gusta aprender.",
+            "case": "en_translate"
+          },
+          {
+            "answer": "Una red descentralizada es una red de computadoras que se distribuye de manera espaciada, lo que permite que cada nodo (computadora o dispositivo) tenga acceso a la red sin necesidad de un centro de control.",
+            "case": "es_definition"
+          },
+          {
+            "answer": "A decentralized network is a network where data and services are distributed among multiple nodes, ensuring security and transparency.",
+            "case": "en_definition"
+          },
+          {
+            "answer": "No, si uno se apaga, no se pierde necesariamente el modelo. El modelo puede estar disponible en otro equipo.",
+            "case": "es_replicas"
+          },
+          {
+            "answer": "If one computer shuts down, the model is still present in the remaining two computers, so it is not necessarily lost.",
+            "case": "en_replicas"
+          },
+          {
+            "answer": "sí",
+            "case": "es_privacy"
+          },
+          {
+            "answer": "yes",
+            "case": "en_privacy"
+          },
+          {
+            "answer": "Boreal",
+            "case": "es_role"
+          },
+          {
+            "answer": "Boreal",
+            "case": "en_role"
+          },
+          {
+            "answer": "12",
+            "case": "es_json"
+          },
+          {
+            "answer": "12",
+            "case": "en_json"
+          },
+          {
+            "answer": "sí",
+            "case": "es_homogeneous"
+          },
+          {
+            "answer": "yes",
+            "case": "en_homogeneous"
+          },
+          {
+            "answer": "A",
+            "case": "es_compare"
+          },
+          {
+            "answer": "A",
+            "case": "en_compare"
+          },
+          {
+            "answer": "lavanda",
+            "case": "es_context"
+          },
+          {
+            "answer": "amber",
+            "case": "en_context"
+          },
+          {
+            "answer": "Coral",
+            "case": "es_correction"
+          },
+          {
+            "answer": "Coral",
+            "case": "en_correction"
+          }
+        ],
+        "nll": 0.0025506918205764114,
+        "quality": [
+          {
+            "answer": "Madrid",
+            "case": "france_es_brief"
+          },
+          {
+            "answer": "Madrid",
+            "case": "france_es_city"
+          },
+          {
+            "answer": "PARIS",
+            "case": "france_es_only"
+          },
+          {
+            "answer": "París",
+            "case": "france_es_question"
+          },
+          {
+            "answer": "Paris",
+            "case": "france_en_brief"
+          },
+          {
+            "answer": "Paris",
+            "case": "france_en_city"
+          },
+          {
+            "answer": "FRANCE",
+            "case": "france_en_only"
+          },
+          {
+            "answer": "Paris",
+            "case": "france_en_question"
+          },
+          {
+            "answer": "Berlín",
+            "case": "germany_es_brief"
+          },
+          {
+            "answer": "Berlín",
+            "case": "germany_es_city"
+          },
+          {
+            "answer": "Berlin",
+            "case": "germany_es_only"
+          },
+          {
+            "answer": "Budapest",
+            "case": "germany_es_question"
+          },
+          {
+            "answer": "Berlin",
+            "case": "germany_en_brief"
+          },
+          {
+            "answer": "Berlin",
+            "case": "germany_en_city"
+          },
+          {
+            "answer": "DEUTLAND",
+            "case": "germany_en_only"
+          },
+          {
+            "answer": "Berlin",
+            "case": "germany_en_question"
+          },
+          {
+            "answer": "Roma.",
+            "case": "italy_es_brief"
+          },
+          {
+            "answer": "Roma",
+            "case": "italy_es_city"
+          },
+          {
+            "answer": "ITALY",
+            "case": "italy_es_only"
+          },
+          {
+            "answer": "Roma",
+            "case": "italy_es_question"
+          },
+          {
+            "answer": "Rome",
+            "case": "italy_en_brief"
+          },
+          {
+            "answer": "Rome",
+            "case": "italy_en_city"
+          },
+          {
+            "answer": "ITALY",
+            "case": "italy_en_only"
+          },
+          {
+            "answer": "Rome",
+            "case": "italy_en_question"
+          },
+          {
+            "answer": "Madrid",
+            "case": "spain_es_brief"
+          },
+          {
+            "answer": "Madrid",
+            "case": "spain_es_city"
+          },
+          {
+            "answer": "Madrid",
+            "case": "spain_es_only"
+          },
+          {
+            "answer": "Madrid",
+            "case": "spain_es_question"
+          },
+          {
+            "answer": "Madrid",
+            "case": "spain_en_brief"
+          },
+          {
+            "answer": "Madrid",
+            "case": "spain_en_city"
+          },
+          {
+            "answer": "SPAIN",
+            "case": "spain_en_only"
+          },
+          {
+            "answer": "Madrid",
+            "case": "spain_en_question"
+          },
+          {
+            "answer": "Tokyo",
+            "case": "japan_es_brief"
+          },
+          {
+            "answer": "Tokyo",
+            "case": "japan_es_city"
+          },
+          {
+            "answer": "Tokyo",
+            "case": "japan_es_only"
+          },
+          {
+            "answer": "Tokyo",
+            "case": "japan_es_question"
+          },
+          {
+            "answer": "Tokyo",
+            "case": "japan_en_brief"
+          },
+          {
+            "answer": "Tokyo",
+            "case": "japan_en_city"
+          },
+          {
+            "answer": "JAPAN",
+            "case": "japan_en_only"
+          },
+          {
+            "answer": "Tokyo",
+            "case": "japan_en_question"
+          }
+        ],
+        "tokens": 258
+      },
+      "transfer": {
+        "nll": 0.3821938470203941,
+        "results": [
+          {
+            "answer": "trébol",
+            "index": 0
+          },
+          {
+            "answer": "56",
+            "index": 1
+          },
+          {
+            "answer": "ébano",
+            "index": 2
+          },
+          {
+            "answer": "trébolébano",
+            "index": 3
+          },
+          {
+            "answer": "vidrio",
+            "index": 4
+          },
+          {
+            "answer": "57",
+            "index": 5
+          },
+          {
+            "answer": "blando",
+            "index": 6
+          },
+          {
+            "answer": "vidrio,bronce",
+            "index": 7
+          },
+          {
+            "answer": "zafiro",
+            "index": 8
+          },
+          {
+            "answer": "58",
+            "index": 9
+          },
+          {
+            "answer": "cerebro",
+            "index": 10
+          },
+          {
+            "answer": "zafirocedro",
+            "index": 11
+          },
+          {
+            "answer": "ámbar",
+            "index": 12
+          },
+          {
+            "answer": "59",
+            "index": 13
+          },
+          {
+            "answer": "cobalto",
+            "index": 14
+          },
+          {
+            "answer": "ámbar,cobalto",
+            "index": 15
+          },
+          {
+            "answer": "abeto",
+            "index": 16
+          },
+          {
+            "answer": "60",
+            "index": 17
+          },
+          {
+            "answer": "coral",
+            "index": 18
+          },
+          {
+            "answer": "abeto,coral",
+            "index": 19
+          },
+          {
+            "answer": "cerezo",
+            "index": 20
+          },
+          {
+            "answer": "61",
+            "index": 21
+          },
+          {
+            "answer": "cerezo",
+            "index": 22
+          },
+          {
+            "answer": "cerezo,duna",
+            "index": 23
+          },
+          {
+            "answer": "espiga",
+            "index": 24
+          },
+          {
+            "answer": "62",
+            "index": 25
+          },
+          {
+            "answer": "espiga",
+            "index": 26
+          },
+          {
+            "answer": "dalía, espiga",
+            "index": 27
+          },
+          {
+            "answer": "ébano",
+            "index": 28
+          },
+          {
+            "answer": "63",
+            "index": 29
+          },
+          {
+            "answer": "faro",
+            "index": 30
+          },
+          {
+            "answer": "ébano,faro",
+            "index": 31
+          }
+        ],
+        "tokens": 126
+      }
+    },
+    "candidate_adapter_bytes": 4599712,
+    "candidate_adapter_id": "a813bb2c5e899caa3cb8569a63c688af4f606a88883bcadf1c4307f57cb7df08",
+    "candidate_weights_retained": false,
+    "controls_and_native_progress_unchanged": true,
+    "eligible_for_research_transfer": false,
+    "factual_verdict": {
+      "baseline_passed": 31,
+      "candidate_passed": 31,
+      "case_digest": "5514ae9f1ca84f9afe7311eee76ae7adf694ddf2d2419e246f5bf931a3371c19",
+      "eligible_for_promotion": false,
+      "regressions": [],
+      "scope": "Factual paraphrase preservation only; not a general conversation score",
+      "total": 40
+    },
+    "incorporated_tokens": 0,
+    "instruction_verdict": {
+      "baseline_passed": 35,
+      "candidate_passed": 35,
+      "case_digest": "584a1363bdada696e8b757e8b478e05328096ba922a4f8d6903609b8ba46cfd2",
+      "eligible_for_promotion": false,
+      "regressions": [],
+      "scope": "Elementary public instruction/context screening; not broad reasoning certification",
+      "total": 40
+    },
+    "lessons_id": "f4a96e51b7c607568465b84ee2ec2dca2d290baa8950823be5d6658935874d13",
+    "limitations": [
+      "Deterministic public labels also admit an oracle; no advantage over oracle-labelled SFT claimed",
+      "Only synthetic Spanish instruction transfer; no broad language or scaling claim",
+      "Tensor child is supervised, but full filesystem isolation remains pending",
+      "Research student is not registered, selected, replicated or chat-approved by this experiment"
+    ],
+    "losses": [
+      {
+        "retention_loss": -2.818212108124385e-09,
+        "step": 1,
+        "supervised_loss": 0.008010394385792097
+      },
+      {
+        "retention_loss": 0.0010718811536207795,
+        "step": 2,
+        "supervised_loss": 0.03212953657202888
+      },
+      {
+        "retention_loss": 0.001071881502866745,
+        "step": 3,
+        "supervised_loss": 1.374956752290018
+      },
+      {
+        "retention_loss": 0.0005786462570540607,
+        "step": 4,
+        "supervised_loss": 0.30704357590875586
+      },
+      {
+        "retention_loss": 0.0007593542104586959,
+        "step": 5,
+        "supervised_loss": 0.026374822604702787
+      },
+      {
+        "retention_loss": 0.0016266959719359875,
+        "step": 6,
+        "supervised_loss": 0.011329657700116513
+      },
+      {
+        "retention_loss": 0.0016329139471054077,
+        "step": 7,
+        "supervised_loss": 0.16735593675002747
+      },
+      {
+        "retention_loss": 0.001015257672406733,
+        "step": 8,
+        "supervised_loss": 0.023126744429432355
+      },
+      {
+        "retention_loss": 0.001002507982775569,
+        "step": 9,
+        "supervised_loss": 0.3508236225940209
+      },
+      {
+        "retention_loss": 0.0007716890540905297,
+        "step": 10,
+        "supervised_loss": 0.17739675191093254
+      },
+      {
+        "retention_loss": 0.00148226716555655,
+        "step": 11,
+        "supervised_loss": 1.0217337517060514
+      },
+      {
+        "retention_loss": 0.0013113166205585003,
+        "step": 12,
+        "supervised_loss": 0.05535704620706384
+      },
+      {
+        "retention_loss": 0.0012342961272224784,
+        "step": 13,
+        "supervised_loss": 0.12746155608254092
+      },
+      {
+        "retention_loss": 0.002009368734434247,
+        "step": 14,
+        "supervised_loss": 0.8900817757976257
+      },
+      {
+        "retention_loss": 0.0007953168242238462,
+        "step": 15,
+        "supervised_loss": 0.0012715985545722877
+      },
+      {
+        "retention_loss": 0.0006392445066012442,
+        "step": 16,
+        "supervised_loss": 0.0007327245567694263
+      }
+    ],
+    "native_coordinator_cycles_added": 0,
+    "peak_gpu_allocated_bytes": 1659389440,
+    "physical_student": "ea914d97caafef310e50385034abae9a50ba86496b0e9cbf4679e6070e4c25b0",
+    "policy": {
+      "accumulation": 4,
+      "clip_norm": 1,
+      "dataset_id": "c0fcd2c99365aec676d2f88c7981fec9b0d5e7a11d65212baa71cb94295c80ce",
+      "existing_factual_and_instruction_gates_required": true,
+      "factual_gate_id": "5514ae9f1ca84f9afe7311eee76ae7adf694ddf2d2419e246f5bf931a3371c19",
+      "instruction_gate_id": "584a1363bdada696e8b757e8b478e05328096ba922a4f8d6903609b8ba46cfd2",
+      "learning_rate": 5e-05,
+      "minimum_labels": 48,
+      "minimum_new_correct": 4,
+      "minimum_relative_nll_improvement": 0.01,
+      "preserve_all_correct_heldout_answers": true,
+      "retention": "exact-small-parent-public-anchor-probabilities",
+      "retention_weight": 1,
+      "seed": 20261014,
+      "steps": 16,
+      "version": 1
+    },
+    "policy_id": "33afd2141a02f2723ea87ae48ae4e1d21a28171ce09e12508b9c8e7fc9375d84",
+    "presented_answer_tokens": 250,
+    "private_inputs": false,
+    "published": false,
+    "rejected_teacher_labels": [
+      {
+        "index": 4,
+        "reason": "teacher_label_failed_public_oracle"
+      },
+      {
+        "index": 8,
+        "reason": "teacher_label_failed_public_oracle"
+      },
+      {
+        "index": 12,
+        "reason": "teacher_label_failed_public_oracle"
+      }
+    ],
+    "scope": "Bounded public text-label transfer from accepted 1.7B to research 0.6B; no parameter mixing or publication",
+    "seconds": 33.83573829199304,
+    "student_parent_adapter_id": "3ff34a673bc4d8d83c0ba33286acfd2a1ee318c8ffbafce16caba345beb0b67f",
+    "student_parent_was_chat_approved": false,
+    "success": true,
+    "teacher": {
+      "requester_id": "d6a6a0df54e4ace6db4e87a0c3190957d9520ae5decb6e81902b29b60382267e",
+      "teacher_model_id": "506317cc9f40da9dea40e6d14a94910ac6625ae478b5f2d0248cb1bbbb93a6c3",
+      "teacher_release_id": "df231f9b93f6300ba7242da793d457880a416448f00d0e9b914e6a3f7b1e533a",
+      "teacher_worker_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255"
+    },
+    "training_presentations": 64,
+    "training_unique_examples": 61,
+    "transfer_verdict": {
+      "baseline_passed": 22,
+      "candidate_passed": 25,
+      "eligible": false,
+      "nll_improved": true,
+      "regressions": [],
+      "total": 32
+    }
+  },
+  "transport_and_evaluation_verified": true,
+  "verification": {
+    "driver_error": "KeyError in final summary print after report was durable; corrected and regression-tested separately",
+    "driver_exit_status": 1,
+    "eligible_for_research_transfer": false,
+    "existing_report_reverified": true,
+    "factual_verdict": {
+      "baseline_passed": 31,
+      "candidate_passed": 31,
+      "case_digest": "5514ae9f1ca84f9afe7311eee76ae7adf694ddf2d2419e246f5bf931a3371c19",
+      "eligible_for_promotion": false,
+      "regressions": [],
+      "scope": "Factual paraphrase preservation only; not a general conversation score",
+      "total": 40
+    },
+    "instruction_verdict": {
+      "baseline_passed": 35,
+      "candidate_passed": 35,
+      "case_digest": "584a1363bdada696e8b757e8b478e05328096ba922a4f8d6903609b8ba46cfd2",
+      "eligible_for_promotion": false,
+      "regressions": [],
+      "scope": "Elementary public instruction/context screening; not broad reasoning certification",
+      "total": 40
+    },
+    "model_recomputed": false,
+    "rejected_candidate_absent": true,
+    "success": true,
+    "transfer_verdict": {
+      "baseline_passed": 22,
+      "candidate_passed": 25,
+      "eligible": false,
+      "nll_improved": true,
+      "regressions": [],
+      "total": 32
+    }
+  }
+}
