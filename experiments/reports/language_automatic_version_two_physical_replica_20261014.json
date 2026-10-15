@@ -1,0 +1,35 @@
+{
+  "acquired_objects": {
+    "33fed1203d8f56be8f06cffa6f84898e5c96aaefea11909fb11a5c90b68c3e05": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+    "506317cc9f40da9dea40e6d14a94910ac6625ae478b5f2d0248cb1bbbb93a6c3": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+    "c3372ddca9b236f2b23f4b6d668a6521733b306726eb81c246e97fa5ed10b57e": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255"
+  },
+  "active_expert_changed": true,
+  "history_failures": [],
+  "metadata_providers": [
+    "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255"
+  ],
+  "model_id": "506317cc9f40da9dea40e6d14a94910ac6625ae478b5f2d0248cb1bbbb93a6c3",
+  "physical_receiver": "ea914d97caafef310e50385034abae9a50ba86496b0e9cbf4679e6070e4c25b0",
+  "providers": [
+    "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255"
+  ],
+  "release_id": "df231f9b93f6300ba7242da793d457880a416448f00d0e9b914e6a3f7b1e533a",
+  "resource_permissions_changed": false,
+  "routes": [
+    {
+      "encrypted": true,
+      "host": "187.189.64.24",
+      "node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+      "relay_host": "31.97.9.54",
+      "transport": "relay"
+    }
+  ],
+  "selection": "selected",
+  "sequence": 2,
+  "verified_at": 1792024731.2078469,
+  "sha256_verified": true,
+  "scope": "Existing physical laptop automatically acquired and selected sequence-two adaptation, descriptor and evaluation from the main physical node over public LSP; no new or independent third replica",
+  "source_revision": "83ad43f99213ab4cd4880d90efb7de638c84207b",
+  "runtime_version": "0.4.0a12"
+}

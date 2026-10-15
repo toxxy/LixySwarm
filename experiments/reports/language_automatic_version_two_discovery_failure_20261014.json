@@ -8,8 +8,8 @@
   "visitor_is_extra_physical_worker": false,
   "worker_id": "ea914d97caafef310e50385034abae9a50ba86496b0e9cbf4679e6070e4c25b0",
   "failure_stage": "provider_discovery",
-  "seed_advertised_entries": 100,
   "laptop_present_in_seed_exchange": false,
   "timeout_s": 45,
-  "retry_success_claimed": false
+  "retry_success_claimed": false,
+  "fresh_address_book_entries": 100
 }
