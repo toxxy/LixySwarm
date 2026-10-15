@@ -2,7 +2,7 @@
 
 LixySwarm is a research prototype for bio-inspired distributed language intelligence. Each physical computer is an ant; it can host expert models. The research components include transformer experts, persistent memory (Matriarca/elephant), an echolocation router (dolphin), and the persistent LSP v3 peer protocol.
 
-**Current status (2026-10-14):** controlled pilot on two physical computers and a public relay, with evaluated distributed learning of a byte reference model, signed model replication, a desktop app and language chat over public Internet. Broad language learning, biological-layer integration, untrusted public compute and mass deployment remain in progress.
+**Current status (2026-10-14):** controlled pilot on two physical computers and a public relay, with evaluated distributed learning of a byte reference model, a first evaluated language adapter update, signed model replication, a desktop app and language chat over public Internet. Broad language learning, biological-layer integration, untrusted public compute and mass deployment remain in progress.
 
 ## Paper
 
@@ -12,11 +12,13 @@ The manuscript's experimental numbers are historical results for a specific chec
 
 ## Plan for the complete vision
 
-[PLAN_VISION.md](PLAN_VISION.md) defines the delivery stages for continuous Internet operation, a simple desktop app, real distributed learning, persistent shared knowledge, hardware-adaptive contribution, useful biological layers and bounded autonomy. Each stage has a concrete acceptance test. The next milestone joins gradient computation, candidate evaluation, model publication and acquisition by another physical node.
+[PLAN_VISION.md](PLAN_VISION.md) defines the delivery stages for continuous Internet operation, a simple desktop app, real distributed learning, persistent shared knowledge, hardware-adaptive contribution, useful biological layers and bounded autonomy. Each stage has a concrete acceptance test. The first evaluated language update now combines contributions from both physical PCs, and its laptop replica answered over Internet with the producer's node service stopped. Continuous cycles, clean GPU installation and the remaining acceptance gates are still pending.
 
 [VISION_PROGRESS.md](VISION_PROGRESS.md) tracks the active goal and its remaining acceptance gates. The Linux participant service connects without importing PyTorch, keeps machine-local identity outside the checkout and publishes signed per-node status over LSP. Separate supervised workers perform computation within local resource permissions.
 
 The [desktop app](desktop/README.md) includes connection controls, persistent contribution settings and per-user installation. The [public Linux A10 preview](https://github.com/toxxy/LixySwarm/releases/tag/v0.4.0a10) connects chat to the known pilot expert over public Internet, stores conversation history encrypted locally and prepares evaluated expert versions from multiple providers. Complete clean-machine GPU preparation, open collaboration and the remaining platform gates are still pending.
+
+The controlled public-data gradient probe (`python -m experiments.language_gradient_probe`) saves signed contributions before downloading their artifacts. To recover an interrupted run, repeat its original arguments with `--resume` and the same directory outside the checkout. Recovery verifies the requester, worker, model head, dataset and shard before reusing work or continuing downloads. A changed head or invalid receipt stops recovery; it does not silently recalculate the contribution. Previous attempt reports are retained. Recovered runs are excluded from uncontended throughput comparisons, and this tool does not publish models automatically.
 
 ## Implemented system
 

@@ -1,0 +1,69 @@
+{
+  "scope": "Controlled signed-gradient recovery on the existing physical laptop after both requester and worker service restart; no new model promoted and no throughput claim",
+  "success": true,
+  "controlled_transfer_interruption_after_signed_receipt": true,
+  "worker_service_restarted": true,
+  "requester_process_restarted": true,
+  "retrained_after_resume": false,
+  "base_name": "qwen3-1.7b",
+  "release_id": "4e478620e27f3e28041a23d8e942d5fa45ca8c04ab04c8f7d5aae83db6fba594",
+  "model_id": "8e526788ef461c8ac20f2c1e9c510258b1862d8520b83d84e8ca2cce73a38e8d",
+  "public_internet": true,
+  "encrypted": true,
+  "transport": "relay",
+  "physical_worker": "ea914d97caafef310e50385034abae9a50ba86496b0e9cbf4679e6070e4c25b0",
+  "visitor_is_extra_physical_worker": false,
+  "tokens": 49,
+  "start": 0,
+  "count": 8,
+  "gradient_id": "b2b58c22e0387140f90d160e0cdf63ce4e7312ed5048d083b7cc980291183fde",
+  "gradient_bytes": 6434888,
+  "gradient_sha256_verified": true,
+  "signed_result": {
+    "error": "",
+    "finished_at": 1792022892.777676,
+    "job_id": "1908729db0c6230ec273e23526d59df48227d27abbd018887210b2c1839d924e",
+    "output": {
+      "adapter_id": "8e526788ef461c8ac20f2c1e9c510258b1862d8520b83d84e8ca2cce73a38e8d",
+      "base_hash": "dfff7c96c5ca45c3aa7e6b68fb0650e103ed2c39a7abc912f19b55fdba819cdc",
+      "count": 8,
+      "dataset_id": "24eb8b9e9c268021ededa84a171a4b6804cbe58263edbb2b2944f49dd4de64a5",
+      "gradient": {
+        "artifact_id": "b2b58c22e0387140f90d160e0cdf63ce4e7312ed5048d083b7cc980291183fde",
+        "created_at": 1792022892.7768147,
+        "kind": "gradient",
+        "media_type": "application/octet-stream",
+        "size": 6434888
+      },
+      "gradient_bytes": 6434888,
+      "gradient_id": "b2b58c22e0387140f90d160e0cdf63ce4e7312ed5048d083b7cc980291183fde",
+      "loss": 1.2178051636816218,
+      "retention_loss": 0.004038387909531593,
+      "start": 0,
+      "tokens": 49
+    },
+    "receipt": {
+      "finished_at": 1792022892.777676,
+      "job_id": "1908729db0c6230ec273e23526d59df48227d27abbd018887210b2c1839d924e",
+      "requester_node_id": "53cea6456aced3a5a31ad24505aaa47d88e1827d1e7976592c91b54fc0e8980f",
+      "result_digest": "c9616edb2798121766cad759fbabc4a14849921e73f4dbc63165888fa6cf7ab9",
+      "signature": "+EFE3B9Xwt1s4bULI0NUvi1c42jk/SBjnwSj0LnChnXg5Lr//dbFR1AWgUI78jyQwsestnTovNGXw/WRwo9BDw==",
+      "version": 1,
+      "worker_node_id": "ea914d97caafef310e50385034abae9a50ba86496b0e9cbf4679e6070e4c25b0"
+    },
+    "status": "ok"
+  },
+  "reused_contributions": 1,
+  "eligible_for_uncontended_scaling_comparison": false,
+  "model_promoted": false,
+  "controls_unchanged": true,
+  "selected_model_preserved": true,
+  "training_counters": {
+    "before": 2,
+    "after_calculation": 3,
+    "after_worker_restart": 3,
+    "after_recovery": 3
+  },
+  "started_at": 1792022872.4996297,
+  "finished_at": 1792022935.1516783
+}
