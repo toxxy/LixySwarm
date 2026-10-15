@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import os
 import re
+import shlex
 import subprocess
 import sys
 import time
@@ -91,7 +92,47 @@ class NodeController:
         settings.save(self.directory)
         if self.snapshot()["running"]:
             return
+        if self._start_user_service():
+            return
         self._launch_node()
+
+    def _start_user_service(self):
+        """Keep the installed service's ordering and recovery dependencies."""
+        if sys.platform != 'linux':
+            return False
+        config = Path(os.environ.get('XDG_CONFIG_HOME', str(Path.home()/'.config')))
+        unit = config/'systemd/user/lixyswarm-node.service'
+        if not unit.is_file() or unit.is_symlink() or unit.stat().st_size > 64*1024:
+            return False
+        section = ''; commands = []
+        for raw in unit.read_text().splitlines():
+            line = raw.strip()
+            if line.startswith('['): section = line
+            elif section == '[Service]' and line.startswith('ExecStart='):
+                commands.append(line.removeprefix('ExecStart='))
+        if len(commands) != 1:
+            return False
+        try:
+            command = shlex.split(commands[0])
+            if command.count('--state-dir') != 1 or command.count('--port') != 1:
+                return False
+            state = command[command.index('--state-dir')+1].replace('%%', '%')
+            port = int(command[command.index('--port')+1])
+        except (ValueError, IndexError):
+            return False
+        if (Path(state).resolve() != self.directory.resolve() or port != self.port
+                or not ('--node' in command or any(Path(arg).name == 'client_daemon.py' for arg in command))):
+            return False
+        try:
+            result = subprocess.run(['systemctl', '--user', 'show', 'lixyswarm-node.service',
+                '-p', 'FragmentPath', '--value'], capture_output=True, text=True, timeout=5)
+            if result.returncode or Path(result.stdout.strip()) != unit.resolve():
+                raise RuntimeError('No se pudo consultar el servicio instalado de este nodo')
+            subprocess.run(['systemctl', '--user', '--no-block', 'start', 'lixyswarm-node.service'],
+                check=True, capture_output=True, text=True, timeout=5)
+        except (OSError, subprocess.SubprocessError) as error:
+            raise RuntimeError('No se pudo iniciar el servicio instalado de este nodo') from error
+        return True
 
     def _launch_node(self, executable=None):
         self.directory.mkdir(parents=True, exist_ok=True, mode=0o700)

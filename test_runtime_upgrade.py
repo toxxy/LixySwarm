@@ -79,3 +79,47 @@ def test_persistent_upgrade_retargets_installed_binary_and_restarts(tmp_path, mo
     assert f'"{installed}" "--node" "--state-dir" "{tmp_path / "state"}"' in unit
     assert calls[-1] == ['systemctl', '--user', 'restart', 'lixyswarm-node.service']
     assert not list((tmp_path / 'config/systemd/user').glob('.lixyswarm-node-*'))
+
+
+def installed_start_fixture(tmp_path, monkeypatch):
+    import desktop.backend as backend
+    from src.network.client_state import ClientSettings
+    monkeypatch.setattr(backend.sys, 'platform', 'linux')
+    config = tmp_path/'config'; monkeypatch.setenv('XDG_CONFIG_HOME', str(config))
+    unit = config/'systemd/user/lixyswarm-node.service'; unit.parent.mkdir(parents=True)
+    directory = tmp_path/'state'; directory.mkdir()
+    unit.write_text(f'[Service]\nExecStart="/installed/LixySwarm" "--node" "--state-dir" "{directory}" "--port" "7338"\n')
+    guard = unit.parent/'lixyswarm-node.service.d/90-recovery.conf'; guard.parent.mkdir()
+    guard.write_text('[Unit]\nRequires=recovery.service\nAfter=recovery.service\n')
+    controller = NodeController(directory)
+    monkeypatch.setattr(controller, 'snapshot', lambda: {'running': False})
+    events = []
+    monkeypatch.setattr(controller, '_launch_node', lambda: events.append('unmanaged'))
+    return backend, controller, ClientSettings(), unit, guard, events
+
+
+def test_connect_uses_owned_installed_service_and_preserves_pending_recovery(tmp_path, monkeypatch):
+    backend, controller, settings, unit, guard, events = installed_start_fixture(tmp_path, monkeypatch)
+    before = {p: p.read_bytes() for p in [unit, guard]}
+    def run(command, **kw):
+        events.append(command)
+        return SimpleNamespace(returncode=0, stdout=str(unit)+'\n')
+    monkeypatch.setattr(backend.subprocess, 'run', run)
+    controller.start(settings)
+    assert events[-1] == ['systemctl', '--user', '--no-block', 'start', 'lixyswarm-node.service']
+    assert 'unmanaged' not in events and {p: p.read_bytes() for p in before} == before
+
+
+def test_failed_owned_service_never_falls_back_to_a_competing_process(tmp_path, monkeypatch):
+    backend, controller, settings, unit, guard, events = installed_start_fixture(tmp_path, monkeypatch)
+    monkeypatch.setattr(backend.subprocess, 'run', lambda *a, **kw: SimpleNamespace(returncode=1, stdout=''))
+    with pytest.raises(RuntimeError, match='servicio instalado'): controller.start(settings)
+    assert events == []
+
+
+def test_another_state_directorys_service_does_not_capture_this_node(tmp_path, monkeypatch):
+    backend, controller, settings, unit, guard, events = installed_start_fixture(tmp_path, monkeypatch)
+    unit.write_text(unit.read_text().replace(str(controller.directory), str(tmp_path/'other')))
+    monkeypatch.setattr(backend.subprocess, 'run', lambda *a, **kw: pytest.fail('Another node service was started'))
+    controller.start(settings)
+    assert events == ['unmanaged']
