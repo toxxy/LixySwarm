@@ -64,6 +64,7 @@ def run(args):
         with lease,NodeStateLock(directory):
             value=ComputeSupervisor().run([str(executable),'--self-test'],{'device':'cpu'},execution,
                 allowed=allowed,ram_gb=2,sandbox=CPUComputeSandbox((package,),(),output))
+        report['engine_self_test']=value
         if (value.get('success') is not True or value.get('frozen') is not True or value.get('cuda_runtime') is not False
                 or value.get('candidate_evaluated') is not True or value.get('candidate_signed_or_promoted') is not False
                 or value.get('personal_state_loaded') is not False or value.get('job_process_signing_keys_loaded') is not False):
