@@ -83,6 +83,11 @@ def main():
     elif action=='candidate':
         from src.learning.language_candidate_job import run
         print(json.dumps(run(request),ensure_ascii=False,allow_nan=False),flush=True)
+    elif action=='public-math-baseline-v1':
+        # Offline package qualification only. No network service exposes this
+        # fixed-corpus action, optimizer or publisher.
+        from src.learning.public_math_job import run
+        print(json.dumps(run(request),ensure_ascii=False,allow_nan=False),flush=True)
     else:raise ValueError('Unknown locally approved language operation')
 
 
