@@ -1,0 +1,66 @@
+{
+  "schema": "lixyswarm-cold-gpu-storage-preflight-v1",
+  "timestamp": 1792088062.4115589,
+  "desktop": {
+    "node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+    "heads": {
+      "qwen3-0.6b": "a43dba6caab4c61a1a74482e3e4ec7b4f0c4a5f4e9764805056dddfaf84c9da0",
+      "qwen3-1.7b": "df231f9b93f6300ba7242da793d457880a416448f00d0e9b914e6a3f7b1e533a"
+    },
+    "managed_bytes": 6056775210,
+    "research_bytes": 332136468,
+    "reclaimable_public_weight_bytes": 5590719840,
+    "retained_managed_after_weight_eviction": 466055370,
+    "physical_quota_bytes": 8589934592,
+    "fresh_client_quota_bytes": 8589934592,
+    "would_fit_after_verified_public_weight_eviction": false,
+    "required_large_family_chain_bytes": 4094322093
+  },
+  "laptop": {
+    "node_id": "ea914d97caafef310e50385034abae9a50ba86496b0e9cbf4679e6070e4c25b0",
+    "heads": {
+      "qwen3-0.6b": "a43dba6caab4c61a1a74482e3e4ec7b4f0c4a5f4e9764805056dddfaf84c9da0",
+      "qwen3-1.7b": "df231f9b93f6300ba7242da793d457880a416448f00d0e9b914e6a3f7b1e533a"
+    },
+    "managed_bytes": 6863977782,
+    "research_bytes": 19823998,
+    "reclaimable_public_weight_bytes": 5601754288,
+    "retained_managed_after_weight_eviction": 1262223494,
+    "physical_quota_bytes": 10737418240,
+    "fresh_client_quota_bytes": 8589934592,
+    "would_fit_after_verified_public_weight_eviction": true,
+    "required_large_family_chain_bytes": 4094322093
+  },
+  "published_weight_ids_verified_on_both": {
+    "f47f71177f32bcd101b7573ec9171e6a57f4f4d31148d38e382306f42996874b": 1503300328,
+    "3ff34a673bc4d8d83c0ba33286acfd2a1ee318c8ffbafce16caba345beb0b67f": 4599712,
+    "169ad53ec313c3a34b06c0809216e4fc072cce444a5d4ff2b59690d064130ed5": 3441185608,
+    "912becff8d60672aa8628ef08c05898d9adf17c2ad4ae3caf99b065622fdeff9": 622329984,
+    "badef4394af180ab75ca25f0d9d47f2406b92809b53b5845ab65d451cf9c4b3c": 6434736,
+    "8e526788ef461c8ac20f2c1e9c510258b1862d8520b83d84e8ca2cce73a38e8d": 6434736,
+    "506317cc9f40da9dea40e6d14a94910ac6625ae478b5f2d0248cb1bbbb93a6c3": 6434736
+  },
+  "desktop_provider_transfer_manifests_present": true,
+  "unaccounted_external_hardlinks": 0,
+  "estimated_fresh_stage_peak_bytes": 8141173748,
+  "estimate_is_measured_install_peak": false,
+  "planned_fresh_client_quota_bytes": 8589934592,
+  "planned_laptop_combined_quota_check": 9871982084,
+  "scope": {
+    "read_only": true,
+    "data_deleted": false,
+    "node_services_changed": false,
+    "weights_transferred_by_administration": false,
+    "clean_native_preparation_proven": false,
+    "new_training_contribution_proven": false
+  },
+  "required_before_reprovisioning": [
+    "freeze and lock old physical node",
+    "revalidate provider copies and exact cache link inventory",
+    "provide resumable native preparation and automatic recovery of the original node",
+    "retain identity, private memory, controls and learning ledgers",
+    "fetch all model bytes through encrypted public LSP",
+    "enforce aggregate retained plus fresh storage quota",
+    "verify new native public gradient receipt after preparation"
+  ]
+}

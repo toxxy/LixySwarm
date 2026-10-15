@@ -199,6 +199,15 @@
     },
     "cause_of_early_http_eof": "not_isolated",
     "recovery": "preserved_partial_and_bounded_32MiB_response_ranges",
-    "recovery_complete": false
+    "recovery_complete": false,
+    "recovery_first_part": {
+      "verified_bytes": 1073741824,
+      "sha256": "04cc14e887fd3979d8327a0cd873ce77cd824e5b67981f38a616900e2f8e678f",
+      "resumed_from_bytes": 796917760,
+      "bounded_http_ranges_observed": 14,
+      "all_observed_responses_206_at_most_32MiB": true,
+      "second_part_in_progress": true,
+      "whole_install_proven": false
+    }
   }
 }
