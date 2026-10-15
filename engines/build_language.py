@@ -16,7 +16,10 @@ def main():
     parser=argparse.ArgumentParser();parser.add_argument('--device',choices=['cpu','cuda'],required=True)
     parser.add_argument('--output',type=Path,required=True)
     parser.add_argument('--batch-policy',action='store_true');parser.add_argument('--half-policy',action='store_true')
-    parser.add_argument('--math-policy',action='store_true');args=parser.parse_args()
+    parser.add_argument('--math-policy',action='store_true')
+    parser.add_argument('--eager-only',action='store_true',help='Exclude the optional Triton compiler from the fixed eager CUDA worker')
+    args=parser.parse_args()
+    if args.eager_only and args.device!='cuda':raise ValueError('The eager-only size profile is for the CUDA worker')
     if args.math_policy:args.half_policy=True
     if args.half_policy:args.batch_policy=True
     if args.batch_policy and args.device!='cuda':raise ValueError('The batch training profile requires CUDA')
@@ -43,6 +46,7 @@ def main():
     for module in ['PySide6','torchvision','torchaudio','matplotlib','pandas','scipy','sklearn','IPython','tensorboard',
                    'src.network','src.matriarca','src.swarm','desktop']:
         command+=['--exclude-module',module]
+    if args.eager_only:command+=['--exclude-module','triton']
     command.append(str(repo/'engines/language_main.py'))
     environment=dict(os.environ);environment.pop('PYTHONPATH',None)
     subprocess.run(command,cwd=repo,env=environment,check=True)
@@ -60,6 +64,12 @@ def main():
     if args.half_policy:manifest['operations']+=['language.gradient.v4','language.candidate.v3']
     if args.math_policy:manifest['operations']+=['language.gradient.v5','language.candidate.v4']
     (package/'engine-package.json').write_text(json.dumps(manifest,indent=2)+'\n')
+    receipt={'device':args.device,'eager_only':args.eager_only,'excluded_optional_compilers':['triton'] if args.eager_only else [],
+        'source_commit':subprocess.check_output(['git','rev-parse','HEAD'],cwd=repo,text=True).strip(),
+        'manifest_sha256':hashlib.sha256((package/'engine-package.json').read_bytes()).hexdigest(),
+        'logical_payload_bytes':sum(row['bytes'] for row in files),
+        'regular_payload_bytes':sum(row['bytes'] for row in files if not (package/row['path']).is_symlink())}
+    (output/'build-receipt.json').write_text(json.dumps(receipt,indent=2)+'\n')
     print(json.dumps({'files':len(files),'bytes':sum(row['bytes'] for row in files)}))
 
 
