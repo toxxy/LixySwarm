@@ -65,11 +65,34 @@
   "diagnostic_report_bytes": 124513,
   "diagnostic_report_id": "f2c1e86ff266c2fd506a98372a7fcec74ab23724f5c4569ca377d605ed0cb275",
   "evidence_recovered_without_new_generation": true,
+  "independent_frozen_reader": {
+    "generation_performed": false,
+    "original_numerical_source_archive_sha256": "7d274c0ca016c266e8161fc880479ab6914b8df166bddaa6772d50a99527e8c6",
+    "reader_revision": "f1a6b5bb039137c6dfe2b51707dc2d9b6ac8aaf5",
+    "reader_source_archive_sha256": "38b0b0df27d9915f252422b96c04513b18469b766c46641d5604943e536610cd",
+    "reproduced_same_audit": true,
+    "tensor_engine_loaded": false
+  },
   "initial_supervisor_success": false,
   "native_model_selected": false,
   "original_child_receipt_captured": false,
   "original_specialist_rejection_retained": true,
   "peak_gpu_allocated_bytes": 4879607808,
+  "posthoc_diagnostic": {
+    "invalid_parent_cases": 51,
+    "oracle_correct": 71,
+    "oracle_generation_seconds": 262.151661876007,
+    "outcome_groups": {
+      "both_correct": 0,
+      "neither_correct": 39,
+      "repair_only_correct": 5,
+      "specialist_only_correct": 7
+    },
+    "posthoc_only": true,
+    "scope": "Diagnostic upper bound for selecting the specialist only when repair fails and specialist succeeds; not another qualified policy or prospective score",
+    "trained_or_deployed_policy": false,
+    "uses_reference_answers": true
+  },
   "protocol_id": "c8a87d122d8db8a44f52e0f5d8b17caa3fcb36dac3a7367fd3113bfe00b20664",
   "schema_version": 1,
   "scope": "Separate prospective offline component on new public TEST rows 128:256; saved evidence audited after report-serialization failure; not native learning, neural routing or a promotion",
