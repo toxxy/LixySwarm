@@ -32,8 +32,8 @@ def run(request):
     from .public_conversation import public_corpus
     from .weights_io import digest_file
     from .language_retention_job import training_sets
-    for filename,identifier in BASES['qwen3-1.7b'].items():
-        if digest_file(Path(request['base_directory'])/filename)[0]!=identifier:raise ValueError('Finite-step public base mismatch')
+    for filename,expected_digest in BASES['qwen3-1.7b'].items():
+        if digest_file(Path(request['base_directory'])/filename)[0]!=expected_digest:raise ValueError('Finite-step public base mismatch')
     parent_digest=digest_file(request['adapter_file'])
     if parent_digest[0]!=PARENT_MODEL:raise ValueError('Finite-step parent mismatch')
     for row in request['contributions']:
