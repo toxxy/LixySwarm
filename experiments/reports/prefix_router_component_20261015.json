@@ -1,0 +1,424 @@
+{
+  "all_memory_choices_identical": true,
+  "ci": {
+    "desktop": {
+      "kernel_skipped": 6,
+      "passed": 594,
+      "run_id": 38812939490,
+      "source_revision": "176da8386de9d448306ccece6e74b0a8e4207b53",
+      "status": "success"
+    },
+    "language_cpu": {
+      "passed": 133,
+      "run_id": 38813652156,
+      "source_revision": "94a4ab7ffa49d590ed0c619fb00a307726697ed7",
+      "status": "success"
+    },
+    "reference_cpu": {
+      "run_id": 38812939423,
+      "source_revision": "176da8386de9d448306ccece6e74b0a8e4207b53",
+      "status": "success"
+    }
+  },
+  "commitment_id": "e18fe3fe84e4c607711c08fd081b16836e2a942770ffb8aa7db4daf4bdc13609",
+  "committed_at": 1792101085.7121499,
+  "counterfactual_expert_generations": 128,
+  "feature_extraction_seconds": 5.824765329016373,
+  "feature_space_id": "c23fc9d44f28b5b972a9cf81cbd268041ee9cb8b4fe22e55fe066a9045dee5a1",
+  "frozen_reader": {
+    "archive_sha256": "3f4dabe96ece6e260c16884211ff27f8e265a5b9cfd41ae466d0c9411af828c7",
+    "code_only": true,
+    "source_revision": "94a4ab7ffa49d590ed0c619fb00a307726697ed7"
+  },
+  "independent_recovery": {
+    "comparisons": {
+      "dolphin": {
+        "choices_identical": true,
+        "learned_state_id": "dbfc3d804ade1b45e63a07347818d72ba3a317d05b1f9dd701ab3e55a150c6d4",
+        "maximum_probability_difference": 2.682209014892578e-07,
+        "maximum_support_bank_difference": 0.0,
+        "state_unchanged": true
+      },
+      "public": {
+        "choices_identical": true,
+        "learned_state_id": "dbb6eb8ad4ef05496d1ccf7981f25fba238900315820110130550341be831c99",
+        "maximum_probability_difference": 1.0132789611816406e-06,
+        "maximum_support_bank_difference": 4.76837158203125e-07,
+        "state_unchanged": true
+      },
+      "shuffled": {
+        "choices_identical": true,
+        "learned_state_id": "3103a3758b1450d6d4d89048107249379cb94f0495b7f9b881025c1ca77f09af",
+        "maximum_probability_difference": 8.344650268554688e-07,
+        "maximum_support_bank_difference": 4.76837158203125e-07,
+        "state_unchanged": true
+      },
+      "zero": {
+        "choices_identical": true,
+        "learned_state_id": "66e5b1aa8f8432946fb1bafbe4a2f9e650c16c91e2dc973aff669688c8de7235",
+        "maximum_probability_difference": 4.76837158203125e-07,
+        "maximum_support_bank_difference": 0.0,
+        "state_unchanged": true
+      }
+    },
+    "independent_cpu_process": true,
+    "language_model_loaded": false,
+    "model_promoted": false,
+    "native_controls_unchanged": true,
+    "native_cycles_added": 0,
+    "new_optimizer_updates": 0,
+    "optimizer_states": {
+      "dolphin": {
+        "parameters_with_moments": 40,
+        "steps": 256
+      },
+      "public": {
+        "parameters_with_moments": 18,
+        "steps": 256
+      },
+      "shuffled": {
+        "parameters_with_moments": 18,
+        "steps": 256
+      },
+      "zero": {
+        "parameters_with_moments": 18,
+        "steps": 256
+      }
+    },
+    "physical_pid": 3134618,
+    "probability_absolute_tolerance": 1e-06,
+    "probability_relative_tolerance": 1e-05,
+    "protocol_id": "a94a96241501ca0132ca3344f94b03b5f2de1fb42ce89c4e5f014f8c6c4fff89",
+    "source_diagnostic_id": "af0731cd280b4a0686d254e233292c75dbb2ce31342e391043ea1787cef58102",
+    "success": true,
+    "support_bank_absolute_tolerance": 2e-06,
+    "verification": {
+      "component_screen_passed": false,
+      "examples": 128,
+      "native_promotion_authorized": false,
+      "oracle_correct_diagnostic_only": 62,
+      "original_evaluation_opened": false,
+      "other_arms_are_counterfactual": true,
+      "parent_correct": 49,
+      "primary_actual_generations": 128,
+      "specialist_correct": 26,
+      "variants": {
+        "dolphin": {
+          "correct": 44,
+          "newly_correct": 4,
+          "regressions": 9,
+          "selected_output_tokens": 18985,
+          "specialist_choices": 44
+        },
+        "public": {
+          "correct": 43,
+          "newly_correct": 2,
+          "regressions": 8,
+          "selected_output_tokens": 18924,
+          "specialist_choices": 33
+        },
+        "shuffled": {
+          "correct": 43,
+          "newly_correct": 2,
+          "regressions": 8,
+          "selected_output_tokens": 18924,
+          "specialist_choices": 33
+        },
+        "zero": {
+          "correct": 43,
+          "newly_correct": 2,
+          "regressions": 8,
+          "selected_output_tokens": 18924,
+          "specialist_choices": 33
+        }
+      }
+    }
+  },
+  "learned_artifact_manifest": {
+    "dolphin.safetensors": {
+      "bytes": 679232,
+      "sha256": "6af2ee75b8bf17157424fdd93885f1d59e5965d759296ceabcc1860168ad410a"
+    },
+    "optimizer-state.pt": {
+      "bytes": 1449419,
+      "sha256": "66a430ce20a7b767b1f6d6a5cc5c56bcbc31a6a951539c85abdeb38b5378f589"
+    },
+    "prediction-commitment.json": {
+      "bytes": 46251,
+      "sha256": "ac8099b88f1e66471117e1460800f8346d464b17e10f20efc4ba650c42531c42"
+    },
+    "prefix-features.safetensors": {
+      "bytes": 2115208,
+      "sha256": "f7ce4b104d2d1da6e99d49344968be325706a58eb1a8ea828d5c991e1a2451c8"
+    },
+    "public.safetensors": {
+      "bytes": 679232,
+      "sha256": "7d35a090bb7073dc666d40cb63080ea169c77e6c888ab2d552292283f3e05d98"
+    },
+    "shuffled.safetensors": {
+      "bytes": 679232,
+      "sha256": "eabe1fe814c2f1bd0c2bca12b3074b84dd2d33877d228fb6f8dc0c5e94193f3a"
+    },
+    "zero.safetensors": {
+      "bytes": 679232,
+      "sha256": "c101f565dc88370f97692c3a739a1d17bf31691104428eb876217484fcb7754f"
+    }
+  },
+  "maximum_public_zero_probability_difference": 0.09758633375167847,
+  "posthoc_format_diagnostic": {
+    "invalid_parent_format_fallback_correct_retrospective": 59,
+    "parent_at_384_limit": 0,
+    "parent_valid_format": 67,
+    "scope": "After-the-fact diagnostic only; no prospective policy, promotion or speedup claim",
+    "specialist_at_384_limit": 20,
+    "specialist_unique_correct": 13,
+    "specialist_unique_correct_when_parent_invalid_format": 10,
+    "specialist_valid_format": 33
+  },
+  "primary_expert_generations": 128,
+  "protocol_id": "a94a96241501ca0132ca3344f94b03b5f2de1fb42ce89c4e5f014f8c6c4fff89",
+  "schema": "lixyswarm-prefix-router-component-v1",
+  "scope": "Research on one desktop using calibration outcomes previously collected on two PCs; 128 new queries outside this selector fit, not original EVAL, native chat or learning speedup",
+  "timestamp": 1792101943.034865,
+  "training": {
+    "fit": {
+      "dolphin_parameter_count": 165056,
+      "dolphin_state_id": "d8f2fd17f54c3d9f2c7f34259d749178142b15700db85ae9003392777d2b99ff",
+      "initial_dolphin_state_id": "fca49a2157b146c6cd9d6a39ea5d7b61f37c57808954a18bea4b84efa551ae37",
+      "memory_scope": "public-training-only",
+      "phase1": {
+        "first_batch_loss": 0.851406991481781,
+        "last_batch_loss": 0.5058310031890869,
+        "steps": 256
+      },
+      "phase2": {
+        "public": {
+          "first_batch_loss": 0.41780614852905273,
+          "last_batch_loss": 0.29692766070365906,
+          "steps": 256
+        },
+        "shuffled": {
+          "first_batch_loss": 0.4178146719932556,
+          "last_batch_loss": 0.2969204783439636,
+          "steps": 256
+        },
+        "zero": {
+          "first_batch_loss": 0.4176991879940033,
+          "last_batch_loss": 0.2967112362384796,
+          "steps": 256
+        }
+      },
+      "prediction_rows_used_for_fit": false,
+      "query_indices": [
+        1,
+        2,
+        3,
+        5,
+        6,
+        7,
+        9,
+        10,
+        11,
+        13,
+        14,
+        15,
+        17,
+        18,
+        19,
+        21,
+        22,
+        23,
+        25,
+        26,
+        27,
+        29,
+        30,
+        31,
+        33,
+        34,
+        35,
+        37,
+        38,
+        39,
+        41,
+        42,
+        43,
+        45,
+        46,
+        47,
+        49,
+        50,
+        51,
+        53,
+        54,
+        55,
+        57,
+        58,
+        59,
+        61,
+        62,
+        63,
+        65,
+        66,
+        67,
+        69,
+        70,
+        71,
+        73,
+        74,
+        75,
+        77,
+        78,
+        79,
+        81,
+        82,
+        83,
+        85,
+        86,
+        87,
+        89,
+        90,
+        91,
+        93,
+        94,
+        95,
+        97,
+        98,
+        99,
+        101,
+        102,
+        103,
+        105,
+        106,
+        107,
+        109,
+        110,
+        111,
+        113,
+        114,
+        115,
+        117,
+        118,
+        119,
+        121,
+        122,
+        123,
+        125,
+        126,
+        127
+      ],
+      "support_indices": [
+        0,
+        4,
+        8,
+        12,
+        16,
+        20,
+        24,
+        28,
+        32,
+        36,
+        40,
+        44,
+        48,
+        52,
+        56,
+        60,
+        64,
+        68,
+        72,
+        76,
+        80,
+        84,
+        88,
+        92,
+        96,
+        100,
+        104,
+        108,
+        112,
+        116,
+        120,
+        124
+      ]
+    },
+    "learned_state_bytes": 6327806,
+    "model_promoted": false,
+    "native_controls_unchanged": true,
+    "native_cycles_added": 0,
+    "numerical_source_files": {
+      "src/learning/language_adapter.py": "f9a563248d2cddb5db21f852ddde69a391fbe119cb23e638133ca86cc2b566e0",
+      "src/learning/language_dense_selector.py": "cbff463638709f3df8496e5b47671e3cb48930b291ec6924347c6eaabc820b23",
+      "src/learning/language_outcome_selector.py": "731ea26dad10bc3bc90cc41da546f36ff379134ed10b91b3c879f5087f991ec2",
+      "src/learning/language_outcomes.py": "1bb080a22620616df023bb3c48e9e6165c41fbd0118b5f24ece1a7619d4f8749",
+      "src/learning/language_prefix_router.py": "4ab01d74f5eaa5829c19909e725a46d9dd201925916d138f75ce4904942a3500",
+      "src/learning/language_prefix_router_job.py": "65eb90e734214f62a485eaf17f1a517ad61bfc1f7f5048f6e6d6497e9c171bed",
+      "src/learning/language_selector.py": "f69cb1910eadd634f667ea8ae0dda759402f74c1486d54d99493229a5c963351",
+      "src/learning/language_specialist.py": "bc7735fc31f0b78c8a9bff44452514f33391f212993d8ff0211c1dc97234b765",
+      "src/learning/language_streamed_float.py": "5137a83ca24e8b75c6a78715055433a5e0fe516599a043ee07e32286123d1487",
+      "src/learning/public_math.py": "e17f8351cce69280c6ccedb1d850eb71fc2dbbe72ed8583b246543c4ded9853a",
+      "src/matriarca/matriarca.py": "f77f83b62546f32c93aa00808601ba659e6728523319af57b18aa5dd19c832c3"
+    },
+    "original_evaluation_opened": false,
+    "peak_gpu_allocated_bytes": 4925523968,
+    "physical_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+    "physical_pid": 3134618,
+    "protocol_id": "a94a96241501ca0132ca3344f94b03b5f2de1fb42ce89c4e5f014f8c6c4fff89",
+    "report_bytes": 216202,
+    "report_id": "af0731cd280b4a0686d254e233292c75dbb2ce31342e391043ea1787cef58102",
+    "scope": "New TRAIN queries outside selector fit; component comparison only, not original held-out quality, native chat or speedup",
+    "seconds": 510.2671656690072,
+    "source_revision": "176da8386de9d448306ccece6e74b0a8e4207b53",
+    "success": true,
+    "verification": {
+      "component_screen_passed": false,
+      "examples": 128,
+      "native_promotion_authorized": false,
+      "oracle_correct_diagnostic_only": 62,
+      "original_evaluation_opened": false,
+      "other_arms_are_counterfactual": true,
+      "parent_correct": 49,
+      "primary_actual_generations": 128,
+      "specialist_correct": 26,
+      "variants": {
+        "dolphin": {
+          "correct": 44,
+          "newly_correct": 4,
+          "regressions": 9,
+          "selected_output_tokens": 18985,
+          "specialist_choices": 44
+        },
+        "public": {
+          "correct": 43,
+          "newly_correct": 2,
+          "regressions": 8,
+          "selected_output_tokens": 18924,
+          "specialist_choices": 33
+        },
+        "shuffled": {
+          "correct": 43,
+          "newly_correct": 2,
+          "regressions": 8,
+          "selected_output_tokens": 18924,
+          "specialist_choices": 33
+        },
+        "zero": {
+          "correct": 43,
+          "newly_correct": 2,
+          "regressions": 8,
+          "selected_output_tokens": 18924,
+          "specialist_choices": 33
+        }
+      }
+    }
+  },
+  "verdict": {
+    "component_screen_passed": false,
+    "extra_physical_participant": false,
+    "model_promoted": false,
+    "native_learning_cycles_added": 0,
+    "original_quality_gates_evaluated": false,
+    "prefix_representation_alone_resolved_quality": false,
+    "public_memory_utility_demonstrated": false
+  }
+}
