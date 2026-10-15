@@ -1,0 +1,31 @@
+{
+  "success": true,
+  "internet": true,
+  "language_preparation_permission_gate": true,
+  "chat_first_answer": "Una red descentralizada es una red de computadoras que no est\u00e1 controlada por un solo punto central.",
+  "chat_ui_verified": true,
+  "chat_remote_context_opt_in": true,
+  "chat_history_survives_reopen": true,
+  "chat_history_encrypted": true,
+  "chat_receipt": {
+    "version": 1,
+    "job_id": "6beeaac33e93d28a30c721f92f5988921137e5c7063fe5abb1ae225c4c81c809",
+    "worker_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+    "requester_node_id": "69780a381354baaac6117a61aed3a87403a4b11daa92283c22e5734b694f6765",
+    "result_digest": "164c97d56f2a74f34bd6a399788bab5d597cde51aa0634626d7bf9a3384c200b",
+    "finished_at": 1792029688.6134443,
+    "signature": "xHtGU2MXbNlkSr2EoI4OlDj6izoarRoHNwhizizj3AVN7MsEIVQOHgJUzj/ZEU1aZcfJLQTSKQ6KHURlVRAhDQ=="
+  },
+  "chat_cancellation_verified": true,
+  "connection_s": 0.72,
+  "controls_confirmed": true,
+  "pause_keeps_connection": true,
+  "reconnect_keeps_identity": true,
+  "calculation_engines_loaded": false,
+  "source_revision": "fe96743c027de1a20bd6f4366205b5d17d820e81",
+  "runtime_version": "0.4.0a13",
+  "physical_pc": "desktop",
+  "scope": "Native A13 app and upgraded physical A13 provider; Internet chat, optional remote context, encrypted history and cancellation; not broad language quality",
+  "production_services_upgraded_before_test": true,
+  "test_client_is_additional_physical_pc": false
+}

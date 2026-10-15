@@ -1,0 +1,98 @@
+{
+  "success": true,
+  "source_revision": "fe96743c027de1a20bd6f4366205b5d17d820e81",
+  "scope": "Rolling native physical service upgrade after Internet chat self-tests; identical operator controls, identity, expert and durable progress; strict continuity window restarts",
+  "native_apps": {
+    "desktop": {
+      "bundle_digest": "7aafb5f6bfec",
+      "controls_preserved": true,
+      "expert_preserved": true,
+      "follow_state": "current",
+      "identity_preserved": true,
+      "new_model_promoted": false,
+      "node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+      "old_pid": 2809149,
+      "pid": 2844516,
+      "progress_preserved": true,
+      "runtime_version": "0.4.0a13",
+      "selected_model_id": "506317cc9f40da9dea40e6d14a94910ac6625ae478b5f2d0248cb1bbbb93a6c3",
+      "source_revision": "fe96743",
+      "success": true,
+      "timestamp": 1792029520.040646,
+      "training_active": 0
+    },
+    "laptop": {
+      "bundle_digest": "5a80cf87788e",
+      "controls_preserved": true,
+      "expert_preserved": true,
+      "follow_state": "current",
+      "identity_preserved": true,
+      "new_model_promoted": false,
+      "node_id": "ea914d97caafef310e50385034abae9a50ba86496b0e9cbf4679e6070e4c25b0",
+      "old_pid": 460668,
+      "pid": 480023,
+      "progress_preserved": true,
+      "runtime_version": "0.4.0a13",
+      "selected_model_id": "506317cc9f40da9dea40e6d14a94910ac6625ae478b5f2d0248cb1bbbb93a6c3",
+      "source_revision": "fe96743",
+      "success": true,
+      "timestamp": 1792029560.7108974,
+      "training_active": 0
+    }
+  },
+  "public_app_release_unchanged": "0.4.0a12",
+  "publisher_key_remained_on_desktop": true,
+  "new_model_promoted": false,
+  "newly_incorporated_tokens": 0,
+  "prior_progress": {
+    "accepted_sequence": 2,
+    "round": 5,
+    "cursor": 96,
+    "rejections": 3,
+    "generation": 0,
+    "status": "no_improvement"
+  },
+  "ci_url": "https://github.com/toxxy/LixySwarm/actions/runs/38668278502",
+  "ci_conclusion": "success",
+  "continuity_after_deployment": {
+    "healthy": true,
+    "failures": 12,
+    "consecutive_healthy_seconds": 240.68,
+    "longest_healthy_seconds": 4342.93,
+    "satisfied": false,
+    "process_instances_required": true,
+    "relay_redundancy_verified": false,
+    "nodes": [
+      {
+        "healthy": true,
+        "node_id": "28c218f34cd6b90e99955346711921d94b54852e4b8f29fb840207388f73444e",
+        "process_instance_id": "64d0a89e0e33450e0cf839a372ec9f52",
+        "sequence": 5386,
+        "state": "connected",
+        "timestamp_ms": 1792029806613,
+        "uptime_reset_or_clock_jump": false,
+        "uptime_s": 4612.1
+      },
+      {
+        "healthy": true,
+        "node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+        "process_instance_id": "df8e5678f30b02c2d3e45432f98f6114",
+        "sequence": 6218,
+        "state": "connected",
+        "timestamp_ms": 1792029799168,
+        "uptime_reset_or_clock_jump": false,
+        "uptime_s": 291.5
+      },
+      {
+        "healthy": true,
+        "node_id": "ea914d97caafef310e50385034abae9a50ba86496b0e9cbf4679e6070e4c25b0",
+        "process_instance_id": "2d534b65791eec524f239d87a9864bc1",
+        "sequence": 6024,
+        "state": "connected",
+        "timestamp_ms": 1792029808169,
+        "uptime_reset_or_clock_jump": false,
+        "uptime_s": 264.2
+      }
+    ]
+  }
+}

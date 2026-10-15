@@ -1,0 +1,139 @@
+{
+  "artifact_id": "ba18195315fba17bbab28b50b0b60cfb6924a777fe7297a90354d6577610ab0b",
+  "comparison": {
+    "encoded": {
+      "encoded_data_bytes": 7555824,
+      "median_seconds": 27.10454464799841
+    },
+    "raw": {
+      "encoded_data_bytes": 8579852,
+      "median_seconds": 30.079203925997717
+    }
+  },
+  "controls_unchanged": true,
+  "finished_at": 1792029721.1236842,
+  "gpu_work_requested": false,
+  "helper_id": "e4ad975b29a5354876fd053b935436d70869ef10c355b855943f5c25c13bcf4e",
+  "helper_is_additional_physical_pc": false,
+  "mbps": 2.5,
+  "scope": "Four fresh transfers from the installed native A13 producer, same immutable public gradient and receive budget; concurrent bounded chat self-test; no training speedup or accepted learning claim",
+  "started_at": 1792029600.826592,
+  "success": true,
+  "trials": [
+    {
+      "artifact_bytes": 6434888,
+      "chunks": 66,
+      "encoded_data_bytes": 8579852,
+      "encodings": [
+        "raw"
+      ],
+      "mode": "raw",
+      "provider_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+      "route": {
+        "encrypted": true,
+        "relay_host": "31.97.9.54",
+        "transport": "relay"
+      },
+      "seconds": 30.401338361989474,
+      "sha256_verified": true
+    },
+    {
+      "artifact_bytes": 6434888,
+      "chunks": 66,
+      "encoded_data_bytes": 7555824,
+      "encodings": [
+        "byteplane4-zlib-v1"
+      ],
+      "mode": "encoded",
+      "provider_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+      "route": {
+        "encrypted": true,
+        "relay_host": "31.97.9.54",
+        "transport": "relay"
+      },
+      "seconds": 27.18280573199445,
+      "sha256_verified": true
+    },
+    {
+      "artifact_bytes": 6434888,
+      "chunks": 66,
+      "encoded_data_bytes": 7555824,
+      "encodings": [
+        "byteplane4-zlib-v1"
+      ],
+      "mode": "encoded",
+      "provider_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+      "route": {
+        "encrypted": true,
+        "relay_host": "31.97.9.54",
+        "transport": "relay"
+      },
+      "seconds": 27.02628356400237,
+      "sha256_verified": true
+    },
+    {
+      "artifact_bytes": 6434888,
+      "chunks": 66,
+      "encoded_data_bytes": 8579852,
+      "encodings": [
+        "raw"
+      ],
+      "mode": "raw",
+      "provider_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+      "route": {
+        "encrypted": true,
+        "relay_host": "31.97.9.54",
+        "transport": "relay"
+      },
+      "seconds": 29.75706949000596,
+      "sha256_verified": true
+    }
+  ],
+  "source_revision": "fe96743c027de1a20bd6f4366205b5d17d820e81",
+  "physical_provider_role": "existing desktop native service",
+  "provider_runtime_version": "0.4.0a13",
+  "provider_bundle_digest": "7aafb5f6bfec",
+  "physical_receiver_role": "auxiliary requester on existing laptop",
+  "new_model_promoted": false,
+  "newly_incorporated_tokens": 0,
+  "public_internet": true,
+  "vpn_for_administration_only": true,
+  "concurrent_native_chat_self_test": true,
+  "original_signed_contribution": {
+    "error": "",
+    "finished_at": 1792027295.3060613,
+    "job_id": "60b2fad357cbe8a1d7e6975aa0279444d0f11a9b3a10c3ed273314e9783e07af",
+    "output": {
+      "adapter_id": "506317cc9f40da9dea40e6d14a94910ac6625ae478b5f2d0248cb1bbbb93a6c3",
+      "base_hash": "dfff7c96c5ca45c3aa7e6b68fb0650e103ed2c39a7abc912f19b55fdba819cdc",
+      "count": 8,
+      "dataset_id": "24eb8b9e9c268021ededa84a171a4b6804cbe58263edbb2b2944f49dd4de64a5",
+      "gradient": {
+        "artifact_id": "ba18195315fba17bbab28b50b0b60cfb6924a777fe7297a90354d6577610ab0b",
+        "created_at": 1792027295.3041306,
+        "kind": "gradient",
+        "media_type": "application/octet-stream",
+        "size": 6434888
+      },
+      "gradient_bytes": 6434888,
+      "gradient_id": "ba18195315fba17bbab28b50b0b60cfb6924a777fe7297a90354d6577610ab0b",
+      "loss": 1.2143749029539115,
+      "retention_loss": 0.00354458624497056,
+      "start": 0,
+      "tokens": 49
+    },
+    "receipt": {
+      "finished_at": 1792027295.3060613,
+      "job_id": "60b2fad357cbe8a1d7e6975aa0279444d0f11a9b3a10c3ed273314e9783e07af",
+      "requester_node_id": "53cea6456aced3a5a31ad24505aaa47d88e1827d1e7976592c91b54fc0e8980f",
+      "result_digest": "94ff10142b4214422c38264dccf20f51af2bc25d42fc89d37dfb54876f36dc84",
+      "signature": "r7Lytas7dkRP+q53Ua28bcMrUeNCEvzUE3mBHAPfY5l2s8QoSfXnVcVduDLUPCX7m7sMpUWJUePVaF1bOsZpBg==",
+      "version": 1,
+      "worker_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255"
+    },
+    "status": "ok"
+  },
+  "data_byte_metric_scope": "Base64 data field only; excludes work envelopes, signatures, encryption and TCP/IP overhead; bandwidth limiter also charges 2048 bytes per chunk",
+  "compressed_data_reduction_fraction": 0.11935264151409608,
+  "observed_transfer_time_reduction_fraction": 0.09889421559552258
+}
