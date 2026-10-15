@@ -1,0 +1,28 @@
+{
+  "success": true,
+  "internet": true,
+  "language_preparation_permission_gate": true,
+  "chat_first_answer": "Una red descentralizada es una red de computadoras que no está controlada por un solo punto central.",
+  "chat_ui_verified": true,
+  "chat_remote_context_opt_in": true,
+  "chat_history_survives_reopen": true,
+  "chat_history_encrypted": true,
+  "chat_receipt": {
+    "version": 1,
+    "job_id": "cea70815ad34af941261208c4947addbe0f8b54efd95867093a6a2dfb4dd44f4",
+    "worker_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+    "requester_node_id": "04f0eb638d268c37f4e26908ddd0cdbf001b8b9a9685fa54c3d1c4c1af99e80d",
+    "result_digest": "304ecae36bc3bc87f3354428f771d9f2a174f04f03dbfc484772a1c427e32087",
+    "finished_at": 1792023614.7881258,
+    "signature": "KuGunF9Acf7Yg10niu5eu3GOa/P5ytu2yepCPs7FOlLFSI73fYjSzX63a5xpBW1ErJ3cH25zVhBJhPiYgwaDAg=="
+  },
+  "chat_cancellation_verified": true,
+  "connection_s": 0.73,
+  "controls_confirmed": true,
+  "pause_keeps_connection": true,
+  "reconnect_keeps_identity": true,
+  "calculation_engines_loaded": false,
+  "source_revision": "8ab9728",
+  "runtime_version": "0.4.0a11",
+  "scope": "Locally built Linux native app: public Internet chat, controls, encrypted local history, opt-in context and cancellation; no clean GPU installation claim"
+}

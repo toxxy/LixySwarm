@@ -1,0 +1,840 @@
+{
+  "scope": "One bounded language round inside the native physical node service; rejected on paired held-out NLL; durable cursor verified after real service restart",
+  "success": true,
+  "candidate_accepted": false,
+  "new_model_promoted": false,
+  "producer_service_physically_powered_off": false,
+  "source_revision": "8ab97284686b07c7692a7e9b0f75872b5d32285d",
+  "coordinator_runtime": "0.4.0a11",
+  "remote_worker_runtime": "0.4.0a9",
+  "requester_is_existing_physical_worker": true,
+  "requester_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+  "public_internet_remote_work": true,
+  "encrypted_remote_route": true,
+  "transport": "relay",
+  "relay_public_address": "31.97.9.54",
+  "base_name": "qwen3-1.7b",
+  "retained_release_id": "4e478620e27f3e28041a23d8e942d5fa45ca8c04ab04c8f7d5aae83db6fba594",
+  "retained_model_id": "8e526788ef461c8ac20f2c1e9c510258b1862d8520b83d84e8ca2cce73a38e8d",
+  "dataset_id": "24eb8b9e9c268021ededa84a171a4b6804cbe58263edbb2b2944f49dd4de64a5",
+  "plan": [
+    {
+      "count": 8,
+      "start": 16,
+      "worker_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255"
+    },
+    {
+      "count": 8,
+      "start": 24,
+      "worker_id": "ea914d97caafef310e50385034abae9a50ba86496b0e9cbf4679e6070e4c25b0"
+    }
+  ],
+  "proof": {
+    "physical_workers": [
+      "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+      "ea914d97caafef310e50385034abae9a50ba86496b0e9cbf4679e6070e4c25b0"
+    ],
+    "tokens": 86
+  },
+  "candidate_result": {
+    "job_id": "4aa4fe4577aefa05e0e7dd53fa72c13383d53fc71587f4914a086042265148a4",
+    "status": "ok",
+    "output": {
+      "evaluation": {
+        "adapter_id": "76d1ca2eb75662ecc0fc446716be499a7cd6fc5adccab0fbd90ec9535cdc0be2",
+        "base_hash": "dfff7c96c5ca45c3aa7e6b68fb0650e103ed2c39a7abc912f19b55fdba819cdc",
+        "base_name": "qwen3-1.7b",
+        "baseline_nll": 0.00040111959138678424,
+        "candidate_nll": 0.0004180186905486163,
+        "contributions": [
+          {
+            "error": "",
+            "finished_at": 1792023661.0196419,
+            "job_id": "933730f0bfb217ea852db85d1d7bb03f09230bd593129fa9659418646abc98e2",
+            "output": {
+              "adapter_id": "8e526788ef461c8ac20f2c1e9c510258b1862d8520b83d84e8ca2cce73a38e8d",
+              "base_hash": "dfff7c96c5ca45c3aa7e6b68fb0650e103ed2c39a7abc912f19b55fdba819cdc",
+              "count": 8,
+              "dataset_id": "24eb8b9e9c268021ededa84a171a4b6804cbe58263edbb2b2944f49dd4de64a5",
+              "gradient": {
+                "artifact_id": "ec777d410fc5864c9152055349db6ba85d57906adafab72ca3aeaefd2e9165f7",
+                "created_at": 1792023661.018942,
+                "kind": "gradient",
+                "media_type": "application/octet-stream",
+                "size": 6434888
+              },
+              "gradient_bytes": 6434888,
+              "gradient_id": "ec777d410fc5864c9152055349db6ba85d57906adafab72ca3aeaefd2e9165f7",
+              "loss": 1.365057343605258e-05,
+              "retention_loss": 0.002030713949352503,
+              "start": 16,
+              "tokens": 48
+            },
+            "receipt": {
+              "finished_at": 1792023661.0196419,
+              "job_id": "933730f0bfb217ea852db85d1d7bb03f09230bd593129fa9659418646abc98e2",
+              "requester_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+              "result_digest": "d688e4bc5a763faf8551d6de7144ddcb8330ffb4eb735d465fb9b96078695172",
+              "signature": "vRq5A5bhrgYjCIrLnJ0uCF2ko4ESIKvyDcDWyCEWobGcfqAUCD2p67BnYjJkjaWqQOCmBaGRIGVUfGnp6A+yCw==",
+              "version": 1,
+              "worker_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255"
+            },
+            "status": "ok"
+          },
+          {
+            "error": "",
+            "finished_at": 1792023664.9054809,
+            "job_id": "00468136395092342da053a3f238d12600750a59410bbdb6598473703c6391ea",
+            "output": {
+              "adapter_id": "8e526788ef461c8ac20f2c1e9c510258b1862d8520b83d84e8ca2cce73a38e8d",
+              "base_hash": "dfff7c96c5ca45c3aa7e6b68fb0650e103ed2c39a7abc912f19b55fdba819cdc",
+              "count": 8,
+              "dataset_id": "24eb8b9e9c268021ededa84a171a4b6804cbe58263edbb2b2944f49dd4de64a5",
+              "gradient": {
+                "artifact_id": "e3f3d672349d1f86feebbd6c6f8c2e760e4d699e2966496c738b2343dcf7fe54",
+                "created_at": 1792023664.9045277,
+                "kind": "gradient",
+                "media_type": "application/octet-stream",
+                "size": 6434888
+              },
+              "gradient_bytes": 6434888,
+              "gradient_id": "e3f3d672349d1f86feebbd6c6f8c2e760e4d699e2966496c738b2343dcf7fe54",
+              "loss": 1.4589653435885632,
+              "retention_loss": 0.004038387909531593,
+              "start": 24,
+              "tokens": 38
+            },
+            "receipt": {
+              "finished_at": 1792023664.9054809,
+              "job_id": "00468136395092342da053a3f238d12600750a59410bbdb6598473703c6391ea",
+              "requester_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+              "result_digest": "9901f14c2c7eb4c1fcea119e7c3477ed510050b124b8a75757b6c20fbdca2fcb",
+              "signature": "frlJMrdqLhFizaOl31li+/omkte25Hr5hdC0FelHGA1ggOWMdjmQlc/HC9o2JkFGkXl7GgsfOncJdrEihFtcDw==",
+              "version": 1,
+              "worker_node_id": "ea914d97caafef310e50385034abae9a50ba86496b0e9cbf4679e6070e4c25b0"
+            },
+            "status": "ok"
+          }
+        ],
+        "dataset_id": "24eb8b9e9c268021ededa84a171a4b6804cbe58263edbb2b2944f49dd4de64a5",
+        "gate_id": "8b1163d42606b34937f70442e08f81eb024ea8c8099f970e0e4b1827e75f41c7",
+        "instruction_after": [
+          {
+            "answer": "4",
+            "case": "es_addition"
+          },
+          {
+            "answer": "56",
+            "case": "en_multiplication"
+          },
+          {
+            "answer": "The cat is in the house.",
+            "case": "es_translation"
+          },
+          {
+            "answer": "Buenos días.",
+            "case": "en_translation"
+          },
+          {
+            "answer": "conectada",
+            "case": "es_instruction"
+          },
+          {
+            "answer": "ready",
+            "case": "en_instruction"
+          },
+          {
+            "answer": "París",
+            "case": "es_fact"
+          },
+          {
+            "answer": "H2O",
+            "case": "en_fact"
+          },
+          {
+            "answer": "2, 5, 9",
+            "case": "es_order"
+          },
+          {
+            "answer": "online",
+            "case": "en_extract"
+          },
+          {
+            "answer": "no",
+            "case": "es_public_context"
+          },
+          {
+            "answer": "yes",
+            "case": "en_public_context"
+          },
+          {
+            "answer": "Berlín",
+            "case": "es_germany"
+          },
+          {
+            "answer": "Rome",
+            "case": "en_italy"
+          },
+          {
+            "answer": "Madrid",
+            "case": "es_spain"
+          },
+          {
+            "answer": "Tokyo",
+            "case": "en_japan"
+          },
+          {
+            "answer": "7",
+            "case": "es_week"
+          },
+          {
+            "answer": "3",
+            "case": "en_triangle"
+          },
+          {
+            "answer": "9",
+            "case": "es_subtraction"
+          },
+          {
+            "answer": "9",
+            "case": "en_division"
+          },
+          {
+            "answer": "Thank you for helping me.",
+            "case": "es_translate"
+          },
+          {
+            "answer": "Me gusta aprender.",
+            "case": "en_translate"
+          },
+          {
+            "answer": "Una red descentralizada es una red de computadoras que no depende de un único nodo central.",
+            "case": "es_definition"
+          },
+          {
+            "answer": "A decentralized network is a system where control and data are distributed among many participants, eliminating a central authority.",
+            "case": "en_definition"
+          },
+          {
+            "answer": "No, no se pierde el modelo. La red sigue funcionando con el modelo en los otros equipos.",
+            "case": "es_replicas"
+          },
+          {
+            "answer": "No, the model is not necessarily lost. The model is still present in the other two computers.",
+            "case": "en_replicas"
+          },
+          {
+            "answer": "no",
+            "case": "es_privacy"
+          },
+          {
+            "answer": "no",
+            "case": "en_privacy"
+          },
+          {
+            "answer": "Boreal",
+            "case": "es_role"
+          },
+          {
+            "answer": "Boreal",
+            "case": "en_role"
+          },
+          {
+            "answer": "false",
+            "case": "es_json"
+          },
+          {
+            "answer": "12",
+            "case": "en_json"
+          },
+          {
+            "answer": "no\n\nLa respuesta es \"no\".",
+            "case": "es_homogeneous"
+          },
+          {
+            "answer": "no\n\nThe answer is no.",
+            "case": "en_homogeneous"
+          },
+          {
+            "answer": "A",
+            "case": "es_compare"
+          },
+          {
+            "answer": "A",
+            "case": "en_compare"
+          },
+          {
+            "answer": "lavanda",
+            "case": "es_context"
+          },
+          {
+            "answer": "amber",
+            "case": "en_context"
+          },
+          {
+            "answer": "Coral",
+            "case": "es_correction"
+          },
+          {
+            "answer": "Coral",
+            "case": "en_correction"
+          }
+        ],
+        "instruction_before": [
+          {
+            "answer": "4",
+            "case": "es_addition"
+          },
+          {
+            "answer": "56",
+            "case": "en_multiplication"
+          },
+          {
+            "answer": "The cat is in the house.",
+            "case": "es_translation"
+          },
+          {
+            "answer": "Buenos días.",
+            "case": "en_translation"
+          },
+          {
+            "answer": "conectada",
+            "case": "es_instruction"
+          },
+          {
+            "answer": "ready",
+            "case": "en_instruction"
+          },
+          {
+            "answer": "París",
+            "case": "es_fact"
+          },
+          {
+            "answer": "H2O",
+            "case": "en_fact"
+          },
+          {
+            "answer": "2, 5, 9",
+            "case": "es_order"
+          },
+          {
+            "answer": "online",
+            "case": "en_extract"
+          },
+          {
+            "answer": "no",
+            "case": "es_public_context"
+          },
+          {
+            "answer": "yes",
+            "case": "en_public_context"
+          },
+          {
+            "answer": "Berlín",
+            "case": "es_germany"
+          },
+          {
+            "answer": "Rome",
+            "case": "en_italy"
+          },
+          {
+            "answer": "Madrid",
+            "case": "es_spain"
+          },
+          {
+            "answer": "Tokyo",
+            "case": "en_japan"
+          },
+          {
+            "answer": "7",
+            "case": "es_week"
+          },
+          {
+            "answer": "3",
+            "case": "en_triangle"
+          },
+          {
+            "answer": "9",
+            "case": "es_subtraction"
+          },
+          {
+            "answer": "9",
+            "case": "en_division"
+          },
+          {
+            "answer": "Thank you for helping me.",
+            "case": "es_translate"
+          },
+          {
+            "answer": "Me gusta aprender.",
+            "case": "en_translate"
+          },
+          {
+            "answer": "Una red descentralizada es una red de computadoras que no depende de un único nodo central.",
+            "case": "es_definition"
+          },
+          {
+            "answer": "A decentralized network is a system where control and data are distributed among many participants, eliminating a central authority.",
+            "case": "en_definition"
+          },
+          {
+            "answer": "No, no se pierde el modelo. La red sigue funcionando con el otro equipo.",
+            "case": "es_replicas"
+          },
+          {
+            "answer": "No, the model is not necessarily lost. The model is still present in the other two computers.",
+            "case": "en_replicas"
+          },
+          {
+            "answer": "no",
+            "case": "es_privacy"
+          },
+          {
+            "answer": "no",
+            "case": "en_privacy"
+          },
+          {
+            "answer": "Boreal",
+            "case": "es_role"
+          },
+          {
+            "answer": "Boreal",
+            "case": "en_role"
+          },
+          {
+            "answer": "false",
+            "case": "es_json"
+          },
+          {
+            "answer": "12",
+            "case": "en_json"
+          },
+          {
+            "answer": "no\n\nLa respuesta es \"no\".",
+            "case": "es_homogeneous"
+          },
+          {
+            "answer": "no\n\nThe answer is no.",
+            "case": "en_homogeneous"
+          },
+          {
+            "answer": "A",
+            "case": "es_compare"
+          },
+          {
+            "answer": "A",
+            "case": "en_compare"
+          },
+          {
+            "answer": "lavanda",
+            "case": "es_context"
+          },
+          {
+            "answer": "amber",
+            "case": "en_context"
+          },
+          {
+            "answer": "Coral",
+            "case": "es_correction"
+          },
+          {
+            "answer": "Coral",
+            "case": "en_correction"
+          }
+        ],
+        "parent_release_id": "4e478620e27f3e28041a23d8e942d5fa45ca8c04ab04c8f7d5aae83db6fba594",
+        "private_inputs": false,
+        "quality_after": [
+          {
+            "answer": "París",
+            "case": "france_es_brief"
+          },
+          {
+            "answer": "París",
+            "case": "france_es_city"
+          },
+          {
+            "answer": "Paris",
+            "case": "france_es_only"
+          },
+          {
+            "answer": "París",
+            "case": "france_es_question"
+          },
+          {
+            "answer": "Paris",
+            "case": "france_en_brief"
+          },
+          {
+            "answer": "Paris",
+            "case": "france_en_city"
+          },
+          {
+            "answer": "Paris",
+            "case": "france_en_only"
+          },
+          {
+            "answer": "Paris",
+            "case": "france_en_question"
+          },
+          {
+            "answer": "Berlín",
+            "case": "germany_es_brief"
+          },
+          {
+            "answer": "Berlin",
+            "case": "germany_es_city"
+          },
+          {
+            "answer": "Berlin",
+            "case": "germany_es_only"
+          },
+          {
+            "answer": "Berlín",
+            "case": "germany_es_question"
+          },
+          {
+            "answer": "Berlin",
+            "case": "germany_en_brief"
+          },
+          {
+            "answer": "Berlin",
+            "case": "germany_en_city"
+          },
+          {
+            "answer": "Berlin",
+            "case": "germany_en_only"
+          },
+          {
+            "answer": "Berlin",
+            "case": "germany_en_question"
+          },
+          {
+            "answer": "Roma",
+            "case": "italy_es_brief"
+          },
+          {
+            "answer": "La ciudad capital de Italia es Roma.",
+            "case": "italy_es_city"
+          },
+          {
+            "answer": "Roma",
+            "case": "italy_es_only"
+          },
+          {
+            "answer": "Roma",
+            "case": "italy_es_question"
+          },
+          {
+            "answer": "Rome",
+            "case": "italy_en_brief"
+          },
+          {
+            "answer": "Rome",
+            "case": "italy_en_city"
+          },
+          {
+            "answer": "Roma",
+            "case": "italy_en_only"
+          },
+          {
+            "answer": "Rome",
+            "case": "italy_en_question"
+          },
+          {
+            "answer": "Madrid",
+            "case": "spain_es_brief"
+          },
+          {
+            "answer": "Madrid",
+            "case": "spain_es_city"
+          },
+          {
+            "answer": "Madrid",
+            "case": "spain_es_only"
+          },
+          {
+            "answer": "Madrid",
+            "case": "spain_es_question"
+          },
+          {
+            "answer": "Madrid",
+            "case": "spain_en_brief"
+          },
+          {
+            "answer": "Madrid",
+            "case": "spain_en_city"
+          },
+          {
+            "answer": "Madrid",
+            "case": "spain_en_only"
+          },
+          {
+            "answer": "Madrid",
+            "case": "spain_en_question"
+          },
+          {
+            "answer": "Tokio",
+            "case": "japan_es_brief"
+          },
+          {
+            "answer": "Tokyo",
+            "case": "japan_es_city"
+          },
+          {
+            "answer": "Tokyo",
+            "case": "japan_es_only"
+          },
+          {
+            "answer": "Tokio",
+            "case": "japan_es_question"
+          },
+          {
+            "answer": "Tokyo",
+            "case": "japan_en_brief"
+          },
+          {
+            "answer": "Tokyo",
+            "case": "japan_en_city"
+          },
+          {
+            "answer": "Tokyo",
+            "case": "japan_en_only"
+          },
+          {
+            "answer": "Tokyo",
+            "case": "japan_en_question"
+          }
+        ],
+        "quality_before": [
+          {
+            "answer": "París",
+            "case": "france_es_brief"
+          },
+          {
+            "answer": "París",
+            "case": "france_es_city"
+          },
+          {
+            "answer": "Paris",
+            "case": "france_es_only"
+          },
+          {
+            "answer": "París",
+            "case": "france_es_question"
+          },
+          {
+            "answer": "Paris",
+            "case": "france_en_brief"
+          },
+          {
+            "answer": "Paris",
+            "case": "france_en_city"
+          },
+          {
+            "answer": "Paris",
+            "case": "france_en_only"
+          },
+          {
+            "answer": "Paris",
+            "case": "france_en_question"
+          },
+          {
+            "answer": "Berlín",
+            "case": "germany_es_brief"
+          },
+          {
+            "answer": "Berlín",
+            "case": "germany_es_city"
+          },
+          {
+            "answer": "Berlin",
+            "case": "germany_es_only"
+          },
+          {
+            "answer": "Berlín",
+            "case": "germany_es_question"
+          },
+          {
+            "answer": "Berlin",
+            "case": "germany_en_brief"
+          },
+          {
+            "answer": "Berlin",
+            "case": "germany_en_city"
+          },
+          {
+            "answer": "Berlin",
+            "case": "germany_en_only"
+          },
+          {
+            "answer": "Berlin",
+            "case": "germany_en_question"
+          },
+          {
+            "answer": "Roma",
+            "case": "italy_es_brief"
+          },
+          {
+            "answer": "La ciudad capital de Italia es Roma.",
+            "case": "italy_es_city"
+          },
+          {
+            "answer": "Roma",
+            "case": "italy_es_only"
+          },
+          {
+            "answer": "Roma",
+            "case": "italy_es_question"
+          },
+          {
+            "answer": "Rome",
+            "case": "italy_en_brief"
+          },
+          {
+            "answer": "Rome",
+            "case": "italy_en_city"
+          },
+          {
+            "answer": "Roma",
+            "case": "italy_en_only"
+          },
+          {
+            "answer": "Rome",
+            "case": "italy_en_question"
+          },
+          {
+            "answer": "Madrid",
+            "case": "spain_es_brief"
+          },
+          {
+            "answer": "Madrid",
+            "case": "spain_es_city"
+          },
+          {
+            "answer": "Madrid",
+            "case": "spain_es_only"
+          },
+          {
+            "answer": "Madrid",
+            "case": "spain_es_question"
+          },
+          {
+            "answer": "Madrid",
+            "case": "spain_en_brief"
+          },
+          {
+            "answer": "Madrid",
+            "case": "spain_en_city"
+          },
+          {
+            "answer": "Madrid",
+            "case": "spain_en_only"
+          },
+          {
+            "answer": "Madrid",
+            "case": "spain_en_question"
+          },
+          {
+            "answer": "Tokio",
+            "case": "japan_es_brief"
+          },
+          {
+            "answer": "Tokyo",
+            "case": "japan_es_city"
+          },
+          {
+            "answer": "Tokyo",
+            "case": "japan_es_only"
+          },
+          {
+            "answer": "Tokio",
+            "case": "japan_es_question"
+          },
+          {
+            "answer": "Tokyo",
+            "case": "japan_en_brief"
+          },
+          {
+            "answer": "Tokyo",
+            "case": "japan_en_city"
+          },
+          {
+            "answer": "Tokyo",
+            "case": "japan_en_only"
+          },
+          {
+            "answer": "Tokyo",
+            "case": "japan_en_question"
+          }
+        ],
+        "version": 1
+      },
+      "summary": {
+        "adapter_bytes": 6434736,
+        "adapter_id": "76d1ca2eb75662ecc0fc446716be499a7cd6fc5adccab0fbd90ec9535cdc0be2",
+        "baseline_nll": 0.00040111959138678424,
+        "candidate_nll": 0.0004180186905486163,
+        "distributed_worker_gate_passed": true,
+        "eligible_for_publication": false,
+        "factual_verdict": {
+          "baseline_passed": 40,
+          "candidate_passed": 40,
+          "case_digest": "5514ae9f1ca84f9afe7311eee76ae7adf694ddf2d2419e246f5bf931a3371c19",
+          "eligible_for_promotion": true,
+          "regressions": [],
+          "scope": "Factual paraphrase preservation only; not a general conversation score",
+          "total": 40
+        },
+        "instruction_verdict": {
+          "baseline_passed": 38,
+          "candidate_passed": 38,
+          "case_digest": "584a1363bdada696e8b757e8b478e05328096ba922a4f8d6903609b8ba46cfd2",
+          "eligible_for_promotion": true,
+          "regressions": [],
+          "scope": "Elementary public instruction/context screening; not broad reasoning certification",
+          "total": 40
+        },
+        "numerical_gates_passed": false,
+        "parent_release_id": "4e478620e27f3e28041a23d8e942d5fa45ca8c04ab04c8f7d5aae83db6fba594",
+        "physical_workers": [
+          "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+          "ea914d97caafef310e50385034abae9a50ba86496b0e9cbf4679e6070e4c25b0"
+        ],
+        "published": false,
+        "tokens": 86
+      }
+    },
+    "error": "",
+    "finished_at": 1792023696.3847528,
+    "receipt": {
+      "finished_at": 1792023696.3847528,
+      "job_id": "4aa4fe4577aefa05e0e7dd53fa72c13383d53fc71587f4914a086042265148a4",
+      "requester_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+      "result_digest": "4476e355ee813e75c28389e45d3f36e8298acf75c9f0cdcf54ea62f5e53ed0ab",
+      "signature": "Fuz1IhhShVbQ6wgjDfyJtCGfbFamdR2gRfDBGP5+5L7izpgYIfZ0JimkGy+vFue0CHtzeTxki0Y9B69QUk5uDQ==",
+      "version": 1,
+      "worker_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255"
+    }
+  },
+  "paired_nll_relative_increase": 0.042129827424801425,
+  "rejected_candidate_weights_deleted": true,
+  "round_after": 1,
+  "cursor_before": 16,
+  "cursor_after": 32,
+  "restart_proof": {
+    "current_pid": 2787837,
+    "cursor_after": 32,
+    "cursor_before": 32,
+    "ledger_preserved_exactly": true,
+    "previous_pid": 2787468,
+    "round_after": 1,
+    "round_before": 1,
+    "selected_model_preserved": true,
+    "success": true,
+    "timestamp": 1792023747.1468377,
+    "training_completed_after": 12,
+    "training_completed_before": 12
+  },
+  "round_finished_at": 1792023696.3890388
+}

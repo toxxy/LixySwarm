@@ -1,0 +1,13 @@
+{
+  "controls_preserved": true,
+  "coordinator_initially_enabled": false,
+  "identity_preserved": true,
+  "node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+  "pid": 2787468,
+  "runtime_version": "0.4.0a11",
+  "selected_expert_preserved": true,
+  "success": true,
+  "timestamp": 1792023632.77122,
+  "source_revision": "8ab9728",
+  "scope": "Native A11 upgrade of existing physical main node; not a clean machine installation"
+}
