@@ -320,6 +320,18 @@ class LanguageVersionRegistry:
         current = validate_bundle(self.head())[0]
         if target.sequence < current.sequence or chain[current.sequence]['release']['release_id'] != current.release_id:
             raise ReleaseError('Language head cannot go backwards or fork')
+        self.verify_available(chain,store)
+        self.bundles.mkdir(parents=True, exist_ok=True)
+        for bundle in chain[1:]:
+            atomic_json(self.bundles/f"{bundle['release']['release_id']}.json", bundle)
+        atomic_json(self.head_path, {'release_id': target.release_id})
+        return target
+
+    def verify_available(self,chain,store):
+        """Validate retained public dependencies without selecting another head."""
+        target=verify_chain(chain)
+        if chain[0]['descriptor']['base_name']!=self.name:
+            raise ReleaseError('Language history belongs to another family')
         checked = set()
         for index, bundle in enumerate(chain):
             if store.manifest(bundle['release']['model_artifact_id']).kind!='model':
@@ -339,8 +351,4 @@ class LanguageVersionRegistry:
                     json.loads(configuration.read_text()),bundle['descriptor']['base_hash'])
                 evaluation = store.object_path(bundle['descriptor']['evaluation_id'])
                 verify_evaluation(json.loads(evaluation.read_text()), chain[index-1], bundle, store=store)
-        self.bundles.mkdir(parents=True, exist_ok=True)
-        for bundle in chain[1:]:
-            atomic_json(self.bundles/f"{bundle['release']['release_id']}.json", bundle)
-        atomic_json(self.head_path, {'release_id': target.release_id})
         return target

@@ -9,7 +9,8 @@ from .language_version_service import fetch_history
 
 
 def replicate_version(work,store,root,name,providers,*,cancel_event=None,receive_budget=None,
-                      allowed=lambda:True,preflight=lambda *_:None,progress=lambda *_:None):
+                      allowed=lambda:True,preflight=lambda *_:None,progress=lambda *_:None,pinned_only=False):
+    if type(pinned_only) is not bool:raise ValueError('Invalid local replication mode')
     if not isinstance(providers,list) or not 1<=len(providers)<=8 or len(set(providers))!=len(providers):
         raise ValueError('Use one to eight distinct language providers')
     registry=LanguageVersionRegistry(root,name);current=registry.head()
@@ -17,7 +18,7 @@ def replicate_version(work,store,root,name,providers,*,cancel_event=None,receive
     def check():
         if not allowed() or cancel_event is not None and cancel_event.is_set():
             raise ArtifactError('Language replication permission withdrawn or cancelled')
-    for provider in providers:
+    for provider in [] if pinned_only else providers:
         check()
         try:
             chain=fetch_history(work,name,provider,cancel_event=cancel_event,timeout_s=30)
@@ -61,7 +62,7 @@ def replicate_version(work,store,root,name,providers,*,cancel_event=None,receive
     for bundle in chosen:
         for identifier,size in dependencies(bundle):fetch(identifier,size)
     check()
-    release=registry.install(chosen,store)
+    release=registry.verify_available(chosen,store) if pinned_only else registry.install(chosen,store)
     return {'release_id':release.release_id,'sequence':release.sequence,'model_id':release.model_artifact_id,
         'providers':list(providers),'metadata_providers':metadata_providers,
         'acquired_objects':acquired,'history_failures':errors,

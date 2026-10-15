@@ -59,6 +59,23 @@ def test_current_question_only_is_sent_by_default_and_ipc_writes_no_plaintext(mo
     assert not (tmp_path/"local-api.json").exists()
 
 
+def test_cache_repair_ipc_is_owner_only_and_accepts_no_paths_or_programs(monkeypatch,tmp_path):
+    broker,_=broker_fixture(monkeypatch);names=[]
+    repair=SimpleNamespace(snapshot=lambda:{'state':'idle'},start=lambda name:names.append(name) or {'state':'starting'},stop=lambda:{'state':'stopped'})
+    api=LocalChatAPI(broker,tmp_path,cache_repair=repair);api.start()
+    try:
+        for kwargs in [{'token':'invalid'},{'origin':'https://untrusted.invalid'}]:
+            with pytest.raises(urllib.error.HTTPError) as error:call(api,'/cache-repair/start',{'base_name':'qwen3-0.6b'},**kwargs)
+            assert error.value.code==403
+        with pytest.raises(urllib.error.HTTPError) as error:
+            call(api,'/cache-repair/start',{'base_name':'qwen3-0.6b','command':['untrusted']})
+        assert error.value.code==400 and names==[]
+        assert call(api,'/cache-repair/status')=={'state':'idle'}
+        assert call(api,'/cache-repair/start',{'base_name':'qwen3-0.6b'})=={'state':'starting'}
+        assert names==['qwen3-0.6b'] and call(api,'/cache-repair/stop',{})=={'state':'stopped'}
+    finally:api.close()
+
+
 def test_chat_tracks_verified_head_and_pins_it_through_each_response(monkeypatch,tmp_path):
     from src.release import language_versions
     broker,sent=broker_fixture(monkeypatch);broker.language.directory=tmp_path

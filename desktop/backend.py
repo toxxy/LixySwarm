@@ -280,6 +280,13 @@ class NodeController:
     def stop_language_preparation(self):
         return self._chat_call('/preparation/stop',{})
 
+    def repair_language_cache(self,base_name):
+        if self.runtime_update_available():raise RuntimeError('Actualiza el servicio antes de reparar su caché pública')
+        return self._chat_call('/cache-repair/start',{'base_name':base_name},timeout=10)
+
+    def cache_repair_status(self):
+        return self._chat_call('/cache-repair/status')
+
     def confirmed_settings(self):
         snapshot = self.snapshot()
         return snapshot["fresh"] and snapshot["diagnostics"].get("settings") == asdict(self.settings())

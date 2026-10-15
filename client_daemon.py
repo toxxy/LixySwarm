@@ -32,6 +32,7 @@ from src.network.chat_service import ChatBroker,LocalChatAPI
 from src.network.language_families import LanguageFamilies
 from src.network.language_training import LanguageTraining
 from src.network.language_preparation import LanguagePreparation
+from src.network.language_cache_repair import LanguageCacheRepair
 from src.network.language_learning import LanguageLearningCoordinator
 from src.network.local_language_work import LocalLanguageWork
 from src.network.language_follow import LanguageVersionFollower
@@ -139,12 +140,13 @@ def run(directory: Path, *, host="0.0.0.0", port=7338, interval=15, allow_privat
         families=LanguageFamilies(knowledge,directory)
         language_training=LanguageTraining(knowledge,families,directory,resources)
         preparation=LanguagePreparation(node,knowledge,families,directory,resources)
+        cache_repair=LanguageCacheRepair(node,knowledge,families,directory)
         public_memory=PublicMemoryService(knowledge,directory)
         chat=ChatBroker(node,knowledge.work,language,public_memory)
         learning = LearningCoordinator(knowledge,compute,directory)
         language_learning=LanguageLearningCoordinator(knowledge,language_training,directory)
         owner_work=LocalLanguageWork(knowledge,language_training,language_learning)
-        chat_api=LocalChatAPI(chat,directory,preparation,owner_work);chat_api.start()
+        chat_api=LocalChatAPI(chat,directory,preparation,owner_work,cache_repair);chat_api.start()
         language_follow=LanguageVersionFollower(knowledge,families,directory)
         stop = threading.Event()
         for signum in (signal.SIGINT, signal.SIGTERM):
@@ -183,6 +185,7 @@ def run(directory: Path, *, host="0.0.0.0", port=7338, interval=15, allow_privat
                 "language_families":families.snapshot(),
                 "language_training":training,
                 "language_preparation":preparing,
+                "language_cache_repair":cache_repair.snapshot(),
                 "chat":chat.snapshot(),
                 "learning":learning.snapshot(),
                 "language_learning":language_learning.snapshot(),
@@ -237,6 +240,7 @@ def run(directory: Path, *, host="0.0.0.0", port=7338, interval=15, allow_privat
                 compute.update(settings)
                 language.update(settings)
                 language_training.update(settings)
+                cache_repair.update()
                 preparation.update()
                 chat.update(settings)
                 learning.update()
@@ -278,6 +282,8 @@ def run(directory: Path, *, host="0.0.0.0", port=7338, interval=15, allow_privat
                 preparing=preparation.snapshot()['state']
                 if running and not settings.paused and preparing not in {'idle','waiting','stopped','complete'}:
                     current_state='working' if preparing=='testing' else 'preparing'
+                if running and not settings.paused and cache_repair.snapshot()['state'] in {'starting','receiving'}:
+                    current_state='preparing'
                 if running and not settings.paused and language_follow.settings.enabled and language_follow.snapshot()['state']=='acquiring':
                     current_state='preparing'
                 if running and not settings.paused and (compute.snapshot()["active"] or language.snapshot()["active"] or language_training.snapshot()['active']):
@@ -304,6 +310,7 @@ def run(directory: Path, *, host="0.0.0.0", port=7338, interval=15, allow_privat
                 stop.wait(0.5)
             publish("disconnected", settings)
         finally:
+            cache_repair.close()
             preparation.close()
             chat_api.close()
             learning.close()

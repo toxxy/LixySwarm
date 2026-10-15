@@ -98,6 +98,18 @@ def test_known_head_can_be_repaired_when_every_history_rpc_is_unavailable(monkey
     assert len(result['history_failures'])==1
 
 
+def test_pinned_repair_never_requests_or_selects_a_newer_peer_head(monkeypatch,tmp_path):
+    from src.network import language_replication
+    source,target,first,second,report,calls,_update=setup(monkeypatch,tmp_path)
+    replicate_version(None,target,tmp_path/'receiver','qwen3-0.6b',['working'])
+    head=tmp_path/'receiver/versions/qwen3-0.6b/head.json';before=head.read_bytes()
+    model=second['release']['model_artifact_id'];target.object_path(model).unlink();calls.clear()
+    monkeypatch.setattr(language_replication,'fetch_history',lambda *a,**k:pytest.fail('Pinned repair queried another head'))
+    result=replicate_version(None,target,tmp_path/'receiver','qwen3-0.6b',['working'],pinned_only=True)
+    assert result['acquired_objects']=={model:'working'} and head.read_bytes()==before
+    assert target.has(model) and result['metadata_providers']==[] and result['history_failures']==[]
+
+
 def test_valid_signed_forks_are_not_silently_chosen(monkeypatch,tmp_path):
     from src.network import language_replication
     from src.release.language_versions import verify_chain
