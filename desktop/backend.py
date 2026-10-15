@@ -117,7 +117,13 @@ class NodeController:
         settings=self.learning_settings()
         completed=self.snapshot()["diagnostics"].get(self.learning_channel(),{}).get("round") or 0
         if completed>=10: raise ValueError("La ventana inicial de diez rondas terminó")
-        if isinstance(settings,LanguageLearningSettings):settings.generation+=1
+        if isinstance(settings,LanguageLearningSettings):
+            diagnostic=self.snapshot()['diagnostics']
+            if diagnostic.get('language_learning',{}).get('required_training_policy_version')==2:
+                if not diagnostic.get('language_training',{}).get('batching_enabled'):
+                    raise ValueError('Este equipo necesita habilitar el aprendizaje por lotes antes de continuar')
+                settings.training_policy_version=2
+            settings.generation+=1
         settings.cycles=completed+1; settings.enabled=True; settings.save(self.directory)
 
     def stop_learning(self):

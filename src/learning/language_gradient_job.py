@@ -8,11 +8,15 @@ sys.path.insert(0,str(Path(__file__).resolve().parents[2]))
 
 
 def run(request):
+    from src.learning.language_policy import BATCH_POLICY_ID,limits,retention_plan
+    policy_version=2 if request.get('action')=='gradient-batch' else 1
+    if policy_version==2 and request.get('training_policy_id')!=BATCH_POLICY_ID:
+        raise ValueError('Unknown public batch training policy')
     from src.learning.public_bases import BASES,base_hash
     from src.learning.public_conversation import public_corpus,corpus_digest
     from src.learning.weights_io import digest_file
     corpus=public_corpus();start=request['start'];count=request['count']
-    if type(start) is not int or type(count) is not int or not 1<=count<=8 or not 0<=start<len(corpus['train']) or start+count>len(corpus['train']):
+    if type(start) is not int or type(count) is not int or not 1<=count<=limits(policy_version)[0] or not 0<=start<len(corpus['train']) or start+count>len(corpus['train']):
         raise ValueError('Invalid public language shard')
     if request['dataset_id']!=corpus_digest(corpus):raise ValueError('Only the exact public corpus is accepted')
     name=request['base_name']
@@ -41,16 +45,21 @@ def run(request):
         if time.time()>=request['deadline']:raise TimeoutError('Language gradient deadline exceeded')
         loss=model(input_ids=inputs,labels=labels,use_cache=False).loss
         (loss*n/tokens).backward();loss_sum+=float(loss.detach())*n/tokens
-    anchor=tokenizer(corpus['retention'][start%len(corpus['retention'])],return_tensors='pt',add_special_tokens=False).input_ids.to('cuda')
-    with torch.no_grad(),adapters_enabled(model,False):teacher=model(input_ids=anchor,use_cache=False).logits.detach().float()
-    student=model(input_ids=anchor,use_cache=False).logits.float()
-    retention=torch.nn.functional.kl_div(torch.log_softmax(student,dim=-1),torch.softmax(teacher,dim=-1),reduction='sum')/anchor.shape[1]
-    retention.backward();torch.nn.utils.clip_grad_norm_(parameters.values(),1,error_if_nonfinite=True)
+    anchors=retention_plan(start,[row[2] for row in encoded]) if policy_version==2 else [(start%len(corpus['retention']),1)]
+    retention_loss=0
+    for anchor_index,weight in anchors:
+        if time.time()>=request['deadline']:raise TimeoutError('Language retention deadline exceeded')
+        anchor=tokenizer(corpus['retention'][anchor_index],return_tensors='pt',add_special_tokens=False).input_ids.to('cuda')
+        with torch.no_grad(),adapters_enabled(model,False):teacher=model(input_ids=anchor,use_cache=False).logits.detach().float()
+        student=model(input_ids=anchor,use_cache=False).logits.float()
+        retention=torch.nn.functional.kl_div(torch.log_softmax(student,dim=-1),torch.softmax(teacher,dim=-1),reduction='sum')/anchor.shape[1]
+        (retention*weight).backward();retention_loss+=float(retention.detach())*weight
+    torch.nn.utils.clip_grad_norm_(parameters.values(),1,error_if_nonfinite=True)
     if time.time()>=request['deadline']:raise TimeoutError('Language gradient deadline exceeded')
     path=Path(request['output_file']);path.parent.mkdir(parents=True,exist_ok=True)
     save_gradient(model,path,base_hash=base_hash(name),adapter_id=request['adapter_id'],dataset_id=request['dataset_id'],start=start,count=count,tokens=tokens)
-    return {'base_hash':base_hash(name),'adapter_id':request['adapter_id'],'dataset_id':request['dataset_id'],
-            'start':start,'count':count,'tokens':tokens,'loss':loss_sum,'retention_loss':float(retention.detach()),
+    return {**({'training_policy_id':BATCH_POLICY_ID} if policy_version==2 else {}),'base_hash':base_hash(name),'adapter_id':request['adapter_id'],'dataset_id':request['dataset_id'],
+            'start':start,'count':count,'tokens':tokens,'loss':loss_sum,'retention_loss':retention_loss,
             'gradient_id':digest_file(path)[0],'gradient_bytes':path.stat().st_size}
 
 

@@ -8,6 +8,8 @@ PROFILES={
         'max_package_bytes':8*1024**3,'max_download_bytes':4*1024**3,'archive_links':True},
     'language-cuda-learning':{'name':'LixySwarmLanguageCUDA','operations':['language.inference.v1','language.gradient.v2','language.candidate.v1'],
         'max_package_bytes':8*1024**3,'max_download_bytes':4*1024**3,'archive_links':True},
+    'language-cuda-batches':{'name':'LixySwarmLanguageCUDA','operations':['language.inference.v1','language.gradient.v2','language.candidate.v1','language.gradient.v3','language.candidate.v2'],
+        'max_package_bytes':8*1024**3,'max_download_bytes':4*1024**3,'archive_links':True},
 }
 
 

@@ -14,12 +14,14 @@ from src.network.work_protocol import ResultReceipt,WorkResult
 from src.release.language_versions import verify_contributions,validate_bundle
 from .language_scaling import verify_timed_run
 from .public_conversation import public_corpus,corpus_digest
+from .language_policy import limits
 
 
 def observation(result,*,base_name,release_id,request_seconds,transfer_seconds=0):
     value=WorkResult.from_dict(result);receipt=ResultReceipt.from_dict(value.receipt)
+    policy_version=2 if 'training_policy_id' in value.output else 1
     verify_contributions([result],base_name=base_name,adapter_id=value.output['adapter_id'],
-        dataset_id=corpus_digest(public_corpus()),require_distributed=False)
+        dataset_id=corpus_digest(public_corpus()),require_distributed=False,policy_version=policy_version)
     if (not re.fullmatch('[0-9a-f]{64}',str(release_id))
             or any(type(number) not in (int,float) or not math.isfinite(number)
                 for number in [request_seconds,transfer_seconds])
@@ -29,7 +31,7 @@ def observation(result,*,base_name,release_id,request_seconds,transfer_seconds=0
         'result':result,'request_seconds':request_seconds,'transfer_seconds':transfer_seconds}
 
 
-def profile(rows,*,base_name,release_id,adapter_id,workers,exact_version=True):
+def profile(rows,*,base_name,release_id,adapter_id,workers,exact_version=True,policy_version=1):
     grouped=defaultdict(list);jobs=set()
     for row in rows:
         checked=observation(row['result'],base_name=row['base_name'],release_id=row['release_id'],
@@ -38,6 +40,7 @@ def profile(rows,*,base_name,release_id,adapter_id,workers,exact_version=True):
         if job in jobs:raise ValueError('Capacity evidence repeats a signed calculation')
         jobs.add(job)
         if (row['base_name']==base_name and checked['worker_id'] in workers
+                and (2 if 'training_policy_id' in result['output'] else 1)==policy_version
                 and (not exact_version or row['release_id']==release_id and result['output']['adapter_id']==adapter_id)):
             grouped[checked['worker_id']].append(checked)
     if any(len(grouped[worker])<2 for worker in workers):
@@ -52,7 +55,7 @@ def profile(rows,*,base_name,release_id,adapter_id,workers,exact_version=True):
         values[worker]={'samples':len(samples),'examples_per_request_second':1/seconds_per_example,
             'verified_output_tokens_per_request_second':sum(row['result']['output']['tokens'] for row in samples)/sum(row['request_seconds'] for row in samples),
             'mean_transfer_seconds':statistics.mean(row['transfer_seconds'] for row in samples)}
-    return {'base_name':base_name,'release_id':release_id,'adapter_id':adapter_id,'workers':values,
+    return {'base_name':base_name,'release_id':release_id,'adapter_id':adapter_id,'workers':values,'training_policy_version':policy_version,
         'sampled_versions':sorted({row['release_id'] for samples in grouped.values() for row in samples}),
         'version_scope':'exact' if exact_version else 'same_pinned_base_family',
         'scope':'Requester-observed calculation readiness; includes network/materialization/compute, excludes artifact acquisition; not a signed worker timer or an end-to-end speedup claim'}
@@ -66,6 +69,7 @@ def crossed_calibration(reports):
     for report in reports:
         verify_timed_run(report)
         if (report.get('resumed') or report['head']!=reference['head'] or report['base_name']!=reference['base_name']
+                or report.get('training_policy_version',1)!=reference.get('training_policy_version',1)
                 or report.get('receive_bandwidth_mbps')!=reference.get('receive_bandwidth_mbps')
                 or report.get('requester_id')!=requester):
             raise ValueError('Capacity calibration must use the same current model, data and receive policy')
@@ -84,14 +88,14 @@ def crossed_calibration(reports):
     if len(workers)<2 or any(sorted(coverage[w])!=sorted(coverage[workers[0]]) for w in workers):
         raise ValueError('Crossed calibration must give every worker the same shards and tokens')
     result=profile(rows,base_name=reference['base_name'],release_id=reference['head']['release']['release_id'],
-        adapter_id=reference['head']['release']['model_artifact_id'],workers=workers)
+        adapter_id=reference['head']['release']['model_artifact_id'],workers=workers,policy_version=reference.get('training_policy_version',1))
     return {**result,'observations':rows,'crossed_inputs_verified':True}
 
 
-def allocate_shards(workers,count,shards,*,start=0,capacity=None,slots=None):
+def allocate_shards(workers,count,shards,*,start=0,capacity=None,slots=None,policy_version=1):
     if (not isinstance(workers,list) or not 1<=len(workers)<=8 or len(set(workers))!=len(workers)
             or any(not isinstance(w,str) or not re.fullmatch('[0-9a-f]{64}',w) for w in workers)
-            or type(count) is not int or not 1<=count<=8 or type(shards) is not int or not len(workers)<=shards<=16
+            or type(count) is not int or not 1<=count<=limits(policy_version)[0] or type(shards) is not int or not len(workers)<=shards<=16
             or type(start) is not int or not 0<=start<len(public_corpus()['train'])):
         raise ValueError('Invalid bounded language work plan')
     slots=slots or {worker:1 for worker in workers}
@@ -145,8 +149,8 @@ class CapacityHistory:
             self.rows=(self.rows+[checked])[-64:]
             atomic_json(self.path,{'version':1,'observations':self.rows})
 
-    def estimate(self,head,workers):
+    def estimate(self,head,workers,*,policy_version=1):
         with self.lock:
             validate_bundle(head)
             return profile(self.rows,base_name=head['descriptor']['base_name'],release_id=head['release']['release_id'],
-                adapter_id=head['release']['model_artifact_id'],workers=workers,exact_version=False)
+                adapter_id=head['release']['model_artifact_id'],workers=workers,exact_version=False,policy_version=policy_version)

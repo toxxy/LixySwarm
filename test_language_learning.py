@@ -170,10 +170,10 @@ def test_corpus_boundary_and_failed_round_do_not_lose_examples(monkeypatch,tmp_p
 
 def test_old_controls_migrate_without_enabling_observed_allocation(monkeypatch,tmp_path):
     coordinator,controls,head,calls=setup(monkeypatch,tmp_path)
-    old=asdict(controls);old['version']=1;old.pop('shards_per_cycle');old.pop('allocation')
+    old=asdict(controls);old['version']=1;old.pop('shards_per_cycle');old.pop('allocation');old.pop('training_policy_version')
     path=coordinator.directory/'language-learning-controls.json';path.write_text(json.dumps(old))
     migrated=learning.LanguageLearningSettings.load(coordinator.directory)
-    assert migrated.enabled==controls.enabled and migrated.version==2
+    assert migrated.enabled==controls.enabled and migrated.version==3 and migrated.training_policy_version==1
     assert migrated.shards_per_cycle==2 and migrated.allocation=='balanced'
     assert migrated.workers==controls.workers and migrated.signing_key_file==controls.signing_key_file
 

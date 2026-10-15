@@ -17,7 +17,8 @@ from src.network.artifact_store import ArtifactService, ArtifactStore
 from src.network.bootstrap import get_seed_endpoints
 from src.network.client_state import NodeStateLock,state_directory,ClientSettings
 from src.network.public_knowledge import BandwidthBudget
-from src.network.language_training import OPERATION,VERSIONED_OPERATION
+from src.network.language_training import OPERATION,VERSIONED_OPERATION,BATCH_OPERATION
+from src.learning.language_policy import BATCH_POLICY_ID,limits
 from src.network.language_version_service import fetch_history
 from src.network.lsp import LSPIdentity
 from src.network.lsp_v3 import LSPNodeV3
@@ -28,11 +29,12 @@ from src.release.language_versions import verify_contributions
 from src.learning.language_capacity import allocate_shards,crossed_calibration
 
 
-def shard_plan(workers,count,shards=None):
+def shard_plan(workers,count,shards=None,*,policy_version=1):
     total=len(workers) if shards is None else shards
     if (not 1<=len(workers)<=8 or len(set(workers))!=len(workers)
-            or type(count) is not int or not 1<=count<=8
+            or type(count) is not int or not 1<=count<=limits(policy_version)[0]
             or type(total) is not int or not len(workers)<=total<=16
+            or count*total>len(public_corpus()['train'])
             or any(not isinstance(worker,str) or len(worker)!=64 or any(c not in '0123456789abcdef' for c in worker) for worker in workers)):
         raise ValueError('Use distinct physical workers and at most sixteen disjoint shards')
     return [(index,workers[index%len(workers)]) for index in range(total)]
@@ -65,7 +67,7 @@ def load_checkpoint(path,*,worker,requester,base_name,release_id,payload):
             expected_worker_id=worker,expected_requester_id=requester):
         raise ValueError('Contribution checkpoint receipt is invalid')
     verify_contributions([result.to_dict()],base_name=base_name,
-        adapter_id=payload['adapter_id'],dataset_id=payload['dataset_id'],require_distributed=False)
+        adapter_id=payload['adapter_id'],dataset_id=payload['dataset_id'],require_distributed=False,policy_version=2 if 'training_policy_id' in payload else 1)
     if any(result.output[key]!=payload[key] for key in ['start','count']):
         raise ValueError('Contribution checkpoint belongs to another shard')
     for key in ['compute_seconds','request_started_at']:
@@ -89,7 +91,8 @@ def capacity_plan(args):
         data=json.loads(path.read_text());capacity=crossed_calibration(data['reports'])
         if set(capacity['workers'])!=set(args.worker) or capacity['base_name']!=args.base_name:
             raise ValueError('Capacity calibration belongs to another family or worker set')
-    rows=allocate_shards(args.worker,args.count,count,capacity=capacity,slots=slots)
+        if capacity.get('training_policy_version',1)!=(2 if getattr(args,'batch',False) else 1):raise ValueError('Capacity calibration has another immutable training policy')
+    rows=allocate_shards(args.worker,args.count,count,capacity=capacity,slots=slots,policy_version=2 if getattr(args,'batch',False) else 1)
     return [(index,row['worker_id']) for index,row in enumerate(rows)],slots,capacity
 
 
@@ -103,6 +106,7 @@ def main():
     parser.add_argument('--parallel-jobs',type=int,help='Concurrent requests, from one to four')
     parser.add_argument('--base-name',choices=['qwen3-0.6b','qwen3-1.7b'],default='qwen3-0.6b')
     parser.add_argument('--legacy',action='store_true')
+    parser.add_argument('--batch',action='store_true',help='Use the separately approved version-two batch training policy, up to 64 distinct examples per gradient')
     parser.add_argument('--candidate-worker')
     parser.add_argument('--learning-rate',type=float,default=.001)
     parser.add_argument('--resume',action='store_true',help='Recover signed contributions and partial downloads from this directory')
@@ -112,12 +116,13 @@ def main():
     repo = Path(__file__).resolve().parents[1]
     if args.directory.resolve().is_relative_to(repo):
         parser.error('Experiment state must be outside the checkout')
-    try:shard_plan(args.worker,args.count,args.shards)
+    try:shard_plan(args.worker,args.count,args.shards,policy_version=2 if args.batch else 1)
     except ValueError as error:parser.error(str(error))
     if args.parallel_jobs is not None and not 1<=args.parallel_jobs<=4:parser.error('Use one to four concurrent jobs')
     if args.legacy and (args.base_name!='qwen3-0.6b' or args.candidate_worker):
         parser.error('Legacy gradients support only the original small family and no candidate')
     if args.resume and args.legacy:parser.error('Recovery requires versioned contributions')
+    if args.batch and args.legacy:parser.error('Batches require the versioned batch operation')
     if not 1e-6<=args.learning_rate<=1e-3:parser.error('Candidate step is outside its bound')
     identity = LSPIdentity.load(str(args.identity_key))
     if identity is None:
@@ -126,7 +131,9 @@ def main():
 
 
 def run(args,identity):
-    shard_plan(args.worker,args.count,args.shards)
+    policy_version=2 if getattr(args,'batch',False) else 1
+    operation=BATCH_OPERATION if policy_version==2 else OPERATION if args.legacy else VERSIONED_OPERATION
+    shard_plan(args.worker,args.count,args.shards,policy_version=policy_version)
     plan,slots,capacity=capacity_plan(args)
     parallel_jobs=min(len(plan),args.parallel_jobs if args.parallel_jobs is not None else min(4,len(args.worker)))
     args.directory.mkdir(parents=True, exist_ok=True, mode=0o700)
@@ -139,7 +146,7 @@ def run(args,identity):
     expected_plan=[{'worker_id':worker,'start':index*args.count,'count':args.count} for index,worker in plan]
     if prior is not None and any(prior.get(key)!=value for key,value in {
             'base_name':args.base_name,'requester_id':identity.node_id_hex,
-            'operation':VERSIONED_OPERATION,'physical_workers':args.worker,'shard_plan':expected_plan}.items()):
+            'operation':operation,'physical_workers':args.worker,'shard_plan':expected_plan}.items()):
         raise ValueError('Recovery must preserve the original requester, workers, model and shard plan')
     node = LSPNodeV3(identity, host='0.0.0.0', port=0, seeds=get_seed_endpoints(),
         address_book_path=args.directory/'peers.json', allow_private=False)
@@ -156,7 +163,7 @@ def run(args,identity):
         'physical_workers': args.worker, 'requester_id': identity.node_id_hex,
         'requester_is_extra_physical_worker': False, 'contributions': [], 'success': False,
         'candidate_promoted': False, 'started_at': time.time()}
-    report.update(base_name=args.base_name,operation=OPERATION if args.legacy else VERSIONED_OPERATION,
+    report.update(base_name=args.base_name,operation=operation,training_policy_version=policy_version,
         signed_results=[],shard_plan=[{'worker_id':worker,'start':index*args.count,'count':args.count} for index,worker in plan],
         parallel_jobs=parallel_jobs,receive_bandwidth_mbps=receive_rate())
     report.update(resumed=resuming,reused_contributions=0)
@@ -204,6 +211,7 @@ def run(args,identity):
             payload={'adapter_id':ADAPTERS[args.base_name] if args.legacy else report['head']['release']['model_artifact_id'],
                 'dataset_id':corpus_digest(public_corpus()),'start':index*args.count,'count':args.count}
             if not args.legacy:payload.update(base_name=args.base_name,release_id=report['head']['release']['release_id'])
+            if policy_version==2:payload['training_policy_id']=BATCH_POLICY_ID
             return payload
         # Validate every existing receipt before dispatching any new work. A
         # corrupt checkpoint is evidence to inspect, never a reason to retrain.
@@ -230,7 +238,7 @@ def run(args,identity):
                 with calculations[worker]:
                     if cancelled.is_set():raise RuntimeError('Capacity trial cancelled before dispatch')
                     compute_started=time.monotonic();began_at=time.time()
-                    result = work.submit(OPERATION if args.legacy else VERSIONED_OPERATION, payload, ResourceRequirements(kind='training', gpu_required=True,
+                    result = work.submit(operation, payload, ResourceRequirements(kind='training', gpu_required=True,
                         ram_gb=6 if args.base_name=='qwen3-1.7b' else 4, disk_gb=.04), peer_id=worker, timeout_s=240,cancel_event=cancelled)
                     compute_seconds=time.monotonic()-compute_started
             if result.status != 'ok':
@@ -239,6 +247,8 @@ def run(args,identity):
                     expected_requester_id=identity.node_id_hex):
                 raise ValueError('Language contribution receipt is invalid')
             output = result.output
+            verify_contributions([result.to_dict()],base_name=args.base_name,adapter_id=payload['adapter_id'],
+                dataset_id=payload['dataset_id'],require_distributed=False,policy_version=policy_version)
             if output['base_hash'] != base_hash(args.base_name) or any(output[k] != payload[k] for k in ['adapter_id','dataset_id','start','count']):
                 raise ValueError('Returned language contribution is from another version or shard')
             # Preserve the signed calculation before acquiring its bytes. A
@@ -279,9 +289,10 @@ def run(args,identity):
             payload={'base_name':args.base_name,'release_id':report['head']['release']['release_id'],
                 'adapter_id':report['head']['release']['model_artifact_id'],'dataset_id':corpus_digest(public_corpus()),
                 'contributions':report['signed_results'],'learning_rate':args.learning_rate}
+            if policy_version==2:payload['training_policy_id']=BATCH_POLICY_ID
             report.update(candidate_state='evaluating',candidate_worker=args.candidate_worker)
             atomic_json(path,report)
-            result=work.submit('language.candidate.v1',payload,ResourceRequirements(kind='training',gpu_required=True,
+            result=work.submit('language.candidate.v2' if policy_version==2 else 'language.candidate.v1',payload,ResourceRequirements(kind='training',gpu_required=True,
                 ram_gb=6 if args.base_name=='qwen3-1.7b' else 4,disk_gb=.1),peer_id=args.candidate_worker,timeout_s=900)
             if result.status!='ok':raise RuntimeError(result.error)
             if not ResultReceipt.from_dict(result.receipt).verify(result,expected_worker_id=args.candidate_worker,

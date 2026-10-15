@@ -11,6 +11,7 @@ from .work_protocol import ResultReceipt
 from src.release.language_family import canonical
 
 HEAD_OPERATION = 'language.version-head.v1'
+HEAD_OPERATION_V2 = 'language.version-head.v2'
 HISTORY_OPERATION = 'language.version-history.v1'
 
 
@@ -18,16 +19,26 @@ class LanguageVersionService:
     def __init__(self, families):
         self.families = families
         work = families.knowledge.work
-        for operation, handler in [(HEAD_OPERATION, self.head), (HISTORY_OPERATION, self.history)]:
+        for operation, handler in [(HEAD_OPERATION, self.head), (HEAD_OPERATION_V2,self.current_head), (HISTORY_OPERATION, self.history)]:
             work.register_handler(operation, 'artifact', families._guard(handler), permit_cached=families._permit_cached)
+        work.node.capabilities['language_versions_v2']=True
 
     def head(self, payload, execution):
+        return self._head(payload,execution,legacy=True)
+
+    def current_head(self,payload,execution):
+        return self._head(payload,execution,legacy=False)
+
+    def _head(self,payload,execution,*,legacy):
         if not isinstance(payload, dict) or set(payload) != {'base_name'}:
             raise ReleaseError('Invalid language-head request')
         # Signed history remains useful if this replica loses an object: other
         # providers may hold the missing content. Complete-family availability
         # is advertised separately by LanguageFamilies.
-        bundle = LanguageVersionRegistry(self.families.root, payload['base_name']).head()
+        registry=LanguageVersionRegistry(self.families.root, payload['base_name'])
+        bundle = registry.head()
+        if legacy and bundle['descriptor']['version']==3:
+            bundle=next(row for row in reversed(registry.history(bundle['release']['release_id'])) if row['descriptor']['version']<3)
         self._charge(bundle,execution)
         return bundle
 
@@ -57,7 +68,9 @@ def fetch_history(work, name, provider, *, cancel_event=None, timeout_s=60):
                 expected_worker_id=provider, expected_requester_id=work.node.identity.node_id_hex):
             raise ReleaseError('Language history response is unavailable or unsigned')
         return result.output
-    head = request(HEAD_OPERATION, {'base_name': name})
+    peers=getattr(work.node,'peers',lambda:[])()
+    version_two=any(peer.get('node_id')==provider and peer.get('capabilities',{}).get('language_versions_v2') is True for peer in peers)
+    head = request(HEAD_OPERATION_V2 if version_two else HEAD_OPERATION, {'base_name': name})
     target, descriptor = validate_bundle(head)
     if descriptor['base_name'] != name:
         raise ReleaseError('Language head belongs to another family')

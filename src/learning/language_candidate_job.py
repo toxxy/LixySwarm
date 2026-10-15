@@ -9,6 +9,7 @@ from pathlib import Path
 from .public_bases import BASES,base_hash
 from .public_conversation import public_corpus,corpus_digest
 from .weights_io import digest_file
+from .language_policy import BATCH_POLICY_ID,limits
 
 HEX=re.compile(r'[0-9a-f]{64}')
 FIELDS={'action','base_name','base_directory','adapter_file','adapter_id','dataset_id',
@@ -20,8 +21,11 @@ GRADIENT_FIELDS={'path','gradient_id','gradient_bytes','base_hash','adapter_id',
 
 def validate_request(request):
     """A local supervisor supplies paths; peers cannot choose this request."""
-    if not isinstance(request,dict) or set(request)!=FIELDS or request['action']!='candidate':
+    policy_version=2 if isinstance(request,dict) and 'training_policy_id' in request else 1
+    expected=FIELDS|({'training_policy_id'} if policy_version==2 else set())
+    if not isinstance(request,dict) or set(request)!=expected or request['action']!='candidate':
         raise ValueError('Invalid language candidate request')
+    if policy_version==2 and request['training_policy_id']!=BATCH_POLICY_ID:raise ValueError('Unknown public batch candidate policy')
     if request['base_name'] not in BASES or request['device'] not in {'cpu','cuda'}:
         raise ValueError('Unknown candidate base or device')
     if any(not isinstance(request[k],str) or not HEX.fullmatch(request[k])
@@ -50,8 +54,9 @@ def validate_request(request):
                 or not HEX.fullmatch(row['gradient_id']) or type(row['gradient_bytes']) is not int
                 or not 1<=row['gradient_bytes']<=32*1024**2
                 or type(row['start']) is not int or type(row['count']) is not int
-                or not 1<=row['count']<=8 or not 0<=row['start']<=len(corpus['train'])-row['count']
-                or type(row['tokens']) is not int or not 1<=row['tokens']<=1536
+                or not 1<=row['count']<=limits(policy_version)[0] or not 0<=row['start']<=len(corpus['train'])-row['count']
+                or type(row['tokens']) is not int or not 1<=row['tokens']<=limits(policy_version)[1]
+                or policy_version==2 and row['tokens']>192*row['count']
                 or not isinstance(row['path'],str) or not Path(row['path']).is_absolute()):
             raise ValueError('Candidate contribution has incompatible version, data, shard or bounds')
     ranges=sorted((row['start'],row['start']+row['count']) for row in rows)
@@ -142,7 +147,7 @@ def run(request):
     baseline,value=before['nll'],after['nll']
     factual=factual_verdict(before['quality'],after['quality'])
     instruction=instruction_verdict(before['instructions'],after['instructions'])
-    return {'version':1,'private_inputs':False,'base_name':request['base_name'],'base_hash':base_hash(request['base_name']),
+    return {'version':2 if 'training_policy_id' in request else 1,'private_inputs':False,'base_name':request['base_name'],'base_hash':base_hash(request['base_name']),
         'dataset_id':request['dataset_id'],'parent_release_id':request['parent_release_id'],
         'adapter_id':identifier,'adapter_bytes':size,'baseline_nll':baseline,'candidate_nll':value,
         'quality_before':before['quality'],'quality_after':after['quality'],

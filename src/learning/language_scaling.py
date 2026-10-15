@@ -7,15 +7,17 @@ from src.release.language_versions import verify_chain,verify_contributions
 
 
 def verify_timed_run(report):
-    if report.get('success') is not True or report.get('operation')!='language.gradient.v2':
+    if report.get('success') is not True or report.get('operation') not in {'language.gradient.v2','language.gradient.v3'}:
         raise ValueError('Scaling requires completed versioned gradient trials')
     if report.get('eligible_for_uncontended_scaling_comparison') is False or report.get('concurrent_initial_model_copy') is True:
         raise ValueError('A trial with known initial-download contention is only a warm-up')
     head=report['head'];history=report.get('history',[head]);verify_chain(history)
+    policy_version=2 if report['operation']=='language.gradient.v3' else 1
+    if report.get('training_policy_version',1)!=policy_version:raise ValueError('Trial operation and immutable training policy differ')
     if history[-1]!=head:raise ValueError('Trial head differs from its verified history')
     results=report['signed_results']
     proof=verify_contributions(results,base_name=report['base_name'],
-        adapter_id=head['release']['model_artifact_id'],dataset_id=corpus_digest(public_corpus()),require_distributed=False)
+        adapter_id=head['release']['model_artifact_id'],dataset_id=corpus_digest(public_corpus()),require_distributed=False,policy_version=policy_version)
     if set(report['physical_workers'])!=set(proof['physical_workers']):
         raise ValueError('Reported physical workers differ from signed contributions')
     rows=report['contributions'];by_job={row['receipt']['job_id']:row for row in rows}
@@ -48,6 +50,7 @@ def compare_runs(baseline,distributed):
             or not set(before['physical_workers']).issubset(after['physical_workers'])):
         raise ValueError('Compare one physical worker with the same worker plus another')
     if (baseline['base_name']!=distributed['base_name'] or baseline['head']!=distributed['head']
+            or baseline['operation']!=distributed['operation']
             or first_shards!=second_shards
             or baseline.get('requester_id')!=distributed.get('requester_id')
             or baseline.get('receive_bandwidth_mbps')!=distributed.get('receive_bandwidth_mbps')):
@@ -61,6 +64,7 @@ def compare_runs(baseline,distributed):
         'base_name':baseline['base_name'],'release_id':baseline['head']['release']['release_id'],
         'model_id':baseline['head']['release']['model_artifact_id'],'dataset_id':corpus_digest(public_corpus()),
         'tokens':before['tokens'],'receive_bandwidth_mbps':baseline.get('receive_bandwidth_mbps'),
+        'training_policy_version':baseline.get('training_policy_version',1),
         'shards':[{'start':start,'count':count,'tokens':tokens} for start,count,tokens in first_shards],
         'one_pc':{'workers':before['physical_workers'],'seconds':first_seconds,'verified_tokens_per_second':before['tokens']/first_seconds},
         'multiple_pcs':{'workers':after['physical_workers'],'seconds':second_seconds,'verified_tokens_per_second':after['tokens']/second_seconds},

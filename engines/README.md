@@ -4,6 +4,8 @@ El nodo y la app se conectan sin cargar PyTorch. Este paquete CPU incluye su int
 
 El motor actual sirve inferencia de bytes, gradientes y evaluación de candidatas del modelo de referencia. No ofrece conversación ni ejecuta modelos o código arbitrario de los peers. La instalación del motor no concede recursos ni habilita entrenamiento de solicitantes nuevos.
 
+El motor separado de lenguaje incorpora una política opcional de lotes de hasta 64 ejemplos públicos distintos. Se construye con `python engines/build_language.py --device cuda --batch-policy --output /directorio/local` y se verifica con el perfil local `language-cuda-batches`. Amplía las operaciones de lenguaje con `language.gradient.v3` y `language.candidate.v2`; los perfiles existentes conservan sus listas. Los trabajadores deben habilitar expresamente `batching_enabled`; instalar el motor no concede ese permiso. Las nuevas evaluaciones necesitan A14, conservan los gates históricos y exigen las mismas condiciones de calidad. La verificación física y la preparación desde una instalación vacía siguen siendo comprobaciones aparte.
+
 ## Construcción y verificación
 
 Crear un entorno separado fuera del checkout. Instalar `torch==2.12.0` desde el índice CPU oficial y las dependencias fijadas en `requirements-cpu.txt`, junto con `PyInstaller==6.22.3`. Después:

@@ -6,6 +6,7 @@ import shutil
 
 from src.learning.public_quality import preservation_verdict as factual_verdict
 from src.learning.public_language_gate import preservation_verdict as instruction_verdict
+from src.learning.language_policy import BATCH_POLICY_ID
 from src.release.language_versions import verify_contributions,gate_id
 from src.release import language_versions
 from src.release.adapter_format import validate_adapter
@@ -19,9 +20,12 @@ from .work_protocol import WorkResult,ResultReceipt
 OPERATION='language.candidate.v1'
 
 
-def run_candidate(training,payload,execution):
+def run_candidate(training,payload,execution,*,policy_version=1):
     expected={'base_name','release_id','adapter_id','dataset_id','contributions','learning_rate'}
+    if policy_version==2:expected.add('training_policy_id')
     if not isinstance(payload,dict) or set(payload)!=expected:raise ValueError('Invalid public language candidate payload')
+    if policy_version==2 and (not training.engine.batching_enabled or payload['training_policy_id']!=BATCH_POLICY_ID):
+        raise ComputeProcessError('Public batch candidate policy is not locally enabled')
     if (not training.ready or not training.engine.candidates_enabled or not training.knowledge.allowed
             or execution.work.origin_node_id not in training.engine.requesters
             or payload['base_name']!=training.engine.base_name):
@@ -32,10 +36,12 @@ def run_candidate(training,payload,execution):
     if not requirements.gpu_required or requirements.ram_gb<training.required_ram():
         raise ComputeProcessError('Language candidate requires its full GPU/RAM lease')
     head=training._head()
+    if head.get('descriptor',{}).get('version')==3 and policy_version!=2:
+        raise ComputeProcessError('This accepted parent requires the batch candidate policy')
     if payload['release_id']!=head['release']['release_id'] or payload['adapter_id']!=head['release']['model_artifact_id']:
         raise ValueError('Language candidate refers to a stale parent')
     proof=verify_contributions(payload['contributions'],base_name=payload['base_name'],
-        adapter_id=payload['adapter_id'],dataset_id=payload['dataset_id'],require_distributed=False)
+        adapter_id=payload['adapter_id'],dataset_id=payload['dataset_id'],require_distributed=False,policy_version=policy_version)
     permission=asdict(training.settings.policy);engine=asdict(training.engine)
     def allowed():
         return (training.ready and training.knowledge.allowed and asdict(training.settings.policy)==permission
@@ -67,6 +73,7 @@ def run_candidate(training,payload,execution):
         'parent_release_id':payload['release_id'],'contributions':contributions,'learning_rate':payload['learning_rate'],
         'output_file':str(path),'cpu_threads':max(1,min(4,int(training.resources['cpu_cores']*permission['cpu_percent']/100))),
         'gpu_fraction':permission['gpu_percent']/100/max(1,permission['max_gpu_jobs']),'device':'cuda','deadline':execution.deadline}
+    if policy_version==2:request['training_policy_id']=BATCH_POLICY_ID
     with training.lock:training.active+=1
     training.changed.set()
     complete=False
@@ -79,7 +86,7 @@ def run_candidate(training,payload,execution):
         fields={'version','private_inputs','base_name','base_hash','dataset_id','parent_release_id','adapter_id',
                 'baseline_nll','candidate_nll','quality_before','quality_after','instruction_before','instruction_after'}
         evaluation={key:value[key] for key in fields}
-        if (evaluation['version']!=1 or evaluation['private_inputs'] is not False
+        if (type(evaluation['version']) is not int or evaluation['version']!=policy_version or evaluation['private_inputs'] is not False
                 or any(evaluation[key]!=expected for key,expected in {
                     'base_name':payload['base_name'],'base_hash':head['descriptor']['base_hash'],
                     'dataset_id':payload['dataset_id'],'parent_release_id':payload['release_id']}.items())):
@@ -95,12 +102,13 @@ def run_candidate(training,payload,execution):
         instructions=instruction_verdict(evaluation['instruction_before'],evaluation['instruction_after'])
         numerical=after<before-max(1e-7,before*.001) and facts['eligible_for_promotion'] and instructions['eligible_for_promotion']
         distributed=set(proof['physical_workers'])==language_versions.WORKERS and proof['tokens']>=16
-        evaluation.update(gate_id=gate_id(),contributions=payload['contributions'])
+        evaluation.update(gate_id=gate_id(policy_version),contributions=payload['contributions'])
         atomic_json(directory/'evaluation.json',evaluation)
         summary={'parent_release_id':payload['release_id'],'adapter_id':identifier,'adapter_bytes':size,
             'baseline_nll':before,'candidate_nll':after,'factual_verdict':facts,'instruction_verdict':instructions,
             **proof,'numerical_gates_passed':numerical,'distributed_worker_gate_passed':distributed,
             'eligible_for_publication':numerical and distributed,'published':False}
+        if policy_version==2:summary['training_policy_id']=BATCH_POLICY_ID
         if not summary['eligible_for_publication']:path.unlink()
         check();atomic_json(directory/'summary.json',summary);complete=True
         with training.lock:
