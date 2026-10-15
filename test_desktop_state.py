@@ -57,12 +57,18 @@ def test_gpu_choice_preserves_hidden_operator_limits_and_waits_for_the_node(tmp_
     os.environ.setdefault('QT_QPA_PLATFORM','offscreen')
     from PySide6.QtWidgets import QApplication
     from PySide6.QtCore import QCoreApplication,QEvent
+    import desktop.backend as backend
+    import desktop.window as ui
     from desktop.window import SwarmWindow
     from desktop.backend import NodeController
     policy=ContributionPolicy.for_mode('maximum');policy.max_gpu_jobs=1
     policy.gpu_percent=100;policy.max_ram_gb=8;policy.max_disk_gb=8;policy.pause_above_cpu_percent=80
     ClientSettings(policy=policy).save(tmp_path)
     controller=NodeController(tmp_path);fresh=[False];sharing=[False];calls=[]
+    # This fixture models a supported CUDA platform. The CI runner's older
+    # glibc must keep rejecting the real Ubuntu-24.04 worker catalog.
+    monkeypatch.setattr(backend,'language_engine',lambda device:object())
+    monkeypatch.setattr(ui,'language_engine',lambda device:object())
     monkeypatch.setattr(controller,'snapshot',lambda:{'fresh':fresh[0],'running':fresh[0],
         'status':{'node_id':'0'*64,'state':'connected','resources':{'has_gpu':True,'gpu_vram_gb':7.99}},
         'diagnostics':{'knowledge':{'sharing':sharing[0]}}})
@@ -72,7 +78,7 @@ def test_gpu_choice_preserves_hidden_operator_limits_and_waits_for_the_node(tmp_
     try:
         assert window.chosen_policy().max_gpu_jobs==1
         assert window.chosen_policy().pause_above_cpu_percent==80
-        monkeypatch.setattr(window,'prepare_engine',lambda:pytest.fail('Unneeded CPU engine was requested'))
+        monkeypatch.setattr(window,'prepare_engine',lambda:calls.append('cpu'))
         window.preparation_requested=True;window.maybe_prepare_engine()
         assert not calls and window.preparation_requested
         fresh[0]=True;window.refresh();app.processEvents()
