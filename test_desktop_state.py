@@ -62,9 +62,10 @@ def test_gpu_choice_preserves_hidden_operator_limits_and_waits_for_the_node(tmp_
     policy=ContributionPolicy.for_mode('maximum');policy.max_gpu_jobs=1
     policy.gpu_percent=100;policy.max_ram_gb=8;policy.max_disk_gb=8;policy.pause_above_cpu_percent=80
     ClientSettings(policy=policy).save(tmp_path)
-    controller=NodeController(tmp_path);fresh=[False];calls=[]
+    controller=NodeController(tmp_path);fresh=[False];sharing=[False];calls=[]
     monkeypatch.setattr(controller,'snapshot',lambda:{'fresh':fresh[0],'running':fresh[0],
-        'status':{'node_id':'0'*64,'state':'connected','resources':{'has_gpu':True,'gpu_vram_gb':7.99}},'diagnostics':{}})
+        'status':{'node_id':'0'*64,'state':'connected','resources':{'has_gpu':True,'gpu_vram_gb':7.99}},
+        'diagnostics':{'knowledge':{'sharing':sharing[0]}}})
     monkeypatch.setattr(controller,'prepare_language',lambda:calls.append('gpu'))
     app=QApplication.instance() or QApplication([])
     window=SwarmWindow(controller,initialize_personal=False)
@@ -75,6 +76,8 @@ def test_gpu_choice_preserves_hidden_operator_limits_and_waits_for_the_node(tmp_
         window.preparation_requested=True;window.maybe_prepare_engine()
         assert not calls and window.preparation_requested
         fresh[0]=True;window.refresh();app.processEvents()
+        assert not calls and window.preparation_requested
+        sharing[0]=True;window.refresh();app.processEvents()
         assert calls==['gpu'] and not window.preparation_requested
     finally:
         window.close();window.deleteLater();QCoreApplication.sendPostedEvents(None,QEvent.DeferredDelete);app.processEvents()

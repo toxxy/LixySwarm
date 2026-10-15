@@ -339,6 +339,9 @@ class SwarmWindow(QMainWindow):
         if not (self.controller.directory/"public-knowledge.json").exists():
             self.controller.share_knowledge(True)
         if target=='language':
+            if not self.controller.knowledge_settings().enabled:return
+            if self.controller.snapshot()['diagnostics'].get('knowledge',{}).get('sharing') is not True:
+                self.preparation_requested=True;return
             self.maybe_prepare_language();return
         policy=settings.policy
         if self.auto_prepare and settings.connected and not settings.paused and policy.mode in {"balanced","maximum"} and policy.cpu_percent>0 and policy.max_ram_gb>=2 and not self.controller.cpu_engine_prepared() and cpu_engine() is not None:
