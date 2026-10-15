@@ -194,8 +194,14 @@ def run(session):
             time.sleep(1)
         raise TimeoutError('Native trial did not reach the expected state before its deadline')
     try:
+        allowed()
+        if not KnowledgeSettings.load(original).enabled:raise ValueError('Public storage permission was withdrawn')
+        live=NodeController(original).snapshot()
+        if not live['fresh'] or live['diagnostics'].get('pid')!=value['original_pid']:
+            raise ValueError('The physical participant changed after arming recovery')
         systemctl('stop',ORIGINAL)
         with NodeStateLock(original):
+            allowed()
             with NodeStateLock(trial):
                 checkpoint=ColdCheckpoint.capture(original,trial,folder/'checkpoint.json')
                 evict_weights(original,value['planned_inventory'],value['provider_inventory'])
