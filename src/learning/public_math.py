@@ -28,6 +28,8 @@ ARTIFACTS = {
 SELECTION = 'sort-sha256(version:upstream-split:exact-question)-then-take-count-v1'
 HISTORICAL_GATE_ID = 'cb33111cc44098bc845ffff8eb51888527d6667fd872f03407a55928b9b8020b'
 MAX_SNAPSHOT_BYTES = 8*1024**2
+MAX_TRACE_BYTES = 4*1024**2
+MATH_REPORT_FIELDS = {'math_before', 'math_after', 'math_trace_id', 'math_trace_bytes'}
 PROMPT_PREFIX = ('Solve this word problem. Explain the calculations briefly, then end with '
                  'a line containing #### followed by the final number.\n\n')
 NUMBER = r'-?(?:0|[1-9][0-9]*|[1-9][0-9]{0,2}(?:,[0-9]{3})+)(?:\.[0-9]+)?'
@@ -196,3 +198,47 @@ def verdict(before, after, evaluation):
             'eligible_for_research_promotion': gain >= 4 and not regressions and math_nll and legacy_nll
                 and facts['eligible_for_promotion'] and instructions['eligible_for_promotion'],
             'native_publication_authorized': False, 'scope': gate_definition()['scope']}
+
+
+def compact_evaluation(result):
+    """Keep exact scoring semantics; bind full generated text separately by hash."""
+    fields={'nll','tokens','answers','correct','total','output_tokens','at_output_limit'}
+    if (not isinstance(result,dict) or set(result)!=fields or type(result['total']) is not int or result['total']!=COUNTS['evaluation']
+            or type(result['correct']) is not int or not 0<=result['correct']<=result['total']
+            or type(result['at_output_limit']) is not int
+            or type(result['nll']) not in (int,float) or not math.isfinite(result['nll']) or result['nll']<=0
+            or type(result['tokens']) is not int or not 1<=result['tokens']<=COUNTS['evaluation']*512
+            or not isinstance(result['answers'],list) or len(result['answers'])!=COUNTS['evaluation']
+            or not isinstance(result['output_tokens'],list) or len(result['output_tokens'])!=COUNTS['evaluation']
+            or any(type(n) is not int or not 1<=n<=384 for n in result['output_tokens'])
+            or result['at_output_limit']!=sum(n==384 for n in result['output_tokens'])):
+        raise ValueError('Invalid bounded full math evaluation')
+    projected=[];hashes=[]
+    for row in result['answers']:
+        if (not isinstance(row,dict) or set(row)!={'case','answer'} or not isinstance(row['case'],str)
+                or not isinstance(row['answer'],str) or len(row['answer'].encode())>8192):
+            raise ValueError('Invalid full math answer')
+        number=final_number(row['answer'])
+        projected.append({'case':row['case'],'answer':'' if number is None else '#### '+number})
+        hashes.append(hashlib.sha256(row['answer'].encode()).hexdigest())
+    return {'answer_projection':'canonical-numeric-final-line-v1','nll':result['nll'],'tokens':result['tokens'],
+            'answers':projected,'raw_answer_sha256':hashes,'output_tokens':result['output_tokens'],
+            'at_output_limit':result['at_output_limit']}
+
+
+def verify_math_transition(report, evaluation, trace):
+    """Raw generations must reconstruct the compact signed scoring record exactly."""
+    if (not isinstance(trace,dict) or set(trace)!={'version','evaluation_artifact_id','before','after'}
+            or type(trace['version']) is not int or trace['version']!=1 or trace['evaluation_artifact_id']!=ARTIFACTS['evaluation'][0]
+            or len(canonical(trace))>MAX_TRACE_BYTES or digest(trace)!=report['math_trace_id']
+            or len(canonical(trace))!=report['math_trace_bytes']):
+        raise ValueError('Math trace does not bind its complete raw public generations')
+    for side in ['before','after']:
+        raw=trace[side];compact=report['math_'+side]
+        if compact_evaluation(raw)!=compact or sum(score_answers(raw['answers'],evaluation).values())!=raw['correct']:
+            raise ValueError('Math scoring projection differs from its original generated text')
+    before={**report['math_before'],'legacy':{'nll':report['baseline_nll'],'quality':report['quality_before'],
+                                             'instructions':report['instruction_before']}}
+    after={**report['math_after'],'legacy':{'nll':report['candidate_nll'],'quality':report['quality_after'],
+                                           'instructions':report['instruction_after']}}
+    return verdict(before,after,evaluation)

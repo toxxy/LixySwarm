@@ -1,14 +1,16 @@
 """Known-requester public LoRA gradients under the physical node's permissions."""
 import json
 import math
+import ipaddress
 import threading
+import time
 from dataclasses import dataclass,asdict,field
 from pathlib import Path
 
 from src.learning.public_conversation import public_corpus,corpus_digest
 from src.learning.public_bases import base_hash
 from src.learning.public_bases import BASES
-from src.learning.language_policy import policy_id,policy_from_id,descriptor_policy,HALF_POLICY,limits,gradient_operation,candidate_operation,enabled_policy
+from src.learning.language_policy import policy_id,policy_from_id,descriptor_policy,HALF_POLICY,limits,gradient_operation,candidate_operation,enabled_policy,dataset_id,dataset_length,answer_limit
 from src.release.language_family import ADAPTERS
 from .compute_process import ComputeSupervisor,ComputeProcessError
 from .artifact_store import digest_file
@@ -32,9 +34,10 @@ class LanguageTrainingSettings:
     candidates_enabled:bool=False
     batching_enabled:bool=False
     half_precision_enabled:bool=False
+    math_curriculum_enabled:bool=False
 
     def validate(self):
-        if type(self.version) is not int or self.version!=2 or type(self.enabled) is not bool or type(self.candidates_enabled) is not bool or type(self.batching_enabled) is not bool or type(self.half_precision_enabled) is not bool or self.base_name not in BASES:raise ValueError('Invalid language training controls')
+        if type(self.version) is not int or self.version!=2 or type(self.enabled) is not bool or type(self.candidates_enabled) is not bool or type(self.batching_enabled) is not bool or type(self.half_precision_enabled) is not bool or type(self.math_curriculum_enabled) is not bool or self.base_name not in BASES:raise ValueError('Invalid language training controls')
         if not isinstance(self.command,list) or len(self.command)>4 or any(not isinstance(x,str) or not x or len(x)>4096 for x in self.command):raise ValueError('Invalid local gradient command')
         if not isinstance(self.requesters,list) or len(self.requesters)>8 or any(not isinstance(x,str) or len(x)!=64 or any(c not in '0123456789abcdef' for c in x) for x in self.requesters):raise ValueError('Invalid known language requesters')
         if self.enabled and (not self.command or not self.requesters or any(not Path(x).is_absolute() for x in [self.command[0],self.base_directory,self.adapter_file])):raise ValueError('Public language training requires locally approved inputs/requesters')
@@ -47,6 +50,7 @@ class LanguageTrainingSettings:
         if not path.exists():return cls()
         if path.stat().st_size>16*1024:raise ValueError('Language training controls exceed their bound')
         value=json.loads(path.read_text())
+        if isinstance(value,dict) and 'math_curriculum_enabled' not in value:value={**value,'math_curriculum_enabled':False}
         if isinstance(value,dict) and 'half_precision_enabled' not in value:value={**value,'half_precision_enabled':False}
         if isinstance(value,dict) and set(value)==set(asdict(cls()))-{'base_name','candidates_enabled','batching_enabled'} and value.get('version')==1:
             value={**value,'version':2,'base_name':'qwen3-0.6b'}
@@ -63,6 +67,7 @@ class LanguageTraining:
         self.knowledge,self.families,self.directory,self.resources=knowledge,families,Path(directory),resources
         self.engine=LanguageTrainingSettings();self.settings=None;self.ready=False;self.active=0;self.completed=0
         self.changed=threading.Event();self.lock=threading.RLock();self.supervisor=ComputeSupervisor()
+        self.dataset_lock=threading.Lock();self.dataset_preparation=None
         try:
             path=self.directory/'language-training-status.json'
             if path.stat().st_size>1024:raise ValueError('Language training counter exceeds its bound')
@@ -74,12 +79,15 @@ class LanguageTraining:
         knowledge.work.register_handler(VERSIONED_OPERATION,'training',self.versioned_gradient,permit_cached=self._permit_versioned_cached)
         knowledge.work.register_handler(BATCH_OPERATION,'training',self.batched_gradient,permit_cached=self._permit_versioned_cached)
         knowledge.work.register_handler(HALF_OPERATION,'training',self.half_gradient,permit_cached=self._permit_versioned_cached)
+        knowledge.work.register_handler('language.gradient.v5','training',self.math_gradient,permit_cached=self._permit_versioned_cached)
         from .language_candidate import OPERATION as candidate_operation,run_candidate
         knowledge.work.register_handler(candidate_operation,'training',lambda payload,execution:run_candidate(self,payload,execution),
             permit_cached=lambda execution,result:self._permit_candidate_cached(execution,result))
         knowledge.work.register_handler('language.candidate.v2','training',lambda payload,execution:run_candidate(self,payload,execution,policy_version=2),
             permit_cached=lambda execution,result:self._permit_candidate_cached(execution,result))
         knowledge.work.register_handler('language.candidate.v3','training',lambda payload,execution:run_candidate(self,payload,execution,policy_version=3),
+            permit_cached=lambda execution,result:self._permit_candidate_cached(execution,result))
+        knowledge.work.register_handler('language.candidate.v4','training',lambda payload,execution:run_candidate(self,payload,execution,policy_version=4),
             permit_cached=lambda execution,result:self._permit_candidate_cached(execution,result))
 
     def policy_enabled(self,version):
@@ -111,7 +119,7 @@ class LanguageTraining:
                 and result.get('training_policy_id')==execution.work.payload.get('training_policy_id')
                 and result.get('training_policy_id')==policy_id(version)
                 and execution.work.payload.get('base_name')==self.engine.base_name
-                and result.get('adapter_id')==head['release']['model_artifact_id'] and result.get('dataset_id')==corpus_digest(public_corpus()))
+                and result.get('adapter_id')==head['release']['model_artifact_id'] and result.get('dataset_id')==dataset_id(version))
         except (OSError,ValueError,TypeError):return False
 
     def _permit_cached(self,execution,result):
@@ -134,13 +142,15 @@ class LanguageTraining:
         if node is not None:
             node.capabilities['language_gradient_batches_v1']=bool(self.ready and self.engine.batching_enabled)
             node.capabilities['language_gradient_half_v1']=bool(self.ready and self.policy_enabled(3))
+            node.capabilities['language_gradient_math_v1']=bool(self.ready and self.policy_enabled(4))
 
     def required_ram(self):return 6 if self.engine.base_name=='qwen3-1.7b' else 4
 
     def snapshot(self):
         try:model=self._head()['release']['model_artifact_id'] if self.ready else ''
         except (OSError,ValueError,TypeError):model=''
-        return {'ready':self.ready,'active':self.active,'completed':self.completed,'model_id':model,'base_name':self.engine.base_name,'batching_enabled':self.engine.batching_enabled,'half_precision_enabled':self.engine.half_precision_enabled}
+        return {'ready':self.ready,'active':self.active,'completed':self.completed,'model_id':model,'base_name':self.engine.base_name,'batching_enabled':self.engine.batching_enabled,'half_precision_enabled':self.engine.half_precision_enabled,
+                'math_curriculum_enabled':self.engine.math_curriculum_enabled,'dataset_preparation':self.dataset_preparation}
 
     def versioned_gradient(self,payload,execution):
         return self._versioned_gradient(payload,execution,policy_version=1)
@@ -153,6 +163,56 @@ class LanguageTraining:
         if not self.policy_enabled(3):raise ComputeProcessError('Public half-precision training is not locally enabled')
         return self._versioned_gradient(payload,execution,policy_version=3)
 
+    def math_gradient(self,payload,execution):
+        if not self.policy_enabled(4):raise ComputeProcessError('Public math curriculum is not locally enabled')
+        return self._versioned_gradient(payload,execution,policy_version=4)
+
+    def ensure_math_data(self,execution,allowed,*,splits=('train',)):
+        """Fetch fixed data through this physical identity before a tensor child starts."""
+        from src.learning.public_math import ARTIFACTS,load_snapshot
+        from .public_math_dataset import replicate_dataset
+        from .public_knowledge import managed_public_bytes
+        store=self.families.store;node=self.knowledge.node
+        while not self.dataset_lock.acquire(timeout=.1):
+            execution.raise_if_cancelled()
+            if not allowed():raise ComputeProcessError('Math dataset preparation permission changed')
+        try:
+            paths={}
+            for split in splits:
+                execution.raise_if_cancelled()
+                if not allowed() or not self.policy_enabled(4):raise ComputeProcessError('Math dataset preparation is disabled')
+                identifier,size=ARTIFACTS[split]
+                if store.has(identifier):
+                    if store.manifest(identifier).kind!='dataset':raise ValueError('Math data is not a dataset artifact')
+                    paths[split]=store.object_path(identifier);load_snapshot(paths[split],split);continue
+                own=node.identity.node_id_hex;origin=execution.work.origin_node_id
+                available_peers={p['node_id']:p for p in node.peers()}
+                providers=list(dict.fromkeys(([origin] if origin!=own else [])+[p for p in node.connected_node_ids
+                    if p!=own and available_peers.get(p,{}).get('capabilities',{}).get('language_versions_v1') is True]))
+                routes={}
+                for provider in providers:
+                    if provider not in node.connected_node_ids:node.connect_node(provider,timeout=min(12,execution.remaining_s()))
+                    peer=next((p for p in node.peers() if p['node_id']==provider),None)
+                    if peer and peer.get('encrypted') and ipaddress.ip_address(peer.get('relay_host') or peer['host']).is_global:
+                        routes[provider]={'transport':peer['transport'],'encrypted':True,'public_internet':True}
+                if not routes:raise ComputeProcessError('No public provider for the pinned math dataset')
+                def preflight(missing):
+                    if not allowed() or managed_public_bytes(self.directory)+2*missing>self.settings.policy.max_disk_gb*1024**3:
+                        raise ComputeProcessError('Math dataset acquisition exceeds current local consent')
+                stats=[];self.dataset_preparation={'state':'acquiring','split':split,'artifact_id':identifier};self.changed.set()
+                result=replicate_dataset(self.knowledge.work,store,list(routes),splits=(split,),receive_budget=self.knowledge.budget,
+                    cancel_event=execution.cancel_event,allowed=allowed,preflight=preflight,observer=stats.append)
+                row=result['acquired'][0];self.dataset_preparation={'state':'ready',**row,'route':routes.get(row['provider_id']),
+                    'encoded_data_bytes':sum(s['encoded_data_bytes'] for s in stats),'job_id':execution.work.job_id,'timestamp':time.time()}
+                atomic_json(self.directory/'language-math-dataset-preparation.json',self.dataset_preparation);self.changed.set()
+                paths[split]=store.object_path(identifier)
+            return paths
+        except BaseException as error:
+            self.dataset_preparation={'state':'failed','error_type':type(error).__name__,'job_id':execution.work.job_id,'timestamp':time.time()}
+            atomic_json(self.directory/'language-math-dataset-preparation.json',self.dataset_preparation);self.changed.set()
+            raise
+        finally:self.dataset_lock.release()
+
     def _versioned_gradient(self,payload,execution,*,policy_version):
         fields={'base_name','release_id','adapter_id','dataset_id','start','count'}
         if policy_version>=2:fields.add('training_policy_id')
@@ -161,9 +221,9 @@ class LanguageTraining:
         if (not self.ready or execution.work.origin_node_id not in self.engine.requesters
                 or payload['base_name']!=self.engine.base_name):
             raise ComputeProcessError('Language family or requester is not locally approved')
-        corpus=public_corpus();start,count=payload['start'],payload['count']
-        if (payload['dataset_id']!=corpus_digest(corpus) or type(start) is not int or type(count) is not int
-                or not 1<=count<=limits(policy_version)[0] or not 0<=start<=len(corpus['train'])-count):
+        start,count=payload['start'],payload['count']
+        if (payload['dataset_id']!=dataset_id(policy_version) or type(start) is not int or type(count) is not int
+                or not 1<=count<=limits(policy_version)[0] or not 0<=start<=dataset_length(policy_version)-count):
             raise ValueError('Invalid public language data or shard')
         requirements=execution.resource_requirements()
         if not requirements.gpu_required or requirements.ram_gb<self.required_ram():
@@ -189,9 +249,9 @@ class LanguageTraining:
     def _gradient(self,payload,execution,*,base_name,base_directory,adapter_file,expected_adapter,still_current=lambda:True,policy_version=1):
         if not isinstance(payload,dict) or set(payload)!={'adapter_id','dataset_id','start','count'}:raise ValueError('Invalid language gradient payload')
         corpus=public_corpus()
-        if payload['adapter_id']!=expected_adapter or payload['dataset_id']!=corpus_digest(corpus):raise ValueError('Only the pinned public model/corpus may train')
+        if payload['adapter_id']!=expected_adapter or payload['dataset_id']!=dataset_id(policy_version):raise ValueError('Only the pinned public model/corpus may train')
         start,count=payload['start'],payload['count']
-        if type(start) is not int or type(count) is not int or not 1<=count<=limits(policy_version)[0] or not 0<=start<len(corpus['train']) or start+count>len(corpus['train']):raise ValueError('Invalid disjoint language shard')
+        if type(start) is not int or type(count) is not int or not 1<=count<=limits(policy_version)[0] or not 0<=start<dataset_length(policy_version) or start+count>dataset_length(policy_version):raise ValueError('Invalid disjoint language shard')
         requirements=execution.resource_requirements()
         if not self.ready or execution.work.origin_node_id not in self.engine.requesters or not requirements.gpu_required or requirements.ram_gb<self.required_ram():
             raise ComputeProcessError('Public language gradient requires known requester, GPU and RAM permission')
@@ -200,7 +260,10 @@ class LanguageTraining:
         request={'action':'gradient','base_name':base_name,'base_directory':str(base_directory),'adapter_file':str(adapter_file),
             **payload,'output_file':str(path),'cpu_threads':max(1,min(4,int(self.resources['cpu_cores']*self.settings.policy.cpu_percent/100))),
             'gpu_fraction':self.settings.policy.gpu_percent/100/max(1,self.settings.policy.max_gpu_jobs),'device':'cuda','deadline':execution.deadline}
-        if policy_version>=2:request.update(action='gradient-half' if policy_version==3 else 'gradient-batch',training_policy_id=policy_id(policy_version))
+        if policy_version>=2:request.update(action={2:'gradient-batch',3:'gradient-half',4:'gradient-math'}[policy_version],training_policy_id=policy_id(policy_version))
+        if policy_version==4:
+            allowed=lambda:self.ready and asdict(self.settings.policy)==policy and asdict(self.engine)==engine and still_current()
+            request['training_file']=str(self.ensure_math_data(execution,allowed)['train'])
         with self.lock:self.active+=1
         self.changed.set()
         try:
@@ -208,10 +271,13 @@ class LanguageTraining:
                 allowed=lambda:self.ready and asdict(self.settings.policy)==policy and asdict(self.engine)==engine and still_current())
             expected={'base_hash','adapter_id','dataset_id','start','count','tokens','loss','retention_loss','gradient_id','gradient_bytes'}
             if policy_version>=2:expected.add('training_policy_id')
-            if policy_version==3:expected.add('quantization_relative_l2_error')
+            if policy_version>=3:expected.add('quantization_relative_l2_error')
+            if policy_version==4:expected.add('replay_tokens')
             if set(result)!=expected or policy_version>=2 and result.get('training_policy_id')!=policy_id(policy_version) or result['base_hash']!=base_hash(base_name) or any(result[k]!=payload[k] for k in payload) or type(result['tokens']) is not int or not 1<=result['tokens']<=limits(policy_version)[1] or any(type(result[k]) not in (int,float) or not math.isfinite(result[k]) for k in ['loss','retention_loss']):raise ValueError('Invalid language gradient result')
-            if policy_version>=2 and result['tokens']>192*count:raise ValueError('Batch token count exceeds its distinct examples')
-            if policy_version==3:
+            if policy_version>=2 and result['tokens']>answer_limit(policy_version)*count:raise ValueError('Batch token count exceeds its distinct examples')
+            if policy_version==4 and (type(result['replay_tokens']) is not int or not 1<=result['replay_tokens']<=64*192):
+                raise ValueError('Math replay token cost exceeds its fixed public examples')
+            if policy_version>=3:
                 error=result['quantization_relative_l2_error']
                 if type(error) not in (int,float) or not math.isfinite(error) or not 0<=error<=HALF_POLICY['maximum_relative_l2_error']:raise ValueError('Half-precision gradient exceeds its reconstruction bound')
             if not still_current():raise ComputeProcessError('Language version changed before gradient commit')

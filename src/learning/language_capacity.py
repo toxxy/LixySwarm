@@ -14,14 +14,14 @@ from src.network.work_protocol import ResultReceipt,WorkResult
 from src.release.language_versions import verify_contributions,validate_bundle
 from .language_scaling import verify_timed_run
 from .public_conversation import public_corpus,corpus_digest
-from .language_policy import limits,policy_from_id
+from .language_policy import limits,policy_from_id,dataset_id,dataset_length
 
 
 def observation(result,*,base_name,release_id,request_seconds,transfer_seconds=0):
     value=WorkResult.from_dict(result);receipt=ResultReceipt.from_dict(value.receipt)
     policy_version=policy_from_id(value.output.get('training_policy_id'))
     verify_contributions([result],base_name=base_name,adapter_id=value.output['adapter_id'],
-        dataset_id=corpus_digest(public_corpus()),require_distributed=False,policy_version=policy_version)
+        dataset_id=dataset_id(policy_version),require_distributed=False,policy_version=policy_version)
     if (not re.fullmatch('[0-9a-f]{64}',str(release_id))
             or any(type(number) not in (int,float) or not math.isfinite(number)
                 for number in [request_seconds,transfer_seconds])
@@ -96,12 +96,12 @@ def allocate_shards(workers,count,shards,*,start=0,capacity=None,slots=None,poli
     if (not isinstance(workers,list) or not 1<=len(workers)<=8 or len(set(workers))!=len(workers)
             or any(not isinstance(w,str) or not re.fullmatch('[0-9a-f]{64}',w) for w in workers)
             or type(count) is not int or not 1<=count<=limits(policy_version)[0] or type(shards) is not int or not len(workers)<=shards<=16
-            or type(start) is not int or not 0<=start<len(public_corpus()['train'])):
+            or type(start) is not int or not 0<=start<dataset_length(policy_version)):
         raise ValueError('Invalid bounded language work plan')
     slots=slots or {worker:1 for worker in workers}
     if set(slots)!=set(workers) or any(type(n) is not int or not 1<=n<=4 for n in slots.values()):
         raise ValueError('Use one to four locally bounded calculation slots per worker')
-    remaining=len(public_corpus()['train'])-start
+    remaining=dataset_length(policy_version)-start
     total=min(count*shards,remaining)
     if remaining-total==1:total-=1
     shards=min(shards,total)

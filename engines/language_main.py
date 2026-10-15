@@ -17,7 +17,8 @@ def self_test():
     from src.learning.language_gradient import save_gradient,load_gradient
     from src.learning.language_gradient_job import run as gradient_job
     from src.learning.language_candidate_job import apply_update
-    from src.learning.language_policy import BATCH_POLICY_ID,HALF_POLICY_ID,retention_plan
+    from src.learning.language_policy import BATCH_POLICY_ID,HALF_POLICY_ID,MATH_POLICY_ID,retention_plan,dataset_id
+    from src.learning.language_math_gradient import project_with_replay
     torch.set_num_threads(2);torch.manual_seed(20261014)
     config=Qwen3Config(vocab_size=128,hidden_size=32,intermediate_size=64,num_hidden_layers=2,
                       num_attention_heads=2,num_key_value_heads=1,head_dim=16)
@@ -39,6 +40,12 @@ def self_test():
         reconstructed=load_gradient(model,half_path,**fields,policy_version=3,**precision)
         assert precision['quantization_relative_l2_error']<=.001
         assert all(t.dtype==torch.float32 for t in reconstructed.values())
+        math_path=Path(directory)/'gradient-math.safetensors';math_fields={**fields,'dataset_id':dataset_id(4)}
+        math_precision=save_gradient(model,math_path,**math_fields,policy_version=4)
+        math_gradient=load_gradient(model,math_path,**math_fields,policy_version=4,**math_precision)
+        assert all(t.dtype==torch.float32 for t in math_gradient.values())
+        projected=project_with_replay({'p':torch.tensor([-1.,2.])},{'p':torch.tensor([1.,0.])})
+        assert torch.equal(projected['p'],torch.tensor([1.,2.]))
         before={name:parameter.detach().clone() for name,parameter in model.named_parameters()}
         apply_update(model,[{'path':str(path),**fields}],.001)
         assert any(not torch.equal(before[name],parameter) for name,parameter in model.named_parameters() if parameter.requires_grad)
@@ -52,6 +59,7 @@ def self_test():
             'gradient_fixture_verified':True,'signing_identity_loaded':False,
             'candidate_fixture_verified':True,'batch_policy_id':BATCH_POLICY_ID,'batch_retention_fixture_verified':True,
             'half_policy_id':HALF_POLICY_ID,'half_gradient_fixture_verified':True,
+            'math_policy_id':MATH_POLICY_ID,'math_gradient_fixture_verified':True,'math_replay_projection_fixture_verified':True,
             'scope':'Synthetic architecture/gradient/update fixture; not public-model learning'}
 
 
@@ -69,7 +77,7 @@ def main():
     if action=='inference':
         from src.learning.language_job import run
         run(request)
-    elif action in {'gradient','gradient-batch','gradient-half'}:
+    elif action in {'gradient','gradient-batch','gradient-half','gradient-math'}:
         from src.learning.language_gradient_job import run
         print(json.dumps(run(request),allow_nan=False),flush=True)
     elif action=='candidate':

@@ -2,7 +2,7 @@
 import json
 
 from src.release.language_versions import (LanguageVersionRegistry,dependencies,verify_chain,
-    verify_evaluation,MAX_EVALUATION_BYTES)
+    verify_evaluation,MAX_EVALUATION_BYTES,evidence_dependencies)
 from src.release.manifest import ReleaseError
 from .artifact_store import ArtifactService,ArtifactError
 from .language_version_service import fetch_history
@@ -56,7 +56,8 @@ def replicate_version(work,store,root,name,providers,*,cancel_event=None,receive
         path=fetch(descriptor['evaluation_id'],descriptor['evaluation_bytes'])
         if path.stat().st_size>MAX_EVALUATION_BYTES or store.manifest(descriptor['evaluation_id']).kind!='evaluation':
             raise ReleaseError('Language version has no bounded evaluation artifact')
-        verify_evaluation(json.loads(path.read_text()),chosen[index-1],bundle)
+        for identifier,size in evidence_dependencies(bundle):fetch(identifier,size)
+        verify_evaluation(json.loads(path.read_text()),chosen[index-1],bundle,store=store)
     for bundle in chosen:
         for identifier,size in dependencies(bundle):fetch(identifier,size)
     check()

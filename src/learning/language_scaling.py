@@ -4,11 +4,11 @@ import math
 from src.learning.public_conversation import public_corpus,corpus_digest
 from src.network.work_protocol import ResultReceipt
 from src.release.language_versions import verify_chain,verify_contributions
-from .language_policy import work_policy
+from .language_policy import work_policy,dataset_id
 
 
 def verify_timed_run(report):
-    if report.get('success') is not True or report.get('operation') not in {'language.gradient.v2','language.gradient.v3','language.gradient.v4'}:
+    if report.get('success') is not True or report.get('operation') not in {'language.gradient.v2','language.gradient.v3','language.gradient.v4','language.gradient.v5'}:
         raise ValueError('Scaling requires completed versioned gradient trials')
     if report.get('eligible_for_uncontended_scaling_comparison') is False or report.get('concurrent_initial_model_copy') is True:
         raise ValueError('A trial with known initial-download contention is only a warm-up')
@@ -18,7 +18,7 @@ def verify_timed_run(report):
     if history[-1]!=head:raise ValueError('Trial head differs from its verified history')
     results=report['signed_results']
     proof=verify_contributions(results,base_name=report['base_name'],
-        adapter_id=head['release']['model_artifact_id'],dataset_id=corpus_digest(public_corpus()),require_distributed=False,policy_version=policy_version)
+        adapter_id=head['release']['model_artifact_id'],dataset_id=dataset_id(policy_version),require_distributed=False,policy_version=policy_version)
     if set(report['physical_workers'])!=set(proof['physical_workers']):
         raise ValueError('Reported physical workers differ from signed contributions')
     rows=report['contributions'];by_job={row['receipt']['job_id']:row for row in rows}
@@ -74,7 +74,7 @@ def compare_runs(baseline,distributed):
     ratio=first_seconds/second_seconds
     return {'scope':('One native physical-node comparison with local artifact reuse and fresh remote acquisition' if baseline.get('native_physical_requester') else 'One observed Internet training comparison')+'; excludes initial model download and candidate evaluation; no general scaling or model promotion claim',
         'base_name':baseline['base_name'],'release_id':baseline['head']['release']['release_id'],
-        'model_id':baseline['head']['release']['model_artifact_id'],'dataset_id':corpus_digest(public_corpus()),
+        'model_id':baseline['head']['release']['model_artifact_id'],'dataset_id':dataset_id(work_policy(baseline['operation'])),
         'tokens':before['tokens'],'receive_bandwidth_mbps':baseline.get('receive_bandwidth_mbps'),
         'training_policy_version':baseline.get('training_policy_version',1),
         'shards':[{'start':start,'count':count,'tokens':tokens} for start,count,tokens in first_shards],

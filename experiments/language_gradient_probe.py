@@ -18,7 +18,7 @@ from src.network.bootstrap import get_seed_endpoints
 from src.network.client_state import NodeStateLock,state_directory,ClientSettings
 from src.network.public_knowledge import BandwidthBudget
 from src.network.language_training import OPERATION,VERSIONED_OPERATION,BATCH_OPERATION
-from src.learning.language_policy import BATCH_POLICY_ID,limits
+from src.learning.language_policy import BATCH_POLICY_ID,limits,dataset_length
 from src.network.language_version_service import fetch_history
 from src.network.lsp import LSPIdentity
 from src.network.lsp_v3 import LSPNodeV3
@@ -34,7 +34,7 @@ def shard_plan(workers,count,shards=None,*,policy_version=1):
     if (not 1<=len(workers)<=8 or len(set(workers))!=len(workers)
             or type(count) is not int or not 1<=count<=limits(policy_version)[0]
             or type(total) is not int or not len(workers)<=total<=16
-            or count*total>len(public_corpus()['train'])
+            or count*total>dataset_length(policy_version)
             or any(not isinstance(worker,str) or len(worker)!=64 or any(c not in '0123456789abcdef' for c in worker) for worker in workers)):
         raise ValueError('Use distinct physical workers and at most sixteen disjoint shards')
     return [(index,workers[index%len(workers)]) for index in range(total)]

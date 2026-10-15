@@ -13,6 +13,7 @@ from src.release.language_family import canonical
 HEAD_OPERATION = 'language.version-head.v1'
 HEAD_OPERATION_V2 = 'language.version-head.v2'
 HEAD_OPERATION_V3 = 'language.version-head.v3'
+HEAD_OPERATION_V4 = 'language.version-head.v4'
 HISTORY_OPERATION = 'language.version-history.v1'
 
 
@@ -20,10 +21,11 @@ class LanguageVersionService:
     def __init__(self, families):
         self.families = families
         work = families.knowledge.work
-        for operation, handler in [(HEAD_OPERATION, self.head), (HEAD_OPERATION_V2,self.current_head), (HEAD_OPERATION_V3,self.precision_head), (HISTORY_OPERATION, self.history)]:
+        for operation, handler in [(HEAD_OPERATION, self.head), (HEAD_OPERATION_V2,self.current_head), (HEAD_OPERATION_V3,self.precision_head), (HEAD_OPERATION_V4,self.curriculum_head), (HISTORY_OPERATION, self.history)]:
             work.register_handler(operation, 'artifact', families._guard(handler), permit_cached=families._permit_cached)
         work.node.capabilities['language_versions_v2']=True
         work.node.capabilities['language_versions_v3']=True
+        work.node.capabilities['language_versions_v4']=True
 
     def head(self, payload, execution):
         return self._head(payload,execution,maximum_descriptor=2)
@@ -33,6 +35,9 @@ class LanguageVersionService:
 
     def precision_head(self,payload,execution):
         return self._head(payload,execution,maximum_descriptor=4)
+
+    def curriculum_head(self,payload,execution):
+        return self._head(payload,execution,maximum_descriptor=5)
 
     def _head(self,payload,execution,*,maximum_descriptor):
         if not isinstance(payload, dict) or set(payload) != {'base_name'}:
@@ -76,7 +81,8 @@ def fetch_history(work, name, provider, *, cancel_event=None, timeout_s=60):
     peers=getattr(work.node,'peers',lambda:[])()
     version_two=any(peer.get('node_id')==provider and peer.get('capabilities',{}).get('language_versions_v2') is True for peer in peers)
     version_three=any(peer.get('node_id')==provider and peer.get('capabilities',{}).get('language_versions_v3') is True for peer in peers)
-    head = request(HEAD_OPERATION_V3 if version_three else HEAD_OPERATION_V2 if version_two else HEAD_OPERATION, {'base_name': name})
+    version_four=any(peer.get('node_id')==provider and peer.get('capabilities',{}).get('language_versions_v4') is True for peer in peers)
+    head = request(HEAD_OPERATION_V4 if version_four else HEAD_OPERATION_V3 if version_three else HEAD_OPERATION_V2 if version_two else HEAD_OPERATION, {'base_name': name})
     target, descriptor = validate_bundle(head)
     if descriptor['base_name'] != name:
         raise ReleaseError('Language head belongs to another family')

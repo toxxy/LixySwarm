@@ -460,8 +460,10 @@ class SwarmWindow(QMainWindow):
         learning=diagnostic.get(channel,{}) if snapshot["fresh"] else {}
         learning_states={"idle":"Listo para una ronda", "collecting":"Repartiendo y recuperando fragmentos", "evaluating":"Evaluando la versión candidata", "promoting":"Conservando y publicando la mejora", "complete":"Ronda finalizada", "interrupted":"Trabajo conservado; esperando recuperación", "no_improvement":"En pausa: las últimas rondas no mejoraron el modelo", "needs_attention":"En pausa: revisa el error antes de reintentar", "waiting_replicas":"Esperando que los equipos compartan la misma versión", "waiting_capacity":"Esperando recursos disponibles para aprender"}
         learning_states['waiting_policy']='Esperando permiso para continuar el aprendizaje'
+        learning_states['waiting_program']='El programa anterior conserva trabajo pendiente'
         self.learning_label.setText(learning_states.get(learning.get("status"),"Preparando coordinación")
             + f" · {learning.get('round') or 0} rondas terminadas"
+            + (f" · {learning['historical_rounds']} rondas conservadas de otro programa" if learning.get('historical_rounds') else "")
             + (f" · versión {learning['accepted_sequence']}" if learning.get("accepted_sequence") is not None else ""))
         if learning.get("paused"):
             self.learning_label.setText("Aprendizaje detenido; el trabajo pendiente se conserva.")

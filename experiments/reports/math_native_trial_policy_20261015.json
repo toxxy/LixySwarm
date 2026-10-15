@@ -1,0 +1,67 @@
+{
+  "version": 1,
+  "created_at": 1792054183.9420009,
+  "scope": "Known two-PC native public-math pilot; no open-worker consensus or general conversation claim",
+  "training_policy": {
+    "version": 4,
+    "dataset_id": "fe010a42f036c6abd10f519e327a7fb99e77c3bda93c51be31e5f29e4c0f56c8",
+    "maximum_examples": 64,
+    "maximum_answer_tokens": 32768,
+    "maximum_answer_tokens_per_example": 512,
+    "supervised_normalization": "answer-token-mean",
+    "retention": "project-conflicting-math-gradient-off-common-replay-gradient-then-add-replay-gradient",
+    "retention_anchor_index": "not-used; common-first64-training-replay",
+    "gradient_clipping": "one-global-l2-clip-at-one-after-mean-supervision-and-retention",
+    "gradient_format": "lixyswarm-language-gradient-v3-float16",
+    "quantization": "ieee754-binary16-round-nearest-even",
+    "maximum_relative_l2_error": 0.001,
+    "decoded_clipping": "global-l2-clip-at-one-after-float32-reconstruction",
+    "training_artifact_id": "a1a36bc0cea6f5a8dbf81a5828a01da3ca0674c534431ef51583f3f46a915be6",
+    "evaluation_artifact_id": "188812577d2a7834eff5fc0ac0fad5f09f121b3587b34b7ba5d88ba37537be50",
+    "evaluation_gate_id": "5e085b48da4be5c0e2b3176bb387466405005a0ec61c44b2372f521dbb8e4507",
+    "maximum_sequence_tokens": 1024,
+    "replay_dataset_id": "24eb8b9e9c268021ededa84a171a4b6804cbe58263edbb2b2944f49dd4de64a5",
+    "replay_examples": 64,
+    "replay_selection": "first-64-training-examples-identical-on-all-workers",
+    "replay_cost": "signed-replay-answer-tokens; aggregation-is-weighted-only-by-math-answer-tokens",
+    "projection": "g-math-minus-min(0,dot(g-math,g-replay))/squared-norm(g-replay)*g-replay-plus-g-replay;zero-replay-skips-projection"
+  },
+  "training_policy_id": "de2929818310546b588e93640cd34f6459d2bf157f3d79d64f542889c1234d95",
+  "native_gate_id": "e16e78057c5573cc3b9a0db9afb182ea6ebeef098cb95d6dad5cfff3517d40c2",
+  "parent_release_id": "df231f9b93f6300ba7242da793d457880a416448f00d0e9b914e6a3f7b1e533a",
+  "parent_model_id": "506317cc9f40da9dea40e6d14a94910ac6625ae478b5f2d0248cb1bbbb93a6c3",
+  "learning_rate": 0.001,
+  "comparisons": [
+    {
+      "start": 0,
+      "count": 64,
+      "shards": 3
+    },
+    {
+      "start": 192,
+      "count": 64,
+      "shards": 3
+    }
+  ],
+  "order": "distributed-first-then-one-PC-for-each-range; fixed parent until all four candidates evaluated",
+  "workers": {
+    "desktop_slots": 2,
+    "laptop_slots": 1,
+    "distributed_example_allocation": [
+      128,
+      64
+    ],
+    "one_PC_example_allocation": [
+      192,
+      0
+    ]
+  },
+  "calibration": "one separate non-comparative warmup: start4094,count1,shards2; no score-dependent parameter changes",
+  "candidate_evaluation": "parent and candidate in the same desktop process, all 128 fixed math cases and all historical gates",
+  "resources": "preserve existing consent: CPU/GPU100%; desktop31GiB/laptop30GiB RAM; desktop8GiB/5Mbps, laptop10GiB/10Mbps disk/network",
+  "acceptance": "all predeclared math and historical gates plus verified distinct known-worker contributions; unchanged math gate5e085b48da4be5c0e2b3176bb387466405005a0ec61c44b2372f521dbb8e4507",
+  "scaling": "fresh remote artifact required; compare wall time through gradient acquisition and separately through full candidate evaluation; useful speedup threshold1.05",
+  "promotion": "after all comparisons, only first predeclared eligible distributed candidate may pass normal publisher and replica verification; otherwise retain sequence2",
+  "history": "manual probes never reset or count as autonomous cycles; old five rounds, cursor96, generation0, rejections3 preserved; new autonomous curriculum is a separate opt-in program",
+  "data_transport": "code/admin via Git/Dropbox/VPN; all learning data and contributions via encrypted public LSP"
+}

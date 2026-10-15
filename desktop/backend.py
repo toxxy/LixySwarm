@@ -123,8 +123,10 @@ class NodeController:
             if required>=2:
                 if not diagnostic.get('language_training',{}).get('batching_enabled'):
                     raise ValueError('Este equipo necesita habilitar el aprendizaje por lotes antes de continuar')
-                if required==3 and not diagnostic.get('language_training',{}).get('half_precision_enabled'):
+                if required>=3 and not diagnostic.get('language_training',{}).get('half_precision_enabled'):
                     raise ValueError('Este equipo necesita habilitar la precisión de 16 bits antes de continuar')
+                if required==4 and not diagnostic.get('language_training',{}).get('math_curriculum_enabled'):
+                    raise ValueError('Este equipo necesita habilitar el currículo público de matemáticas antes de continuar')
                 settings.training_policy_version=required
             settings.generation+=1
         settings.cycles=completed+1; settings.enabled=True; settings.save(self.directory)

@@ -14,7 +14,10 @@ from src.learning.public_conversation import public_corpus, corpus_digest
 from src.learning.public_quality import preservation_verdict,digest_cases as factual_digest
 from src.learning.public_language_gate import preservation_verdict as instruction_verdict,digest_cases as instruction_digest
 from src.learning.language_policy import (BATCH_POLICY_ID, BATCH_CLIENT_VERSION, HALF_CLIENT_VERSION,
-    HALF_POLICY, limits, policy_id, descriptor_policy)
+    HALF_POLICY, limits, policy_id, descriptor_policy, MATH_CLIENT_VERSION, dataset_id as policy_dataset_id,
+    dataset_length, answer_limit)
+from src.learning.public_math import (ARTIFACTS, MAX_TRACE_BYTES, MATH_REPORT_FIELDS, load_snapshot,
+    gate_id as math_gate_id, verify_math_transition)
 from src.network.artifact_store import ArtifactManifest
 from src.network.telemetry import atomic_json
 from src.network.work_protocol import ResultReceipt, WorkResult
@@ -41,6 +44,9 @@ def gate_id(policy_version=1):
         'decoding':'greedy','max_output_tokens':128,'scope':'Known-operator public instruction/context pilot'}
     if policy_version>=2:
         definition.update(version=policy_version,maximum_shard_examples=maximum,training_policy_id=policy_id(policy_version))
+    if policy_version==4:
+        definition.update(dataset_id=policy_dataset_id(4),math_gate_id=math_gate_id(),
+            raw_generations='separate-hash-bound-trace-with-exact-scoring-projection',max_output_tokens=384)
     return hashlib.sha256(genesis.canonical(definition)).hexdigest()
 
 
@@ -52,8 +58,9 @@ def validate_bundle(bundle):
     if isinstance(descriptor, dict) and descriptor.get('version') == 1:
         return genesis.verify_bundle(bundle)
     fields = {'version', 'base_name', 'base_hash', 'files', 'adapter_id', 'adapter_bytes', 'evaluation_id', 'evaluation_bytes'}
-    if isinstance(descriptor,dict) and descriptor.get('version') in {3,4}:fields.add('training_policy_id')
-    if not isinstance(descriptor, dict) or set(descriptor) != fields or type(descriptor['version']) is not int or descriptor['version'] not in {2,3,4}:
+    if isinstance(descriptor,dict) and descriptor.get('version') in {3,4,5}:fields.add('training_policy_id')
+    if isinstance(descriptor,dict) and descriptor.get('version')==5:fields|={'math_trace_id','math_trace_bytes'}
+    if not isinstance(descriptor, dict) or set(descriptor) != fields or type(descriptor['version']) is not int or descriptor['version'] not in {2,3,4,5}:
         raise ReleaseError('Invalid language update descriptor')
     training_policy=descriptor_policy(descriptor)
     if training_policy>=2 and descriptor['training_policy_id']!=policy_id(training_policy):
@@ -63,8 +70,11 @@ def validate_bundle(bundle):
         raise ReleaseError('Invalid bounded language adapter')
     if type(descriptor['evaluation_bytes']) is not int or not 0 < descriptor['evaluation_bytes'] <= MAX_EVALUATION_BYTES:
         raise ReleaseError('Language evaluation exceeds its bound')
+    if training_policy==4 and (name!='qwen3-1.7b' or not HEX.fullmatch(str(descriptor['math_trace_id']))
+            or type(descriptor['math_trace_bytes']) is not int or not 0<descriptor['math_trace_bytes']<=MAX_TRACE_BYTES):
+        raise ReleaseError('Math update requires its declared expert and bounded raw generation trace')
     # Reuse the closed upstream schema; only adapter/evaluation identity vary.
-    upstream = {k: v for k, v in descriptor.items() if k not in {'evaluation_bytes','training_policy_id'}}
+    upstream = {k: v for k, v in descriptor.items() if k not in {'evaluation_bytes','training_policy_id','math_trace_id','math_trace_bytes'}}
     upstream.update(version=1, adapter_id=genesis.ADAPTERS[name],
         adapter_bytes=4599712 if name == 'qwen3-0.6b' else 6434736)
     genesis.validate_descriptor(upstream)
@@ -73,6 +83,8 @@ def validate_bundle(bundle):
         raise ReleaseError('Batch language updates require a compatible client')
     if descriptor['version']==4 and release.minimum_client_version!=HALF_CLIENT_VERSION:
         raise ReleaseError('Half-precision language updates require a compatible client')
+    if descriptor['version']==5 and release.minimum_client_version!=MATH_CLIENT_VERSION:
+        raise ReleaseError('Math updates require a compatible curriculum client')
     if (release.sequence < 1 or release.sequence >= MAX_CHAIN or release.model_format != 'safetensors-v1'
             or release.model_artifact_id != descriptor['adapter_id']
             or release.config_artifact_id != hashlib.sha256(genesis.canonical(descriptor)).hexdigest()
@@ -101,23 +113,45 @@ def dependencies(bundle):
     release, row = validate_bundle(bundle)
     if release.sequence == 0:
         return genesis.dependencies(bundle)
-    return [(r['artifact_id'], r['bytes']) for r in row['files']]+[
+    result=[(r['artifact_id'], r['bytes']) for r in row['files']]+[
         (release.model_artifact_id, row['adapter_bytes']),
         (release.config_artifact_id, len(genesis.canonical(row))),
         (row['evaluation_id'], row['evaluation_bytes'])]
+    if descriptor_policy(row)==4:result+=[ARTIFACTS['train'],*evidence_dependencies(bundle)]
+    return result
 
 
-def verify_evaluation(report, parent_bundle, candidate_bundle):
+def evidence_dependencies(bundle):
+    """Additional math proof data needed even by a client without model weights."""
+    _release,row=validate_bundle(bundle)
+    if descriptor_policy(row)!=4:return []
+    return [ARTIFACTS['evaluation'],(row['math_trace_id'],row['math_trace_bytes'])]
+
+
+def math_evidence(report,store):
+    if store is None:raise ReleaseError('Math quality requires its pinned test data and complete trace')
+    for identifier,size,kind in [(ARTIFACTS['evaluation'][0],ARTIFACTS['evaluation'][1],'dataset'),
+                                (report['math_trace_id'],report['math_trace_bytes'],'evaluation')]:
+        if not store.has(identifier) or store.manifest(identifier).size!=size or store.manifest(identifier).kind!=kind:
+            raise ReleaseError('Math evaluation evidence is missing, corrupt or has a different kind')
+    evaluation=load_snapshot(store.object_path(ARTIFACTS['evaluation'][0]),'evaluation')
+    path=store.object_path(report['math_trace_id'])
+    if path.stat().st_size>MAX_TRACE_BYTES:raise ReleaseError('Math generation trace exceeds its bound')
+    return evaluation,json.loads(path.read_text())
+
+
+def verify_evaluation(report, parent_bundle, candidate_bundle, *, store=None):
     parent, before = validate_bundle(parent_bundle)
     candidate, after = validate_bundle(candidate_bundle)
-    return _verify_evaluation(report,parent,before,candidate,after)
+    return _verify_evaluation(report,parent,before,candidate,after,store=store)
 
 
-def _verify_evaluation(report,parent,before,candidate,after):
+def _verify_evaluation(report,parent,before,candidate,after,*,store=None):
     policy_version=descriptor_policy(after)
     fields = {'version','gate_id', 'private_inputs', 'base_name', 'base_hash', 'dataset_id', 'parent_release_id',
         'adapter_id', 'baseline_nll', 'candidate_nll', 'quality_before', 'quality_after',
         'instruction_before','instruction_after','contributions'}
+    if policy_version==4:fields|=MATH_REPORT_FIELDS
     if (not isinstance(report, dict) or set(report) != fields or type(report['version']) is not int or report['version'] != policy_version
             or report['private_inputs'] is not False or report['base_name'] != before['base_name']
             or report['gate_id']!=gate_id(policy_version)
@@ -125,7 +159,7 @@ def _verify_evaluation(report,parent,before,candidate,after):
             or report['base_hash'] != before['base_hash'] or after['base_hash'] != before['base_hash']
             or report['parent_release_id'] != parent.release_id or candidate.previous_release_id != parent.release_id
             or candidate.sequence!=parent.sequence+1 or before['base_name']!=after['base_name']
-            or report['adapter_id'] != candidate.model_artifact_id or report['dataset_id'] != corpus_digest(public_corpus())):
+            or report['adapter_id'] != candidate.model_artifact_id or report['dataset_id'] != policy_dataset_id(policy_version)):
         raise ReleaseError('Language evaluation is not bound to public data and this transition')
     baseline, value = report['baseline_nll'], report['candidate_nll']
     if (any(type(v) not in (int, float) or not math.isfinite(v) or v <= 0 for v in (baseline, value))
@@ -139,6 +173,12 @@ def _verify_evaluation(report,parent,before,candidate,after):
         raise ReleaseError('Language candidate regresses factual preservation')
     if not instruction_verdict(report['instruction_before'],report['instruction_after'])['eligible_for_promotion']:
         raise ReleaseError('Language candidate regresses instructions or context')
+    if policy_version==4:
+        if any(report[k]!=after[k] for k in ['math_trace_id','math_trace_bytes']):
+            raise ReleaseError('Math descriptor and report bind different raw generations')
+        evaluation,trace=math_evidence(report,store)
+        if not verify_math_transition(report,evaluation,trace)['eligible_for_research_promotion']:
+            raise ReleaseError('Math candidate does not pass its predeclared stronger evaluation')
     proof=verify_contributions(report['contributions'],base_name=before['base_name'],
         adapter_id=parent.model_artifact_id,dataset_id=report['dataset_id'],policy_version=policy_version)
     if len(genesis.canonical(report)) > MAX_EVALUATION_BYTES:
@@ -150,7 +190,7 @@ def verify_contributions(contributions,*,base_name,adapter_id,dataset_id,require
     """Check signed physical receipts; promotion always uses both-worker mode."""
     maximum,maximum_tokens=limits(policy_version)
     if (type(require_distributed) is not bool or base_name not in BASES
-            or dataset_id!=corpus_digest(public_corpus())):
+            or dataset_id!=policy_dataset_id(policy_version) or policy_version==4 and base_name!='qwen3-1.7b'):
         raise ReleaseError('Invalid public contribution policy or dataset')
     if not isinstance(contributions, list) or not (2 if require_distributed else 1) <= len(contributions) <= 16:
         raise ReleaseError('Distributed language promotion requires contributions from both PCs')
@@ -167,20 +207,23 @@ def verify_contributions(contributions,*,base_name,adapter_id,dataset_id,require
         expected = {'base_hash', 'adapter_id', 'dataset_id', 'start', 'count', 'tokens', 'loss', 'retention_loss',
             'gradient_id', 'gradient_bytes', 'gradient'}
         if policy_version>=2:expected.add('training_policy_id')
-        if policy_version==3:expected.add('quantization_relative_l2_error')
+        if policy_version>=3:expected.add('quantization_relative_l2_error')
+        if policy_version==4:expected.add('replay_tokens')
         if (set(output) != expected or output['base_hash'] != genesis.base_hash(base_name)
                 or policy_version>=2 and output.get('training_policy_id')!=policy_id(policy_version)
                 or output['adapter_id'] != adapter_id or output['dataset_id'] != dataset_id
                 or type(output['start']) is not int or type(output['count']) is not int
-                or not 1 <= output['count'] <= maximum or not 0 <= output['start'] <= len(public_corpus()['train'])-output['count']
+                or not 1 <= output['count'] <= maximum or not 0 <= output['start'] <= dataset_length(policy_version)-output['count']
                 or type(output['tokens']) is not int or not 1 <= output['tokens'] <= maximum_tokens
-                or policy_version>=2 and output['tokens']>192*output['count']
+                or policy_version>=2 and output['tokens']>answer_limit(policy_version)*output['count']
                 or any(type(output[k]) not in (int, float) or not math.isfinite(output[k]) for k in ('loss', 'retention_loss'))):
             raise ReleaseError('Language contribution is from another version, dataset or shard')
-        if policy_version==3:
+        if policy_version>=3:
             error=output['quantization_relative_l2_error']
             if type(error) not in (int,float) or not math.isfinite(error) or not 0<=error<=HALF_POLICY['maximum_relative_l2_error']:
                 raise ReleaseError('Half-precision contribution exceeds its reconstruction bound')
+        if policy_version==4 and (type(output['replay_tokens']) is not int or not 1<=output['replay_tokens']<=64*192):
+            raise ReleaseError('Math replay token cost exceeds its immutable public bound')
         manifest = ArtifactManifest.from_dict(output['gradient'], max_bytes=32*1024**2)
         if (manifest.kind != 'gradient' or manifest.artifact_id != output['gradient_id']
                 or type(output['gradient_bytes']) is not int or manifest.size != output['gradient_bytes']):
@@ -196,7 +239,7 @@ def verify_contributions(contributions,*,base_name,adapter_id,dataset_id,require
     return {'physical_workers':sorted(workers),'tokens':tokens}
 
 
-def build_update(chain,adapter,evaluation,report,publisher):
+def build_update(chain,adapter,evaluation,report,publisher,*,store=None):
     """Sign only after the public transition gate passes; no transport authority."""
     parent=verify_chain(chain);before=chain[-1]['descriptor']
     if publisher.node_id_hex!=genesis.SIGNER:
@@ -212,11 +255,12 @@ def build_update(chain,adapter,evaluation,report,publisher):
     training_policy=report.get('version',1)
     limits(training_policy)
     if training_policy>=2:descriptor.update(version=training_policy+1,training_policy_id=policy_id(training_policy))
+    if training_policy==4:descriptor.update({k:report[k] for k in ['math_trace_id','math_trace_bytes']})
     draft=ReleaseManifest.create(model_artifact_id=adapter.artifact_id,model_format='safetensors-v1',
         sequence=parent.sequence+1,previous_release_id=parent.release_id,
         config_artifact_id=hashlib.sha256(genesis.canonical(descriptor)).hexdigest(),
-        tokenizer_artifact_id=parent.tokenizer_artifact_id,minimum_client_version={1:'0.4.0a8',2:BATCH_CLIENT_VERSION,3:HALF_CLIENT_VERSION}[training_policy])
-    _verify_evaluation(report,parent,before,draft,descriptor)
+        tokenizer_artifact_id=parent.tokenizer_artifact_id,minimum_client_version={1:'0.4.0a8',2:BATCH_CLIENT_VERSION,3:HALF_CLIENT_VERSION,4:MATH_CLIENT_VERSION}[training_policy])
+    _verify_evaluation(report,parent,before,draft,descriptor,store=store)
     bundle={'release':draft.sign(publisher).to_dict(),'descriptor':descriptor}
     validate_bundle(bundle)
     return bundle
@@ -294,7 +338,7 @@ class LanguageVersionRegistry:
                 validate_adapter(store.object_path(bundle['release']['model_artifact_id']),
                     json.loads(configuration.read_text()),bundle['descriptor']['base_hash'])
                 evaluation = store.object_path(bundle['descriptor']['evaluation_id'])
-                verify_evaluation(json.loads(evaluation.read_text()), chain[index-1], bundle)
+                verify_evaluation(json.loads(evaluation.read_text()), chain[index-1], bundle, store=store)
         self.bundles.mkdir(parents=True, exist_ok=True)
         for bundle in chain[1:]:
             atomic_json(self.bundles/f"{bundle['release']['release_id']}.json", bundle)

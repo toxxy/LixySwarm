@@ -66,7 +66,8 @@ def run_candidate(training,payload,execution,*,policy_version=1):
         if digest_file(path)!=(identifier,output['gradient_bytes']):raise ValueError('Candidate gradient hash or size mismatch')
         contributions.append({'path':str(path),**{k:output[k] for k in
             ['gradient_id','gradient_bytes','base_hash','adapter_id','dataset_id','start','count','tokens']}})
-        if policy_version==3:contributions[-1]['quantization_relative_l2_error']=output['quantization_relative_l2_error']
+        if policy_version>=3:contributions[-1]['quantization_relative_l2_error']=output['quantization_relative_l2_error']
+    math_data=training.ensure_math_data(execution,allowed,splits=('train','evaluation')) if policy_version==4 else None
     check();directory=training.directory/'language-candidates'/execution.work.job_id
     directory.mkdir(parents=True,exist_ok=False,mode=0o700);path=directory/'adapter.safetensors'
     request={'action':'candidate','base_name':payload['base_name'],'base_directory':str(base),
@@ -75,6 +76,8 @@ def run_candidate(training,payload,execution,*,policy_version=1):
         'output_file':str(path),'cpu_threads':max(1,min(4,int(training.resources['cpu_cores']*permission['cpu_percent']/100))),
         'gpu_fraction':permission['gpu_percent']/100/max(1,permission['max_gpu_jobs']),'device':'cuda','deadline':execution.deadline}
     if policy_version>=2:request['training_policy_id']=policy_id(policy_version)
+    if policy_version==4:
+        request['evaluation_file']=str(math_data['evaluation'])
     with training.lock:training.active+=1
     training.changed.set()
     complete=False
@@ -86,6 +89,9 @@ def run_candidate(training,payload,execution,*,policy_version=1):
         validate_adapter(path,json.loads((base/'config.json').read_text()),head['descriptor']['base_hash'])
         fields={'version','private_inputs','base_name','base_hash','dataset_id','parent_release_id','adapter_id',
                 'baseline_nll','candidate_nll','quality_before','quality_after','instruction_before','instruction_after'}
+        if policy_version==4:
+            from src.learning.public_math import MATH_REPORT_FIELDS
+            fields|=MATH_REPORT_FIELDS
         evaluation={key:value[key] for key in fields}
         if (type(evaluation['version']) is not int or evaluation['version']!=policy_version or evaluation['private_inputs'] is not False
                 or any(evaluation[key]!=expected for key,expected in {
@@ -102,6 +108,17 @@ def run_candidate(training,payload,execution,*,policy_version=1):
         facts=factual_verdict(evaluation['quality_before'],evaluation['quality_after'])
         instructions=instruction_verdict(evaluation['instruction_before'],evaluation['instruction_after'])
         numerical=after<before-max(1e-7,before*.001) and facts['eligible_for_promotion'] and instructions['eligible_for_promotion']
+        math_verdict=None
+        if policy_version==4:
+            from src.learning.public_math import load_snapshot,MAX_TRACE_BYTES,verify_math_transition
+            trace_path=directory/'math-traces.json'
+            if (trace_path.is_symlink() or trace_path.stat().st_size>MAX_TRACE_BYTES
+                    or digest_file(trace_path)!=(evaluation['math_trace_id'],evaluation['math_trace_bytes'])):
+                raise ValueError('Candidate raw math trace differs from its declared hash or size')
+            math_verdict=verify_math_transition(evaluation,load_snapshot(request['evaluation_file'],'evaluation'),json.loads(trace_path.read_text()))
+            numerical=math_verdict['eligible_for_research_promotion']
+            check();manifest=training.families.store.import_file(trace_path,kind='evaluation',media_type='application/json')
+            if manifest.kind!='evaluation':raise ValueError('Math trace has a different artifact kind')
         distributed=set(proof['physical_workers'])==language_versions.WORKERS and proof['tokens']>=16
         evaluation.update(gate_id=gate_id(policy_version),contributions=payload['contributions'])
         atomic_json(directory/'evaluation.json',evaluation)
@@ -110,6 +127,7 @@ def run_candidate(training,payload,execution,*,policy_version=1):
             **proof,'numerical_gates_passed':numerical,'distributed_worker_gate_passed':distributed,
             'eligible_for_publication':numerical and distributed,'published':False}
         if policy_version>=2:summary['training_policy_id']=policy_id(policy_version)
+        if math_verdict is not None:summary['math_verdict']=math_verdict
         if not summary['eligible_for_publication']:path.unlink()
         check();atomic_json(directory/'summary.json',summary);complete=True
         with training.lock:

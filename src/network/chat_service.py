@@ -87,7 +87,7 @@ class ChatBroker:
                 and peer.get('capabilities',{}).get('language_inference_v1')]
             if peers and not self.language.ready and not self.catalog.path.exists():return True
             return any(model not in known for peer in peers for model in
-                peer.get('capabilities',{}).get('language_inference_models_v3',peer.get('capabilities',{}).get('language_inference_models',peer.get('resources',{}).get('models',[]))))
+                peer.get('capabilities',{}).get('language_inference_models_v4',peer.get('capabilities',{}).get('language_inference_models_v3',peer.get('capabilities',{}).get('language_inference_models',peer.get('resources',{}).get('models',[])))))
         except (OSError,ValueError,TypeError,KeyError):return True
 
     def _model_id(self):
@@ -114,7 +114,7 @@ class ChatBroker:
         for peer in self.node.peers():
             resources=peer.get("resources",{})
             capabilities=peer.get('capabilities',{})
-            models=capabilities.get('language_inference_models_v3',capabilities.get('language_inference_models',resources.get('models',[])))
+            models=capabilities.get('language_inference_models_v4',capabilities.get('language_inference_models_v3',capabilities.get('language_inference_models',resources.get('models',[]))))
             if peer["node_id"] in PROVIDERS and capabilities.get("language_inference_v1") and model_id in models and resources.get("has_gpu") and resources.get("ram_gb",0)>=5:
                 result.append(peer["node_id"])
         return result

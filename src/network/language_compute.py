@@ -87,10 +87,10 @@ class LanguageComputeService:
                 if store.object_path(row['release']['model_artifact_id']).is_file()}
         except (OSError,ValueError,TypeError,KeyError,StopIteration):return {}
 
-    def approved_models(self,*,maximum_descriptor=4):
+    def approved_models(self,*,maximum_descriptor=5):
         if not self.ready:return []
         models=list(dict.fromkeys([self.engine.adapter_id,*self._ancestors()]))
-        if maximum_descriptor>=4:return models
+        if maximum_descriptor>=5:return models
         from src.release.language_versions import LanguageVersionRegistry
         try:
             registry=LanguageVersionRegistry(self.directory/'public/language',self.engine.base_name)

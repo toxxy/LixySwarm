@@ -165,7 +165,7 @@ def run(directory: Path, *, host="0.0.0.0", port=7338, interval=15, allow_privat
             atomic_json(directory / "diagnostics.json", {
                 "node_id": identity.node_id_hex, "timestamp_ms": status["timestamp_ms"],
                 "port": node.port, "peers": peers,
-                "pid": os.getpid(), "runtime_version": "0.4.0a17", "controls_version": 1,
+                "pid": os.getpid(), "runtime_version": "0.4.0a18", "controls_version": 1,
                 "settings": asdict(settings), "worker_ready": computation["ready"] or conversation["ready"] or training["ready"], "control_error": error,
                 "knowledge": public_knowledge,
                 "compute":computation,
@@ -249,7 +249,8 @@ def run(directory: Path, *, host="0.0.0.0", port=7338, interval=15, allow_privat
                 node.capabilities["inference"]=compute.ready or language.ready
                 node.capabilities["language_inference_v1"]=language.ready
                 node.capabilities["language_inference_models"]=language.approved_models(maximum_descriptor=3)
-                node.capabilities["language_inference_models_v3"]=language_models
+                node.capabilities["language_inference_models_v3"]=language.approved_models(maximum_descriptor=4)
+                node.capabilities["language_inference_models_v4"]=language_models
                 memory_state=public_memory.snapshot()
                 node.capabilities['public_memory_v1']=memory_state['sharing']
                 node.capabilities['public_memory_head']=memory_state['release_id'] if memory_state['sharing'] else ''

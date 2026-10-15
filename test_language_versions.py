@@ -19,15 +19,16 @@ from src.release import language_versions as versions
 from src.release.manifest import ReleaseManifest,ReleaseError
 
 
-def fixture(monkeypatch,tmp_path):
+def fixture(monkeypatch,tmp_path,*,name='qwen3-0.6b'):
     publisher=LSPIdentity.generate();workers=[LSPIdentity.generate(),LSPIdentity.generate()]
     monkeypatch.setattr(genesis,'SIGNER',publisher.node_id_hex)
     monkeypatch.setattr(versions,'WORKERS',{worker.node_id_hex for worker in workers})
-    name='qwen3-0.6b';store=ArtifactStore(tmp_path/'artifacts')
+    store=ArtifactStore(tmp_path/'artifacts')
     def artifact(content,kind='other'):
         path=store.incoming/str(time.time_ns());path.write_bytes(content)
         return store.commit_generated(path,kind=kind,media_type='application/octet-stream')
-    model=artifact(b'g'*4599712,'model');evaluation=artifact(b'legacy public evaluation','evaluation')
+    initial_bytes=4599712 if name=='qwen3-0.6b' else 6434736
+    model=artifact(b'g'*initial_bytes,'model');evaluation=artifact(b'legacy public evaluation','evaluation')
     pins={};sizes={}
     for filename in genesis.BASES[name]:
         content=('synthetic public '+filename).encode()

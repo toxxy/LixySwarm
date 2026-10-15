@@ -10,7 +10,7 @@ import time
 import urllib.request
 import uuid
 
-from src.learning.language_policy import policy_id,gradient_operation,candidate_operation
+from src.learning.language_policy import policy_id,gradient_operation,candidate_operation,dataset_id,dataset_length
 from src.learning.public_conversation import public_corpus,corpus_digest
 from src.network.telemetry import atomic_json
 from src.network.work_protocol import WorkResult,ResultReceipt
@@ -27,7 +27,7 @@ def main():
     parser.add_argument('--count',type=int,default=64)
     parser.add_argument('--shards',type=int,default=3)
     parser.add_argument('--parallel-jobs',type=int,default=3)
-    parser.add_argument('--policy-version',type=int,choices=[2,3],default=2)
+    parser.add_argument('--policy-version',type=int,choices=[2,3,4],default=2)
     parser.add_argument('--start',type=int,default=0)
     parser.add_argument('--candidate',action='store_true')
     parser.add_argument('--learning-rate',type=float,default=.0001)
@@ -37,7 +37,7 @@ def main():
             or not 1e-6<=args.learning_rate<=1e-3):
         parser.error('Use fresh private state, known workers and bounded local requests')
     plan=shard_plan(args.worker,args.count,args.shards,policy_version=args.policy_version)
-    if args.start<0 or args.start+len(plan)*args.count>len(public_corpus()['train']):parser.error('Use disjoint ranges inside the fixed public corpus')
+    if args.start<0 or args.start+len(plan)*args.count>dataset_length(args.policy_version):parser.error('Use disjoint ranges inside the fixed public corpus')
     slots={worker:1 for worker in args.worker}
     for item in args.worker_slots:
         worker,_,value=item.partition('=')
@@ -83,7 +83,7 @@ def main():
     semaphores={worker:threading.BoundedSemaphore(count) for worker,count in slots.items()}
     def contribute(index,worker):
         payload={'base_name':'qwen3-1.7b','release_id':head['release']['release_id'],'adapter_id':head['release']['model_artifact_id'],
-            'dataset_id':corpus_digest(public_corpus()),'start':args.start+index*args.count,'count':args.count,'training_policy_id':policy_id(args.policy_version)}
+            'dataset_id':dataset_id(args.policy_version),'start':args.start+index*args.count,'count':args.count,'training_policy_id':policy_id(args.policy_version)}
         with semaphores[worker]:
             if cancel.is_set():raise RuntimeError('Native work cancelled before dispatch')
             state=execute(worker,gradient_operation(args.policy_version),payload)
@@ -111,7 +111,7 @@ def main():
         report['contributions'].sort(key=lambda row:row['start']);report['signed_results'].sort(key=lambda row:row['output']['start'])
         if args.candidate:
             payload={'base_name':'qwen3-1.7b','release_id':head['release']['release_id'],'adapter_id':head['release']['model_artifact_id'],
-                'dataset_id':corpus_digest(public_corpus()),'training_policy_id':policy_id(args.policy_version),
+                'dataset_id':dataset_id(args.policy_version),'training_policy_id':policy_id(args.policy_version),
                 'contributions':report['signed_results'],'learning_rate':args.learning_rate}
             state=execute(own,candidate_operation(args.policy_version),payload);report['candidate_result']=state['result']
         report.update(success=True,total_tokens=sum(row['tokens'] for row in report['contributions']),

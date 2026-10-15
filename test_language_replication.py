@@ -115,7 +115,7 @@ def test_valid_signed_forks_are_not_silently_chosen(monkeypatch,tmp_path):
 def test_invalid_evaluation_prevents_model_download_and_head_change(monkeypatch,tmp_path):
     from src.network import language_replication
     source,target,first,second,report,calls,_update=setup(monkeypatch,tmp_path)
-    def reject(*_a):raise ReleaseError('fixture quality regression')
+    def reject(*_a,**_kw):raise ReleaseError('fixture quality regression')
     monkeypatch.setattr(language_replication,'verify_evaluation',reject)
     with pytest.raises(ReleaseError,match='regression'):
         replicate_version(None,target,tmp_path/'receiver','qwen3-0.6b',['working'])

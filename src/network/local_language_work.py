@@ -6,13 +6,13 @@ import threading
 import time
 
 from src.contribution import ResourceRequirements
-from src.learning.language_policy import policy_id,work_policy,enabled_policy
+from src.learning.language_policy import policy_id,work_policy,enabled_policy,dataset_id,work_timeout
 from src.learning.public_conversation import public_corpus,corpus_digest
 from src.release.language_versions import WORKERS,verify_contributions
 from .artifact_store import ArtifactService,digest_file
 from .work_protocol import ResultReceipt
 
-OPERATIONS={'language.gradient.v2','language.gradient.v3','language.gradient.v4','language.candidate.v1','language.candidate.v2','language.candidate.v3'}
+OPERATIONS={'language.gradient.v2','language.gradient.v3','language.gradient.v4','language.gradient.v5','language.candidate.v1','language.candidate.v2','language.candidate.v3','language.candidate.v4'}
 
 
 class LocalLanguageWork:
@@ -43,7 +43,7 @@ class LocalLanguageWork:
         expected={'base_name','release_id','adapter_id','dataset_id'}
         expected|={'start','count'} if operation.startswith('language.gradient.') else {'contributions','learning_rate'}
         if batch:expected.add('training_policy_id')
-        if set(payload)!=expected or payload['dataset_id']!=corpus_digest(public_corpus()):
+        if set(payload)!=expected or payload['dataset_id']!=dataset_id(version):
             raise ValueError('Local work cannot select private data, paths or programs')
         if batch and (not enabled_policy(self.training.engine,version) or payload.get('training_policy_id')!=policy_id(version)):
             raise ValueError('Batch policy has not been locally enabled')
@@ -59,7 +59,7 @@ class LocalLanguageWork:
             for old in list(self.jobs):
                 if len(self.jobs)<32:break
                 if self.jobs[old]['state']!='running':self.jobs.pop(old)
-            job={'state':'running','operation':operation,'batch':batch,'half':version==3,'cancel':threading.Event(),'lease':time.monotonic()+30,'started_at':time.time()}
+            job={'state':'running','operation':operation,'batch':batch,'half':version>=3,'policy_version':version,'cancel':threading.Event(),'lease':time.monotonic()+30,'started_at':time.time()}
             self.jobs[request]=job
             job['thread']=threading.Thread(target=self._run,args=(job,worker,operation,deepcopy(payload)),daemon=True)
             job['thread'].start()
@@ -83,6 +83,7 @@ class LocalLanguageWork:
                     if job['state']=='running' and (time.monotonic()>job['lease'] or not self.knowledge.allowed
                             or job['batch'] and not self.training.engine.batching_enabled
                             or job['half'] and not enabled_policy(self.training.engine,3)
+                            or not enabled_policy(self.training.engine,job.get('policy_version',1))
                             or job['operation'].startswith('language.candidate.') and not self.training.engine.candidates_enabled
                             or not self.training.ready or self.coordinator.thread is not None and self.coordinator.thread.is_alive()):
                         job['cancel'].set()
@@ -91,13 +92,14 @@ class LocalLanguageWork:
         cancel=job['cancel'];began=time.monotonic();node=self.knowledge.node
         try:
             gradient=operation.startswith('language.gradient.')
+            timeout=work_timeout(work_policy(operation),candidate=not gradient)
             requirements=ResourceRequirements(kind='training',gpu_required=True,ram_gb=self.training.required_ram(),disk_gb=.04 if gradient else .1)
             if worker==node.identity.node_id_hex:
-                result=self.knowledge.work.execute_local(operation,payload,requirements,timeout_s=240 if gradient else 900,cancel_event=cancel)
+                result=self.knowledge.work.execute_local(operation,payload,requirements,timeout_s=timeout,cancel_event=cancel)
                 route={'transport':'local','encrypted':False,'public_internet':False}
             else:
                 if worker not in node.connected_node_ids:node.connect_node(worker,timeout=12)
-                result=self.knowledge.work.submit(operation,payload,requirements,peer_id=worker,timeout_s=240 if gradient else 900,cancel_event=cancel)
+                result=self.knowledge.work.submit(operation,payload,requirements,peer_id=worker,timeout_s=timeout,cancel_event=cancel)
                 peer=next(row for row in node.peers() if row['node_id']==worker)
                 route={key:peer.get(key) for key in ['transport','encrypted','host','relay_host']}
             ready=time.monotonic()-began

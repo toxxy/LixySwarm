@@ -6,6 +6,7 @@ children receive public artifacts and never the signing key or this ledger.
 from __future__ import annotations
 
 import json
+import hashlib
 import threading
 import time
 import uuid
@@ -18,7 +19,7 @@ from src.contribution import ResourceRequirements
 from src.learning.public_bases import BASES
 from src.learning.public_conversation import public_corpus,corpus_digest
 from src.learning.language_capacity import CapacityHistory,allocate_shards,observation
-from src.learning.language_policy import policy_id,limits,descriptor_policy,enabled_policy,gradient_operation,candidate_operation
+from src.learning.language_policy import policy_id,limits,descriptor_policy,enabled_policy,gradient_operation,candidate_operation,dataset_id,dataset_length,work_timeout
 from src.release.language_family import SIGNER
 from src.release.language_publish import publish_update
 from src.release.language_versions import LanguageVersionRegistry,WORKERS,verify_contributions,verify_evaluation
@@ -60,6 +61,8 @@ class LanguageLearningSettings:
             raise ValueError('Language coordination is limited to the known physical pilot')
         if self.enabled and (set(self.workers)!=WORKERS or not Path(self.signing_key_file).is_absolute()):
             raise ValueError('Learning needs both physical workers and a local publisher')
+        if self.training_policy_version==4 and self.base_name!='qwen3-1.7b':
+            raise ValueError('The math curriculum is currently bounded to the large public expert')
 
     def save(self,directory):
         self.validate();atomic_json(Path(directory)/'language-learning-controls.json',asdict(self))
@@ -84,18 +87,42 @@ class LanguageLearningCoordinator:
     def __init__(self,knowledge,training,directory):
         self.knowledge,self.training,self.directory=knowledge,training,Path(directory)
         self.root=self.directory/'language-learning';self.path=self.root/'ledger.json'
+        self.legacy_root=self.root;self.program_error=None
         self.lock=threading.RLock();self.changed=threading.Event();self.cancel=threading.Event()
         self.settings=LanguageLearningSettings();self.thread=None;self.closed=False;self.next_attempt=0
         self.ledger=None
         self.capacity=CapacityHistory(self.root/'capacity.json');self.calculation_slots={}
-        if self.path.exists():
-            if self.path.stat().st_size>512*1024:raise ValueError('Language learning ledger exceeds its bound')
-            self.ledger=json.loads(self.path.read_text())
-            if (self.ledger.get('version')!=1 or type(self.ledger.get('round')) is not int
-                    or not 0<=self.ledger['round']<=10 or type(self.ledger.get('cursor')) is not int
-                    or not 0<=self.ledger['cursor']<len(public_corpus()['train'])
-                    or self.ledger.get('dataset_id')!=corpus_digest(public_corpus())):
-                raise ValueError('Invalid durable language progress; preserve it for inspection')
+        self.ledger=self._load_progress(self.path,1)
+
+    @staticmethod
+    def _load_progress(path,version):
+        if not path.exists():return None
+        if path.stat().st_size>512*1024:raise ValueError('Language learning ledger exceeds its bound')
+        value=json.loads(path.read_text())
+        if (value.get('version')!=1 or type(value.get('round')) is not int or not 0<=value['round']<=10
+                or type(value.get('cursor')) is not int or not 0<=value['cursor']<dataset_length(version)
+                or value.get('dataset_id')!=dataset_id(version)):
+            raise ValueError('Invalid durable language progress; preserve it for inspection')
+        return value
+
+    def _select_program(self):
+        version=self.settings.training_policy_version
+        root=self.legacy_root if version<4 else self.legacy_root/'programs'/dataset_id(version)
+        if root==self.root:self.program_error=None;return True
+        if self.ledger is not None and self.ledger.get('pending') is not None:
+            self.program_error='The previous data program has pending work; its ledger is preserved';return False
+        try:ledger=self._load_progress(root/'ledger.json',version)
+        except (OSError,ValueError,TypeError) as error:
+            self.program_error=str(error);return False
+        self.root=root;self.path=root/'ledger.json';self.ledger=ledger
+        self.capacity=CapacityHistory(root/'capacity.json');self.program_error=None
+        return True
+
+    def _historical_rounds(self):
+        other=self.legacy_root/'ledger.json' if self.root!=self.legacy_root else self.legacy_root/'programs'/dataset_id(4)/'ledger.json'
+        version=1 if self.root!=self.legacy_root else 4
+        try:return (self._load_progress(other,version) or {}).get('round',0)
+        except (OSError,ValueError,TypeError):return 0
 
     def _registry(self):
         return LanguageVersionRegistry(self.training.families.root,self.settings.base_name)
@@ -108,15 +135,22 @@ class LanguageLearningCoordinator:
         with self.lock:
             try:required=descriptor_policy(self._registry().head()['descriptor'])
             except (OSError,ValueError):required=1
-            if self.ledger is None:return {'status':'idle','round':0,'cursor':0,'epoch':0,'enabled':self.settings.enabled,
+            details={'dataset_id':self.ledger['dataset_id'] if self.ledger else dataset_id(self.settings.training_policy_version),
+                     'historical_rounds':self._historical_rounds()}
+            if self.program_error:return {**details,'status':'waiting_program','round':(self.ledger or {}).get('round',0),
+                'error':self.program_error,'enabled':self.settings.enabled,'training_policy_version':self.settings.training_policy_version}
+            if self.ledger is None:return {**details,'status':'idle','round':0,'cursor':0,'epoch':0,'enabled':self.settings.enabled,
                 'required_training_policy_version':required,'training_policy_version':self.settings.training_policy_version}
-            return {**{key:self.ledger.get(key) for key in ['status','round','cursor','epoch','accepted_sequence','error']},
+            return {**details,**{key:self.ledger.get(key) for key in ['status','round','cursor','epoch','accepted_sequence','error']},
                 'enabled':self.settings.enabled,'paused':self.cancel.is_set() and self.ledger.get('pending') is not None,
                 'required_training_policy_version':required,'training_policy_version':self.settings.training_policy_version}
 
     def update(self):
         try:self.settings=LanguageLearningSettings.load(self.directory)
         except (OSError,ValueError,TypeError):self.settings=LanguageLearningSettings()
+        if self.thread is not None and self.thread.is_alive():
+            if self.ledger and self.ledger['dataset_id']!=dataset_id(self.settings.training_policy_version):self.cancel.set()
+        elif not self._select_program():self.cancel.set();return
         allowed=(not self.closed and self.settings.enabled and self.training.ready
             and self.training.engine.candidates_enabled and self.knowledge.allowed
             and self.training.engine.base_name==self.settings.base_name
@@ -150,10 +184,17 @@ class LanguageLearningCoordinator:
         if head['release']['sequence']:
             chain=registry.history(head['release']['release_id'])
             path=self.training.families.store.object_path(head['descriptor']['evaluation_id'])
-            report=json.loads(path.read_text());verify_evaluation(report,chain[-2],head)
-            cursor=max(row['output']['start']+row['output']['count'] for row in report['contributions'])
-        length=len(public_corpus()['train'])
-        self.ledger={'version':1,'base_name':self.settings.base_name,'dataset_id':corpus_digest(public_corpus()),
+            report=json.loads(path.read_text());verify_evaluation(report,chain[-2],head,store=self.training.families.store)
+            if report['dataset_id']==dataset_id(self.settings.training_policy_version):
+                cursor=max(row['output']['start']+row['output']['count'] for row in report['contributions'])
+        length=dataset_length(self.settings.training_policy_version)
+        if self.settings.training_policy_version==4 and not (self.root/'program.json').exists():
+            previous=self.legacy_root/'ledger.json'
+            atomic_json(self.root/'program.json',{'version':1,'dataset_id':dataset_id(4),'training_policy_id':policy_id(4),
+                'admitted_from_release_id':head['release']['release_id'],'admitted_at':time.time(),
+                'previous_program_dataset_id':dataset_id(1),'previous_ledger_sha256':hashlib.sha256(previous.read_bytes()).hexdigest() if previous.exists() else None,
+                'previous_rounds_preserved':self._historical_rounds(),'reason':'Explicit local selection of a different pinned public curriculum'})
+        self.ledger={'version':1,'base_name':self.settings.base_name,'dataset_id':dataset_id(self.settings.training_policy_version),
             'round':0,'cursor':cursor%length,'epoch':cursor//length,'pending':None,'status':'idle',
             'accepted_sequence':head['release']['sequence'],'rejections':0,'generation':self.settings.generation,'history':[],'error':None}
         self._save()
@@ -175,7 +216,7 @@ class LanguageLearningCoordinator:
             start=start,capacity=measured,slots=slots,policy_version=self.settings.training_policy_version)
         pending={'id':uuid.uuid4().hex,'head':head,'attempts':0,'contributions':{},'candidate':None,'bundle':None,
             'plan':plan,'end':plan[-1]['start']+plan[-1]['count'],'learning_rate':self.settings.learning_rate,
-            'measurements':{},'capacity_used':measured,'training_policy_version':self.settings.training_policy_version}
+            'measurements':{},'capacity_used':measured,'training_policy_version':self.settings.training_policy_version,'started_at':time.time()}
         self._save(status='collecting',pending=pending,error=None)
 
     def _slots(self):
@@ -186,6 +227,8 @@ class LanguageLearningCoordinator:
             if peer.get('capabilities',{}).get('language_gradient_batches_v1') is True}
         half_workers={peer['node_id'] for peer in getattr(self.knowledge.node,'peers',lambda:[])()
             if peer.get('capabilities',{}).get('language_gradient_half_v1') is True}
+        math_workers={peer['node_id'] for peer in getattr(self.knowledge.node,'peers',lambda:[])()
+            if peer.get('capabilities',{}).get('language_gradient_math_v1') is True}
         result={}
         for worker in self.settings.workers:
             count=getattr(policy,'max_gpu_jobs',1) if worker==own else peers.get(worker,{}).get('max_gpu_jobs',1)
@@ -196,6 +239,8 @@ class LanguageLearningCoordinator:
             if worker==own and self.settings.training_policy_version==2 and not self.training.engine.batching_enabled:result[worker]=0
             if worker!=own and self.settings.training_policy_version==3 and worker not in half_workers:result[worker]=0
             if worker==own and self.settings.training_policy_version==3 and not enabled_policy(self.training.engine,3):result[worker]=0
+            if worker!=own and self.settings.training_policy_version==4 and worker not in math_workers:result[worker]=0
+            if worker==own and self.settings.training_policy_version==4 and not enabled_policy(self.training.engine,4):result[worker]=0
         return result
 
     def _check(self,cancel,configuration):
@@ -239,7 +284,7 @@ class LanguageLearningCoordinator:
             with self.calculation_slots.get(worker,threading.BoundedSemaphore(1)):
                 self._check(cancel,configuration);began=time.monotonic()
                 result=self._request(gradient_operation(policy_version),payload,worker,
-                    ResourceRequirements(kind='training',gpu_required=True,ram_gb=self.training.required_ram(),disk_gb=.04),cancel,240)
+                    ResourceRequirements(kind='training',gpu_required=True,ram_gb=self.training.required_ram(),disk_gb=.04),cancel,work_timeout(policy_version))
                 ready_seconds=time.monotonic()-began
             saved=result.to_dict()
         else:ready_seconds=None
@@ -268,8 +313,16 @@ class LanguageLearningCoordinator:
         outcome={'round':self.ledger['round'],'epoch':self.ledger['epoch'],'accepted':accepted,
             'cursor_before':self.ledger['cursor'],'cursor_after':pending['end'],'pending':pending,
             'accepted_release_id':head['release']['release_id'],'finished_at':time.time()}
+        outputs=[row['output'] for row in pending['contributions'].values()]
+        outcome['cost']={'gradient_examples':sum(row['count'] for row in outputs),
+            'supervised_answer_tokens':sum(row['tokens'] for row in outputs),
+            'replay_answer_tokens':sum(row.get('replay_tokens',0) for row in outputs) if pending.get('training_policy_version')==4 else None,
+            'gradient_requests':len(outputs),'observed_contribution_request_seconds':sum(m['request_seconds'] for m in pending.get('measurements',{}).values()),
+            'observed_candidate_seconds':pending.get('candidate_seconds'),
+            'program_elapsed_seconds':outcome['finished_at']-pending['started_at'] if 'started_at' in pending else None,
+            'scope':'Observed work and wall time, including network/waits; not electrical energy or a reward claim'}
         atomic_json(self.root/'cycles'/pending['id']/'outcome.json',outcome)
-        length=len(public_corpus()['train']);summary={key:outcome[key] for key in outcome if key!='pending'}
+        length=dataset_length(pending.get('training_policy_version',1));summary={key:outcome[key] for key in outcome if key!='pending'}
         self._save(status='idle',round=self.ledger['round']+1,cursor=pending['end']%length,
             epoch=self.ledger['epoch']+pending['end']//length,pending=None,error=None,
             accepted_sequence=head['release']['sequence'],rejections=0 if accepted else self.ledger['rejections']+1,
@@ -340,9 +393,11 @@ class LanguageLearningCoordinator:
                     'contributions':results,'learning_rate':pending['learning_rate']}
                 policy_version=pending.get('training_policy_version',1)
                 if policy_version>=2:payload['training_policy_id']=policy_id(policy_version)
+                began=time.monotonic()
                 result=self._request(candidate_operation(policy_version),payload,self.knowledge.node.identity.node_id_hex,
-                    ResourceRequirements(kind='training',gpu_required=True,ram_gb=self.training.required_ram(),disk_gb=.1),cancel,900)
+                    ResourceRequirements(kind='training',gpu_required=True,ram_gb=self.training.required_ram(),disk_gb=.1),cancel,work_timeout(policy_version,candidate=True))
                 candidate=result.to_dict();changed=deepcopy(self.ledger['pending']);changed['candidate']=candidate;self._save(pending=changed)
+                changed=deepcopy(self.ledger['pending']);changed['candidate_seconds']=time.monotonic()-began;self._save(pending=changed)
             self._check(cancel,configuration)
             result=WorkResult.from_dict(candidate)
             if not ResultReceipt.from_dict(result.receipt).verify(result,expected_worker_id=self.knowledge.node.identity.node_id_hex,

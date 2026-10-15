@@ -81,6 +81,10 @@ def language_source(directory):
     from .language_versions import LanguageVersionRegistry
     registry=LanguageVersionRegistry(Path(directory)/'public/language','qwen3-1.7b')
     chain=registry.history(registry.head()['release']['release_id'])
+    # This closed memory policy embeds self-contained historical evaluations.
+    # Math generations require separate proof artifacts and a future memory
+    # policy; preserve the last fully verifiable supported language snapshot.
+    chain=[bundle for bundle in chain if bundle['descriptor']['version']<=4]
     store=ArtifactStore(Path(directory)/'public/language/artifacts',max_artifact_bytes=4*1024**3,max_total_bytes=8*1024**3)
     reports={}
     for bundle in chain[1:]:

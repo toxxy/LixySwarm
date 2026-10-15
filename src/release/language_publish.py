@@ -38,7 +38,7 @@ def publish_update(directory,base_name,adapter_file,report_file,identity,*,befor
         model=ArtifactManifest(identifier,size,'model','application/octet-stream',time.time())
         evaluation=ArtifactManifest(hashlib.sha256(encoded).hexdigest(),len(encoded),'evaluation','application/json',time.time())
         # Gate before committing any candidate/report to the public namespace.
-        bundle=build_update(chain,model,evaluation,report,identity)
+        bundle=build_update(chain,model,evaluation,report,identity,store=store)
         store.import_file(snapshot,kind='model',media_type='application/octet-stream')
         evaluation_path=Path(temporary)/'evaluation.json';evaluation_path.write_bytes(encoded)
         store.import_file(evaluation_path,kind='evaluation',media_type='application/json')
