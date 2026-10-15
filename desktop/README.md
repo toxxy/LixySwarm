@@ -37,7 +37,9 @@ El botón **Conservar conocimiento público** habilita adquisición, verificaci�
 
 Una reducción de cuota por debajo de los archivos conservados pausa su servicio; no elimina conocimiento automáticamente. Dejar de compartir conserva los archivos y detiene nuevas transferencias. El presupuesto de transferencia se aplica a chunks codificados y puede interrumpirse; por ahora se limita además a 5 Mbps por servicio para respetar la ventana de bytes LSP. Descubrimiento global por contenido, reparación automática y distribución del experto de lenguaje siguen pendientes.
 
-La clave de cifrado personal se genera en el almacén protegido del sistema. Si falta o está bloqueado, el chat informa que conserva la conversación temporalmente en memoria. No hay clave alternativa en archivo plano. La pérdida de una clave existente no genera una sustituta que inutilice el contenido cifrado. La integración de Matriarca continúa en las etapas de aprendizaje y memoria.
+La clave de cifrado personal se genera en el almacén protegido del sistema. Si falta o está bloqueado, el chat informa que conserva la conversación temporalmente en memoria. No hay clave alternativa en archivo plano. La pérdida de una clave existente no genera una sustituta que inutilice el contenido cifrado.
+
+La fuente A15 añade **Recuperar recuerdos de esta conversación**, desactivado inicialmente. El componente textual de Matriarca personal consolida intercambios completos y busca hasta dos fragmentos anteriores dentro del mismo presupuesto de contexto. Sus hasta 128 fragmentos se conservan cifrados aunque salgan de los 200 mensajes visibles. Sin autorización de contexto, el experto remoto recibe solamente la pregunta actual. **Vaciar recuerdos** elimina esos fragmentos y desactiva la recuperación; conserva el historial visible, que puede consolidarse otra vez al reactivarla. La memoria global, la orientación neuronal, Dolphin y las sectas mantienen su integración y evaluación pendientes. La publicación y la prueba física de esta versión se registran en VISION_PROGRESS.
 
 ## Chat del piloto
 

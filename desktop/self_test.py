@@ -20,6 +20,7 @@ def main():
     parser.add_argument("--knowledge", action="store_true")
     parser.add_argument("--prepare-engine", action="store_true")
     parser.add_argument("--chat",action="store_true")
+    parser.add_argument('--memory',action='store_true')
     parser.add_argument("--report", type=Path)
     parser.add_argument("--screenshot", type=Path)
     parser.add_argument("--work-directory", type=Path)
@@ -27,6 +28,7 @@ def main():
     if args.knowledge and not args.internet:
         parser.error("The real catalog acquisition gate requires --internet")
     if args.chat and not args.internet:parser.error("The real chat assessment requires --internet")
+    if args.memory and not args.chat:parser.error('Memory comparison requires the real chat assessment')
     os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
     from PySide6.QtWidgets import QApplication
     from desktop.backend import NodeController
@@ -187,6 +189,48 @@ def main():
                 window.tabs.setCurrentIndex(1)
                 report.update(chat_ui_verified=True,chat_remote_context_opt_in=True,chat_history_survives_reopen=True,
                               chat_history_encrypted=True,chat_receipt=last_chat_receipt)
+                if args.memory:
+                    import subprocess
+                    from src.learning.public_memory_gate import memory_cases,statement_messages,distractor_messages,verdict
+                    comparisons=[]
+                    def ask_memory(question):
+                        wait(lambda:window.chat_send.isEnabled())
+                        messages,recalled=window.chat_history.context(window.chat_messages,question,enabled=window.chat_memory.isChecked())
+                        window.chat_input.setPlainText(question);window.chat_send.click()
+                        wait(lambda:not window.chat_pending and not window.chat_worker.isRunning(),timeout=75)
+                        assert window.chat_last_result,window.chat_status.text()
+                        result=window.chat_last_result
+                        assert result['context_sent'] and result['route']=='network'
+                        return {**result,'recalled_episodes':window.chat_last_memories,
+                            'context_bytes':sum(len(row['content'].encode()) for row in messages),'context_messages':len(messages)}
+                    for case in memory_cases():
+                        window.chat_forget.click();window.chat_messages=[]
+                        window.chat_memory.setChecked(True);window.chat_context.setChecked(True)
+                        window.chat_messages=statement_messages(case);window.save_chat_history()
+                        window.chat_messages+=distractor_messages();window.save_chat_history()
+                        assert case['expected'] not in json.dumps(window.chat_messages)
+                        window.chat_memory.setChecked(False)
+                        recent=ask_memory(case['question'])
+                        assert recent['recalled_episodes']==0
+                        # Restore the identical visible background. The previous
+                        # answer cannot become a memory or satisfy the next ask.
+                        window.chat_messages=distractor_messages()[-200:]
+                        window.chat_memory.setChecked(True);window.save_chat_history()
+                        command=([sys.executable] if getattr(sys,'frozen',False) else [sys.executable,str(Path(__file__).with_name('main.py'))])
+                        restored=subprocess.run([*command,'--memory-fixture-check','--directory',str(controller.directory),'--case',case['case']],
+                            capture_output=True,text=True,timeout=20,check=True)
+                        fresh=json.loads(restored.stdout)
+                        assert fresh['success'] and fresh['restored_in_fresh_process']
+                        window.timer.stop();window.close();window.deleteLater()
+                        QCoreApplication.sendPostedEvents(None,QEvent.DeferredDelete);app.processEvents()
+                        window=SwarmWindow(controller,initialize_personal=True,auto_prepare=False);window.show()
+                        wait(lambda:window.chat_history is not None,timeout=20)
+                        assert window.chat_memory.isChecked() and window.chat_context.isChecked()
+                        remembered=ask_memory(case['question'])
+                        comparisons.append({'case':case['case'],'recent':recent,'memory':remembered,'fresh_process':fresh})
+                    report['personal_memory_comparison']={'results':comparisons,'verdict':verdict(comparisons),
+                        'private_inputs':False,'model_training_performed':False,'global_signals_from_personal':False}
+                    assert report['personal_memory_comparison']['verdict']['eligible']
                 # Cancel at dispatch, including the race before the API records
                 # the request. A previous response cannot satisfy this check.
                 wait(lambda:window.chat_send.isEnabled())

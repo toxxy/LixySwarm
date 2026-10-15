@@ -7,6 +7,9 @@ if not getattr(sys, "frozen", False):
 
 
 def main():
+    if '--memory-fixture-check' in sys.argv:
+        from desktop.memory_fixture_check import main as memory_check
+        raise SystemExit(memory_check())
     if "--node" in sys.argv:
         sys.argv.remove("--node")
         from client_daemon import main as node_main

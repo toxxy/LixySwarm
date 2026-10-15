@@ -100,6 +100,7 @@ class SwarmWindow(QMainWindow):
         self.controller = controller or NodeController(state_directory())
         self.auto_prepare=auto_prepare; self.engine_preparation=None; self.engine_phase=""
         self.chat_worker=None;self.chat_pending=False;self.chat_messages=[];self.chat_history=None;self.chat_last_result=None;self.close_pending=False
+        self.chat_pending_memories=0;self.chat_last_memories=0
         self.setWindowTitle("LixySwarm")
         self.resize(900, 760)
         self.setMinimumSize(720, 680)
@@ -142,7 +143,15 @@ class SwarmWindow(QMainWindow):
         self.chat_transcript=QTextEdit();self.chat_transcript.setReadOnly(True);chat.addWidget(self.chat_transcript)
         self.chat_privacy=QLabel("El historial queda cifrado si el almacén protegido está disponible. A la red se envía la pregunta actual.")
         self.chat_privacy.setWordWrap(True);chat.addWidget(self.chat_privacy)
-        self.chat_context=QCheckBox("Enviar también el contexto de esta conversación al experto de la red")
+        memory_actions=QHBoxLayout()
+        self.chat_memory=QCheckBox('Recuperar recuerdos de esta conversación')
+        self.chat_memory.setEnabled(False);self.chat_memory.toggled.connect(self.save_chat_history)
+        memory_actions.addWidget(self.chat_memory)
+        self.chat_forget=QPushButton('Vaciar recuerdos');self.chat_forget.setEnabled(False)
+        self.chat_forget.setToolTip('Vacía la memoria local y la desactiva. Conserva el historial visible.')
+        self.chat_forget.clicked.connect(self.forget_chat_memory);memory_actions.addWidget(self.chat_forget)
+        chat.addLayout(memory_actions)
+        self.chat_context=QCheckBox("Enviar también contexto y recuerdos seleccionados al experto de la red")
         self.chat_context.toggled.connect(self.save_chat_history);chat.addWidget(self.chat_context)
         self.chat_input = QTextEdit(); self.chat_input.setPlaceholderText("Pregunta al enjambre…")
         self.chat_input.setMaximumHeight(110);chat.addWidget(self.chat_input)
@@ -305,8 +314,10 @@ class SwarmWindow(QMainWindow):
         current=self.chat_messages;self.chat_history=history
         self.chat_messages=list(history.messages)+current
         self.chat_context.blockSignals(True);self.chat_context.setChecked(history.share_context);self.chat_context.blockSignals(False)
+        self.chat_memory.blockSignals(True);self.chat_memory.setChecked(history.memory_enabled);self.chat_memory.blockSignals(False)
+        self.chat_memory.setEnabled(True);self.chat_forget.setEnabled(True)
         self.render_chat()
-        self.chat_privacy.setText("Historial cifrado en este equipo. A la red se envía la pregunta actual salvo que autorices el contexto.")
+        self.chat_privacy.setText("Historial y recuerdos cifrados en este equipo. A la red se envía solo la pregunta actual salvo que autorices contexto y recuerdos seleccionados.")
         if current:self.save_chat_history()
 
     def render_chat(self):
@@ -318,14 +329,26 @@ class SwarmWindow(QMainWindow):
         if self.chat_history is None:
             self.chat_privacy.setText("Historial temporal en memoria: el almacén protegido está pendiente. La pregunta actual puede enviarse a la red.")
             return
-        try:self.chat_history.save(self.chat_messages,self.chat_context.isChecked())
+        try:self.chat_history.save(self.chat_messages,self.chat_context.isChecked(),memory_enabled=self.chat_memory.isChecked())
         except Exception:
             self.chat_privacy.setText("No se pudo guardar el historial cifrado; la conversación actual sigue en memoria")
+
+    def forget_chat_memory(self):
+        if self.chat_history is None:return
+        try:
+            self.chat_history.forget_memory()
+            self.chat_memory.blockSignals(True);self.chat_memory.setChecked(False);self.chat_memory.blockSignals(False)
+            self.chat_privacy.setText('Recuerdos vaciados y memoria desactivada. El historial de esta conversación sigue cifrado en este equipo.')
+        except Exception:self.chat_privacy.setText('No se pudieron vaciar los recuerdos cifrados')
 
     def send_chat(self):
         if self.chat_pending or self.chat_worker is not None and self.chat_worker.isRunning():return
         try:
-            question=self.chat_input.toPlainText().strip();messages=bounded_context(self.chat_messages,question)
+            question=self.chat_input.toPlainText().strip()
+            if self.chat_history is not None:
+                messages,recalled=self.chat_history.context(self.chat_messages,question,enabled=self.chat_memory.isChecked())
+            else:messages,recalled=bounded_context(self.chat_messages,question),[]
+            self.chat_pending_memories=len(recalled);self.chat_last_memories=0
             self.chat_messages.append({"role":"user","content":question});self.render_chat();self.save_chat_history()
             self.chat_last_result=None
             self.chat_input.clear();self.chat_status.setText("Consultando al experto…")
@@ -344,8 +367,10 @@ class SwarmWindow(QMainWindow):
         self.chat_pending=False
         if success:
             self.chat_last_result=result
+            self.chat_last_memories=self.chat_pending_memories if result['route']=='local' or result['context_sent'] else 0
             self.chat_messages.append({"role":"assistant","content":result["answer"]});self.render_chat();self.save_chat_history()
             self.chat_status.setText(("Respuesta en este equipo" if result["route"]=="local" else "Respuesta de la red")+" · recibo verificado")
+            if self.chat_last_memories:self.chat_status.setText(self.chat_status.text()+f' · {self.chat_last_memories} recuerdo(s) recuperado(s)')
         else:self.chat_status.setText(str(result))
         self.chat_cancel.setEnabled(False)
         if self.close_pending:self.close()

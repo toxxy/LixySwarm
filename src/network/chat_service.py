@@ -143,7 +143,8 @@ class ChatBroker:
             if output.get("model_id")!=model_id or not isinstance(output.get("answer"),str) or not 1<=len(output["answer"].encode())<=8192:
                 raise ChatUnavailable("El experto devolvió una respuesta inválida")
             return {"answer":output["answer"],"provider_id":provider,"model_id":model_id,
-                    "route":"local" if local else "network","context_sent":not local and value["remote_context"],"receipt":result.receipt}
+                    "route":"local" if local else "network","context_sent":not local and value["remote_context"],"receipt":result.receipt,
+                    "signed_result":result.to_dict()}
         finally:
             with self.lock:self.requests.pop(request_id,None)
 
