@@ -9,6 +9,8 @@ Las etapas se completan por sus pruebas de aceptación; una implementación parc
 
 **Corrección de empaquetado (2026-10-15):** `engines/archive.py` admite el perfil explícito de lenguaje y conserva sus enlaces a archivos internos. Antes verificaba siempre el perfil de referencia y convertía los alias en copias del contenido. Una prueba completa con fixtures recorre empaquetado, descarga, verificación e instalación, conserva el alias de lenguaje y mantiene el comportamiento del perfil de referencia. Pasaron 23 pruebas focales. No se construyó ni instaló otro runtime CUDA; siguen pendientes el espacio transitorio total, la instalación GPU vacía y su medición física dentro de las cuotas de 8/10 GiB.
 
+La preparación HTTPS también instala mediante movimiento de su etapa temporal propia, con verificación antes y después del movimiento y antes de activar el motor. La instalación desde otras carpetas conserva la copia anterior. Pasaron 41 pruebas focales, incluyendo rechazo de cambios entre verificaciones y conservación de permisos. Aún no se redujeron la reserva conservadora de la app ni la caché comprimida, ni se presentó este avance como una instalación GPU vacía aprobada.
+
 | Etapa | Estado | Evidencia y trabajo restante |
 |---|---|---|
 | 1. Red continua | En observación | Servicios desplegados en dos PCs y VPS, estado por identidad en el Explorer y recuperación tras reinicio comprobados. Faltan operación de 24 horas y recuperación con otro relay público independiente. |

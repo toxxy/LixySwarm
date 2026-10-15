@@ -1,6 +1,7 @@
 import hashlib
 import json
 import platform
+from pathlib import Path
 import sys
 
 import pytest
@@ -69,3 +70,30 @@ def test_symlink_outside_package_is_rejected(tmp_path):
         pytest.skip("Symlink creation unavailable on this platform")
     with pytest.raises(ValueError, match="verification"):
         verify_package(root, digest)
+
+
+def test_only_owned_downloaded_staging_can_move_without_a_second_package_copy(tmp_path,monkeypatch):
+    root,value,digest=package(tmp_path);state=tmp_path/'state'
+    with pytest.raises(ValueError,match='owned downloaded'):
+        install_package(root,digest,state,consume_download=True)
+    assert root.is_dir()
+    download=state/'engine-downloads'/('a'*64+'.unpacked');download.parent.mkdir(parents=True)
+    root.rename(download)
+    def no_copy(*args,**kwargs):pytest.fail('Downloaded engine must install without another full copy')
+    monkeypatch.setattr('src.network.engine_package.shutil.copytree',no_copy)
+    command=install_package(download,digest,state,consume_download=True)
+    assert not download.exists() and Path(command).read_bytes()==b'trusted-test-package'
+
+
+def test_owned_download_is_reverified_after_moving_before_activation(tmp_path,monkeypatch):
+    import src.network.engine_package as module
+    root,value,digest=package(tmp_path);state=tmp_path/'state'
+    download=state/'engine-downloads'/('b'*64+'.unpacked');download.parent.mkdir(parents=True);root.rename(download)
+    original=module.verify_package;checks=[]
+    def verify(path,*args,**kwargs):
+        result=original(path,*args,**kwargs);checks.append(str(path))
+        if len(checks)==1:(Path(path)/value['entrypoint']).write_bytes(b'changed during move')
+        return result
+    monkeypatch.setattr(module,'verify_package',verify)
+    with pytest.raises(ValueError,match='verification'):install_package(download,digest,state,consume_download=True)
+    assert not EngineSettings.load(state).enabled and not (state/'engines'/digest).exists()

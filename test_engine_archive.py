@@ -16,7 +16,7 @@ from src.network.engine_profiles import engine_profile
 
 
 @pytest.mark.parametrize('profile',['reference-cpu','language-cuda-math'])
-def test_verified_profile_archive_round_trips_internal_alias_without_duplicate_language_library(tmp_path,profile):
+def test_verified_profile_archive_round_trips_internal_alias_without_duplicate_language_library(tmp_path,profile,monkeypatch):
     if sys.platform=='win32':pytest.skip('POSIX package alias fixture')
     selected=engine_profile(profile);root=tmp_path/'package';root.mkdir()
     name=selected['name'];(root/name).write_bytes(b'fixture only; must never execute')
@@ -39,6 +39,8 @@ def test_verified_profile_archive_round_trips_internal_alias_without_duplicate_l
             assert not stat.S_ISLNK(alias.external_attr>>16) and zipped.read('alias')==library
             assert result['regular_file_bytes']==result['installed_bytes']
     data=output.read_bytes()
+    def no_copy(*args,**kwargs):pytest.fail('Verified download must move its owned stage, without another full package copy')
+    monkeypatch.setattr('src.network.engine_package.shutil.copytree',no_copy)
     class Response(io.BytesIO):status=200;headers={}
     entry=EngineDownload('https://example.invalid/engine.zip',result['sha256'],len(data),
         result['manifest_sha256'],result['installed_bytes'],profile=profile)

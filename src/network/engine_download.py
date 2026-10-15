@@ -200,8 +200,8 @@ def prepare_engine(entry, directory, *, allowed, rate_mbps, progress=lambda *_: 
             if size != entry.installed_bytes:
                 raise ValueError("Engine archive unpacked size does not match")
         check(); progress("installing", 0, entry.installed_bytes)
-        entrypoint = install_package(extracted, entry.manifest_sha256, directory,profile=profile)
+        entrypoint = install_package(extracted, entry.manifest_sha256, directory,profile=profile,consume_download=True)
         progress("complete", entry.installed_bytes, entry.installed_bytes)
         return entrypoint
     finally:
-        shutil.rmtree(extracted)
+        if extracted.exists():shutil.rmtree(extracted)

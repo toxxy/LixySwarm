@@ -94,8 +94,14 @@ def verify_package(directory, trusted_manifest_sha256, *, target_platform=None, 
     return manifest
 
 
-def install_package(directory, trusted_manifest_sha256, state_directory,*,profile='reference-cpu'):
+def install_package(directory, trusted_manifest_sha256, state_directory,*,profile='reference-cpu',consume_download=False):
     source = Path(directory)
+    if type(consume_download) is not bool:raise ValueError('Invalid downloaded-package ownership')
+    if consume_download:
+        # Only the downloader's disposable, pinned staging directory may move.
+        if (source.is_symlink() or source.parent.resolve() != (Path(state_directory)/'engine-downloads').resolve()
+                or not re.fullmatch('[0-9a-f]{64}\\.unpacked',source.name)):
+            raise ValueError('Only owned downloaded staging may be consumed')
     verify_package(source, trusted_manifest_sha256,profile=profile)
     engines = Path(state_directory) / "engines"
     engines.mkdir(parents=True, exist_ok=True)
@@ -103,7 +109,12 @@ def install_package(directory, trusted_manifest_sha256, state_directory,*,profil
     if not destination.exists():
         with tempfile.TemporaryDirectory(prefix=".install-", dir=engines) as temporary:
             staged = Path(temporary) / "package"
-            shutil.copytree(source, staged, symlinks=True)
+            if consume_download:
+                # Both locations belong to the same state tree. Fail on a
+                # cross-filesystem move rather than silently duplicate gigabytes.
+                source.rename(staged)
+            else:
+                shutil.copytree(source, staged, symlinks=True)
             # Verify the copy before atomically exposing it. A changed source
             # during copying must not become an executable selected by the node.
             verify_package(staged, trusted_manifest_sha256,profile=profile)
