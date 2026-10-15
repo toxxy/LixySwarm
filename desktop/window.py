@@ -274,7 +274,9 @@ class SwarmWindow(QMainWindow):
         if changed and policy.max_gpu_jobs and policy.gpu_percent:
             resources=self.controller.resources()
             available=resources.get('gpu_vram_gb',0)*policy.gpu_percent/100
-            policy.max_gpu_jobs=min(policy.max_gpu_jobs,max(1,int(available//4)))
+            # A Large public training task needs 6 GiB. Splitting an 8-GiB
+            # allocation into two inference-sized slots prevents collaboration.
+            policy.max_gpu_jobs=min(policy.max_gpu_jobs,max(1,int(available//6)))
         if index == 3:
             policy.gpu_percent = 0
         policy.validate()
@@ -479,13 +481,27 @@ class SwarmWindow(QMainWindow):
         phase=preparation.get('state','idle')
         language_busy=phase not in {'idle','waiting','stopped','complete'}
         installed=diagnostic.get('language',{}).get('installed',False)
-        self.language_label.setText(preparation.get('message') or ('Experto de lenguaje preparado en este equipo' if installed else 'Puedes usar el chat de la red. Para alojar un experto se necesitan 5 GB de RAM y 4 GB de GPU dentro de tus límites.'))
-        self.language_progress.setVisible(language_busy and preparation.get('total',0)>0)
-        self.language_progress.setValue(int(100*preparation.get('done',0)/max(1,preparation.get('total',0))))
-        self.language_button.setEnabled(snapshot['fresh'] and not needs_update and not preparing and not language_busy and language_engine('cuda') is not None
+        language_ready=diagnostic.get('language',{}).get('ready',False) if snapshot['fresh'] else False
+        repair=diagnostic.get('language_cache_repair',{}) if snapshot['fresh'] else {}
+        repairing=repair.get('state') in {'starting','receiving','waiting'}
+        progress=repair if repairing else preparation
+        if repairing:
+            message=repair.get('message') or 'Recuperando los archivos del conocimiento público'
+        elif language_busy or phase in {'waiting','stopped'}:
+            message=preparation.get('message') or 'Preparación del experto pendiente'
+        elif language_ready:
+            message='Experto de lenguaje disponible en este equipo'
+        elif installed:
+            message='Experto configurado; todavía no está disponible dentro de tus permisos o faltan archivos.'
+        else:
+            message='Puedes usar el chat de la red. Para alojar un experto se necesitan 5 GB de RAM y 4 GB de GPU dentro de tus límites.'
+        self.language_label.setText(message)
+        self.language_progress.setVisible((language_busy or repairing) and progress.get('total',0)>0)
+        self.language_progress.setValue(int(100*progress.get('done',0)/max(1,progress.get('total',0))))
+        self.language_button.setEnabled(snapshot['fresh'] and not needs_update and not preparing and not language_busy and not repairing and language_engine('cuda') is not None
             and policy.mode in {'balanced','maximum'} and policy.max_ram_gb>=5 and policy.gpu_percent>0)
         self.language_button.setText('Reanudar preparación del experto' if phase in {'waiting','stopped'} else 'Preparar experto de lenguaje')
-        self.language_stop.setEnabled(language_busy or phase=='waiting')
+        self.language_stop.setEnabled((language_busy or phase=='waiting') and not repairing)
         chat=diagnostic.get("chat",{}) if snapshot["fresh"] else {}
         public_memory=chat.get('public_memory') or {}
         self.chat_public_memory.setText('Usar memoria pública verificada de la red'+

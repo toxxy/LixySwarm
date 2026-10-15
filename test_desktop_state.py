@@ -89,7 +89,8 @@ def test_gpu_choice_preserves_hidden_operator_limits_and_waits_for_the_node(tmp_
         window.close();window.deleteLater();QCoreApplication.sendPostedEvents(None,QEvent.DeferredDelete);app.processEvents()
 
 
-def test_new_maximum_profile_uses_one_gpu_slot_on_an_eight_gib_laptop(tmp_path,monkeypatch):
+@pytest.mark.parametrize('vram,percent,jobs', [(7.99,90,1),(8,100,1),(11.99,100,1),(12,100,2),(32,90,2)])
+def test_new_maximum_profile_reserves_enough_gpu_for_large_training(tmp_path,monkeypatch,vram,percent,jobs):
     pytest.importorskip('PySide6')
     os.environ.setdefault('QT_QPA_PLATFORM','offscreen')
     from PySide6.QtWidgets import QApplication
@@ -97,12 +98,15 @@ def test_new_maximum_profile_uses_one_gpu_slot_on_an_eight_gib_laptop(tmp_path,m
     from desktop.window import SwarmWindow
     from desktop.backend import NodeController
     controller=NodeController(tmp_path)
-    monkeypatch.setattr(controller,'resources',lambda:{'has_gpu':True,'gpu_vram_gb':7.99})
+    monkeypatch.setattr(controller,'resources',lambda:{'has_gpu':True,'gpu_vram_gb':vram})
     app=QApplication.instance() or QApplication([])
     window=SwarmWindow(controller,initialize_personal=False,auto_prepare=False)
     try:
         window.profile.setCurrentIndex(1)
-        assert window.chosen_policy().max_gpu_jobs==1
+        window.gpu.setValue(percent)
+        policy=window.chosen_policy()
+        assert policy.max_gpu_jobs==jobs
+        assert vram*policy.gpu_percent/100/policy.max_gpu_jobs>=6
     finally:
         window.close();window.deleteLater();QCoreApplication.sendPostedEvents(None,QEvent.DeferredDelete);app.processEvents()
 
@@ -117,6 +121,37 @@ def test_personal_content_is_encrypted_and_survives_a_new_store_instance(tmp_pat
     assert "importance" not in data
     assert PersonalStore(tmp_path, backend=backend).load() == value
     assert len(backend.values) == 1
+
+
+@pytest.mark.parametrize('repair_state', ['receiving','waiting'])
+def test_recovery_progress_does_not_claim_a_configured_model_is_ready(tmp_path,monkeypatch,repair_state):
+    pytest.importorskip('PySide6')
+    os.environ.setdefault('QT_QPA_PLATFORM','offscreen')
+    from PySide6.QtWidgets import QApplication
+    from PySide6.QtCore import QCoreApplication,QEvent
+    from desktop.window import SwarmWindow
+    from desktop.backend import NodeController
+    controller=NodeController(tmp_path)
+    diagnostic={'language':{'installed':True,'ready':False},
+        'language_preparation':{'state':'waiting','message':'stale engine preparation'},
+        'language_cache_repair':{'state':repair_state,'message':'Recuperando archivos públicos','done':50,'total':100}}
+    monkeypatch.setattr(controller,'snapshot',lambda:{'fresh':True,'running':True,
+        'status':{'state':'preparing','resources':{}},'diagnostics':diagnostic})
+    app=QApplication.instance() or QApplication([])
+    window=SwarmWindow(controller,initialize_personal=False,auto_prepare=False)
+    try:
+        assert window.language_label.text()=='Recuperando archivos públicos'
+        assert window.language_progress.value()==50
+        assert not window.language_progress.isHidden()
+        assert not window.language_button.isEnabled() and not window.language_stop.isEnabled()
+        diagnostic['language_cache_repair']['state']='complete'
+        diagnostic['language_preparation']['state']='complete'
+        window.refresh()
+        assert 'todavía no está disponible' in window.language_label.text()
+        diagnostic['language']['ready']=True;window.refresh()
+        assert window.language_label.text()=='Experto de lenguaje disponible en este equipo'
+    finally:
+        window.close();window.deleteLater();QCoreApplication.sendPostedEvents(None,QEvent.DeferredDelete);app.processEvents()
 
 
 def test_missing_key_cannot_replace_existing_encrypted_memory(tmp_path):
