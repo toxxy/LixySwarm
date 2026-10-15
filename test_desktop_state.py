@@ -136,7 +136,7 @@ def test_recovery_progress_does_not_claim_a_configured_model_is_ready(tmp_path,m
         'language_preparation':{'state':'waiting','message':'stale engine preparation'},
         'language_cache_repair':{'state':repair_state,'message':'Recuperando archivos públicos','done':50,'total':100}}
     monkeypatch.setattr(controller,'snapshot',lambda:{'fresh':True,'running':True,
-        'status':{'state':'preparing','resources':{}},'diagnostics':diagnostic})
+        'status':{'node_id':'0'*64,'state':'preparing','resources':{}},'diagnostics':diagnostic})
     app=QApplication.instance() or QApplication([])
     window=SwarmWindow(controller,initialize_personal=False,auto_prepare=False)
     try:
