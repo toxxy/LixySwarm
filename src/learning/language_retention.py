@@ -15,16 +15,21 @@ GRADIENTS = (
 def definition():
     from .language_policy import MATH_POLICY_ID, dataset_id
     from .public_math import ARTIFACTS
-    return {'version': 1, 'action': 'public-retention-diagnostic-v1',
+    return {'version': 2, 'action': 'public-retention-diagnostic-v2',
         'parent_release_id': PARENT_RELEASE, 'model_id': PARENT_MODEL,
         'source_report_id': SOURCE_REPORT, 'source_trial': 'offset0-p4-distributed',
         'training_policy_id': MATH_POLICY_ID, 'math_training_artifact_id': ARTIFACTS['train'][0],
         'historical_dataset_id': dataset_id(1), 'math_range': [0, 192],
         'historical_training_prefix': 64, 'historical_training_full': 200,
+        'loss_execution_mode': 'train-with-autograd-for-every-loss-pass; backward-only-when-requested',
+        'no_update_control': 'repeat-every-training-loss-with-identical-parameters-before-applying-step',
+        'no_update_absolute_tolerance': 1e-7, 'no_update_relative_tolerance': 1e-6,
         'gradient_metadata': [list(row) for row in GRADIENTS], 'learning_rate': .001,
         'measurements': ['baseline-training-loss-and-reference-gradients',
             'decoded-signed-directions-vs-prefix-and-full-training-gradients',
             'reconstructed-source-vs-saved-half-precision-first-desktop-shard',
+            'decoded-gradient-concordance-current-reconstruction-vs-saved',
+            'no-update-numerical-control',
             'finite-sgd-training-loss-change-and-first-order-residual', 'restore-parent-parameters'],
         'held_out_data_used_in_compute': False, 'generation_performed': False,
         'scope': 'Retrospective diagnosis of one fixed rejected update; not a fresh quality test or training-method selection',

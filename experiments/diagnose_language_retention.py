@@ -80,7 +80,7 @@ def run(args,cancel):
         def raise_if_cancelled(self):
             if cancel.is_set():raise RuntimeError('Retention research cancelled')
     execution=Execution();execution.deadline=deadline
-    request={'action':'public-retention-diagnostic-v1','protocol_id':protocol_id(),
+    request={'action':'public-retention-diagnostic-v2','protocol_id':protocol_id(),
         'base_directory':str(base),'adapter_file':str(base/'adapter.safetensors'),'model_id':PARENT_MODEL,
         'parent_release_id':PARENT_RELEASE,'training_file':str(training),'contributions':rows,
         'output_directory':str(directory/'engine'),'device':'cuda','cpu_threads':min(4,max(1,int(4*policy['cpu_percent']/100))),

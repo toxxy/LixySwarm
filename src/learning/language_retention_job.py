@@ -16,7 +16,7 @@ os.environ['HF_HUB_OFFLINE']='1';os.environ['TRANSFORMERS_OFFLINE']='1'
 def validate_request(request):
     fields = {'action', 'protocol_id', 'base_directory', 'adapter_file', 'model_id', 'parent_release_id',
               'training_file', 'contributions', 'output_directory', 'device', 'cpu_threads', 'gpu_fraction', 'deadline'}
-    if (not isinstance(request, dict) or set(request) != fields or request['action'] != 'public-retention-diagnostic-v1'
+    if (not isinstance(request, dict) or set(request) != fields or request['action'] != 'public-retention-diagnostic-v2'
             or request['protocol_id'] != protocol_id() or request['model_id'] != PARENT_MODEL
             or request['parent_release_id'] != PARENT_RELEASE or request['device'] not in {'cpu', 'cuda'}):
         raise ValueError('Unknown bounded retention diagnostic or model')
@@ -70,9 +70,11 @@ def training_statistics(model, tokenizer, rows, device, deadline, *, gradient=Fa
         if len(prefix)+len(target)>maximum or len(target)>answer_maximum:raise ValueError('Training diagnostic cannot truncate examples')
         encoded.append((prefix,target))
     tokens=sum(len(target) for _prefix,target in encoded);total=0.;previous=model.training
-    model.train(gradient);model.zero_grad(set_to_none=True)
+    # Keep the forward path identical when only the backward calculation differs.
+    # BF16 attention/loss paths may differ between training and no-grad inference.
+    model.train();model.zero_grad(set_to_none=True)
     try:
-        with torch.enable_grad() if gradient else torch.no_grad():
+        with torch.enable_grad():
             for prefix,target in encoded:
                 if time.time()>=deadline:raise TimeoutError('Retention training diagnostic deadline exceeded')
                 inputs=torch.tensor([prefix+target],device=device)
@@ -166,8 +168,16 @@ def run(request):
     path=output/'reconstructed-root-gradient.safetensors';precision=save_gradient(model,path,**fields,policy_version=4)
     exact=digest_file(path)==(row['gradient_id'],row['gradient_bytes'])
     directions['reconstructed_decoded_start0']=load_gradient(model,path,**fields,policy_version=4,**precision)
+    original=directions['saved_start0'];current=directions['reconstructed_decoded_start0']
+    norm=math.sqrt(sum(float(t.double().square().sum()) for t in original.values()))
+    difference=math.sqrt(sum(float((original[n].double()-current[n].double()).square().sum()) for n in original))
+    concordance={**direction_statistics(original,current),'relative_l2_difference':difference/norm if norm else None}
     geometry={name:{key:direction_statistics(value,reference) for key,reference in references.items()}
               for name,value in directions.items()}
+    progress('no-update-control')
+    control={name:training_statistics(model,tokenizer,rows,request['device'],request['deadline'])[0] for name,rows in sets.items()}
+    control_changes={name:control[name]['nll']-baseline[name]['nll'] for name in sets}
+    control_passed=all(abs(value)<=max(1e-7,abs(baseline[name]['nll'])*1e-6) for name,value in control_changes.items())
     progress('temporary-signed-update')
     with temporary_step(parameters,combined):
         after={name:training_statistics(model,tokenizer,rows,request['device'],request['deadline'])[0] for name,rows in sets.items()}
@@ -179,9 +189,12 @@ def run(request):
     if time.time()>=request['deadline']:raise TimeoutError('Retention diagnostic deadline exceeded')
     result={'success':True,'protocol_id':protocol_id(),'model_id':PARENT_MODEL,'parent_release_id':PARENT_RELEASE,
         'baseline':baseline,'after_signed_update':after,'loss_changes':deltas,'direction_geometry':geometry,
+        'loss_execution_mode':'train-with-autograd-for-every-loss-pass; backward-only-when-requested',
+        'no_update_control':control,'no_update_loss_changes':control_changes,'no_update_control_passed':control_passed,
         'prefix_vs_full_reference_alignment':direction_statistics(references['old_prefix64'],references['old_full200']),
         'reconstruction':{'original_half_artifact_reproduced_exactly':exact,'artifact_id':digest_file(path)[0],
             'math_training_nll':loss,'replay_training_nll':replay_loss,'tokens':tokens,'replay_tokens':replay_tokens,**precision,
+            'decoded_direction_concordance_with_saved':concordance,
             'causal_scope':'Source-vs-codec comparison of the original artifact only if exact reproduction succeeded'},
         'held_out_data_used_in_compute':False,'generation_performed':False,'parent_parameters_restored':True,
         'updated_model_files_written':False,'model_published':False,'new_promotion_authorized':False,

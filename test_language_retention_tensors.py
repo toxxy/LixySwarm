@@ -52,6 +52,23 @@ def test_training_loss_masks_prompt_and_computes_real_weighted_gradient():
     assert gradient['lora_a'].item()==pytest.approx(40/6) and not model.training
     assert model.lora_a.grad is None and torch.equal(model.lora_a,before)
     result,_none=training_statistics(model,Tokenizer(),rows,'cpu',time.time()+10)
-    assert model.calls[-1][1:] == (False,False)
+    assert model.calls[-1][1:] == (True,True)
     with pytest.raises(ValueError):training_statistics(model,Tokenizer(),rows,'cpu',time.time()+10,maximum=3)
     with pytest.raises(TimeoutError):training_statistics(None,None,rows,'cpu',time.time()-1)
+
+
+def test_reference_baseline_and_no_update_control_use_identical_forward_mode():
+    class Tokenizer:
+        eos_token_id=9
+        def apply_chat_template(self,*_a,**_k):return 'prefix'
+        def encode(self,*_a,**_k):return [1,2]
+    class ModeSensitive(torch.nn.Module):
+        def __init__(self):
+            super().__init__();self.lora_a=torch.nn.Parameter(torch.ones(1))
+        def forward(self,**_kwargs):
+            offset=100*(not self.training)+1000*(not torch.is_grad_enabled())
+            return SimpleNamespace(loss=self.lora_a.square().mean()+offset)
+    model=ModeSensitive().eval();rows=[{'prompt':'public training','answer':'public target'}]
+    baseline,_grad=training_statistics(model,Tokenizer(),rows,'cpu',time.time()+10,gradient=True)
+    control,_none=training_statistics(model,Tokenizer(),rows,'cpu',time.time()+10)
+    assert baseline==control and baseline['nll']==1 and not model.training
