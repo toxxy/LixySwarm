@@ -13,9 +13,10 @@ class LanguageFamilies:
     def __init__(self,knowledge,directory):
         self.knowledge=knowledge;self.root=Path(directory)/"public/language"
         self.store=ArtifactStore(self.root/"artifacts",max_artifact_bytes=4*1024**3,max_total_bytes=8*1024**3)
-        self.artifacts=ArtifactService(knowledge.work,self.store,namespace="language.artifact",receive_budget=knowledge.budget)
+        self.artifacts=ArtifactService(knowledge.work,self.store,namespace="language.artifact",receive_budget=knowledge.budget,register_handlers=False)
         for operation,handler in [("language.artifact.describe.v1",self.artifacts._describe),
                                   ("language.artifact.read-chunk.v1",self._chunk),
+                                  ("language.artifact.read-chunk.v2",self._encoded_chunk),
                                   ("language.family.v1",self._family)]:
             knowledge.work.register_handler(operation,"artifact",self._guard(handler),permit_cached=self._permit_cached)
         from .language_version_service import LanguageVersionService
@@ -34,9 +35,15 @@ class LanguageFamilies:
         self.knowledge.budget.wait(len(value["data"])+2048,cancel_event=self.knowledge.cancel,deadline=execution.deadline)
         return value
 
+    def _encoded_chunk(self,payload,execution):
+        value=self.artifacts._read_encoded_chunk(payload,execution)
+        self.knowledge.budget.wait(len(value['data'])+2048,cancel_event=self.knowledge.cancel,deadline=execution.deadline)
+        execution.raise_if_cancelled()
+        return value
+
     def _permit_cached(self,execution,output):
         if not self.knowledge.allowed:return False
-        if execution.operation=="language.artifact.read-chunk.v1":
+        if execution.operation in {"language.artifact.read-chunk.v1", "language.artifact.read-chunk.v2"}:
             self.knowledge.budget.wait(len(output["data"])+2048,cancel_event=self.knowledge.cancel,deadline=execution.deadline)
         elif execution.operation.startswith('language.version-'):
             from src.release.language_family import canonical

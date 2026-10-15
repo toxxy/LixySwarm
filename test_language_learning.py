@@ -90,7 +90,11 @@ def test_signed_receipts_survive_failed_fetch_without_recalculating(monkeypatch,
     store=coordinator.training.families.store
     original=store.has
     monkeypatch.setattr(store,'has',lambda _identifier:False)
-    def fail(*_a,**_kw):raise TimeoutError('injected transfer interruption')
+    fetched=threading.Barrier(2)
+    def fail(*_a,**_kw):
+        # Inject the cut after both receipts exist, independent of thread order.
+        fetched.wait(timeout=3)
+        raise TimeoutError('injected transfer interruption')
     coordinator.training.families.artifacts=SimpleNamespace(fetch=fail)
     coordinator._run(threading.Event())
     assert coordinator.ledger['round']==0 and coordinator.ledger['cursor']==0

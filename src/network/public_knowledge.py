@@ -118,7 +118,7 @@ class PublicKnowledgeService:
             hardware=hardware, storage_path=root)
         self.work = WorkCoordinator(node, self.governor, max_workers=2,
             max_offers_per_peer=4, max_offers_per_minute=600)
-        self.artifacts = ArtifactService(self.work, self.store)
+        self.artifacts = ArtifactService(self.work, self.store, register_handlers=False)
         history = ReleaseHistoryService(self.work, self.registry, catalog.policy)
         self.cancel = threading.Event(); self.cancel.set()
         self.policy = ContributionPolicy.for_mode("disabled")
@@ -141,6 +141,7 @@ class PublicKnowledgeService:
         self.artifacts.receive_budget = self.budget
         self.work.register_handler("artifact.describe.v1", "artifact", self._guard(self.artifacts._describe),permit_cached=self._permit_cached)
         self.work.register_handler("artifact.read-chunk.v1", "artifact", self._guard(self._chunk),permit_cached=self._permit_cached)
+        self.work.register_handler("artifact.read-chunk.v2", "artifact", self._guard(self._encoded_chunk),permit_cached=self._permit_cached)
         self.work.register_handler("release.history.v1", "artifact", self._guard(history._page),permit_cached=self._permit_cached)
         node.capabilities["public_artifacts_v1"] = True
         node.on_release_announced(self._on_release)
@@ -208,9 +209,15 @@ class PublicKnowledgeService:
         execution.raise_if_cancelled()
         return value
 
+    def _encoded_chunk(self, payload, execution):
+        value = self.artifacts._read_encoded_chunk(payload, execution)
+        self.budget.wait(len(value['data'])+2048, cancel_event=self.cancel, deadline=execution.deadline)
+        execution.raise_if_cancelled()
+        return value
+
     def _permit_cached(self, execution, output):
         if not self.allowed: return False
-        if execution.operation=="artifact.read-chunk.v1":
+        if execution.operation in {"artifact.read-chunk.v1", "artifact.read-chunk.v2"}:
             self.budget.wait(len(output["data"])+2048,cancel_event=self.cancel,deadline=execution.deadline)
         return self.allowed
 

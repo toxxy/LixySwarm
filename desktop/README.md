@@ -6,6 +6,8 @@ La coordinación de lenguaje y el seguimiento automático se habilitan mediante 
 
 El código en preparación para A13 añade reparto por capacidad observada entre las dos PCs conocidas. Los controles de coordinación versión 2 admiten `shards_per_cycle` de 2 a 16 y `allocation` igual a `balanced` u `observed`. Cada fragmento conserva el máximo de ocho ejemplos; la nueva configuración usa cuatro fragmentos y necesita dos observaciones verificadas por equipo antes de ponderar el reparto. Un archivo existente de versión 1 conserva dos fragmentos y reparto equilibrado al migrar. Los permisos GPU de cada nodo prevalecen sobre el plan. La [medición física](../experiments/reports/language_capacity_allocation_physical_20261014.json) distribuyó 24 ejemplos al escritorio y ocho a la laptop, pero resultó un 2,1 % más lenta que el escritorio solo. Esto aún no acredita acelerar el aprendizaje al sumar PCs. La descarga pública enlazada sigue siendo A12.
 
+A13 también prepara transferencias comprimidas sin pérdida, negociadas con cada proveedor. Conserva los bytes y hashes de modelos y gradientes, las descargas parciales y el protocolo de los nodos anteriores. Las cuotas de disco se calculan sobre el archivo original; el presupuesto de red se aplica a los datos codificados y su margen de protocolo.
+
 El ejecutable incluye Python y los componentes de interfaz y transporte. La instalación por usuario conserva la identidad y el estado fuera del paquete. En Linux crea una entrada en el menú de aplicaciones; Windows y macOS tienen sus propios adaptadores de instalación.
 
 ## Prueba de empaquetado

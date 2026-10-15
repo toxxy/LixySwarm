@@ -14,9 +14,9 @@ from pathlib import Path
 from typing import Optional
 
 from src.contribution import ResourceRequirements
+from .artifact_codec import CHUNK_BYTES as ARTIFACT_CHUNK_BYTES, ENCODING, encode_chunk, decode_chunk
 
 
-ARTIFACT_CHUNK_BYTES = 96 * 1024
 DEFAULT_MAX_ARTIFACT_BYTES = 10 * 1024 ** 3
 DEFAULT_MAX_STORE_BYTES = 100 * 1024 ** 3
 VALID_ARTIFACT_KINDS = {"model", "dataset", "gradient", "evaluation", "other"}
@@ -281,23 +281,28 @@ class ArtifactStore:
 class ArtifactService:
     """Register artifact read operations and fetch verified objects from peers."""
 
-    def __init__(self, coordinator, store: ArtifactStore, *, receive_budget=None, namespace="artifact",register_handlers=True):
+    def __init__(self, coordinator, store: ArtifactStore, *, receive_budget=None, namespace="artifact",register_handlers=True,prefer_compressed=True):
         if namespace not in {"artifact", "language.artifact"}:
             raise ArtifactError("unsupported artifact operation namespace")
         self.coordinator = coordinator
         self.store = store
         self.receive_budget = receive_budget
         self.namespace = namespace
+        if type(prefer_compressed) is not bool:
+            raise ArtifactError('Invalid local artifact encoding preference')
+        self.prefer_compressed = prefer_compressed
         self._fetch_locks: dict[str, threading.Lock] = {}
         self._fetch_locks_guard = threading.Lock()
         if register_handlers:
             coordinator.register_handler(f"{namespace}.describe.v1", "artifact", self._describe)
             coordinator.register_handler(f"{namespace}.read-chunk.v1", "artifact", self._read_chunk)
+            coordinator.register_handler(f"{namespace}.read-chunk.v2", "artifact", self._read_encoded_chunk)
 
     def _describe(self, payload: dict, _work) -> dict:
         if set(payload) != {"artifact_id"}:
             raise ArtifactError("invalid artifact describe request")
-        return {"manifest": self.store.manifest(payload["artifact_id"]).to_dict()}
+        return {"manifest": self.store.manifest(payload["artifact_id"]).to_dict(),
+                "chunk_encodings": ['raw', ENCODING]}
 
     def _read_chunk(self, payload: dict, _work) -> dict:
         if set(payload) != {"artifact_id", "offset", "length"}:
@@ -310,6 +315,13 @@ class ArtifactService:
             "data": base64.b64encode(chunk).decode("ascii"),
             "chunk_sha256": hashlib.sha256(chunk).hexdigest(),
         }
+
+    def _read_encoded_chunk(self, payload: dict, _work) -> dict:
+        if set(payload) != {"artifact_id", "offset", "length"}:
+            raise ArtifactError('Invalid encoded artifact chunk request')
+        chunk = self.store.read_chunk(payload['artifact_id'], payload['offset'], payload['length'])
+        return {'offset': int(payload['offset']), 'chunk_sha256': hashlib.sha256(chunk).hexdigest(),
+                **encode_chunk(chunk)}
 
     def fetch(
         self,
@@ -381,6 +393,8 @@ class ArtifactService:
             raise ArtifactError("peer returned a different artifact")
         if expected_size is not None and manifest.size!=expected_size:
             raise ArtifactError("peer artifact size differs from the signed dependency")
+        encodings = describe.output.get('chunk_encodings')
+        encoded = self.prefer_compressed and isinstance(encodings, list) and 'raw' in encodings and ENCODING in encodings
         partial, offset = self.store.begin_receive(manifest)
         if offset == manifest.size:
             return self.store.finalize_receive(manifest, partial)
@@ -391,7 +405,7 @@ class ArtifactService:
                 length = min(ARTIFACT_CHUNK_BYTES, manifest.size - offset)
                 began=time.monotonic()
                 result = self.coordinator.submit(
-                    f"{self.namespace}.read-chunk.v1",
+                    f"{self.namespace}.read-chunk.v2" if encoded else f"{self.namespace}.read-chunk.v1",
                     {"artifact_id": artifact_id, "offset": offset, "length": length},
                     ResourceRequirements(kind="artifact"),
                     peer_id=peer_id,
@@ -403,7 +417,7 @@ class ArtifactService:
                 if result.output.get("offset") != offset:
                     raise ArtifactError("peer returned a chunk at the wrong offset")
                 try:
-                    chunk = base64.b64decode(
+                    chunk = decode_chunk(result.output, length) if encoded else base64.b64decode(
                         result.output.get("data", ""), validate=True
                     )
                 except (ValueError, TypeError) as exc:
@@ -421,6 +435,7 @@ class ArtifactService:
                 progress(offset,manifest.size)
                 if observer is not None:
                     observer({'offset':offset,'bytes':len(chunk),'rpc_seconds':received-began,
+                        'encoded_data_bytes':len(result.output['data']), 'encoding':result.output.get('encoding','raw'),
                         'receive_and_write_seconds':time.monotonic()-received})
             destination.flush()
             os.fsync(destination.fileno())
