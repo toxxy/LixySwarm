@@ -45,8 +45,12 @@ def run(args,cancel):
     source_revision=subprocess.check_output(['git','rev-parse','HEAD'],cwd=repo,text=True).strip()
     finite=getattr(args,'finite_step',False)
     quality_block=getattr(args,'quality_block',False)
+    selector=getattr(args,'expert_selector',False)
     streamed=getattr(args,'streamed_base',False)
-    if quality_block:
+    if selector:
+        from src.learning.language_selector_protocol import definition as selector_definition,protocol_id as selector_id
+        protocol=selector_definition();identifier=selector_id()
+    elif quality_block:
         from src.learning.language_block_protocol import definition as block_definition,protocol_id as block_id
         protocol=block_definition();identifier=block_id()
     elif finite:
@@ -56,7 +60,7 @@ def run(args,cancel):
         identifier=finite_id(args.precision,group_direction=group,streamed_base=streamed)
     else:protocol=definition(args.precision);identifier=protocol_id(args.precision)
     ram_gb=protocol['ram_gb'];disk_gb=protocol.get('disk_reservation_gb',.008)
-    trial=selected_trial(repo);before=fingerprints(node);controls=ClientSettings.load(node);policy=asdict(controls.policy)
+    trial=None if selector else selected_trial(repo);before=fingerprints(node);controls=ClientSettings.load(node);policy=asdict(controls.policy)
     diagnostic=json.loads((node/'diagnostics.json').read_text());pid=diagnostic['pid']
     registry=LanguageVersionRegistry(node/'public/language','qwen3-1.7b');head=registry.head()
     if head['release']['release_id']!=PARENT_RELEASE or head['release']['model_artifact_id']!=PARENT_MODEL:
@@ -81,7 +85,7 @@ def run(args,cancel):
     training=store.object_path(ARTIFACTS['train'][0])
     base=materialize_version(node,'qwen3-1.7b',PARENT_RELEASE,allowed=allowed)
     rows=[]
-    for result in trial['signed_results']:
+    for result in ([] if selector else trial['signed_results']):
         output=result['output'];row={key:output[key] for key in
             ['gradient_id','gradient_bytes','base_hash','adapter_id','dataset_id','start','count','tokens','quantization_relative_l2_error']}
         row['path']=str(store.object_path(row['gradient_id']));rows.append(row)
@@ -98,24 +102,39 @@ def run(args,cancel):
         'parent_release_id':PARENT_RELEASE,'training_file':str(training),'contributions':rows,
         'output_directory':str(directory/'engine'),'device':'cuda','cpu_threads':min(4,max(1,int(4*policy['cpu_percent']/100))),
         'gpu_fraction':policy['gpu_percent']/100/max(1,policy['max_gpu_jobs']),'deadline':deadline}
+    if selector:
+        request.pop('contributions');request['streamed_base']=True
     if quality_block or finite and streamed:request['streamed_base']=True
-    if quality_block:request['evaluation_file']=str(store.object_path(ARTIFACTS['evaluation'][0]))
+    if quality_block or selector:request['evaluation_file']=str(store.object_path(ARTIFACTS['evaluation'][0]))
     lease,reason=governor.acquire(ResourceRequirements(kind='training',gpu_required=True,ram_gb=ram_gb,disk_gb=disk_gb))
     if lease is None:raise ValueError('Retention research reservation denied: '+reason)
     try:
         with lease,NodeStateLock(node/'research/public-math'):
             atomic_json(directory/'status.json',{'phase':'diagnosing','success':False})
-            module='src.learning.language_block_quality_job' if quality_block else 'src.learning.language_finite_step_job' if finite else 'src.learning.language_retention_job'
+            module='src.learning.language_selector_job' if selector else 'src.learning.language_block_quality_job' if quality_block else 'src.learning.language_finite_step_job' if finite else 'src.learning.language_retention_job'
             response=ComputeSupervisor().run([str(args.engine_python.absolute()),'-m',module],
                 request,execution,allowed=allowed,ram_gb=ram_gb)
         path=directory/'engine/diagnostic.json'
-        if path.is_symlink() or path.stat().st_size>(1024**2 if quality_block else 256*1024):raise ValueError('Retention diagnostic output exceeds its bound')
+        if path.is_symlink() or path.stat().st_size>(1024**2 if quality_block or selector else 256*1024):raise ValueError('Retention diagnostic output exceeds its bound')
         raw=path.read_bytes();result=json.loads(raw)
         if (hashlib.sha256(raw).hexdigest()!=response['report_id'] or len(raw)!=response['bytes']
                 or result['protocol_id']!=identifier or result['model_id']!=PARENT_MODEL or not result['success']
-                or result['held_out_data_used_in_compute'] is not quality_block or result['updated_model_files_written'] is not False
+                or result['held_out_data_used_in_compute'] is not (quality_block or selector) or result['updated_model_files_written'] is not False
                 or result['parent_parameters_restored'] is not True or fingerprints(node)!=before):
             raise ValueError('Retention diagnostic changed its scope or current native controls')
+        if selector:
+            from src.learning.language_selector_protocol import verify_loss_report
+            from src.learning.weights_io import digest_file
+            verify_loss_report(result)
+            expected={'dolphin.safetensors','zero.safetensors','shuffled.safetensors','public.safetensors','optimizer-state.pt'}
+            artifacts=result.get('selector_artifacts',{})
+            if (set(artifacts)!=expected or result.get('held_out_data_used_for_training_or_selection') is not False
+                    or result.get('generation_performed') is not False or result.get('eligible_for_native_promotion') is not False
+                    or result.get('language_expert_files_written') is not False or result.get('selector_state_files_written') is not True
+                    or sum(v['bytes'] for v in artifacts.values())>disk_gb*1024**3):raise ValueError('Selector scope or saved-state budget changed')
+            for name,row in artifacts.items():
+                artifact=directory/'engine'/name
+                if artifact.is_symlink() or digest_file(artifact)!=(row['sha256'],row['bytes']):raise ValueError('Learned selector state digest mismatch')
         if quality_block:
             from src.learning.public_math import load_snapshot,verify_math_transition,MAX_TRACE_BYTES
             trace_path=directory/'engine/math-traces.json'
@@ -132,7 +151,7 @@ def run(args,cancel):
             'native_learning_cycles_added':0,'new_model_published':False,'source_daemon_pid_unchanged':True,
             'resource_reservation':{'ram_gb':ram_gb,'gpu_fraction':request['gpu_fraction']},'finished_at':time.time()}
         atomic_json(directory/'report.json',report);atomic_json(directory/'status.json',{'phase':'complete','success':True})
-        summary={'success':True,'accepted_microsteps':result['block']['accepted_steps'],
+        summary={'success':True,'selector_evaluations':{k:{g:r[g]['nll'] for g in ['historical','math']} for k,r in result['evaluations'].items()}} if selector else {'success':True,'accepted_microsteps':result['block']['accepted_steps'],
             'quality_verdict':result['quality']['math_verdict']} if quality_block else {'success':True,'applied_in_temporary_model':result['guard']['applied'],
             'accepted_rate':result['guard']['accepted_rate']} if finite else {
             'success':True,'loss_changes':result['loss_changes'],'reconstruction':result['reconstruction']}
@@ -152,9 +171,12 @@ def main():
     parser.add_argument('--group-direction',action='store_true',help='Constrain the saved direction against each protected TRAIN gradient')
     parser.add_argument('--streamed-base',action='store_true',help='Keep original frozen BF16 matrices while computing in FP32')
     parser.add_argument('--quality-block',action='store_true',help='Run the prospective fixed block and paired held-out quality evaluation')
+    parser.add_argument('--expert-selector',action='store_true',help='Train public-only Dolphin/Matriarca routing over two frozen experts')
     args=parser.parse_args();cancel=threading.Event()
     if args.group_direction and not args.finite_step:parser.error('--group-direction requires --finite-step')
-    if args.streamed_base and (not args.finite_step or not args.group_direction or args.precision!='float32'):
+    if args.expert_selector and (args.finite_step or args.group_direction or args.quality_block or args.precision!='float32' or not args.streamed_base):
+        parser.error('--expert-selector requires --streamed-base --precision float32 without update experiments')
+    if args.streamed_base and not args.expert_selector and (not args.finite_step or not args.group_direction or args.precision!='float32'):
         parser.error('--streamed-base requires --finite-step --group-direction --precision float32')
     if args.quality_block and not args.streamed_base:parser.error('--quality-block requires --streamed-base')
     for sig in [signal.SIGINT,signal.SIGTERM]:signal.signal(sig,lambda *_:cancel.set())

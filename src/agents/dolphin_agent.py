@@ -100,9 +100,18 @@ class PingEncoder(nn.Module):
         self.encoder = nn.Sequential(*layers)
         self.norm = nn.LayerNorm(echo_dim)
 
-    def forward(self, idx: torch.Tensor) -> torch.Tensor:
+    def forward(self, idx: torch.Tensor, attention_mask: Optional[torch.Tensor] = None) -> torch.Tensor:
         """idx: (B, T) → echo: (B, echo_dim)"""
-        x = self.embed(idx).mean(dim=1)  # (B, n_embd//4)
+        embeddings = self.embed(idx)
+        if attention_mask is None:
+            x = embeddings.mean(dim=1)
+        else:
+            if attention_mask.shape != idx.shape or not torch.all((attention_mask == 0) | (attention_mask == 1)):
+                raise ValueError('Ping attention mask must match the token batch')
+            counts = attention_mask.sum(dim=1, keepdim=True)
+            if torch.any(counts == 0):
+                raise ValueError('Every ping query needs at least one token')
+            x = (embeddings * attention_mask.unsqueeze(-1)).sum(dim=1) / counts
         x = self.encoder(x)
         return self.norm(torch.tanh(x))
 
@@ -175,7 +184,7 @@ class Echolocation(nn.Module):
         self.load_state_dict(own_state)
         print(f"  Echolocation: {loaded} pesos cargados, {skipped} omitidos (nuevos pings random)")
 
-    def forward(self, idx: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor, dict]:
+    def forward(self, idx: torch.Tensor, attention_mask: Optional[torch.Tensor] = None) -> Tuple[torch.Tensor, torch.Tensor, dict]:
         """
         idx: (B, T) tokens de input
         returns:
@@ -184,11 +193,11 @@ class Echolocation(nn.Module):
           echoes:     dict con los 5 pings + acoustic_map para inspección
         """
         # ─── 5 pings simultáneos ───
-        echo_topic   = self.ping_topic(idx)    # (B, echo_dim)
-        echo_intent  = self.ping_intent(idx)   # (B, echo_dim)
-        echo_need    = self.ping_need(idx)     # (B, echo_dim)
-        echo_context = self.ping_context(idx)  # (B, echo_dim)
-        echo_emotion = self.ping_emotion(idx)  # (B, echo_dim)
+        echo_topic   = self.ping_topic(idx, attention_mask)    # (B, echo_dim)
+        echo_intent  = self.ping_intent(idx, attention_mask)   # (B, echo_dim)
+        echo_need    = self.ping_need(idx, attention_mask)     # (B, echo_dim)
+        echo_context = self.ping_context(idx, attention_mask)  # (B, echo_dim)
+        echo_emotion = self.ping_emotion(idx, attention_mask)  # (B, echo_dim)
 
         # ─── Phase A: Triangulación por atención ───
         # Stack de los 5 ecos: (B, 5, echo_dim)
