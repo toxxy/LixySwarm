@@ -44,13 +44,18 @@ def run(args,cancel):
     def allowed():
         try:
             now = ClientSettings.load(node); state = json.loads((node/'diagnostics.json').read_text())
-            return (not cancel.is_set() and now.connected and not now.paused and asdict(now.policy)==policy
-                and now.policy.max_ram_gb>=10 and now.policy.cpu_percent>0 and now.policy.gpu_percent>0 and now.policy.max_gpu_jobs>0
-                and managed_public_bytes(node)+retained_bytes()+.01*1024**3<=now.policy.max_disk_gb*1024**3
-                and state['pid']==pid and time.time()*1000-state['timestamp_ms']<30000
-                and state['language']['active']==0 and state['language_training']['active']==0
-                and state['language_training']['ready'] and fingerprints(node)==before
-                and registry.head()['release']['release_id']==PARENT_RELEASE and not governor._system_busy())
+            checks = {'not_cancelled':not cancel.is_set(),'connected':now.connected,'not_paused':not now.paused,
+                'same_policy':asdict(now.policy)==policy,'ram':now.policy.max_ram_gb>=10,
+                'cpu':now.policy.cpu_percent>0,'gpu':now.policy.gpu_percent>0 and now.policy.max_gpu_jobs>0,
+                'disk':managed_public_bytes(node)+retained_bytes()+.01*1024**3<=now.policy.max_disk_gb*1024**3,
+                'same_process':state['pid']==pid,'fresh_diagnostics':time.time()*1000-state['timestamp_ms']<30000,
+                'idle_inference':state['language']['active']==0,'idle_training':state['language_training']['active']==0,
+                'training_ready':state['language_training']['ready'],'same_native_state':fingerprints(node)==before,
+                'same_parent':registry.head()['release']['release_id']==PARENT_RELEASE,'system_available':not governor._system_busy()}
+            permitted = all(checks.values())
+            if not permitted and directory.exists():
+                atomic_json(directory/'guard-failure.json',{'checks':checks,'timestamp':time.time()})
+            return permitted
         except (OSError,ValueError,KeyError,TypeError):return False
     if not allowed():raise ValueError('Outcome calibration requires idle work within current physical resources')
     base = materialize_version(node,'qwen3-1.7b',PARENT_RELEASE,allowed=allowed)
