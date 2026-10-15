@@ -83,6 +83,7 @@ def main():
                 # The fixture has no physical participant state or model. Keep
                 # its installer and launcher outside the operator's real app.
                 os.environ['XDG_DATA_HOME'] = str(root / 'installed-app')
+                controller.settings().save(controller.directory)
                 controller._launch_node(executable=args.upgrade_from.resolve())
                 wait(lambda: controller.snapshot()['fresh'])
             started = time.monotonic()
