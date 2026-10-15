@@ -30,13 +30,24 @@ def terminate_owned_process(process):
 
 
 class ComputeSupervisor:
-    def run(self, command, request, execution, *, allowed, ram_gb):
+    def run(self, command, request, execution, *, allowed, ram_gb, sandbox=None):
         encoded = json.dumps(request,allow_nan=False).encode()
         if len(encoded)>16*1024 or ram_gb<=0:
             raise ComputeProcessError("Invalid local compute bounds")
         environment = dict(os.environ); environment.pop("PYTHONPATH",None)
         if request.get("device")=="cpu":
             environment["CUDA_VISIBLE_DEVICES"]=""
+        if sandbox is not None:
+            from .compute_sandbox import CPUComputeSandbox, ComputeSandboxError
+            if type(sandbox) is not CPUComputeSandbox:
+                raise ComputeProcessError("Compute sandbox must be selected locally")
+            try:
+                command, environment = sandbox.launch(command, request)
+            except (ComputeSandboxError, OSError) as error:
+                raise ComputeProcessError("Required compute isolation could not be prepared") from error
+        execution.raise_if_cancelled()
+        if not allowed() or time.time() >= execution.deadline:
+            raise ComputeProcessError("Compute permission withdrawn or deadline exceeded")
         kwargs = {"start_new_session":True} if os.name!="nt" else {"creationflags":subprocess.CREATE_NEW_PROCESS_GROUP | subprocess.CREATE_NO_WINDOW}
         process = subprocess.Popen(command,stdin=subprocess.PIPE,stdout=subprocess.PIPE,stderr=subprocess.PIPE,
                                    env=environment,**kwargs)

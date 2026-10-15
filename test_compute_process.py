@@ -57,6 +57,14 @@ def test_memory_and_output_limits_do_not_accept_a_result(tmp_path):
         ComputeSupervisor().run(command,{},execution(),allowed=lambda:True,ram_gb=0.2)
 
 
+def test_revoked_permission_does_not_launch_even_a_fast_engine(tmp_path):
+    marker=tmp_path/'started'
+    command=worker(tmp_path,f"from pathlib import Path; Path({str(marker)!r}).touch(); print('{{}}')")
+    with pytest.raises(ComputeProcessError,match='permission'):
+        ComputeSupervisor().run(command,{},execution(),allowed=lambda:False,ram_gb=.2)
+    assert not marker.exists()
+
+
 def test_engine_command_is_machine_local_and_unknown_fields_are_rejected(tmp_path):
     with pytest.raises(ValueError,match="locally installed"):
         EngineSettings(enabled=True,command=["downloaded-peer-command"]).save(tmp_path)
