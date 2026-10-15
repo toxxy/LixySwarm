@@ -200,3 +200,25 @@ def test_known_catalog_provider_is_targeted_before_general_stale_address_queue(t
         assert attempts==[provider] and service.snapshot()["state"]=="pending"
     finally:
         service.close()
+
+
+def test_chat_metadata_uses_shared_budget_without_granting_public_sharing(tmp_path):
+    from types import SimpleNamespace
+    instance=node(tmp_path/'receiver')
+    service=PublicKnowledgeService(instance,tmp_path/'receiver',RESOURCES)
+    settings=ClientSettings(policy=ContributionPolicy.for_mode('relay'))
+    permitted=True
+    try:
+        service.update(settings,KnowledgeSettings())
+        assert not service.allowed and service._artifact_rate()==0
+        with service.metadata_budget(lambda:permitted) as budget:
+            assert budget is service.budget and service._artifact_rate()==settings.policy.max_bandwidth_mbps
+            budget.wait(128,deadline=time.time()+1)
+            assert not service.allowed
+            with pytest.raises(ArtifactError):
+                service._guard(lambda *_: {'unexpected':'served'})({},SimpleNamespace(raise_if_cancelled=lambda:None))
+            permitted=False
+            assert service._artifact_rate()==0
+            with pytest.raises(ArtifactError):budget.wait(128,deadline=time.time()+1)
+        assert not service.metadata_receivers and service._artifact_rate()==0
+    finally:service.close()

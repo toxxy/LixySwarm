@@ -1,0 +1,759 @@
+{
+  "app_release_published": false,
+  "archive_sha256": "1b603461a1b14d37573277601223c438b7de2ffb6eba6d342cbff30a7aa348fd",
+  "ci_run_id": 38680288304,
+  "current_accepted_version_used": false,
+  "expected_model_id": "506317cc9f40da9dea40e6d14a94910ac6625ae478b5f2d0248cb1bbbb93a6c3",
+  "memory_comparison_passed": true,
+  "observed_model_id": "badef4394af180ab75ca25f0d9d47f2406b92809b53b5845ab65d451cf9c4b3c",
+  "physical_client_host": "ea914d97caafef310e50385034abae9a50ba86496b0e9cbf4679e6070e4c25b0",
+  "report": {
+    "calculation_engines_loaded": false,
+    "chat_cancellation_verified": true,
+    "chat_first_answer": "Una red descentralizada es una red de computadoras que no está controlada por un solo punto central.",
+    "chat_history_encrypted": true,
+    "chat_history_survives_reopen": true,
+    "chat_receipt": {
+      "finished_at": 1792037927.1409223,
+      "job_id": "a0247edd6e60ab41b82668c2881ded663abd73bcce2d29c0bdf73444dee9fca6",
+      "requester_node_id": "e30c12d85f0bae775f9704b08b3f35442dc32cbda9d658cd587d4661632516c0",
+      "result_digest": "741cfe61c17403aaa26dcb71dffc34acc596df322a06a087b1e40dc770a66226",
+      "signature": "vQuWYZicvYs1e2s4L/Tma99jAk4EkBPG0zaSTFX5eqTgbuRwfmz3qt+n29c/m9FFWFcm4ig9mQa+ej8R6LczAA==",
+      "version": 1,
+      "worker_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255"
+    },
+    "chat_remote_context_opt_in": true,
+    "chat_ui_verified": true,
+    "connection_s": 0.83,
+    "controls_confirmed": true,
+    "internet": true,
+    "language_preparation_permission_gate": true,
+    "pause_keeps_connection": true,
+    "personal_memory_comparison": {
+      "global_signals_from_personal": false,
+      "model_training_performed": false,
+      "private_inputs": false,
+      "results": [
+        {
+          "case": "es_code",
+          "fresh_process": {
+            "case": "es_code",
+            "context_sha256": "5c76ad36ad360f26d37d4bfe2e47e3f28bdd143b4a26ec85bdac84c6b05a0c3f",
+            "recalled_episodes": 1,
+            "restored_in_fresh_process": true,
+            "success": true
+          },
+          "memory": {
+            "answer": "jaspe-642",
+            "context_bytes": 254,
+            "context_messages": 6,
+            "context_sent": true,
+            "model_id": "badef4394af180ab75ca25f0d9d47f2406b92809b53b5845ab65d451cf9c4b3c",
+            "provider_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+            "recalled_episodes": 1,
+            "receipt": {
+              "finished_at": 1792037945.47474,
+              "job_id": "f68aa55bd276b732e69a28bf55ebcc78897d8fce3c2c5b8c7ef659030a180a2d",
+              "requester_node_id": "e30c12d85f0bae775f9704b08b3f35442dc32cbda9d658cd587d4661632516c0",
+              "result_digest": "4f6cdb5b5bab473d01d7b86427f13184101c49f02bdd8a11bf264d7fa654f915",
+              "signature": "outVb25QwSBGWyRQwaveqmnN39y+MFyppVQ2RVkXftlOI2mmCN6EIMGFsjNqODXw0wf8lIC9SoIiWiwZhQO5Cg==",
+              "version": 1,
+              "worker_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255"
+            },
+            "route": "network",
+            "signed_result": {
+              "error": "",
+              "finished_at": 1792037945.47474,
+              "job_id": "f68aa55bd276b732e69a28bf55ebcc78897d8fce3c2c5b8c7ef659030a180a2d",
+              "output": {
+                "answer": "jaspe-642",
+                "model_id": "badef4394af180ab75ca25f0d9d47f2406b92809b53b5845ab65d451cf9c4b3c",
+                "output_tokens": 7
+              },
+              "receipt": {
+                "finished_at": 1792037945.47474,
+                "job_id": "f68aa55bd276b732e69a28bf55ebcc78897d8fce3c2c5b8c7ef659030a180a2d",
+                "requester_node_id": "e30c12d85f0bae775f9704b08b3f35442dc32cbda9d658cd587d4661632516c0",
+                "result_digest": "4f6cdb5b5bab473d01d7b86427f13184101c49f02bdd8a11bf264d7fa654f915",
+                "signature": "outVb25QwSBGWyRQwaveqmnN39y+MFyppVQ2RVkXftlOI2mmCN6EIMGFsjNqODXw0wf8lIC9SoIiWiwZhQO5Cg==",
+                "version": 1,
+                "worker_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255"
+              },
+              "status": "ok"
+            }
+          },
+          "recent": {
+            "answer": "A",
+            "context_bytes": 299,
+            "context_messages": 8,
+            "context_sent": true,
+            "model_id": "badef4394af180ab75ca25f0d9d47f2406b92809b53b5845ab65d451cf9c4b3c",
+            "provider_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+            "recalled_episodes": 0,
+            "receipt": {
+              "finished_at": 1792037936.1210582,
+              "job_id": "ac4ef619ee2290ecc654ea0455572056785d2f834270a68d695abf1a76cf475c",
+              "requester_node_id": "e30c12d85f0bae775f9704b08b3f35442dc32cbda9d658cd587d4661632516c0",
+              "result_digest": "826c5795fa522cba85954741acc400aae816f83e1989e4beff21fd253975b7a4",
+              "signature": "BGwVHQC0l7T1HVVdpX7BeJ+Qmoi6ZE9bKMjRa/wgRkr4dFteB925sG7NOp/Fb/t0Ribd9Yjl8OXc33p+s3IeDA==",
+              "version": 1,
+              "worker_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255"
+            },
+            "route": "network",
+            "signed_result": {
+              "error": "",
+              "finished_at": 1792037936.1210582,
+              "job_id": "ac4ef619ee2290ecc654ea0455572056785d2f834270a68d695abf1a76cf475c",
+              "output": {
+                "answer": "A",
+                "model_id": "badef4394af180ab75ca25f0d9d47f2406b92809b53b5845ab65d451cf9c4b3c",
+                "output_tokens": 2
+              },
+              "receipt": {
+                "finished_at": 1792037936.1210582,
+                "job_id": "ac4ef619ee2290ecc654ea0455572056785d2f834270a68d695abf1a76cf475c",
+                "requester_node_id": "e30c12d85f0bae775f9704b08b3f35442dc32cbda9d658cd587d4661632516c0",
+                "result_digest": "826c5795fa522cba85954741acc400aae816f83e1989e4beff21fd253975b7a4",
+                "signature": "BGwVHQC0l7T1HVVdpX7BeJ+Qmoi6ZE9bKMjRa/wgRkr4dFteB925sG7NOp/Fb/t0Ribd9Yjl8OXc33p+s3IeDA==",
+                "version": 1,
+                "worker_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255"
+              },
+              "status": "ok"
+            }
+          }
+        },
+        {
+          "case": "es_label",
+          "fresh_process": {
+            "case": "es_label",
+            "context_sha256": "f5bc40540d3ff28763bd923882b92fd337ab9b1840bd5bdd826f3cbd51f1f354",
+            "recalled_episodes": 1,
+            "restored_in_fresh_process": true,
+            "success": true
+          },
+          "memory": {
+            "answer": "aguamarina-731",
+            "context_bytes": 272,
+            "context_messages": 6,
+            "context_sent": true,
+            "model_id": "badef4394af180ab75ca25f0d9d47f2406b92809b53b5845ab65d451cf9c4b3c",
+            "provider_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+            "recalled_episodes": 1,
+            "receipt": {
+              "finished_at": 1792037963.7969346,
+              "job_id": "370d6ed24732e260ab38e4c56a92db5a124f3506b9839f084a3883a4662df5b9",
+              "requester_node_id": "e30c12d85f0bae775f9704b08b3f35442dc32cbda9d658cd587d4661632516c0",
+              "result_digest": "9b65275dba21d2457a64d862a9e1a8c7e9ac1f799251e1e2fdbb946f35ea3552",
+              "signature": "syBqqOr1o5b5s8i8nV+1b1oSsYbbsOZ6ZLR6f1+ZJZJRopyse8zI4ilGj0kbQI6Gff/wLBfw2+VWgkASEVjBCA==",
+              "version": 1,
+              "worker_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255"
+            },
+            "route": "network",
+            "signed_result": {
+              "error": "",
+              "finished_at": 1792037963.7969346,
+              "job_id": "370d6ed24732e260ab38e4c56a92db5a124f3506b9839f084a3883a4662df5b9",
+              "output": {
+                "answer": "aguamarina-731",
+                "model_id": "badef4394af180ab75ca25f0d9d47f2406b92809b53b5845ab65d451cf9c4b3c",
+                "output_tokens": 8
+              },
+              "receipt": {
+                "finished_at": 1792037963.7969346,
+                "job_id": "370d6ed24732e260ab38e4c56a92db5a124f3506b9839f084a3883a4662df5b9",
+                "requester_node_id": "e30c12d85f0bae775f9704b08b3f35442dc32cbda9d658cd587d4661632516c0",
+                "result_digest": "9b65275dba21d2457a64d862a9e1a8c7e9ac1f799251e1e2fdbb946f35ea3552",
+                "signature": "syBqqOr1o5b5s8i8nV+1b1oSsYbbsOZ6ZLR6f1+ZJZJRopyse8zI4ilGj0kbQI6Gff/wLBfw2+VWgkASEVjBCA==",
+                "version": 1,
+                "worker_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255"
+              },
+              "status": "ok"
+            }
+          },
+          "recent": {
+            "answer": "Azucena",
+            "context_bytes": 307,
+            "context_messages": 8,
+            "context_sent": true,
+            "model_id": "badef4394af180ab75ca25f0d9d47f2406b92809b53b5845ab65d451cf9c4b3c",
+            "provider_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+            "recalled_episodes": 0,
+            "receipt": {
+              "finished_at": 1792037954.4571712,
+              "job_id": "663b2534df3d2b6345356c9fff67e7488da14b24d1658cee2ba9e610c13e00b2",
+              "requester_node_id": "e30c12d85f0bae775f9704b08b3f35442dc32cbda9d658cd587d4661632516c0",
+              "result_digest": "55e74b915f2b2544648e82a1a16bbdbc2c6069d1975ac7319f43b93ea5ad4a25",
+              "signature": "mkJU7FAvkF7Ci56IKOfhLrUT5xFvbwNljAeuPApEAL9+IaMjpZX/aYF13aKELP1WOdWgod1+QZ9mMWPaZdC9Dw==",
+              "version": 1,
+              "worker_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255"
+            },
+            "route": "network",
+            "signed_result": {
+              "error": "",
+              "finished_at": 1792037954.4571712,
+              "job_id": "663b2534df3d2b6345356c9fff67e7488da14b24d1658cee2ba9e610c13e00b2",
+              "output": {
+                "answer": "Azucena",
+                "model_id": "badef4394af180ab75ca25f0d9d47f2406b92809b53b5845ab65d451cf9c4b3c",
+                "output_tokens": 4
+              },
+              "receipt": {
+                "finished_at": 1792037954.4571712,
+                "job_id": "663b2534df3d2b6345356c9fff67e7488da14b24d1658cee2ba9e610c13e00b2",
+                "requester_node_id": "e30c12d85f0bae775f9704b08b3f35442dc32cbda9d658cd587d4661632516c0",
+                "result_digest": "55e74b915f2b2544648e82a1a16bbdbc2c6069d1975ac7319f43b93ea5ad4a25",
+                "signature": "mkJU7FAvkF7Ci56IKOfhLrUT5xFvbwNljAeuPApEAL9+IaMjpZX/aYF13aKELP1WOdWgod1+QZ9mMWPaZdC9Dw==",
+                "version": 1,
+                "worker_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255"
+              },
+              "status": "ok"
+            }
+          }
+        },
+        {
+          "case": "es_location",
+          "fresh_process": {
+            "case": "es_location",
+            "context_sha256": "c3ac5806505960f269b4be74fe9d8d7b3a5414e135f8e6f1f932b9feaa46f053",
+            "recalled_episodes": 1,
+            "restored_in_fresh_process": true,
+            "success": true
+          },
+          "memory": {
+            "answer": "estante-624",
+            "context_bytes": 275,
+            "context_messages": 6,
+            "context_sent": true,
+            "model_id": "badef4394af180ab75ca25f0d9d47f2406b92809b53b5845ab65d451cf9c4b3c",
+            "provider_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+            "recalled_episodes": 1,
+            "receipt": {
+              "finished_at": 1792037982.1394377,
+              "job_id": "aa0e066df68a1e7981b363a2f107a41e31e72d2c1efc1d266d482e3488f54e15",
+              "requester_node_id": "e30c12d85f0bae775f9704b08b3f35442dc32cbda9d658cd587d4661632516c0",
+              "result_digest": "484cbd7913fac479ea5cec217ce392b8350c3158db3afd5583277f39fc9006c8",
+              "signature": "kT8dk8ftg+Om3eBzb0ONH85JfnosS++Q/yYXM3y9+HgF3w169dN6r1RcBmCArHbPPuDxSlEfHwX/HeudBLdtCQ==",
+              "version": 1,
+              "worker_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255"
+            },
+            "route": "network",
+            "signed_result": {
+              "error": "",
+              "finished_at": 1792037982.1394377,
+              "job_id": "aa0e066df68a1e7981b363a2f107a41e31e72d2c1efc1d266d482e3488f54e15",
+              "output": {
+                "answer": "estante-624",
+                "model_id": "badef4394af180ab75ca25f0d9d47f2406b92809b53b5845ab65d451cf9c4b3c",
+                "output_tokens": 7
+              },
+              "receipt": {
+                "finished_at": 1792037982.1394377,
+                "job_id": "aa0e066df68a1e7981b363a2f107a41e31e72d2c1efc1d266d482e3488f54e15",
+                "requester_node_id": "e30c12d85f0bae775f9704b08b3f35442dc32cbda9d658cd587d4661632516c0",
+                "result_digest": "484cbd7913fac479ea5cec217ce392b8350c3158db3afd5583277f39fc9006c8",
+                "signature": "kT8dk8ftg+Om3eBzb0ONH85JfnosS++Q/yYXM3y9+HgF3w169dN6r1RcBmCArHbPPuDxSlEfHwX/HeudBLdtCQ==",
+                "version": 1,
+                "worker_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255"
+              },
+              "status": "ok"
+            }
+          },
+          "recent": {
+            "answer": "sobre la mesa",
+            "context_bytes": 310,
+            "context_messages": 8,
+            "context_sent": true,
+            "model_id": "badef4394af180ab75ca25f0d9d47f2406b92809b53b5845ab65d451cf9c4b3c",
+            "provider_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+            "recalled_episodes": 0,
+            "receipt": {
+              "finished_at": 1792037972.714396,
+              "job_id": "0e36e7bc475a3c05b4f7a14a9e85a805e0a1ec8a6d3ecc7bbd08d3448cf2a81c",
+              "requester_node_id": "e30c12d85f0bae775f9704b08b3f35442dc32cbda9d658cd587d4661632516c0",
+              "result_digest": "8d372819942e2990e3e0ad76b48fa6be7b52a5a93ebed7619b859e035b5f8e7d",
+              "signature": "y+ATxQzZyp+SljZlVzSYbin3s64gL9/WcZ/iLUhzGOqtebNklgszdJSWXfg6IMMiFa+SgJhAtQjr/ChjcwKYDQ==",
+              "version": 1,
+              "worker_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255"
+            },
+            "route": "network",
+            "signed_result": {
+              "error": "",
+              "finished_at": 1792037972.714396,
+              "job_id": "0e36e7bc475a3c05b4f7a14a9e85a805e0a1ec8a6d3ecc7bbd08d3448cf2a81c",
+              "output": {
+                "answer": "sobre la mesa",
+                "model_id": "badef4394af180ab75ca25f0d9d47f2406b92809b53b5845ab65d451cf9c4b3c",
+                "output_tokens": 5
+              },
+              "receipt": {
+                "finished_at": 1792037972.714396,
+                "job_id": "0e36e7bc475a3c05b4f7a14a9e85a805e0a1ec8a6d3ecc7bbd08d3448cf2a81c",
+                "requester_node_id": "e30c12d85f0bae775f9704b08b3f35442dc32cbda9d658cd587d4661632516c0",
+                "result_digest": "8d372819942e2990e3e0ad76b48fa6be7b52a5a93ebed7619b859e035b5f8e7d",
+                "signature": "y+ATxQzZyp+SljZlVzSYbin3s64gL9/WcZ/iLUhzGOqtebNklgszdJSWXfg6IMMiFa+SgJhAtQjr/ChjcwKYDQ==",
+                "version": 1,
+                "worker_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255"
+              },
+              "status": "ok"
+            }
+          }
+        },
+        {
+          "case": "es_correction",
+          "fresh_process": {
+            "case": "es_correction",
+            "context_sha256": "14538b07d646c00dc4bb5f0dbc9291b0602380173d2cb50516d88f33dd819a36",
+            "recalled_episodes": 2,
+            "restored_in_fresh_process": true,
+            "success": true
+          },
+          "memory": {
+            "answer": "granito-958",
+            "context_bytes": 352,
+            "context_messages": 8,
+            "context_sent": true,
+            "model_id": "badef4394af180ab75ca25f0d9d47f2406b92809b53b5845ab65d451cf9c4b3c",
+            "provider_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+            "recalled_episodes": 2,
+            "receipt": {
+              "finished_at": 1792038000.4463093,
+              "job_id": "80497aa17c617d350984dfa88278c1e55a17fe0d2a5e6a5c31a8866aa941061c",
+              "requester_node_id": "e30c12d85f0bae775f9704b08b3f35442dc32cbda9d658cd587d4661632516c0",
+              "result_digest": "8f0a647a696cee9b72f91b7488f62f237da8cc49516e0ba063ec05f3af4a6d32",
+              "signature": "facIheln/3KGGdVey0oaC6BwqBw6S1YnF9iC2Rlgmyf3lwGPUR7HYMtH6bU2clxYevtfBORKHcXm6HW/ujaJBA==",
+              "version": 1,
+              "worker_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255"
+            },
+            "route": "network",
+            "signed_result": {
+              "error": "",
+              "finished_at": 1792038000.4463093,
+              "job_id": "80497aa17c617d350984dfa88278c1e55a17fe0d2a5e6a5c31a8866aa941061c",
+              "output": {
+                "answer": "granito-958",
+                "model_id": "badef4394af180ab75ca25f0d9d47f2406b92809b53b5845ab65d451cf9c4b3c",
+                "output_tokens": 7
+              },
+              "receipt": {
+                "finished_at": 1792038000.4463093,
+                "job_id": "80497aa17c617d350984dfa88278c1e55a17fe0d2a5e6a5c31a8866aa941061c",
+                "requester_node_id": "e30c12d85f0bae775f9704b08b3f35442dc32cbda9d658cd587d4661632516c0",
+                "result_digest": "8f0a647a696cee9b72f91b7488f62f237da8cc49516e0ba063ec05f3af4a6d32",
+                "signature": "facIheln/3KGGdVey0oaC6BwqBw6S1YnF9iC2Rlgmyf3lwGPUR7HYMtH6bU2clxYevtfBORKHcXm6HW/ujaJBA==",
+                "version": 1,
+                "worker_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255"
+              },
+              "status": "ok"
+            }
+          },
+          "recent": {
+            "answer": "Cedro",
+            "context_bytes": 306,
+            "context_messages": 8,
+            "context_sent": true,
+            "model_id": "badef4394af180ab75ca25f0d9d47f2406b92809b53b5845ab65d451cf9c4b3c",
+            "provider_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+            "recalled_episodes": 0,
+            "receipt": {
+              "finished_at": 1792037991.0838346,
+              "job_id": "8f38ed7cb3cbc9fc3edec9a31e8fa4f378e7cf629c9d420a1e569fab18dc5e77",
+              "requester_node_id": "e30c12d85f0bae775f9704b08b3f35442dc32cbda9d658cd587d4661632516c0",
+              "result_digest": "9cef735512c7a1d03cd1a1cd4f46c61a17e7903bb741d53bc9853be54b3a287b",
+              "signature": "XBNutiH2hppUDT5LTwMVSs7hSSyaEpOy8LLOpX1Xr4wwlgyAT46WNb78r8q5tQfkdH+y3w5qZdNqY0dR8q/QBA==",
+              "version": 1,
+              "worker_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255"
+            },
+            "route": "network",
+            "signed_result": {
+              "error": "",
+              "finished_at": 1792037991.0838346,
+              "job_id": "8f38ed7cb3cbc9fc3edec9a31e8fa4f378e7cf629c9d420a1e569fab18dc5e77",
+              "output": {
+                "answer": "Cedro",
+                "model_id": "badef4394af180ab75ca25f0d9d47f2406b92809b53b5845ab65d451cf9c4b3c",
+                "output_tokens": 4
+              },
+              "receipt": {
+                "finished_at": 1792037991.0838346,
+                "job_id": "8f38ed7cb3cbc9fc3edec9a31e8fa4f378e7cf629c9d420a1e569fab18dc5e77",
+                "requester_node_id": "e30c12d85f0bae775f9704b08b3f35442dc32cbda9d658cd587d4661632516c0",
+                "result_digest": "9cef735512c7a1d03cd1a1cd4f46c61a17e7903bb741d53bc9853be54b3a287b",
+                "signature": "XBNutiH2hppUDT5LTwMVSs7hSSyaEpOy8LLOpX1Xr4wwlgyAT46WNb78r8q5tQfkdH+y3w5qZdNqY0dR8q/QBA==",
+                "version": 1,
+                "worker_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255"
+              },
+              "status": "ok"
+            }
+          }
+        },
+        {
+          "case": "en_code",
+          "fresh_process": {
+            "case": "en_code",
+            "context_sha256": "7d5f8ece672c71cd98dcda055e7d365aea46c1f450373d2641feebdc1f19029c",
+            "recalled_episodes": 1,
+            "restored_in_fresh_process": true,
+            "success": true
+          },
+          "memory": {
+            "answer": "cinder-593",
+            "context_bytes": 263,
+            "context_messages": 6,
+            "context_sent": true,
+            "model_id": "badef4394af180ab75ca25f0d9d47f2406b92809b53b5845ab65d451cf9c4b3c",
+            "provider_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+            "recalled_episodes": 1,
+            "receipt": {
+              "finished_at": 1792038018.7288468,
+              "job_id": "0fa88245a17e889169d23fcc9b7e03ece8a1044a35d292ef2c8341bc6657e8f0",
+              "requester_node_id": "e30c12d85f0bae775f9704b08b3f35442dc32cbda9d658cd587d4661632516c0",
+              "result_digest": "7ac7137fe90b15078558af5640a3de440b10e3359717f081840cdda48f392301",
+              "signature": "G7YP+1ikD/b7ZMwSd1p7IXzPuhvNKy21H5wcAGMU1O8Zu+3gxaV3UtAcy5zhK4EbxdXAS1/wVSlhdGnHJb1CBQ==",
+              "version": 1,
+              "worker_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255"
+            },
+            "route": "network",
+            "signed_result": {
+              "error": "",
+              "finished_at": 1792038018.7288468,
+              "job_id": "0fa88245a17e889169d23fcc9b7e03ece8a1044a35d292ef2c8341bc6657e8f0",
+              "output": {
+                "answer": "cinder-593",
+                "model_id": "badef4394af180ab75ca25f0d9d47f2406b92809b53b5845ab65d451cf9c4b3c",
+                "output_tokens": 7
+              },
+              "receipt": {
+                "finished_at": 1792038018.7288468,
+                "job_id": "0fa88245a17e889169d23fcc9b7e03ece8a1044a35d292ef2c8341bc6657e8f0",
+                "requester_node_id": "e30c12d85f0bae775f9704b08b3f35442dc32cbda9d658cd587d4661632516c0",
+                "result_digest": "7ac7137fe90b15078558af5640a3de440b10e3359717f081840cdda48f392301",
+                "signature": "G7YP+1ikD/b7ZMwSd1p7IXzPuhvNKy21H5wcAGMU1O8Zu+3gxaV3UtAcy5zhK4EbxdXAS1/wVSlhdGnHJb1CBQ==",
+                "version": 1,
+                "worker_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255"
+              },
+              "status": "ok"
+            }
+          },
+          "recent": {
+            "answer": "Riv\n</think>\n\nRiv",
+            "context_bytes": 302,
+            "context_messages": 8,
+            "context_sent": true,
+            "model_id": "badef4394af180ab75ca25f0d9d47f2406b92809b53b5845ab65d451cf9c4b3c",
+            "provider_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+            "recalled_episodes": 0,
+            "receipt": {
+              "finished_at": 1792038009.401751,
+              "job_id": "e2e14b6f82886b576d9dddb73657d492e0f004b6d45e21c1d22d2296cdeced14",
+              "requester_node_id": "e30c12d85f0bae775f9704b08b3f35442dc32cbda9d658cd587d4661632516c0",
+              "result_digest": "5d06a1036536afa0d688d11cadbd44d168ea4ec9b6e06eddb12d0f36c1274514",
+              "signature": "ipyImY4mfHFI/gQTRvi4pUEwhmh00SPazLwazsFx0rHOrMTh5rqhxZcsP93WlnwR3UodUuyQCf8LzrpiLGgaCQ==",
+              "version": 1,
+              "worker_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255"
+            },
+            "route": "network",
+            "signed_result": {
+              "error": "",
+              "finished_at": 1792038009.401751,
+              "job_id": "e2e14b6f82886b576d9dddb73657d492e0f004b6d45e21c1d22d2296cdeced14",
+              "output": {
+                "answer": "Riv\n</think>\n\nRiv",
+                "model_id": "badef4394af180ab75ca25f0d9d47f2406b92809b53b5845ab65d451cf9c4b3c",
+                "output_tokens": 8
+              },
+              "receipt": {
+                "finished_at": 1792038009.401751,
+                "job_id": "e2e14b6f82886b576d9dddb73657d492e0f004b6d45e21c1d22d2296cdeced14",
+                "requester_node_id": "e30c12d85f0bae775f9704b08b3f35442dc32cbda9d658cd587d4661632516c0",
+                "result_digest": "5d06a1036536afa0d688d11cadbd44d168ea4ec9b6e06eddb12d0f36c1274514",
+                "signature": "ipyImY4mfHFI/gQTRvi4pUEwhmh00SPazLwazsFx0rHOrMTh5rqhxZcsP93WlnwR3UodUuyQCf8LzrpiLGgaCQ==",
+                "version": 1,
+                "worker_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255"
+              },
+              "status": "ok"
+            }
+          }
+        },
+        {
+          "case": "en_location",
+          "fresh_process": {
+            "case": "en_location",
+            "context_sha256": "b203b47d0329d2b3bcc4815a0194a69c39dcb8b8d2b11b3b8e38b482e11cca52",
+            "recalled_episodes": 1,
+            "restored_in_fresh_process": true,
+            "success": true
+          },
+          "memory": {
+            "answer": "shelf-826",
+            "context_bytes": 268,
+            "context_messages": 6,
+            "context_sent": true,
+            "model_id": "badef4394af180ab75ca25f0d9d47f2406b92809b53b5845ab65d451cf9c4b3c",
+            "provider_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+            "recalled_episodes": 1,
+            "receipt": {
+              "finished_at": 1792038036.9093947,
+              "job_id": "3b92c778b5aa4ad3286cbcd0734b9b6b442c3d5fc187dafe871d33998fedccb5",
+              "requester_node_id": "e30c12d85f0bae775f9704b08b3f35442dc32cbda9d658cd587d4661632516c0",
+              "result_digest": "af1af3feaadc0bb9ceb397f36ff69a1e5939333c7d4f3d28ab24221689fdc9ef",
+              "signature": "yPWOs8oWPOqUJ3Z990gV/AxHF8v0dSxgvmezyNvufGsRs2Ha6qrG2pmnzqS2h0AtkuGlOjpacsTbsIGVHIa0Ag==",
+              "version": 1,
+              "worker_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255"
+            },
+            "route": "network",
+            "signed_result": {
+              "error": "",
+              "finished_at": 1792038036.9093947,
+              "job_id": "3b92c778b5aa4ad3286cbcd0734b9b6b442c3d5fc187dafe871d33998fedccb5",
+              "output": {
+                "answer": "shelf-826",
+                "model_id": "badef4394af180ab75ca25f0d9d47f2406b92809b53b5845ab65d451cf9c4b3c",
+                "output_tokens": 6
+              },
+              "receipt": {
+                "finished_at": 1792038036.9093947,
+                "job_id": "3b92c778b5aa4ad3286cbcd0734b9b6b442c3d5fc187dafe871d33998fedccb5",
+                "requester_node_id": "e30c12d85f0bae775f9704b08b3f35442dc32cbda9d658cd587d4661632516c0",
+                "result_digest": "af1af3feaadc0bb9ceb397f36ff69a1e5939333c7d4f3d28ab24221689fdc9ef",
+                "signature": "yPWOs8oWPOqUJ3Z990gV/AxHF8v0dSxgvmezyNvufGsRs2Ha6qrG2pmnzqS2h0AtkuGlOjpacsTbsIGVHIa0Ag==",
+                "version": 1,
+                "worker_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255"
+              },
+              "status": "ok"
+            }
+          },
+          "recent": {
+            "answer": "backup_maple",
+            "context_bytes": 306,
+            "context_messages": 8,
+            "context_sent": true,
+            "model_id": "badef4394af180ab75ca25f0d9d47f2406b92809b53b5845ab65d451cf9c4b3c",
+            "provider_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+            "recalled_episodes": 0,
+            "receipt": {
+              "finished_at": 1792038027.6418524,
+              "job_id": "314499582f10f29aaba9ebd6f9a3d33a7ab7bcf5a3e4100b886b0441425d2748",
+              "requester_node_id": "e30c12d85f0bae775f9704b08b3f35442dc32cbda9d658cd587d4661632516c0",
+              "result_digest": "b3bc87e071f8e779c9430076a599b777ef2269aeb918b4c4ab89589c26c00fd8",
+              "signature": "mqTxYhR/eFX/7VShFT7g34mP3NJTepY476ZwpIqKQB9/kfAQQr+/tC/SCNworQ7BKV7J2huAzl/jsYlbOzR+CQ==",
+              "version": 1,
+              "worker_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255"
+            },
+            "route": "network",
+            "signed_result": {
+              "error": "",
+              "finished_at": 1792038027.6418524,
+              "job_id": "314499582f10f29aaba9ebd6f9a3d33a7ab7bcf5a3e4100b886b0441425d2748",
+              "output": {
+                "answer": "backup_maple",
+                "model_id": "badef4394af180ab75ca25f0d9d47f2406b92809b53b5845ab65d451cf9c4b3c",
+                "output_tokens": 4
+              },
+              "receipt": {
+                "finished_at": 1792038027.6418524,
+                "job_id": "314499582f10f29aaba9ebd6f9a3d33a7ab7bcf5a3e4100b886b0441425d2748",
+                "requester_node_id": "e30c12d85f0bae775f9704b08b3f35442dc32cbda9d658cd587d4661632516c0",
+                "result_digest": "b3bc87e071f8e779c9430076a599b777ef2269aeb918b4c4ab89589c26c00fd8",
+                "signature": "mqTxYhR/eFX/7VShFT7g34mP3NJTepY476ZwpIqKQB9/kfAQQr+/tC/SCNworQ7BKV7J2huAzl/jsYlbOzR+CQ==",
+                "version": 1,
+                "worker_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255"
+              },
+              "status": "ok"
+            }
+          }
+        },
+        {
+          "case": "en_label",
+          "fresh_process": {
+            "case": "en_label",
+            "context_sha256": "3bc856da55b39f8ed39b348f3c9008031d13e0eadfcd76be722eb104d568b42b",
+            "recalled_episodes": 1,
+            "restored_in_fresh_process": true,
+            "success": true
+          },
+          "memory": {
+            "answer": "violet-218",
+            "context_bytes": 262,
+            "context_messages": 6,
+            "context_sent": true,
+            "model_id": "badef4394af180ab75ca25f0d9d47f2406b92809b53b5845ab65d451cf9c4b3c",
+            "provider_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+            "recalled_episodes": 1,
+            "receipt": {
+              "finished_at": 1792038055.2001705,
+              "job_id": "f627bd5b466720f7ac14cd4a0cd04ef93f8fae3dd08ac80f95c5fe6015e08c12",
+              "requester_node_id": "e30c12d85f0bae775f9704b08b3f35442dc32cbda9d658cd587d4661632516c0",
+              "result_digest": "bc77fa6e51bba754135c695008f84ac37b7810efb16f1ce214e9c448f847fd31",
+              "signature": "+qIhgDp0Ji+15jW3mzQiSst8tjQQSvFN/eRq/G6E68DVN3NrlidVa4ycGc+c1o/Vq6wHHo/GpVuseJWUzwc1AA==",
+              "version": 1,
+              "worker_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255"
+            },
+            "route": "network",
+            "signed_result": {
+              "error": "",
+              "finished_at": 1792038055.2001705,
+              "job_id": "f627bd5b466720f7ac14cd4a0cd04ef93f8fae3dd08ac80f95c5fe6015e08c12",
+              "output": {
+                "answer": "violet-218",
+                "model_id": "badef4394af180ab75ca25f0d9d47f2406b92809b53b5845ab65d451cf9c4b3c",
+                "output_tokens": 7
+              },
+              "receipt": {
+                "finished_at": 1792038055.2001705,
+                "job_id": "f627bd5b466720f7ac14cd4a0cd04ef93f8fae3dd08ac80f95c5fe6015e08c12",
+                "requester_node_id": "e30c12d85f0bae775f9704b08b3f35442dc32cbda9d658cd587d4661632516c0",
+                "result_digest": "bc77fa6e51bba754135c695008f84ac37b7810efb16f1ce214e9c448f847fd31",
+                "signature": "+qIhgDp0Ji+15jW3mzQiSst8tjQQSvFN/eRq/G6E68DVN3NrlidVa4ycGc+c1o/Vq6wHHo/GpVuseJWUzwc1AA==",
+                "version": 1,
+                "worker_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255"
+              },
+              "status": "ok"
+            }
+          },
+          "recent": {
+            "answer": "Willow",
+            "context_bytes": 302,
+            "context_messages": 8,
+            "context_sent": true,
+            "model_id": "badef4394af180ab75ca25f0d9d47f2406b92809b53b5845ab65d451cf9c4b3c",
+            "provider_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+            "recalled_episodes": 0,
+            "receipt": {
+              "finished_at": 1792038045.8264067,
+              "job_id": "9819e12b04264c87fc98639218bbdec7cf7ea7593b3cab731609d469b3ceb6ac",
+              "requester_node_id": "e30c12d85f0bae775f9704b08b3f35442dc32cbda9d658cd587d4661632516c0",
+              "result_digest": "e3adc54670c1b6a06904cd053a89f89737ed17f68ed7b0fea889eb2ff75cc372",
+              "signature": "JgeiNoCX3tUr10bwo3pm4T0evh7ACGQ4rUK2c1ZggRQ0Gtvb30+6wgTzwv3x+1wBR6ujiG5jqN3qfhSEXCIeCg==",
+              "version": 1,
+              "worker_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255"
+            },
+            "route": "network",
+            "signed_result": {
+              "error": "",
+              "finished_at": 1792038045.8264067,
+              "job_id": "9819e12b04264c87fc98639218bbdec7cf7ea7593b3cab731609d469b3ceb6ac",
+              "output": {
+                "answer": "Willow",
+                "model_id": "badef4394af180ab75ca25f0d9d47f2406b92809b53b5845ab65d451cf9c4b3c",
+                "output_tokens": 3
+              },
+              "receipt": {
+                "finished_at": 1792038045.8264067,
+                "job_id": "9819e12b04264c87fc98639218bbdec7cf7ea7593b3cab731609d469b3ceb6ac",
+                "requester_node_id": "e30c12d85f0bae775f9704b08b3f35442dc32cbda9d658cd587d4661632516c0",
+                "result_digest": "e3adc54670c1b6a06904cd053a89f89737ed17f68ed7b0fea889eb2ff75cc372",
+                "signature": "JgeiNoCX3tUr10bwo3pm4T0evh7ACGQ4rUK2c1ZggRQ0Gtvb30+6wgTzwv3x+1wBR6ujiG5jqN3qfhSEXCIeCg==",
+                "version": 1,
+                "worker_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255"
+              },
+              "status": "ok"
+            }
+          }
+        },
+        {
+          "case": "en_correction",
+          "fresh_process": {
+            "case": "en_correction",
+            "context_sha256": "c9e2bad7414b0081a1ff1af47d6168984bdb1158d8f9f5d44df5cd41ff94e750",
+            "recalled_episodes": 2,
+            "restored_in_fresh_process": true,
+            "success": true
+          },
+          "memory": {
+            "answer": "copper-947",
+            "context_bytes": 354,
+            "context_messages": 8,
+            "context_sent": true,
+            "model_id": "badef4394af180ab75ca25f0d9d47f2406b92809b53b5845ab65d451cf9c4b3c",
+            "provider_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+            "recalled_episodes": 2,
+            "receipt": {
+              "finished_at": 1792038073.5616817,
+              "job_id": "9f971e4b7b2a1631750456e1e99e99853eb7150fbdbf5a656cf6db66792fe7a8",
+              "requester_node_id": "e30c12d85f0bae775f9704b08b3f35442dc32cbda9d658cd587d4661632516c0",
+              "result_digest": "1ff1a548b5ad367fef25380dbb95dc8c8f2207e9718e79785dacaba1f5d71f0c",
+              "signature": "uEX7uNQUgiTK7Xen/Tpg9cNSmn/faaghawDaXVP+AtVykYjpG9vKOvuChL1X/XXPRmWXs+rFT854N+N24hUDCg==",
+              "version": 1,
+              "worker_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255"
+            },
+            "route": "network",
+            "signed_result": {
+              "error": "",
+              "finished_at": 1792038073.5616817,
+              "job_id": "9f971e4b7b2a1631750456e1e99e99853eb7150fbdbf5a656cf6db66792fe7a8",
+              "output": {
+                "answer": "copper-947",
+                "model_id": "badef4394af180ab75ca25f0d9d47f2406b92809b53b5845ab65d451cf9c4b3c",
+                "output_tokens": 7
+              },
+              "receipt": {
+                "finished_at": 1792038073.5616817,
+                "job_id": "9f971e4b7b2a1631750456e1e99e99853eb7150fbdbf5a656cf6db66792fe7a8",
+                "requester_node_id": "e30c12d85f0bae775f9704b08b3f35442dc32cbda9d658cd587d4661632516c0",
+                "result_digest": "1ff1a548b5ad367fef25380dbb95dc8c8f2207e9718e79785dacaba1f5d71f0c",
+                "signature": "uEX7uNQUgiTK7Xen/Tpg9cNSmn/faaghawDaXVP+AtVykYjpG9vKOvuChL1X/XXPRmWXs+rFT854N+N24hUDCg==",
+                "version": 1,
+                "worker_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255"
+              },
+              "status": "ok"
+            }
+          },
+          "recent": {
+            "answer": "Orchid: 1234567890",
+            "context_bytes": 307,
+            "context_messages": 8,
+            "context_sent": true,
+            "model_id": "badef4394af180ab75ca25f0d9d47f2406b92809b53b5845ab65d451cf9c4b3c",
+            "provider_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+            "recalled_episodes": 0,
+            "receipt": {
+              "finished_at": 1792038064.2296882,
+              "job_id": "b4c6032a71287029387b41c3de61d80a672f048d1c89bb304c607922cd43bd88",
+              "requester_node_id": "e30c12d85f0bae775f9704b08b3f35442dc32cbda9d658cd587d4661632516c0",
+              "result_digest": "3009ed9ba0e36bb1df4de3163c3541b38964b131ebb43028bc5afea8e77a530c",
+              "signature": "+kZa/D0M2ombK7p0CUzf4zasUSGEbpjJjoxS2aR6PFh6ewGoFqOvsw2XgVNfsTYpzODqxP+WABo48yoOoeQhAw==",
+              "version": 1,
+              "worker_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255"
+            },
+            "route": "network",
+            "signed_result": {
+              "error": "",
+              "finished_at": 1792038064.2296882,
+              "job_id": "b4c6032a71287029387b41c3de61d80a672f048d1c89bb304c607922cd43bd88",
+              "output": {
+                "answer": "Orchid: 1234567890",
+                "model_id": "badef4394af180ab75ca25f0d9d47f2406b92809b53b5845ab65d451cf9c4b3c",
+                "output_tokens": 16
+              },
+              "receipt": {
+                "finished_at": 1792038064.2296882,
+                "job_id": "b4c6032a71287029387b41c3de61d80a672f048d1c89bb304c607922cd43bd88",
+                "requester_node_id": "e30c12d85f0bae775f9704b08b3f35442dc32cbda9d658cd587d4661632516c0",
+                "result_digest": "3009ed9ba0e36bb1df4de3163c3541b38964b131ebb43028bc5afea8e77a530c",
+                "signature": "+kZa/D0M2ombK7p0CUzf4zasUSGEbpjJjoxS2aR6PFh6ewGoFqOvsw2XgVNfsTYpzODqxP+WABo48yoOoeQhAw==",
+                "version": 1,
+                "worker_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255"
+              },
+              "status": "ok"
+            }
+          }
+        }
+      ],
+      "verdict": {
+        "case_digest": "907d7abf09baa77eb5a81f4478ee1a92db1353bd0f6f93b57662411a8618afa9",
+        "eligible": true,
+        "gain": 8,
+        "memory_correct": 8,
+        "recent_correct": 0,
+        "regressions": [],
+        "scope": "Synthetic episodic recall and correction with one unchanged expert; not a general memory or neural-routing claim",
+        "total": 8
+      }
+    },
+    "reconnect_keeps_identity": true,
+    "success": true
+  },
+  "schema_version": 1,
+  "scope": "Initial A15 native memory comparison passed but selected genesis; not accepted as a current-knowledge app release",
+  "source_revision": "86b0fee3dc8d806d6e76411cd14ff17cc07f995f"
+}

@@ -434,6 +434,8 @@ class SwarmWindow(QMainWindow):
         self.chat_input.setEnabled(snapshot["running"])
         if not asking and not self.chat_messages:
             self.chat_status.setText("Experto disponible en este equipo" if chat.get("available") and chat.get("local") else "Experto de la red disponible" if chat.get("available") else "Esperando un experto de lenguaje disponible")
+            if chat.get('catalog_pending'):
+                self.chat_status.setText(chat.get('catalog_error') or 'Verificando la versión de lenguaje disponible…')
         state = status.get("state") if snapshot["fresh"] else "stopped"
         labels = {"stopped":"Listo para conectar", "connecting":"Conectando", "connected":"Conectado a la red", "preparing":"Preparando conocimiento público", "paused":"Aporte pausado", "disconnected":"Desconectado"}
         self.status.setText(labels.get(state, state))

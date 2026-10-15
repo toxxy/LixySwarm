@@ -21,6 +21,7 @@ def main():
     parser.add_argument("--prepare-engine", action="store_true")
     parser.add_argument("--chat",action="store_true")
     parser.add_argument('--memory',action='store_true')
+    parser.add_argument('--expected-chat-model')
     parser.add_argument("--report", type=Path)
     parser.add_argument("--screenshot", type=Path)
     parser.add_argument("--work-directory", type=Path)
@@ -29,6 +30,9 @@ def main():
         parser.error("The real catalog acquisition gate requires --internet")
     if args.chat and not args.internet:parser.error("The real chat assessment requires --internet")
     if args.memory and not args.chat:parser.error('Memory comparison requires the real chat assessment')
+    if args.expected_chat_model and (not args.chat or len(args.expected_chat_model)!=64
+            or any(c not in '0123456789abcdef' for c in args.expected_chat_model)):
+        parser.error('Expected chat model is an assertion against a public artifact hash')
     os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
     from PySide6.QtWidgets import QApplication
     from desktop.backend import NodeController
@@ -38,6 +42,7 @@ def main():
 
     app = QApplication.instance() or QApplication([])
     report = {"success": False, "internet": args.internet}
+    if args.expected_chat_model:report['expected_chat_model_id']=args.expected_chat_model
     seed = None
     previous_seeds = os.environ.get("LIXYSWARM_BOOTSTRAP_SEEDS")
     if args.work_directory:
@@ -155,6 +160,8 @@ def main():
             if args.chat:
                 wait(lambda: window.chat_history is not None,timeout=20)
                 wait(lambda: window.chat_send.isEnabled(),timeout=90)
+                if args.expected_chat_model:
+                    assert controller.chat_status()['model_id']==args.expected_chat_model,'The light chat selected another model version'
                 window.tabs.setCurrentIndex(1)
                 canary="synthetic-private-history-canary-3081"
                 window.chat_messages=[{"role":"user","content":canary}];window.save_chat_history()
@@ -163,6 +170,7 @@ def main():
                 wait(lambda:window.chat_worker is not None and not window.chat_pending and not window.chat_worker.isRunning(),timeout=75)
                 assert window.chat_last_result and window.chat_last_result["route"]=="network",window.chat_status.text()
                 assert not window.chat_last_result["context_sent"]
+                report['chat_model_id']=window.chat_last_result['model_id']
                 report["chat_first_answer"]=window.chat_last_result["answer"]
                 for path in controller.directory.rglob("*"):
                     if path.is_file() and path.name not in {"node.lock"}:
@@ -201,6 +209,7 @@ def main():
                         assert window.chat_last_result,window.chat_status.text()
                         result=window.chat_last_result
                         assert result['context_sent'] and result['route']=='network'
+                        if args.expected_chat_model:assert result['model_id']==args.expected_chat_model
                         return {**result,'recalled_episodes':window.chat_last_memories,
                             'context_bytes':sum(len(row['content'].encode()) for row in messages),'context_messages':len(messages)}
                     for case in memory_cases():

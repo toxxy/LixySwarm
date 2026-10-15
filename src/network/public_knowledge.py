@@ -6,6 +6,7 @@ conversation, dataset directory, or peer-supplied code is opened here.
 from __future__ import annotations
 
 import json
+from contextlib import contextmanager
 import logging
 import math
 import threading
@@ -138,6 +139,7 @@ class PublicKnowledgeService:
         self._status = {"state":"disabled", "family":catalog.family, "release_id":None,
                         "model_id":None, "sequence":None, "error":None, "versions_done":0}
         self.budget = BandwidthBudget(self._artifact_rate)
+        self.metadata_receivers={}
         self.artifacts.receive_budget = self.budget
         self.work.register_handler("artifact.describe.v1", "artifact", self._guard(self.artifacts._describe),permit_cached=self._permit_cached)
         self.work.register_handler("artifact.read-chunk.v1", "artifact", self._guard(self._chunk),permit_cached=self._permit_cached)
@@ -149,7 +151,9 @@ class PublicKnowledgeService:
         self.restore()
 
     def _artifact_rate(self):
-        if not self.allowed: return 0
+        if self.closed:return 0
+        with self.lock:receivers=list(self.metadata_receivers.values())
+        if not self.allowed and not any(allowed() for allowed in receivers): return 0
         rate=self.policy.max_bandwidth_mbps
         for name,state in [('engine-preparation.json','downloading'),('language-preparation.json','engine-downloading')]:
             try:
@@ -159,6 +163,21 @@ class PublicKnowledgeService:
                 if isinstance(value,dict) and value.get('state')==state and 0<=time.time()-value['updated_at']<=5:return rate/2
             except (OSError,ValueError,TypeError,KeyError):pass
         return rate
+
+    @contextmanager
+    def metadata_budget(self,allowed):
+        """Share the one transfer budget for verified chat metadata reception.
+
+        This does not permit serving, model acquisition, training or gossip.
+        Those paths retain their own sharing guards and cancellation tokens.
+        """
+        token=object()
+        with self.lock:
+            if len(self.metadata_receivers)>=8:raise ArtifactError('Metadata receiver slots are occupied')
+            self.metadata_receivers[token]=allowed
+        try:yield self.budget
+        finally:
+            with self.lock:self.metadata_receivers.pop(token,None)
 
     def _announce_current(self,peer_id,*_):
         if not self.allowed or not self.complete: return

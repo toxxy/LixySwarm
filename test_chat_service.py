@@ -2,6 +2,7 @@ import hashlib
 import json
 import os
 import threading
+import time
 import urllib.request
 import urllib.error
 from dataclasses import replace
@@ -175,6 +176,47 @@ def test_new_requester_prioritizes_approved_expert_without_blocking_controls(mon
         assert connected==sorted(chat_service.PROVIDERS)
         assert broker.snapshot()["available"] is False
     finally:broker.close()
+
+
+def test_available_genesis_provider_does_not_prevent_learning_catalog_refresh(monkeypatch,tmp_path):
+    from contextlib import nullcontext
+    from src.release import language_versions
+    broker,_=broker_fixture(monkeypatch)
+    broker.language.directory=tmp_path
+    broker.language.knowledge=SimpleNamespace(metadata_budget=lambda _allowed:nullcontext(None))
+    first={'release':{'release_id':'1'*64,'sequence':0,'model_artifact_id':MODEL_ID}}
+    second={'release':{'release_id':'2'*64,'sequence':1,'model_artifact_id':'d'*64}}
+    monkeypatch.setattr(language_versions,'LanguageVersionRegistry',lambda *_a:SimpleNamespace(
+        head=lambda:first,history=lambda _:[first]))
+    started,finish=threading.Event(),threading.Event()
+    calls=[]
+    class Catalog:
+        path=tmp_path/'catalog.json'
+        chain=[first]
+        def head(self):return self.chain[-1]
+        def read(self):return {'chain':self.chain}
+        def synchronize(self,*args,**kwargs):
+            calls.append(True);started.set();assert finish.wait(2)
+            self.chain=[first,second];self.path.write_text('{}')
+    broker.catalog=Catalog()
+    worker=next(iter(chat_service.PROVIDERS))
+    broker.node.connected_node_ids={worker}
+    broker.node.connect_node=lambda *_a,**_kw:True
+    broker.node.peers=lambda:[{'node_id':worker,'capabilities':{'language_inference_v1':True,
+        'language_inference_models':['d'*64,MODEL_ID]},'resources':{'models':['d'*64,MODEL_ID],'has_gpu':True,'ram_gb':5}}]
+    assert broker.providers(MODEL_ID)==[worker]
+    try:
+        broker.update(ClientSettings());assert started.wait(2)
+        assert broker.snapshot()['catalog_pending'] and not broker.snapshot()['available']
+        with pytest.raises(chat_service.ChatUnavailable,match='verificar'):
+            broker.ask({'request_id':'a'*32,'messages':[{'role':'user','content':'Question'}],'remote_context':False})
+        finish.set();broker.discovery_thread.join(timeout=2)
+        assert broker.snapshot()['model_id']=='d'*64 and broker.snapshot()['available']
+        broker.last_discovery=time.monotonic()-61
+        broker.update(ClientSettings());broker.discovery_thread.join(timeout=2)
+        assert len(calls)==2
+    finally:
+        finish.set();broker.close()
 
 
 class KeyStore:

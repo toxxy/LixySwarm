@@ -31,6 +31,7 @@ class ChatBroker:
         self.node,self.work,self.language=node,work,language
         self.lock=threading.RLock();self.requests={};self.cancelled={};self.connected=False;self.closed=False
         self.discovery_thread=None;self.last_discovery=0.0
+        self.catalog_error=None
         self.settings=None;self.catalog_cancel=threading.Event();self.catalog=None
         if getattr(language,'directory',None) is not None:
             from .chat_versions import ChatVersions
@@ -43,10 +44,11 @@ class ChatBroker:
             self.catalog_cancel.set()
             with self.lock:
                 for event in self.requests.values():event.set()
-        elif not self.language.ready and not self.providers() and hasattr(self.node,"connect_node"):
+        elif hasattr(self.node,"connect_node") and (self.catalog is not None or not self.language.ready and not self.providers()):
             # A fresh requester must not wait behind obsolete test peers in
             # the general connection queue to reach the approved pilot expert.
-            if time.monotonic()-self.last_discovery>=15 and (self.discovery_thread is None or not self.discovery_thread.is_alive()):
+            interval=15 if self._catalog_pending() or not self.providers() else 60
+            if time.monotonic()-self.last_discovery>=interval and (self.discovery_thread is None or not self.discovery_thread.is_alive()):
                 self.last_discovery=time.monotonic()
                 self.catalog_cancel=threading.Event()
                 self.discovery_thread=threading.Thread(target=self._discover,daemon=True,name="lixy-chat-discovery")
@@ -55,6 +57,7 @@ class ChatBroker:
     def _discover(self):
         for provider in sorted(PROVIDERS):
             if not self.connected or self.closed:return
+            if provider==self.node.identity.node_id_hex:continue
             try:
                 self.node.connect_node(provider,timeout=12)
                 if self.catalog is not None and provider in self.node.connected_node_ids:
@@ -62,9 +65,29 @@ class ChatBroker:
                     def preflight(extra):
                         if (not self.connected or self.closed or managed_public_bytes(self.language.directory)+extra
                                 >self.settings.policy.max_disk_gb*1024**3):raise ChatUnavailable('No hay espacio autorizado para verificar versiones de chat')
-                    self.catalog.synchronize(self.work,provider,cancel_event=self.catalog_cancel,preflight=preflight,
-                        receive_budget=getattr(self.language.knowledge,'budget',None))
-            except Exception:pass
+                    def allowed():
+                        return (self.connected and not self.closed and self.settings.policy.mode!='disabled'
+                            and self.settings.policy.max_bandwidth_mbps>0 and self.settings.policy.max_disk_gb>0)
+                    with self.language.knowledge.metadata_budget(allowed) as budget:
+                        self.catalog.synchronize(self.work,provider,cancel_event=self.catalog_cancel,preflight=preflight,
+                            receive_budget=budget)
+                    self.catalog_error=None
+            except Exception:
+                self.catalog_error='No se pudo verificar el catálogo de lenguaje'
+
+    def _catalog_pending(self):
+        if self.catalog is None:return False
+        from src.release.language_versions import LanguageVersionRegistry
+        try:
+            registry=LanguageVersionRegistry(Path(self.language.directory)/'public/language','qwen3-1.7b')
+            chain=registry.history(registry.head()['release']['release_id'])
+            known={row['release']['model_artifact_id'] for row in chain+self.catalog.read()['chain']}
+            peers=[peer for peer in self.node.peers() if peer['node_id'] in PROVIDERS
+                and peer.get('capabilities',{}).get('language_inference_v1')]
+            if peers and not self.language.ready and not self.catalog.path.exists():return True
+            return any(model not in known for peer in peers for model in
+                peer.get('capabilities',{}).get('language_inference_models',peer.get('resources',{}).get('models',[])))
+        except (OSError,ValueError,TypeError,KeyError):return True
 
     def _model_id(self):
         directory=getattr(self.language,'directory',None)
@@ -96,10 +119,12 @@ class ChatBroker:
         return result
 
     def snapshot(self):
+        pending=self._catalog_pending()
         model_id=self._model_id();providers=self.providers(model_id)
         local=bool(model_id and self.language.ready and self.language.engine.adapter_id==model_id)
-        return {"connected":self.connected,"available":self.connected and (local or bool(providers)),
-                "local":local,"remote_providers":len(providers),"model_id":model_id,"active":len(self.requests)}
+        return {"connected":self.connected,"available":self.connected and not pending and (local or bool(providers)),
+                "local":local,"remote_providers":len(providers),"model_id":model_id,"active":len(self.requests),
+                'catalog_pending':pending,'catalog_error':self.catalog_error}
 
     def cancel(self,request_id):
         if not isinstance(request_id,str) or not REQUEST_ID.fullmatch(request_id):raise ValueError("Invalid chat cancellation")
@@ -121,6 +146,7 @@ class ChatBroker:
             if self.requests:raise ChatUnavailable("Ya hay una consulta en curso")
             self.requests[request_id]=event
         try:
+            if self._catalog_pending():raise ChatUnavailable('Espera a verificar la versión de lenguaje disponible')
             model_id=self._model_id()
             if not model_id:raise ChatUnavailable('No se pudo verificar la versión de lenguaje conservada')
             local=self.language.ready and self.language.engine.adapter_id==model_id
