@@ -121,7 +121,8 @@ def install(args):
     import sys
     command=' '.join(map(word,[sys.executable,'-m','experiments.cold_native_trial']))
     cwd=Path(__file__).resolve().parents[1]
-    common='WorkingDirectory='+word(cwd)+'\nUMask=0077\nKillMode=control-group\nTimeoutStopSec=45\n'
+    word(cwd)  # Validate the path; this scalar setting does not unquote shell words.
+    common='WorkingDirectory='+str(cwd)+'\nUMask=0077\nKillMode=control-group\nTimeoutStopSec=45\n'
     recovery=('[Unit]\nDescription=Restore physical LixySwarm participant after cold trial\n'
         f'Before={ORIGINAL}\nConflicts={TRIAL}\nAfter=network-online.target {TRIAL}\nWants=network-online.target\n'
         '[Service]\nType=oneshot\nRemainAfterExit=yes\nRestart=on-failure\nRestartSec=30\nTimeoutStartSec=infinity\n'+common+
