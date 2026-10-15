@@ -49,7 +49,7 @@ def test_out_of_order_responses_resume_an_unaligned_prefix_without_gaps(tmp_path
         elif payload['offset']==3+ARTIFACT_CHUNK_BYTES:second.set()
         finished.append(payload['offset'])
     coordinator.on_read=read;target=ArtifactStore(tmp_path/'target');part,_=target.begin_receive(m);part.write_bytes(content[:3])
-    stats=[];path=ArtifactService(coordinator,target,register_handlers=False).fetch(m.artifact_id,peer_id='peer',observer=stats.append)
+    stats=[];path=ArtifactService(coordinator,target,register_handlers=False,fetch_window=2).fetch(m.artifact_id,peer_id='peer',observer=stats.append)
     assert path.read_bytes()==content and coordinator.peak==2 and finished[0]!=3
     assert [r['offset'] for r in stats]==sorted(r['offset'] for r in stats)
     assert sum(r['bytes'] for r in stats)==len(content)-3
@@ -70,7 +70,7 @@ def test_corruption_preserves_only_the_contiguous_verified_prefix_and_retry_fini
         if payload['offset']==ARTIFACT_CHUNK_BYTES:
             assert committed.wait(2)
             return SimpleNamespace(status='ok',output={'offset':payload['offset'],'encoding':'raw','data':'AA==','chunk_sha256':'0'*64})
-    coordinator.on_read=bad;target=ArtifactStore(tmp_path/'target');client=ArtifactService(coordinator,target,register_handlers=False)
+    coordinator.on_read=bad;target=ArtifactStore(tmp_path/'target');client=ArtifactService(coordinator,target,register_handlers=False,fetch_window=2)
     with pytest.raises(ArtifactError):client.fetch(m.artifact_id,peer_id='peer',progress=lambda done,total:committed.set() if done>=ARTIFACT_CHUNK_BYTES else None)
     partial=target.incoming/(m.artifact_id+'.part')
     assert partial.read_bytes()==content[:ARTIFACT_CHUNK_BYTES] and not target.has(m.artifact_id)
@@ -87,7 +87,7 @@ def test_cancel_stops_prefetched_requests_and_never_writes_a_late_block(tmp_path
         return SimpleNamespace(status='error',error='work_cancelled')
     coordinator.on_read=blocked;target=ArtifactStore(tmp_path/'target')
     def receive():
-        try:ArtifactService(coordinator,target,register_handlers=False).fetch(m.artifact_id,peer_id='peer',cancel_event=cancel)
+        try:ArtifactService(coordinator,target,register_handlers=False,fetch_window=2).fetch(m.artifact_id,peer_id='peer',cancel_event=cancel)
         except Exception as error:errors.append(error)
     thread=threading.Thread(target=receive);thread.start();assert started.wait(2);cancel.set();thread.join(2)
     assert not thread.is_alive() and len(coordinator.calls)==2 and coordinator.active==0
@@ -97,7 +97,7 @@ def test_cancel_stops_prefetched_requests_and_never_writes_a_late_block(tmp_path
 
 def test_chunk_window_is_shared_across_services_and_namespaces(tmp_path):
     source,content,m=fixture(tmp_path);coordinator=Coordinator(source);coordinator.on_read=lambda *_:time.sleep(.01)
-    clients=[ArtifactService(coordinator,ArtifactStore(tmp_path/str(i)),namespace=name,register_handlers=False)
+    clients=[ArtifactService(coordinator,ArtifactStore(tmp_path/str(i)),namespace=name,register_handlers=False,fetch_window=2)
         for i,name in enumerate(['artifact','language.artifact','public-memory.artifact'])]
     with ThreadPoolExecutor(max_workers=3) as pool:
         results=list(pool.map(lambda client:client.fetch(m.artifact_id,peer_id='peer'),clients))
@@ -117,7 +117,7 @@ def test_worker_timeout_is_not_mistaken_for_a_future_poll_timeout(tmp_path):
     def timeout(*_):raise TimeoutError('synthetic RPC failure')
     coordinator.on_read=timeout
     def receive():
-        try:ArtifactService(coordinator,ArtifactStore(tmp_path/'target'),register_handlers=False).fetch(m.artifact_id,peer_id='peer',cancel_event=cancel)
+        try:ArtifactService(coordinator,ArtifactStore(tmp_path/'target'),register_handlers=False,fetch_window=2).fetch(m.artifact_id,peer_id='peer',cancel_event=cancel)
         except Exception as error:errors.append(error)
         finally:done.set()
     thread=threading.Thread(target=receive);thread.start();quick=done.wait(1)
@@ -136,9 +136,16 @@ def test_received_prefetch_is_charged_even_when_an_earlier_block_fails(tmp_path)
             raise ArtifactError('first block failed after another response arrived')
     coordinator.on_read=fail_first;target=ArtifactStore(tmp_path/'target')
     with pytest.raises(ArtifactError,match='first block failed'):
-        ArtifactService(coordinator,target,receive_budget=Budget(),register_handlers=False).fetch(m.artifact_id,peer_id='peer')
+        ArtifactService(coordinator,target,receive_budget=Budget(),register_handlers=False,fetch_window=2).fetch(m.artifact_id,peer_id='peer')
     assert sizes==[4*((ARTIFACT_CHUNK_BYTES+2)//3)+2048]
     assert (target.incoming/(m.artifact_id+'.part')).stat().st_size==0
+
+
+def test_default_reception_stays_serial_until_a_useful_physical_gain_is_qualified(tmp_path):
+    source,content,m=fixture(tmp_path);coordinator=Coordinator(source);coordinator.on_read=lambda *_:time.sleep(.005)
+    stats=[];target=ArtifactStore(tmp_path/'target')
+    ArtifactService(coordinator,target,register_handlers=False).fetch(m.artifact_id,peer_id='peer',observer=stats.append)
+    assert coordinator.peak==1 and {s['fetch_window'] for s in stats}=={1}
 
 
 @pytest.mark.parametrize('limit',[True,0,-1,1.5,65,'2'])

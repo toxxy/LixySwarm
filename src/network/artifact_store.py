@@ -310,7 +310,7 @@ class ArtifactStore:
 class ArtifactService:
     """Register artifact read operations and fetch verified objects from peers."""
 
-    def __init__(self, coordinator, store: ArtifactStore, *, receive_budget=None, namespace="artifact",register_handlers=True,prefer_compressed=True,fetch_window=2):
+    def __init__(self, coordinator, store: ArtifactStore, *, receive_budget=None, namespace="artifact",register_handlers=True,prefer_compressed=True,fetch_window=1):
         if namespace not in {"artifact", "language.artifact", "public-memory.artifact"}:
             raise ArtifactError("unsupported artifact operation namespace")
         self.coordinator = coordinator
@@ -392,7 +392,7 @@ class ArtifactService:
             except ArtifactError:raise
             except ValueError as error:raise ArtifactError(str(error)) from error
         finally:
-            fetch_lock.release()
+            entry.lock.release()
 
     def _fetch_locked(
         self,

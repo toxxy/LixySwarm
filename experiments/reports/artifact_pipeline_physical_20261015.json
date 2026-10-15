@@ -1,0 +1,142 @@
+{
+  "artifact_id": "506317cc9f40da9dea40e6d14a94910ac6625ae478b5f2d0248cb1bbbb93a6c3",
+  "comparison": {
+    "pipelined": {
+      "encoded_data_bytes": 7467380,
+      "median_seconds": 27.342289791995427
+    },
+    "serial": {
+      "encoded_data_bytes": 7467380,
+      "median_seconds": 27.69790370199189
+    }
+  },
+  "controls_unchanged": true,
+  "finished_at": 1792098048.2291977,
+  "gpu_work_requested": false,
+  "helper_id": "5879c62781b4bd230f939cbaf0feaea8030dd950b6a83ad3f8e72e11d0ba7050",
+  "helper_is_additional_physical_pc": false,
+  "mbps": 2.5,
+  "physical_node_id": "ea914d97caafef310e50385034abae9a50ba86496b0e9cbf4679e6070e4c25b0",
+  "scope": "Artifact transfer only; unchanged bytes and model semantics, not a training speedup or accepted learning claim",
+  "started_at": 1792097904.7287989,
+  "success": true,
+  "trials": [
+    {
+      "artifact_bytes": 6434736,
+      "chunks": 66,
+      "encoded_data_bytes": 7467380,
+      "encodings": [
+        "byteplane4-zlib-v1"
+      ],
+      "mode": "serial",
+      "negotiated_windows": [
+        1
+      ],
+      "provider_id": "d77e6245b8792c68e5b0a3252bf150185b8fac57111d17a111ab55503acaf34c",
+      "requested_window": 1,
+      "route": {
+        "encrypted": true,
+        "relay_host": "31.97.9.54",
+        "transport": "relay"
+      },
+      "seconds": 27.489247952995356,
+      "sha256_verified": true,
+      "summed_rpc_seconds": 17.949525867035845
+    },
+    {
+      "artifact_bytes": 6434736,
+      "chunks": 66,
+      "encoded_data_bytes": 7467380,
+      "encodings": [
+        "byteplane4-zlib-v1"
+      ],
+      "mode": "pipelined",
+      "negotiated_windows": [
+        2
+      ],
+      "provider_id": "d77e6245b8792c68e5b0a3252bf150185b8fac57111d17a111ab55503acaf34c",
+      "requested_window": 2,
+      "route": {
+        "encrypted": true,
+        "relay_host": "31.97.9.54",
+        "transport": "relay"
+      },
+      "seconds": 27.195661585981725,
+      "sha256_verified": true,
+      "summed_rpc_seconds": 32.36868754311581
+    },
+    {
+      "artifact_bytes": 6434736,
+      "chunks": 66,
+      "encoded_data_bytes": 7467380,
+      "encodings": [
+        "byteplane4-zlib-v1"
+      ],
+      "mode": "pipelined",
+      "negotiated_windows": [
+        2
+      ],
+      "provider_id": "d77e6245b8792c68e5b0a3252bf150185b8fac57111d17a111ab55503acaf34c",
+      "requested_window": 2,
+      "route": {
+        "encrypted": true,
+        "relay_host": "31.97.9.54",
+        "transport": "relay"
+      },
+      "seconds": 27.48891799800913,
+      "sha256_verified": true,
+      "summed_rpc_seconds": 31.577392693114234
+    },
+    {
+      "artifact_bytes": 6434736,
+      "chunks": 66,
+      "encoded_data_bytes": 7467380,
+      "encodings": [
+        "byteplane4-zlib-v1"
+      ],
+      "mode": "serial",
+      "negotiated_windows": [
+        1
+      ],
+      "provider_id": "d77e6245b8792c68e5b0a3252bf150185b8fac57111d17a111ab55503acaf34c",
+      "requested_window": 1,
+      "route": {
+        "encrypted": true,
+        "relay_host": "31.97.9.54",
+        "transport": "relay"
+      },
+      "seconds": 27.906559450988425,
+      "sha256_verified": true,
+      "summed_rpc_seconds": 18.56904007412959
+    },
+    {
+      "artifact_bytes": 6434736,
+      "chunks": 66,
+      "encoded_data_bytes": 7467380,
+      "encodings": [
+        "byteplane4-zlib-v1"
+      ],
+      "mode": "legacy-provider",
+      "negotiated_windows": [
+        1
+      ],
+      "provider_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+      "requested_window": 2,
+      "route": {
+        "encrypted": true,
+        "relay_host": "31.97.9.54",
+        "transport": "relay"
+      },
+      "seconds": 27.35706900898367,
+      "sha256_verified": true,
+      "summed_rpc_seconds": 16.4962799459463
+    }
+  ],
+  "schema": "lixyswarm-artifact-pipeline-comparison-v1",
+  "source_revision": "86e288f1ad5d859c9f7af49bc61416caa3bac6d5",
+  "median_reduction_fraction": 0.012839018931634527,
+  "material_latency_gain_demonstrated": false,
+  "training_speedup_demonstrated": false,
+  "default_window_changed": false,
+  "default_decision": "Keep serial reception as the default; two chunks remain an explicit experimental option"
+}
