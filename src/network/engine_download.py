@@ -22,10 +22,51 @@ from .engine_catalog import engine_regular_bytes
 
 MAX_DOWNLOAD_BYTES = 512 * 1024**2
 BLOCK_BYTES = 128 * 1024
+RANGE_BYTES = 32 * 1024**2
 
 
 class PreparationCancelled(RuntimeError):
     pass
+
+
+class DownloadInterrupted(RuntimeError):
+    """An incomplete HTTP response; verified installation has not begun."""
+
+
+def download_pinned(url,size,partial,*,check,opener,rate_mbps,event,progress):
+    """Bound each resumable connection without trusting bytes until final SHA."""
+    offset=partial.stat().st_size if partial.exists() else 0
+    if offset>size:raise ValueError('Partial engine download exceeds its bound')
+    while offset<size:
+        check()
+        end=min(size-1,offset+RANGE_BYTES-1)
+        headers={'User-Agent':'LixySwarm','Accept-Encoding':'identity','Range':f'bytes={offset}-{end}'}
+        with opener(urllib.request.Request(url,headers=headers),timeout=5) as response:
+            status=getattr(response,'status',200)
+            if status==206:
+                match=re.fullmatch(r'bytes (\d+)-(\d+)/(\d+)',response.headers.get('Content-Range',''))
+                if not match or int(match[1])!=offset or not offset<=int(match[2])<=end or int(match[3])!=size:
+                    raise ValueError('Engine download returned an unexpected range')
+                response_end=int(match[2])
+            elif status==200:
+                offset=0;response_end=size-1  # Range declined: a deliberate full restart.
+            else:raise ValueError('Unexpected engine download response')
+            length=response.headers.get('Content-Length')
+            if length is not None and (not length.isdecimal() or int(length)!=response_end-offset+1):
+                raise ValueError('Engine download length differs from its response range')
+            with partial.open('ab' if offset else 'wb') as stream:
+                while True:
+                    check();began=time.monotonic();block=response.read(BLOCK_BYTES)
+                    if not block:break
+                    if offset+len(block)>response_end+1:raise ValueError('Engine download exceeded its requested range')
+                    stream.write(block);stream.flush();offset+=len(block);progress(offset)
+                    rate=float(rate_mbps())
+                    if not math.isfinite(rate) or rate<=0:raise PreparationCancelled('Presupuesto de conexión desactivado')
+                    delay=len(block)*8/(rate*1_000_000)-(time.monotonic()-began)
+                    while delay>0:check();waited=min(delay,.05);event.wait(waited);delay-=waited
+            if offset!=response_end+1:
+                raise DownloadInterrupted(f'Descarga interrumpida en {offset} de {size} bytes; se conserva para reanudarla')
+    check()
 
 
 def discard_verified_cache(path,identifier,size):
@@ -50,28 +91,7 @@ def verified_part(part,root,*,check,opener,rate_mbps,event,progress):
     if final.exists():
         if final.stat().st_size!=part.bytes or digest_file(final)!=part.sha256:raise ValueError('Cached compute part failed verification')
         progress(part.bytes);return final
-    offset=partial.stat().st_size if partial.exists() else 0
-    if offset>part.bytes:raise ValueError('Compute part exceeds its bound')
-    if offset<part.bytes:
-        headers={'User-Agent':'LixySwarm','Accept-Encoding':'identity'}
-        if offset:headers['Range']=f'bytes={offset}-'
-        with opener(urllib.request.Request(part.url,headers=headers),timeout=5) as response:
-            status=getattr(response,'status',200)
-            if status==206 and offset:
-                if not re.fullmatch(rf'bytes {offset}-[0-9]+/{part.bytes}',response.headers.get('Content-Range','')):
-                    raise ValueError('Compute part resumed from an unexpected range')
-            elif status==200:offset=0
-            else:raise ValueError('Unexpected compute part response')
-            with partial.open('ab' if offset else 'wb') as stream:
-                while True:
-                    check();began=time.monotonic();block=response.read(BLOCK_BYTES)
-                    if not block:break
-                    if offset+len(block)>part.bytes:raise ValueError('Compute part exceeded its pinned size')
-                    stream.write(block);stream.flush();offset+=len(block);progress(offset)
-                    rate=float(rate_mbps())
-                    if not math.isfinite(rate) or rate<=0:raise PreparationCancelled('Presupuesto de conexión desactivado')
-                    delay=len(block)*8/(rate*1_000_000)-(time.monotonic()-began)
-                    while delay>0:check();waited=min(delay,.05);event.wait(waited);delay-=waited
+    download_pinned(part.url,part.bytes,partial,check=check,opener=opener,rate_mbps=rate_mbps,event=event,progress=progress)
     check()
     if partial.stat().st_size!=part.bytes or digest_file(partial)!=part.sha256:raise ValueError('Compute part failed verification')
     partial.replace(final);return final
@@ -129,38 +149,8 @@ def prepare_engine(entry, directory, *, allowed, rate_mbps, progress=lambda *_: 
         if size!=entry.bytes or digest.hexdigest()!=entry.sha256:raise ValueError('Assembled compute archive failed verification')
         assembling.replace(archive)
     if not archive.exists():
-        offset = partial.stat().st_size if partial.exists() else 0
-        if offset > entry.bytes:
-            raise ValueError("Partial engine archive exceeds its bound")
-        if offset < entry.bytes:
-            headers = {"User-Agent": "LixySwarm/0.4.0a2", "Accept-Encoding": "identity"}
-            if offset: headers["Range"] = f"bytes={offset}-"
-            with opener(urllib.request.Request(entry.url, headers=headers), timeout=5) as response:
-                status = getattr(response, "status", 200)
-                if offset and status == 206:
-                    content_range = response.headers.get("Content-Range", "")
-                    if not re.fullmatch(rf"bytes {offset}-[0-9]+/{entry.bytes}", content_range):
-                        raise ValueError("Engine download resumed from an unexpected range")
-                elif status == 200:
-                    offset = 0  # A server may decline Range; restart deliberately.
-                else:
-                    raise ValueError("Unexpected engine download response")
-                with partial.open("ab" if offset else "wb") as stream:
-                    while True:
-                        check()
-                        began = time.monotonic()
-                        block = response.read(BLOCK_BYTES)
-                        if not block: break
-                        if offset + len(block) > entry.bytes:
-                            raise ValueError("Engine download exceeded its pinned size")
-                        stream.write(block); stream.flush(); offset += len(block)
-                        progress("downloading", offset, entry.bytes)
-                        rate = float(rate_mbps())
-                        if not math.isfinite(rate) or rate <= 0:
-                            raise PreparationCancelled("El presupuesto de conexión está desactivado")
-                        delay = len(block) * 8 / (rate * 1_000_000) - (time.monotonic() - began)
-                        while delay > 0:
-                            check(); waited = min(delay, 0.05); event.wait(waited); delay -= waited
+        download_pinned(entry.url,entry.bytes,partial,check=check,opener=opener,rate_mbps=rate_mbps,event=event,
+            progress=lambda count:progress('downloading',count,entry.bytes))
         check(); progress("verifying", 0, entry.bytes)
         if not partial.exists() or partial.stat().st_size != entry.bytes or digest_file(partial) != entry.sha256:
             if partial.exists(): partial.replace(root/(entry.sha256+".invalid"))

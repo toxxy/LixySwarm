@@ -13,11 +13,15 @@ import signal
 import subprocess
 import threading
 import time
+import ssl
+import urllib.request
+import certifi
 
 from src.network.client_state import ClientSettings
 from src.network.engine_catalog import language_engine
 from src.network.engine_download import prepare_engine
 from src.network.engine_package import verify_package,digest_file
+from src.network.engine_download import HTTPSRedirect
 from src.network.public_knowledge import managed_public_bytes
 from src.network.telemetry import atomic_json
 from .prepare_public_math import outside_checkout
@@ -54,9 +58,18 @@ def run(args,cancel):
         atomic_json(directory/'status.json',{'phase':phase,'done':done,'total':total,'peak_managed_bytes':peak,'success':False,'timestamp':time.time()})
     try:
         if not allowed():raise ValueError('Physical permissions do not allow this code download')
+        connection=urllib.request.build_opener(HTTPSRedirect(),urllib.request.HTTPSHandler(
+            context=ssl.create_default_context(cafile=certifi.where()))).open
+        def opener(request,**kwargs):
+            response=connection(request,**kwargs)
+            with (directory/'http-ranges.jsonl').open('a') as stream:
+                stream.write(json.dumps({'timestamp':time.time(),'request_range':request.headers.get('Range'),
+                    'response_status':response.status,'response_range':response.headers.get('Content-Range'),
+                    'response_bytes':response.headers.get('Content-Length')})+'\n')
+            return response
         command=prepare_engine(entry,directory,allowed=allowed,
             rate_mbps=lambda:ClientSettings.load(physical).policy.max_bandwidth_mbps/2,
-            cancel_event=cancel,progress=progress)
+            cancel_event=cancel,progress=progress,opener=opener)
         metadata=verify_package(Path(command).parent,entry.manifest_sha256,profile=entry.profile)
         sample(force=True)
         completed=subprocess.run([command,'--self-test'],capture_output=True,timeout=120,check=True)

@@ -125,7 +125,7 @@ def test_cancelled_download_resumes_exact_bytes_and_does_not_enable_engine(tmp_p
         prepare_engine(entry,tmp_path,allowed=lambda:True,rate_mbps=lambda:1000000,cancel_event=cancel)
     assert not EngineSettings.load(tmp_path).enabled and part.stat().st_size==50
     def resume(request,**_):
-        assert request.headers["Range"]=="bytes=50-"
+        assert request.headers["Range"]==f"bytes=50-{len(data)-1}"
         return Response(data[50:],206,{"Content-Range":f"bytes 50-{len(data)-1}/{len(data)}"})
     prepare_engine(entry,tmp_path,allowed=lambda:True,rate_mbps=lambda:1000000,opener=resume)
     assert EngineSettings.load(tmp_path).enabled
@@ -161,3 +161,47 @@ def test_installing_cpu_preserves_the_locally_installed_cuda_engine(tmp_path):
     installed=EngineSettings.load(tmp_path)
     assert installed.command_for("cuda")==[sys.executable]
     assert installed.command_for("cpu")==[cpu] and installed.training_requesters==["a"*64]
+
+
+@pytest.mark.parametrize('multipart',[False,True])
+def test_truncated_http_body_preserves_bytes_and_resumes_bounded_ranges(tmp_path,monkeypatch,multipart):
+    import src.network.engine_download as download
+    if multipart and sys.platform=='win32':pytest.skip('POSIX alias fixture')
+    monkeypatch.setattr(download,'RANGE_BYTES',64)
+    entry,data=language_archive() if multipart else archive()
+    if multipart:entry=replace(entry,parts=(EnginePart(entry.url,entry.sha256,len(data)),))
+    def interrupted(request,**kw):
+        assert request.headers['Range']=='bytes=0-63'
+        return Response(data[:17],206,{'Content-Range':f'bytes 0-63/{len(data)}','Content-Length':'64'})
+    with pytest.raises(download.DownloadInterrupted,match='reanudarla'):
+        prepare_engine(entry,tmp_path,allowed=lambda:True,rate_mbps=lambda:1000000,opener=interrupted)
+    root=tmp_path/'engine-downloads';partial=root/(entry.sha256+'.part')
+    assert partial.read_bytes()==data[:17] and not list(root.glob('*.invalid'))
+    assert not (tmp_path/'engines'/entry.manifest_sha256).exists()
+    requested=[]
+    def resume(request,**kw):
+        start,end=map(int,request.headers['Range'].removeprefix('bytes=').split('-'))
+        requested.append((start,end));assert 0<end-start+1<=64
+        return Response(data[start:end+1],206,{'Content-Range':f'bytes {start}-{end}/{len(data)}','Content-Length':str(end-start+1)})
+    command=prepare_engine(entry,tmp_path,allowed=lambda:True,rate_mbps=lambda:1000000,opener=resume)
+    assert Path(command).is_file() and requested[0][0]==17 and requested[-1][1]==len(data)-1
+    assert not list(root.iterdir())
+
+
+def test_range_declined_restarts_the_response_without_appending_duplicate_bytes(tmp_path):
+    entry,data=archive();root=tmp_path/'engine-downloads';root.mkdir()
+    (root/(entry.sha256+'.part')).write_bytes(b'old bytes')
+    command=prepare_engine(entry,tmp_path,allowed=lambda:True,rate_mbps=lambda:1000000,
+        opener=lambda *a,**k:Response(data,200,{'Content-Length':str(len(data))}))
+    assert Path(command).is_file()
+
+
+def test_response_range_or_length_mismatch_cannot_overwrite_a_partial(tmp_path):
+    entry,data=archive();root=tmp_path/'engine-downloads';root.mkdir();partial=root/(entry.sha256+'.part')
+    partial.write_bytes(data[:17])
+    for headers in [{'Content-Range':f'bytes 17-{len(data)}/{len(data)}'},
+                    {'Content-Range':f'bytes 17-{len(data)-1}/{len(data)}','Content-Length':'1'}]:
+        with pytest.raises(ValueError,match='range|length'):
+            prepare_engine(entry,tmp_path,allowed=lambda:True,rate_mbps=lambda:1000000,
+                opener=lambda *a,**k:Response(data[17:],206,headers))
+        assert partial.read_bytes()==data[:17]

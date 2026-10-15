@@ -9,7 +9,7 @@ from src.version import VERSION
 
 
 @pytest.mark.parametrize('version,expected', [('0.4.0a18', True), (VERSION, False),
-    ('0.4.0a20', False), ('unknown', False)])
+    ('0.4.0a21', False), ('unknown', False)])
 def test_update_never_downgrades_a_newer_runtime(tmp_path, version, expected):
     controller = NodeController(tmp_path)
     assert controller.runtime_update_available({'running': True,

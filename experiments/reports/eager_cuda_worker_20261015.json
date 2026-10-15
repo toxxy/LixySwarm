@@ -182,5 +182,23 @@
     "Anonymous full code-package download/extraction/install within measured bound",
     "Fresh native app bootstrap plus model acquisition by public LSP inside quota",
     "Training donation onboarding and remaining full PLAN_VISION stages"
-  ]
+  ],
+  "anonymous_download_first_attempt": {
+    "terminal": "exit_code_1",
+    "error": "Compute part failed verification",
+    "complete_install_proven": false,
+    "received_bytes": 796917760,
+    "expected_part_bytes": 1073741824,
+    "received_prefix_equals_published_code": true,
+    "fresh_https_resume_probe": {
+      "status": 206,
+      "start": 796917760,
+      "end": 796918783,
+      "received_bytes": 1024,
+      "matches_published_code": true
+    },
+    "cause_of_early_http_eof": "not_isolated",
+    "recovery": "preserved_partial_and_bounded_32MiB_response_ranges",
+    "recovery_complete": false
+  }
 }
