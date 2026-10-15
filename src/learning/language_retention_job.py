@@ -57,7 +57,7 @@ def training_sets(snapshot):
             'math_train192': [{'prompt': prompt(r), 'answer': r['answer']} for r in snapshot['rows'][:192]]}
 
 
-def training_statistics(model, tokenizer, rows, device, deadline, *, gradient=False, maximum=1024, answer_maximum=512):
+def training_statistics(model, tokenizer, rows, device, deadline, *, gradient=False, maximum=1024, answer_maximum=512, observer=None):
     import torch
     from .language_adapter import adapter_parameters
     if time.time() >= deadline:raise TimeoutError('Retention training diagnostic deadline exceeded')
@@ -76,7 +76,7 @@ def training_statistics(model, tokenizer, rows, device, deadline, *, gradient=Fa
     model.train();model.zero_grad(set_to_none=True)
     try:
         with torch.enable_grad():
-            for prefix,target in encoded:
+            for index,(prefix,target) in enumerate(encoded):
                 if time.time()>=deadline:raise TimeoutError('Retention training diagnostic deadline exceeded')
                 inputs=torch.tensor([prefix+target],device=device)
                 labels=torch.tensor([[-100]*len(prefix)+target],device=device)
@@ -84,6 +84,7 @@ def training_statistics(model, tokenizer, rows, device, deadline, *, gradient=Fa
                 value=float(loss.detach())
                 if not math.isfinite(value) or value<0:raise ValueError('Invalid public training loss')
                 total+=value*len(target)
+                if observer is not None:observer(index,value,len(target))
                 if gradient:(loss*len(target)/tokens).backward()
         result={'nll':total/tokens,'tokens':tokens,'examples':len(rows)}
         gradients={name:p.grad.detach().float().cpu().clone() for name,p in adapter_parameters(model).items()} if gradient else None

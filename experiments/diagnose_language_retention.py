@@ -43,7 +43,12 @@ def run(args,cancel):
     if subprocess.check_output(['git','status','--porcelain'],cwd=repo,text=True).strip():
         raise ValueError('Commit the diagnostic source and protocol before physical compute')
     source_revision=subprocess.check_output(['git','rev-parse','HEAD'],cwd=repo,text=True).strip()
-    protocol=definition(args.precision);identifier=protocol_id(args.precision);ram_gb=protocol['ram_gb']
+    finite=getattr(args,'finite_step',False)
+    if finite:
+        from src.learning.language_finite_protocol import definition as finite_definition,protocol_id as finite_id
+        protocol=finite_definition(args.precision);identifier=finite_id(args.precision)
+    else:protocol=definition(args.precision);identifier=protocol_id(args.precision)
+    ram_gb=protocol['ram_gb']
     trial=selected_trial(repo);before=fingerprints(node);controls=ClientSettings.load(node);policy=asdict(controls.policy)
     diagnostic=json.loads((node/'diagnostics.json').read_text());pid=diagnostic['pid']
     registry=LanguageVersionRegistry(node/'public/language','qwen3-1.7b');head=registry.head()
@@ -81,7 +86,7 @@ def run(args,cancel):
         def raise_if_cancelled(self):
             if cancel.is_set():raise RuntimeError('Retention research cancelled')
     execution=Execution();execution.deadline=deadline
-    request={'action':'public-retention-diagnostic-v3','protocol_id':identifier,'compute_dtype':args.precision,
+    request={'action':protocol['action'],'protocol_id':identifier,'compute_dtype':args.precision,
         'base_directory':str(base),'adapter_file':str(base/'adapter.safetensors'),'model_id':PARENT_MODEL,
         'parent_release_id':PARENT_RELEASE,'training_file':str(training),'contributions':rows,
         'output_directory':str(directory/'engine'),'device':'cuda','cpu_threads':min(4,max(1,int(4*policy['cpu_percent']/100))),
@@ -91,7 +96,8 @@ def run(args,cancel):
     try:
         with lease,NodeStateLock(node/'research/public-math'):
             atomic_json(directory/'status.json',{'phase':'diagnosing','success':False})
-            response=ComputeSupervisor().run([str(args.engine_python.absolute()),'-m','src.learning.language_retention_job'],
+            module='src.learning.language_finite_step_job' if finite else 'src.learning.language_retention_job'
+            response=ComputeSupervisor().run([str(args.engine_python.absolute()),'-m',module],
                 request,execution,allowed=allowed,ram_gb=ram_gb)
         path=directory/'engine/diagnostic.json'
         if path.is_symlink() or path.stat().st_size>256*1024:raise ValueError('Retention diagnostic output exceeds its bound')
@@ -110,7 +116,10 @@ def run(args,cancel):
             'native_learning_cycles_added':0,'new_model_published':False,'source_daemon_pid_unchanged':True,
             'resource_reservation':{'ram_gb':ram_gb,'gpu_fraction':request['gpu_fraction']},'finished_at':time.time()}
         atomic_json(directory/'report.json',report);atomic_json(directory/'status.json',{'phase':'complete','success':True})
-        print(json.dumps({'success':True,'loss_changes':result['loss_changes'],'reconstruction':result['reconstruction']}),flush=True)
+        summary={'success':True,'applied_in_temporary_model':result['guard']['applied'],
+            'accepted_rate':result['guard']['accepted_rate']} if finite else {
+            'success':True,'loss_changes':result['loss_changes'],'reconstruction':result['reconstruction']}
+        print(json.dumps(summary),flush=True)
     except BaseException as error:
         atomic_json(directory/'status.json',{'phase':'failed','success':False,'error_type':type(error).__name__,
             'controls_and_native_progress_unchanged':fingerprints(node)==before})
@@ -122,6 +131,7 @@ def main():
     parser.add_argument('--node-directory',type=Path,required=True);parser.add_argument('--directory',type=Path,required=True)
     parser.add_argument('--engine-python',type=Path,required=True)
     parser.add_argument('--precision',choices=['float32','bfloat16'],default='float32')
+    parser.add_argument('--finite-step',action='store_true',help='Run the prospective TRAIN-only backtracking protocol')
     args=parser.parse_args();cancel=threading.Event()
     for sig in [signal.SIGINT,signal.SIGTERM]:signal.signal(sig,lambda *_:cancel.set())
     try:run(args,cancel)
