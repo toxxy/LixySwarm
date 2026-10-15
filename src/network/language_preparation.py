@@ -1,6 +1,8 @@
 """Prepare a locally approved expert on the existing physical LSP node."""
 from dataclasses import asdict
 import json
+import os
+import tempfile
 from pathlib import Path
 import shutil
 import threading
@@ -202,6 +204,7 @@ class LanguagePreparation:
             self._probe(command,base,settings,allowed,adapter_id)
             if not allowed():
                 raise PreparationCancelled('Los permisos cambiaron; el experto no se activó')
+            self._prepare_public_training(command,base,entry)
             LanguageSettings(enabled=True, command=[command], base_name=CHAT_FAMILY, base_directory=str(base),
                 adapter_file=str(base/'adapter.safetensors'), adapter_id=adapter_id).save(self.directory)
             atomic_json(self.intent, {'version': 1, 'requested': False})
@@ -216,6 +219,36 @@ class LanguagePreparation:
             self.next_attempt = time.monotonic()+30
         finally:
             if acquired:guard.__exit__(None,None,None)
+
+    def _prepare_public_training(self,command,base,entry):
+        """Fresh compute consent can donate fixed public work in the known pilot.
+
+        Existing operator training controls, including an explicit disabled
+        setting, always win. The seed is transport, never a training authority.
+        """
+        from .engine_profiles import engine_profile
+        from .language_training import LanguageTrainingSettings
+        operations=engine_profile(entry.profile)['operations']
+        if 'language.gradient.v2' not in operations:return
+        path=self.directory/'language-training.json'
+        if path.exists():return
+        requesters=set(INITIAL_PROVIDERS)
+        identity=getattr(self.node,'identity',None)
+        if identity is not None:requesters.add(identity.node_id_hex)
+        if not requesters:return
+        controls=LanguageTrainingSettings(enabled=True,command=[command],base_name=CHAT_FAMILY,
+            base_directory=str(base),adapter_file=str(base/'adapter.safetensors'),
+            requesters=sorted(requesters),candidates_enabled=False,
+            batching_enabled='language.gradient.v3' in operations,
+            half_precision_enabled='language.gradient.v4' in operations,
+            math_curriculum_enabled='language.gradient.v5' in operations)
+        controls.validate()
+        fd,temporary=tempfile.mkstemp(prefix='.public-training-',dir=self.directory)
+        try:
+            with os.fdopen(fd,'w') as target:json.dump(asdict(controls),target,sort_keys=True,allow_nan=False)
+            try:os.link(temporary,path)
+            except FileExistsError:return
+        finally:Path(temporary).unlink(missing_ok=True)
 
     def _prepare_version(self,settings,entry,allowed):
         registry=LanguageVersionRegistry(self.families.root,CHAT_FAMILY)

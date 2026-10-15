@@ -112,6 +112,48 @@ def test_stage_peak_and_proven_model_links_fit_eight_gib_without_assuming_copy_s
     assert copied==11*gib+preparation.BUDGET_MARGIN_BYTES and copied>8*gib
 
 
+def test_fresh_math_worker_donates_public_training_only_to_known_pilot_coordinators(monkeypatch,tmp_path):
+    from dataclasses import replace
+    from src.network.language_training import LanguageTrainingSettings
+    service,entry,_,_=context(monkeypatch,tmp_path)
+    service._prepare_public_training('/local/verified-worker',tmp_path/'verified-model',replace(entry,profile='language-cuda-math'))
+    settings=LanguageTrainingSettings.load(tmp_path)
+    assert settings.enabled and not settings.candidates_enabled
+    assert settings.batching_enabled and settings.half_precision_enabled and settings.math_curriculum_enabled
+    assert settings.requesters==sorted(preparation.INITIAL_PROVIDERS)
+    assert '28c218f34cd6b90e99955346711921d94b54852e4b8f29fb840207388f73444e' not in settings.requesters
+    assert settings.base_name==preparation.CHAT_FAMILY and settings.command==['/local/verified-worker']
+
+
+def test_preparation_keeps_existing_operator_training_controls_even_when_disabled(monkeypatch,tmp_path):
+    from dataclasses import replace
+    from src.network.language_training import LanguageTrainingSettings
+    service,entry,_,_=context(monkeypatch,tmp_path)
+    LanguageTrainingSettings(enabled=False,requesters=['e'*64]).save(tmp_path)
+    before=(tmp_path/'language-training.json').read_bytes()
+    service._prepare_public_training('/local/verified-worker',tmp_path/'verified-model',replace(entry,profile='language-cuda-math'))
+    assert (tmp_path/'language-training.json').read_bytes()==before
+
+
+def test_new_worker_can_request_its_own_public_work_and_control_creation_never_clobbers_a_racing_operator(monkeypatch,tmp_path):
+    from dataclasses import replace
+    from src.network.language_training import LanguageTrainingSettings
+    service,entry,_,_=context(monkeypatch,tmp_path);entry=replace(entry,profile='language-cuda-math')
+    service.node.identity=SimpleNamespace(node_id_hex='f'*64)
+    original=preparation.os.link
+    def racing_link(source,target,*args,**kwargs):
+        LanguageTrainingSettings(enabled=False,requesters=['a'*64]).save(tmp_path)
+        return original(source,target,*args,**kwargs)
+    monkeypatch.setattr(preparation.os,'link',racing_link)
+    service._prepare_public_training('/local/verified-worker',tmp_path/'verified-model',entry)
+    assert not LanguageTrainingSettings.load(tmp_path).enabled
+    assert not list(tmp_path.glob('.public-training-*'))
+    (tmp_path/'language-training.json').unlink()
+    monkeypatch.setattr(preparation.os,'link',original)
+    service._prepare_public_training('/local/verified-worker',tmp_path/'verified-model',entry)
+    assert 'f'*64 in LanguageTrainingSettings.load(tmp_path).requesters
+
+
 @pytest.mark.parametrize('withdraw', ['pause', 'selection'])
 def test_permission_or_operator_selection_changes_prevent_activation(monkeypatch, tmp_path, withdraw):
     def change():
