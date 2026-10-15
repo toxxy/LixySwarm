@@ -59,3 +59,20 @@ def test_only_current_verified_version_materializes(monkeypatch,tmp_path):
     assert (target/'adapter.safetensors').read_bytes()==b'public-adapter'
     with pytest.raises(RuntimeError,match='detenida'):
         installation.materialize_version(tmp_path,'fixture',release.release_id,allowed=lambda:False)
+
+
+def test_model_link_probe_cleans_up_and_required_links_never_fall_back_to_an_unreserved_copy(monkeypatch,tmp_path):
+    store,objects=fixture(monkeypatch,tmp_path)
+    assert installation.model_hardlinks_available(tmp_path,store)
+    assert not list(store.incoming.glob('.link-probe-*'))
+    assert not list((tmp_path/'language-models').glob('.link-probe-*'))
+    release,descriptor=installation.verify_bundle({})
+    def failed_link(*a,**kw):raise OSError('link support disappeared')
+    monkeypatch.setattr(installation.os,'link',failed_link)
+    assert not installation.model_hardlinks_available(tmp_path,store)
+    def no_copy(*a,**kw):pytest.fail('A required-link plan cannot silently allocate a second model')
+    monkeypatch.setattr(installation.shutil,'copyfile',no_copy)
+    with pytest.raises(ValueError,match='reserva'):
+        installation._materialize(tmp_path,store,{},release,descriptor,[(i,n) for _,i,n in objects],lambda:True,require_hardlinks=True)
+    assert not (tmp_path/'language-models'/release.release_id).exists()
+    assert all(store.has(identifier) for _,identifier,_ in objects)

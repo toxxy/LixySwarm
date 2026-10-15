@@ -21,6 +21,18 @@ class EngineDownload:
     installed_bytes: int
     profile: str = 'reference-cpu'
     parts: tuple[EnginePart,...] = ()
+    regular_file_bytes: int | None = None
+
+
+def engine_regular_bytes(entry):
+    """Conservative legacy bound, or an explicit app-pinned regular-file size."""
+    if type(entry.installed_bytes) is not int or entry.installed_bytes<=0:
+        raise ValueError('Invalid locally pinned logical engine size')
+    size = getattr(entry,'regular_file_bytes',None)
+    if size is None:return entry.installed_bytes
+    if type(size) is not int or not 0 < size <= entry.installed_bytes:
+        raise ValueError('Invalid locally pinned regular engine size')
+    return size
 
 
 BASE_URL = "https://github.com/toxxy/LixySwarm/releases/download/cpu-engine-0.4.0a1/"

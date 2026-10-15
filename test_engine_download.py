@@ -40,9 +40,10 @@ class Response(io.BytesIO):
 
 
 def language_archive(link='library',profile='language-cuda'):
+    from src.network.engine_profiles import engine_profile
     name='LixySwarmLanguageCUDA';binary=b'known-language-code';library=b'known-library'
     metadata={'version':1,'name':name,'platform':sys.platform,'machine':platform.machine(),'torch':'2.12.0+cu130',
-        'operations':['language.inference.v1'],'entrypoint':name,'files':[
+        'operations':engine_profile(profile)['operations'],'entrypoint':name,'files':[
             {'path':path,'bytes':len(content),'sha256':hashlib.sha256(content).hexdigest()}
             for path,content in [(name,binary),('library',library),('alias',library)]]}
     manifest=json.dumps(metadata).encode();buffer=io.BytesIO()
@@ -54,6 +55,38 @@ def language_archive(link='library',profile='language-cuda'):
     entry=EngineDownload('https://example.invalid/language.zip',hashlib.sha256(data).hexdigest(),len(data),
         hashlib.sha256(manifest).hexdigest(),len(binary)+2*len(library)+len(manifest),profile=profile)
     return entry,data
+
+
+@pytest.mark.parametrize('profile',['language-cuda','language-cuda-math'])
+def test_verified_parts_release_before_extract_and_cancel_resumes_the_joined_archive(tmp_path,profile):
+    if sys.platform=='win32':pytest.skip('POSIX library alias fixture')
+    entry,data=language_archive(profile=profile);cut=len(data)//2;pieces=[data[:cut],data[cut:]]
+    entry=replace(entry,parts=tuple(EnginePart(f'https://example.invalid/p{i}',hashlib.sha256(p).hexdigest(),len(p)) for i,p in enumerate(pieces)))
+    event=threading.Event();root=tmp_path/'engine-downloads'
+    def progress(phase,done,total):
+        if phase=='extracting':
+            assert (root/(entry.sha256+'.zip')).read_bytes()==data
+            assert not list(root.glob('*.piece'))
+            event.set()
+    with pytest.raises(PreparationCancelled):
+        prepare_engine(entry,tmp_path,allowed=lambda:True,rate_mbps=lambda:1000000,cancel_event=event,progress=progress,
+            opener=lambda request,**kw:Response(pieces[int(request.full_url[-1])]))
+    assert not (tmp_path/(profile+'-prepared.json')).exists()
+    event.clear()
+    def no_download(*a,**kw):pytest.fail('Verified joined archive should resume without network traffic')
+    command=prepare_engine(entry,tmp_path,allowed=lambda:True,rate_mbps=lambda:1000000,cancel_event=event,opener=no_download)
+    assert Path(command).is_file() and not list(root.iterdir())
+
+
+@pytest.mark.parametrize('offset',[-1,1])
+def test_pinned_regular_size_cannot_understate_or_misdescribe_the_library_alias_archive(tmp_path,offset):
+    if sys.platform=='win32':pytest.skip('POSIX library alias fixture')
+    entry,data=language_archive()
+    with zipfile.ZipFile(io.BytesIO(data)) as zipped:
+        regular=sum(m.file_size for m in zipped.infolist() if not stat.S_ISLNK(m.external_attr>>16))
+    entry=replace(entry,regular_file_bytes=regular+offset)
+    with pytest.raises(ValueError):prepare_engine(entry,tmp_path,allowed=lambda:True,rate_mbps=lambda:1000000,opener=lambda *a,**kw:Response(data))
+    assert not (tmp_path/'language-cuda-prepared.json').exists()
 
 
 def test_multipart_language_archive_checks_every_part_and_preserves_active_settings(tmp_path):

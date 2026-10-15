@@ -18,6 +18,7 @@ import certifi
 from .engine_package import (HEX, MAX_PACKAGE_BYTES, MAX_PACKAGE_FILES,
                              digest_file, install_package, safe_relative)
 from .engine_profiles import engine_profile
+from .engine_catalog import engine_regular_bytes
 
 MAX_DOWNLOAD_BYTES = 512 * 1024**2
 BLOCK_BYTES = 128 * 1024
@@ -25,6 +26,14 @@ BLOCK_BYTES = 128 * 1024
 
 class PreparationCancelled(RuntimeError):
     pass
+
+
+def discard_verified_cache(path,identifier,size):
+    """Release only this download's hash-verified, disposable cache object."""
+    if not path.exists():return
+    if path.is_symlink() or not path.is_file() or path.stat().st_size!=size or digest_file(path)!=identifier:
+        raise ValueError('Refusing to discard an unverified engine cache object')
+    path.unlink()
 
 
 class HTTPSRedirect(urllib.request.HTTPRedirectHandler):
@@ -77,6 +86,7 @@ def prepare_engine(entry, directory, *, allowed, rate_mbps, progress=lambda *_: 
     they were. The app explicitly requests preparation separately from compute.
     """
     profile=getattr(entry,'profile','reference-cpu');selected=engine_profile(profile)
+    regular_bytes=engine_regular_bytes(entry)
     if not HEX.fullmatch(entry.sha256) or not HEX.fullmatch(entry.manifest_sha256) or type(entry.bytes) is not int or not 0 < entry.bytes <= selected['max_download_bytes'] or type(entry.installed_bytes) is not int or not 0 < entry.installed_bytes <= selected['max_package_bytes']+2*1024**2:
         raise ValueError("Invalid locally pinned engine download bounds")
     if urlparse(entry.url).scheme != "https":
@@ -96,9 +106,13 @@ def prepare_engine(entry, directory, *, allowed, rate_mbps, progress=lambda *_: 
     if archive.exists() and (archive.stat().st_size != entry.bytes or digest_file(archive) != entry.sha256):
         raise ValueError("Cached engine archive failed verification")
     parts=getattr(entry,'parts',())
-    if parts and not archive.exists():
-        if profile!='language-cuda' or not 1<=len(parts)<=8 or sum(part.bytes for part in parts)!=entry.bytes:
+    if parts:
+        if (selected['name']!='LixySwarmLanguageCUDA' or not 1<=len(parts)<=8
+                or any(not HEX.fullmatch(p.sha256) or type(p.bytes) is not int or not 0<p.bytes<=1024**3
+                       or urlparse(p.url).scheme!='https' for p in parts)
+                or sum(p.bytes for p in parts)!=entry.bytes):
             raise ValueError('Invalid locally pinned multipart compute archive')
+    if parts and not archive.exists():
         completed=0;verified=[]
         for part in parts:
             check();base=completed
@@ -153,6 +167,9 @@ def prepare_engine(entry, directory, *, allowed, rate_mbps, progress=lambda *_: 
             raise ValueError("Engine archive hash or length mismatch")
         partial.replace(archive)
     check()
+    # The complete archive is verified before its pieces can be released.
+    # Cancellation during assembly still retains the individual pieces.
+    for part in parts:discard_verified_cache(root/(part.sha256+'.piece'),part.sha256,part.bytes)
     # Hash the whole archive before extraction; then bound every entry as well.
     extracted = root / (entry.sha256 + ".unpacked")
     if extracted.exists(): shutil.rmtree(extracted)
@@ -178,7 +195,7 @@ def prepare_engine(entry, directory, *, allowed, rate_mbps, progress=lambda *_: 
                         raise ValueError('Engine archive link escaped its root')
                     links.append((relative,link));continue
                 size += member.file_size
-                if size > entry.installed_bytes or member.file_size > selected['max_package_bytes']:
+                if size > regular_bytes or member.file_size > selected['max_package_bytes']:
                     raise ValueError("Engine archive exceeded its unpacked size")
                 target = extracted.joinpath(*relative.parts)
                 target.parent.mkdir(parents=True, exist_ok=True)
@@ -199,8 +216,11 @@ def prepare_engine(entry, directory, *, allowed, rate_mbps, progress=lambda *_: 
                 if size>entry.installed_bytes:raise ValueError('Engine archive link exceeded its unpacked size')
             if size != entry.installed_bytes:
                 raise ValueError("Engine archive unpacked size does not match")
+            if getattr(entry,'regular_file_bytes',None) is not None and unpacked!=regular_bytes:
+                raise ValueError('Engine regular-file size differs from its app-pinned size')
         check(); progress("installing", 0, entry.installed_bytes)
         entrypoint = install_package(extracted, entry.manifest_sha256, directory,profile=profile,consume_download=True)
+        discard_verified_cache(archive,entry.sha256,entry.bytes)
         progress("complete", entry.installed_bytes, entry.installed_bytes)
         return entrypoint
     finally:

@@ -10,11 +10,11 @@ from src.release.language_catalog import INITIAL_BUNDLES
 from src.release.language_family import dependencies
 from src.release.language_versions import LanguageVersionRegistry,dependencies as version_dependencies,validate_bundle
 from .client_state import ClientSettings,NodeStateLock
-from .engine_catalog import language_engine
+from .engine_catalog import language_engine,engine_regular_bytes
 from .engine_download import PreparationCancelled, prepare_engine
 from .engine_package import verify_package
 from .language_compute import LanguageSettings
-from .language_install import materialize_version
+from .language_install import materialize_version,model_hardlinks_available
 from .language_replication import replicate_version
 from .public_knowledge import managed_public_bytes
 from .telemetry import atomic_json
@@ -29,17 +29,18 @@ CHAT_FAMILY = 'qwen3-1.7b'
 CHAT_ADAPTER = 'badef4394af180ab75ca25f0d9d47f2406b92809b53b5845ab65d451cf9c4b3c'
 INITIAL_PROVIDERS = {'c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255',
     'ea914d97caafef310e50385034abae9a50ba86496b0e9cbf4679e6070e4c25b0'}
+BUDGET_MARGIN_BYTES=8*1024**2
 
 
-def preparation_budget(entry):
+def preparation_budget(entry,*,hardlinks=False):
     bundle = INITIAL_BUNDLES[CHAT_FAMILY]
-    # Two copies cover filesystems without hardlinks and staging installation.
-    # Multipart archives retain their pieces plus the joined archive.
-    return 2*sum(size for _, size in dependencies(bundle)) + 2*entry.installed_bytes + entry.bytes*(2 if entry.parts else 1)
+    model=sum(size for _,size in dependencies(bundle))*(1 if hardlinks else 2)
+    regular=engine_regular_bytes(entry)
+    return max(entry.bytes*(2 if entry.parts else 1),entry.bytes+regular,regular+model)+BUDGET_MARGIN_BYTES
 
 
-def remaining_budget(directory, store, entry,*,chain=None):
-    """Reserve remaining stages, including resumable archives and staging."""
+def remaining_budget(directory, store, entry,*,chain=None,hardlinks=None):
+    """Additional peak bytes: engine first, verified-cache release, then model."""
     directory = Path(directory)
     model_missing = 0
     required=dict(dependencies(INITIAL_BUNDLES[CHAT_FAMILY])) if chain is None else {
@@ -55,16 +56,29 @@ def remaining_budget(directory, store, entry,*,chain=None):
         model_missing += size-present
     selected=INITIAL_BUNDLES[CHAT_FAMILY] if chain is None else chain[-1]
     selected_dependencies=dependencies(selected) if chain is None else version_dependencies(selected)
-    model_copy = 0 if (directory/'language-models'/selected['release']['release_id']).is_dir() else sum(size for _, size in selected_dependencies)
+    if hardlinks is None:hardlinks=model_hardlinks_available(directory,store)
+    model_copy = 0 if hardlinks or (directory/'language-models'/selected['release']['release_id']).is_dir() else sum(size for _, size in selected_dependencies)
     if (directory/'engines'/entry.manifest_sha256).is_dir():
-        return model_missing+model_copy
+        return model_missing+model_copy+BUDGET_MARGIN_BYTES
     download = directory/'engine-downloads'
-    def present(identifier, maximum, suffixes):
-        return max((min(maximum, (download/(identifier+suffix)).stat().st_size)
-            for suffix in suffixes if (download/(identifier+suffix)).is_file()), default=0)
-    archive = entry.bytes-present(entry.sha256, entry.bytes, ['.zip', '.assembling'] if entry.parts else ['.zip', '.part'])
-    pieces = sum(part.bytes-present(part.sha256, part.bytes, ['.piece', '.part']) for part in entry.parts)
-    return model_missing+model_copy+archive+pieces+2*entry.installed_bytes
+    reclaim={}
+    def present(identifier,maximum,suffixes):
+        for suffix in suffixes:
+            path=download/(identifier+suffix)
+            if path.is_file() and not path.is_symlink():
+                stat=path.stat();size=min(maximum,stat.st_size)
+                reclaim[(stat.st_dev,stat.st_ino)]=size
+                return size
+        return 0
+    complete=(download/(entry.sha256+'.zip')).is_file()
+    if entry.parts:
+        archive=present(entry.sha256,entry.bytes,['.zip'] if complete else ['.assembling'])
+        pieces=sum(part.bytes-present(part.sha256,part.bytes,['.piece'] if complete else ['.piece','.part']) for part in entry.parts)
+        downloading=0 if complete else pieces+entry.bytes-archive
+    else:
+        archive=present(entry.sha256,entry.bytes,['.zip','.part']);downloading=entry.bytes-archive
+    cached=sum(reclaim.values());regular=engine_regular_bytes(entry)
+    return max(0,downloading,entry.bytes+regular-cached,regular+model_missing+model_copy-cached)+BUDGET_MARGIN_BYTES
 
 
 def eligible(settings, resources, sharing, entry):
@@ -164,13 +178,6 @@ class LanguagePreparation:
                 raise ValueError('El almacenamiento disponible cambió; la preparación se conserva para reanudarla')
             if not allowed():
                 raise PreparationCancelled('Preparación detenida; los archivos se conservan')
-            self._status('discovering',message='Buscando la versión evaluada del experto público')
-            release,base = self._prepare_version(settings,entry,allowed)
-            adapter_id=release.model_artifact_id
-            accepted_release_id=release.release_id
-            unchanged_permissions=allowed
-            def allowed():
-                return (unchanged_permissions() and LanguageVersionRegistry(self.families.root,CHAT_FAMILY).head()['release']['release_id']==accepted_release_id)
             self._status('engine', message='Preparando el motor de lenguaje')
             installed = self.directory/'engines'/entry.manifest_sha256
             if installed.is_dir():
@@ -181,6 +188,14 @@ class LanguagePreparation:
                     rate_mbps=lambda: settings.policy.max_bandwidth_mbps/2,
                     cancel_event=self.cancel, progress=lambda state, done, total: self._status('engine-'+state, done, total, 'Preparando el motor de lenguaje'))
                 verify_package(Path(command).parent, entry.manifest_sha256, profile=entry.profile)
+            if not allowed():raise PreparationCancelled('Los permisos cambiaron; el experto no se activó')
+            self._status('discovering',message='Buscando la versión evaluada del experto público')
+            release,base = self._prepare_version(settings,entry,allowed)
+            adapter_id=release.model_artifact_id
+            accepted_release_id=release.release_id
+            unchanged_permissions=allowed
+            def allowed():
+                return (unchanged_permissions() and LanguageVersionRegistry(self.families.root,CHAT_FAMILY).head()['release']['release_id']==accepted_release_id)
             if not allowed():
                 raise PreparationCancelled('Los permisos cambiaron; el experto no se activó')
             self._status('testing',message='Comprobando que el experto responde dentro de tus límites')
@@ -212,9 +227,9 @@ class LanguagePreparation:
             if not allowed():raise PreparationCancelled('Los permisos cambiaron; el experto no se activó')
             if identifier!=self.node.identity.node_id_hex and self.node.connect_node(identifier,timeout=12):providers.append(identifier)
         sizes={};received={};last_progress=0
-        def preflight(chain):
+        def preflight(chain,hardlinks=None):
             sizes.update({identifier:size for bundle in chain for identifier,size in version_dependencies(bundle)})
-            required=remaining_budget(self.directory,self.families.store,entry,chain=chain)
+            required=remaining_budget(self.directory,self.families.store,entry,chain=chain,hardlinks=hardlinks)
             if (managed_public_bytes(self.directory)+required>settings.policy.max_disk_gb*1024**3
                     or shutil.disk_usage(self.directory).free<required):
                 raise ValueError('No hay espacio autorizado para la versión aceptada y su motor')
@@ -235,7 +250,11 @@ class LanguagePreparation:
         preflight(chain);registry.install(chain,self.families.store)
         release,descriptor=validate_bundle(head)
         if descriptor['base_name']!=CHAT_FAMILY:raise ValueError('La versión aceptada pertenece a otra familia')
-        base=materialize_version(self.directory,CHAT_FAMILY,release.release_id,allowed=allowed)
+        links=model_hardlinks_available(self.directory,self.families.store)
+        # The immediately preceding preflight reserved copies if links are
+        # unavailable. If links disappear later, never silently exceed that plan.
+        preflight(chain,hardlinks=links)
+        base=materialize_version(self.directory,CHAT_FAMILY,release.release_id,allowed=allowed,require_hardlinks=links)
         return release,base
 
     def _probe(self,command,base,settings,allowed,adapter_id=None):

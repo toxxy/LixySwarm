@@ -86,6 +86,32 @@ def test_verified_model_and_native_engine_activate_without_changing_user_policy(
     assert opens
 
 
+def test_engine_finishes_and_discards_download_cache_before_model_materialization(monkeypatch,tmp_path):
+    service,entry,_,_=context(monkeypatch,tmp_path);original=service._prepare_version;observed=[]
+    def prepare_model(*args):
+        assert (tmp_path/'engines'/entry.manifest_sha256).is_dir()
+        assert not list((tmp_path/'engine-downloads').iterdir())
+        observed.append('engine-installed-before-model')
+        return original(*args)
+    monkeypatch.setattr(service,'_prepare_version',prepare_model)
+    service.start();finish(service)
+    assert service.snapshot()['state']=='complete' and observed==['engine-installed-before-model']
+
+
+def test_stage_peak_and_proven_model_links_fit_eight_gib_without_assuming_copy_support(monkeypatch,tmp_path):
+    from src.network.artifact_store import ArtifactStore
+    gib=1024**3;store=ArtifactStore(tmp_path/'public/language/artifacts')
+    bundle={'release':{'release_id':'c'*64}}
+    monkeypatch.setattr(preparation,'INITIAL_BUNDLES',{preparation.CHAT_FAMILY:bundle})
+    monkeypatch.setattr(preparation,'dependencies',lambda *_:[('d'*64,4*gib)])
+    entry=EngineDownload('https://example.invalid/engine','a'*64,2*gib,'b'*64,6*gib,profile='language-cuda',regular_file_bytes=3*gib)
+    # Peak with shared model files: max(2+3 during extraction, 3+4 finally).
+    linked=preparation.remaining_budget(tmp_path,store,entry,hardlinks=True)
+    copied=preparation.remaining_budget(tmp_path,store,entry,hardlinks=False)
+    assert linked==7*gib+preparation.BUDGET_MARGIN_BYTES and linked<8*gib
+    assert copied==11*gib+preparation.BUDGET_MARGIN_BYTES and copied>8*gib
+
+
 @pytest.mark.parametrize('withdraw', ['pause', 'selection'])
 def test_permission_or_operator_selection_changes_prevent_activation(monkeypatch, tmp_path, withdraw):
     def change():
