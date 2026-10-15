@@ -4,6 +4,7 @@ from pathlib import Path
 import time
 from types import SimpleNamespace
 from contextlib import contextmanager
+from copy import deepcopy
 
 import pytest
 import torch
@@ -125,3 +126,38 @@ def test_complete_prefix_fit_commits_all_states_and_new_predictions_before_any_g
     assert report['verification']['parent_correct']==128 and report['verification']['specialist_correct']==0
     assert report['original_evaluation_opened'] is False and report['native_promotion_authorized'] is False
     assert float(model.slot)==1. and len(report['artifacts'])==7
+
+
+def test_independent_cpu_reader_reconstructs_probabilities_memory_and_optimizer_then_detects_tampering(monkeypatch,tmp_path):
+    from safetensors.torch import save_file
+    from src.learning import language_dense_selector as dense
+    from src.learning.weights_io import digest_file
+    from experiments import audit_prefix_router as audit
+    p={**protocol.definition(),'phase_steps':2}
+    monkeypatch.setattr(protocol,'definition',lambda:p);monkeypatch.setattr(dense,'definition',lambda:p)
+    monkeypatch.setattr(audit,'definition',lambda:p)
+    features=torch.randn(256,2048);targets=torch.tensor([[1.,0.] if i%2 else [0.,1.] for i in range(128)])
+    variants,fit,optimizer=train_dense_selectors(features[:128],targets,p)
+    feature_binding={'feature_space_id':protocol.feature_id(),'training_artifact_id':p['training_artifact_id'],
+        'case_ids':[f'{i:064x}' for i in range(256)],'answer_tokens_used':False}
+    save_file({'features':features},str(tmp_path/'prefix-features.safetensors'),metadata={'format':'lixyswarm-public-prefix-features-v1','binding':canonical(feature_binding).decode()})
+    artifacts={};bindings={};predictions={}
+    def record(name):artifacts[name]=dict(zip(['sha256','bytes'],digest_file(tmp_path/name)))
+    record('prefix-features.safetensors')
+    for name,net in variants.items():
+        metadata=binding(net,name);bindings[name]=metadata;save_dense(net,tmp_path/(name+'.safetensors'),metadata);record(name+'.safetensors')
+        choices,probabilities=net.choose(features[128:],use_memory=name!='dolphin')
+        predictions[name]=[{'index':i,'choice':c,'probabilities':q} for i,c,q in zip(range(128,256),choices.tolist(),probabilities.tolist())]
+    torch.save(optimizer,tmp_path/'optimizer-state.pt');record('optimizer-state.pt')
+    commitment={'protocol_id':protocol.protocol_id(),'feature_space_id':protocol.feature_id(),'expert_ids':p['expert_ids'],
+        'learned_artifacts':{k:v for k,v in artifacts.items() if k!='prefix-features.safetensors'},'predictions':predictions}
+    (tmp_path/'prediction-commitment.json').write_bytes(canonical(commitment));record('prediction-commitment.json')
+    report={'commitment':commitment,'artifacts':artifacts,'feature_binding':feature_binding,'fit':fit,'bindings':bindings}
+    result=audit.verify_saved_state(tmp_path,report,targets)
+    assert result['success'] and all(v['choices_identical'] for v in result['comparisons'].values())
+    assert all(v['steps']==2 and v['parameters_with_moments']>0 for v in result['optimizer_states'].values())
+    changed=deepcopy(report);changed['commitment']=deepcopy(changed['commitment'])
+    changed['commitment']['learned_artifacts']['public.safetensors']['sha256']='1'*64
+    with pytest.raises(ValueError,match='committed'):audit.verify_saved_state(tmp_path,changed,targets)
+    path=tmp_path/'public.safetensors';raw=path.read_bytes();path.write_bytes(raw[:-1]+bytes([raw[-1]^1]))
+    with pytest.raises(ValueError,match='integrity'):audit.verify_saved_state(tmp_path,report,targets)

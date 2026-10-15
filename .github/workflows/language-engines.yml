@@ -30,6 +30,7 @@ on:
       - 'test_language_outcome_job_tensors.py'
       - 'test_language_outcome_selector_tensors.py'
       - 'test_language_prefix_router_tensors.py'
+      - 'experiments/audit_prefix_router.py'
       - 'test_public_math.py'
       - 'test_engine_qualification.py'
       - 'test_public_math_tensors.py'
