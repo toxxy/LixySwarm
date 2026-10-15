@@ -1,0 +1,29 @@
+{
+  "success": true,
+  "internet": true,
+  "language_preparation_permission_gate": true,
+  "chat_first_answer": "Una red descentralizada es una red de computadoras que no está controlada por un solo punto central.",
+  "chat_ui_verified": true,
+  "chat_remote_context_opt_in": true,
+  "chat_history_survives_reopen": true,
+  "chat_history_encrypted": true,
+  "chat_receipt": {
+    "version": 1,
+    "job_id": "9a995b832205e6159a510270aff7c25bb808d88045aba043f062a035049e920e",
+    "worker_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+    "requester_node_id": "852d46277387d4c5f9be261b53c038f962f1b1dad1b1625c5846b22702202b34",
+    "result_digest": "233e7a78a6cb4e3f25ede2bd64516379f8ab6218215268ce743506bd7831d93b",
+    "finished_at": 1792025620.8388803,
+    "signature": "KNL4KjRaRW+qjFq62GfxMOGtYUBTuVdWieioQxUpxu6+940tK0UC+8/bSXBUkuGYy3f4Tdxp06TrSg52AM23CQ=="
+  },
+  "chat_cancellation_verified": true,
+  "connection_s": 0.72,
+  "controls_confirmed": true,
+  "pause_keeps_connection": true,
+  "reconnect_keeps_identity": true,
+  "calculation_engines_loaded": false,
+  "source_revision": "7d15369575e56f54dc11f6eccf626a8fc797b827",
+  "archive_sha256": "dc80e858f753f36daef65d622200159c6ece95e55b1d31f10e3db27b6ed1b4fc",
+  "archive_bytes": 81915882,
+  "scope": "Exact Linux CI archive downloaded, verified and run over public Internet on the existing main physical PC; no clean GPU installation claim"
+}

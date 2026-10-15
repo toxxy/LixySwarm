@@ -1,0 +1,21 @@
+{
+  "workflow_run": 38661916961,
+  "source_revision": "7d15369575e56f54dc11f6eccf626a8fc797b827",
+  "artifact_id": 11939158087,
+  "artifact_sha256": "a793e85f9dd8c126a60cc5a807a2fa28d25408d3666193254e2a456d32e67b3d",
+  "release_archive": {
+    "archive": "LixySwarm-0.4.0a12-linux-x86_64.tar.gz",
+    "bytes": 81915882,
+    "sha256": "dc80e858f753f36daef65d622200159c6ece95e55b1d31f10e3db27b6ed1b4fc",
+    "platform": "linux",
+    "machine": "x86_64"
+  },
+  "ci_self_test_passed": true,
+  "release_url": "https://github.com/toxxy/LixySwarm/releases/tag/v0.4.0a12",
+  "public_asset_digest_matches_ci": true,
+  "anonymous_laptop_download_verified": true,
+  "main_chat_connection_s": 0.72,
+  "laptop_chat_connection_s": 0.77,
+  "prerelease": true,
+  "windows_macos_deferred": true
+}

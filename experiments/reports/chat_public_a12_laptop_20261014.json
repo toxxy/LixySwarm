@@ -1,0 +1,36 @@
+{
+  "success": true,
+  "anonymous_https_download": true,
+  "url": "https://github.com/toxxy/LixySwarm/releases/download/v0.4.0a12/LixySwarm-0.4.0a12-linux-x86_64.tar.gz",
+  "archive_bytes": 81915882,
+  "sha256": "dc80e858f753f36daef65d622200159c6ece95e55b1d31f10e3db27b6ed1b4fc",
+  "source_revision": "7d15369575e56f54dc11f6eccf626a8fc797b827",
+  "started_at": 1792025739.9190774,
+  "finished_at": 1792025797.8950713,
+  "scope": "Exact public Linux CI archive downloaded without credentials and tested on the existing physical laptop; no clean GPU installation claim",
+  "chat_report": {
+    "success": true,
+    "internet": true,
+    "language_preparation_permission_gate": true,
+    "chat_first_answer": "Una red descentralizada es una red de computadoras que no está controlada por un solo punto central.",
+    "chat_ui_verified": true,
+    "chat_remote_context_opt_in": true,
+    "chat_history_survives_reopen": true,
+    "chat_history_encrypted": true,
+    "chat_receipt": {
+      "version": 1,
+      "job_id": "47274f3bb137eceed8822214e206cc788a5250928ac8eca81feaaf454a52e047",
+      "worker_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+      "requester_node_id": "74bc6c950e1c22827cc5d1fa305af7651a65c68b097807e0d26567e473e6a483",
+      "result_digest": "9acc4d559b055dd088057f73017ed7637aeb7795ec9a88b977a532d926867d7c",
+      "finished_at": 1792025793.7178547,
+      "signature": "MfS9K5qntuXP+88SNb9GIS2eAarYK/dOYQCTTC8SpTe/YAuGu4HoVqU3XajbXY/QyudIUcwwjiaGluZfGZw0CA=="
+    },
+    "chat_cancellation_verified": true,
+    "connection_s": 0.77,
+    "controls_confirmed": true,
+    "pause_keeps_connection": true,
+    "reconnect_keeps_identity": true,
+    "calculation_engines_loaded": false
+  }
+}
