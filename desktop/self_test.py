@@ -22,6 +22,8 @@ def main():
     parser.add_argument("--chat",action="store_true")
     parser.add_argument('--memory',action='store_true')
     parser.add_argument('--expected-chat-model')
+    parser.add_argument('--global-memory',action='store_true')
+    parser.add_argument('--expected-memory-release')
     parser.add_argument("--report", type=Path)
     parser.add_argument("--screenshot", type=Path)
     parser.add_argument("--work-directory", type=Path)
@@ -30,6 +32,10 @@ def main():
         parser.error("The real catalog acquisition gate requires --internet")
     if args.chat and not args.internet:parser.error("The real chat assessment requires --internet")
     if args.memory and not args.chat:parser.error('Memory comparison requires the real chat assessment')
+    if args.global_memory and not args.chat:parser.error('Public memory comparison requires chat')
+    if args.expected_memory_release and (not args.global_memory or len(args.expected_memory_release)!=64
+            or any(c not in '0123456789abcdef' for c in args.expected_memory_release)):
+        parser.error('Expected public memory release is a content assertion')
     if args.expected_chat_model and (not args.chat or len(args.expected_chat_model)!=64
             or any(c not in '0123456789abcdef' for c in args.expected_chat_model)):
         parser.error('Expected chat model is an assertion against a public artifact hash')
@@ -240,6 +246,45 @@ def main():
                     report['personal_memory_comparison']={'results':comparisons,'verdict':verdict(comparisons),
                         'private_inputs':False,'model_training_performed':False,'global_signals_from_personal':False}
                     assert report['personal_memory_comparison']['verdict']['eligible']
+                if args.global_memory:
+                    from src.network.public_memory import PublicMemorySettings
+                    from src.release.public_memory import PublicMemoryRegistry
+                    from src.learning.public_memory_gate import memory_cases
+                    window.chat_context.setChecked(False);window.chat_memory.setChecked(False)
+                    wait(lambda:controller.snapshot()['diagnostics'].get('public_memory',{}).get('sequence')==1,timeout=120)
+                    registry=PublicMemoryRegistry(controller.directory);document=registry.document();head=registry.chain()[-1]
+                    if args.expected_memory_release:assert head['release_id']==args.expected_memory_release
+                    source_head=document['sources']['accepted_language']['chain'][-1]['release']
+                    expected={row['case']:row['expected'] for row in memory_cases()}
+                    expected.update({'language-sequence':str(source_head['sequence']),'language-adapter':source_head['model_artifact_id']})
+                    comparisons=[]
+                    for card in document['cards']:
+                        row={'record_id':card['record_id'],'expected':expected[card['record_id']]}
+                        for enabled,mode in [(False,'without_memory'),(True,'with_memory')]:
+                            controller.set_public_memory(enabled)
+                            wait(lambda:controller.snapshot()['diagnostics'].get('public_memory',{}).get('enabled')==enabled)
+                            window.chat_messages=[];window.save_chat_history()
+                            window.chat_input.setPlainText(card['example_question']);window.chat_send.click()
+                            wait(lambda:not window.chat_pending and window.chat_worker is not None and not window.chat_worker.isRunning(),timeout=75)
+                            result=window.chat_last_result;assert result,window.chat_status.text()
+                            assert not result['context_sent'] and result['route']=='network'
+                            assert result['public_memory']['used']==enabled
+                            if args.expected_chat_model:assert result['model_id']==args.expected_chat_model
+                            if enabled:assert result['public_memory']['release']['release_id']==head['release_id']
+                            row[mode]=result
+                        comparisons.append(row)
+                    import re
+                    before=after=0;regressions=[]
+                    for row in comparisons:
+                        scores=[bool(re.fullmatch(re.escape(row['expected'])+r'[.!]?',row[mode]['answer'].strip(),flags=re.I))
+                            for mode in ['without_memory','with_memory']]
+                        before+=scores[0];after+=scores[1]
+                        if scores[0] and not scores[1]:regressions.append(row['record_id'])
+                    report['public_memory_comparison']={'head':head,'results':comparisons,'without_correct':before,
+                        'with_correct':after,'total':len(comparisons),'regressions':regressions,'private_inputs':False,
+                        'new_model_trained':False,'eligible':after>=9 and after-before>=6 and not regressions}
+                    assert report['public_memory_comparison']['eligible']
+                    controller.set_public_memory(True)
                 # Cancel at dispatch, including the race before the API records
                 # the request. A previous response cannot satisfy this check.
                 wait(lambda:window.chat_send.isEnabled())

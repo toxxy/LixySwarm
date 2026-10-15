@@ -194,6 +194,15 @@ class NodeController:
     def ask_chat(self,messages,remote_context,request_id):
         return self._chat_call("/ask",{"request_id":request_id,"messages":messages,"remote_context":bool(remote_context)},timeout=75)
 
+    def public_memory_settings(self):
+        from src.network.public_memory import PublicMemorySettings
+        try:return PublicMemorySettings.load(self.directory)
+        except (OSError,ValueError):return PublicMemorySettings(enabled=False)
+
+    def set_public_memory(self,enabled):
+        from src.network.public_memory import PublicMemorySettings
+        PublicMemorySettings(enabled=enabled).save(self.directory)
+
     def cancel_chat(self,request_id):
         return self._chat_call("/cancel",{"request_id":request_id})
 

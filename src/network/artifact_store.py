@@ -282,7 +282,7 @@ class ArtifactService:
     """Register artifact read operations and fetch verified objects from peers."""
 
     def __init__(self, coordinator, store: ArtifactStore, *, receive_budget=None, namespace="artifact",register_handlers=True,prefer_compressed=True):
-        if namespace not in {"artifact", "language.artifact"}:
+        if namespace not in {"artifact", "language.artifact", "public-memory.artifact"}:
             raise ArtifactError("unsupported artifact operation namespace")
         self.coordinator = coordinator
         self.store = store

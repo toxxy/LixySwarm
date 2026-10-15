@@ -14,6 +14,21 @@ from .language_version_service import fetch_history
 MAX_CACHE_BYTES=20*1024**2
 
 
+def verify_catalog(value,name='qwen3-1.7b'):
+    if not isinstance(value,dict) or set(value)!={'chain','evaluations'}:raise ReleaseError('Invalid chat catalog')
+    chain=value['chain'];target=verify_chain(chain)
+    if chain[0]!=genesis.INITIAL_BUNDLES[name]:raise ReleaseError('Chat catalog belongs to another public family')
+    reports=value['evaluations']
+    expected={bundle['descriptor']['evaluation_id'] for bundle in chain[1:]}
+    if not isinstance(reports,dict) or set(reports)!=expected:raise ReleaseError('Chat catalog evaluations are incomplete')
+    for index,bundle in enumerate(chain[1:],1):
+        identifier=bundle['descriptor']['evaluation_id'];report=reports[identifier];encoded=canonical(report)
+        if (len(encoded)>MAX_EVALUATION_BYTES or len(encoded)!=bundle['descriptor']['evaluation_bytes']
+                or hashlib.sha256(encoded).hexdigest()!=identifier):raise ReleaseError('Chat evaluation content identity mismatch')
+        verify_evaluation(report,chain[index-1],bundle)
+    return target
+
+
 class ChatVersions:
     def __init__(self,directory,name='qwen3-1.7b'):
         self.directory=Path(directory);self.name=name;self.path=self.directory/'catalog.json'
@@ -21,19 +36,7 @@ class ChatVersions:
         self.cached=None;self.stamp=None
 
     def _validate(self,value):
-        if not isinstance(value,dict) or set(value)!={'chain','evaluations'}:raise ReleaseError('Invalid chat catalog')
-        chain=value['chain'];target=verify_chain(chain)
-        if chain[0]!=genesis.INITIAL_BUNDLES[self.name]:raise ReleaseError('Chat catalog belongs to another public family')
-        reports=value['evaluations']
-        expected={bundle['descriptor']['evaluation_id'] for bundle in chain[1:]}
-        if not isinstance(reports,dict) or set(reports)!=expected:raise ReleaseError('Chat catalog evaluations are incomplete')
-        for index,bundle in enumerate(chain[1:],1):
-            identifier=bundle['descriptor']['evaluation_id'];report=reports[identifier];encoded=canonical(report)
-            if (len(encoded)>MAX_EVALUATION_BYTES or len(encoded)!=bundle['descriptor']['evaluation_bytes']
-                    or hashlib.sha256(encoded).hexdigest()!=identifier):
-                raise ReleaseError('Chat evaluation content identity mismatch')
-            verify_evaluation(report,chain[index-1],bundle)
-        return target
+        return verify_catalog(value,self.name)
 
     def read(self):
         if not self.path.exists():return {'chain':[genesis.INITIAL_BUNDLES[self.name]],'evaluations':{}}

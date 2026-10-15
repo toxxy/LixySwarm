@@ -23,6 +23,7 @@ from src.network.lsp_v3 import LSPNodeV3
 from src.network.telemetry import atomic_json, build_status, sign_status, verify_status
 from src.network.client_state import ClientSettings, NodeStateLock, state_directory
 from src.network.public_knowledge import KnowledgeSettings, PublicKnowledgeService
+from src.network.public_memory import PublicMemoryService
 from src.network.reference_compute import ReferenceComputeService
 from src.network.learning_coordinator import LearningCoordinator
 from src.network.language_compute import LanguageComputeService
@@ -128,7 +129,8 @@ def run(directory: Path, *, host="0.0.0.0", port=7338, interval=15, allow_privat
         families=LanguageFamilies(knowledge,directory)
         language_training=LanguageTraining(knowledge,families,directory,resources)
         preparation=LanguagePreparation(node,knowledge,families,directory,resources)
-        chat=ChatBroker(node,knowledge.work,language)
+        public_memory=PublicMemoryService(knowledge,directory)
+        chat=ChatBroker(node,knowledge.work,language,public_memory)
         learning = LearningCoordinator(knowledge,compute,directory)
         language_learning=LanguageLearningCoordinator(knowledge,language_training,directory)
         owner_work=LocalLanguageWork(knowledge,language_training,language_learning)
@@ -163,7 +165,7 @@ def run(directory: Path, *, host="0.0.0.0", port=7338, interval=15, allow_privat
             atomic_json(directory / "diagnostics.json", {
                 "node_id": identity.node_id_hex, "timestamp_ms": status["timestamp_ms"],
                 "port": node.port, "peers": peers,
-                "pid": os.getpid(), "runtime_version": "0.4.0a15", "controls_version": 1,
+                "pid": os.getpid(), "runtime_version": "0.4.0a16", "controls_version": 1,
                 "settings": asdict(settings), "worker_ready": computation["ready"] or conversation["ready"] or training["ready"], "control_error": error,
                 "knowledge": public_knowledge,
                 "compute":computation,
@@ -175,6 +177,7 @@ def run(directory: Path, *, host="0.0.0.0", port=7338, interval=15, allow_privat
                 "learning":learning.snapshot(),
                 "language_learning":language_learning.snapshot(),
                 "language_follow":language_follow.snapshot(),
+                'public_memory':public_memory.snapshot(),
             })
             eligible = time.monotonic() - last_sent >= 2
             if eligible:
@@ -220,6 +223,7 @@ def run(directory: Path, *, host="0.0.0.0", port=7338, interval=15, allow_privat
                 except (OSError, ValueError, TypeError):
                     sharing = KnowledgeSettings()
                 knowledge.update(settings, sharing)
+                public_memory.update(settings)
                 compute.update(settings)
                 language.update(settings)
                 language_training.update(settings)
@@ -245,6 +249,9 @@ def run(directory: Path, *, host="0.0.0.0", port=7338, interval=15, allow_privat
                 node.capabilities["inference"]=compute.ready or language.ready
                 node.capabilities["language_inference_v1"]=language.ready
                 node.capabilities["language_inference_models"]=language_models
+                memory_state=public_memory.snapshot()
+                node.capabilities['public_memory_v1']=memory_state['sharing']
+                node.capabilities['public_memory_head']=memory_state['release_id'] if memory_state['sharing'] else ''
                 node.resource_profile["language_families_v1"]=families.snapshot()["available"]
                 node.capabilities["training"]=compute.ready and bool(compute.engine.training_requesters) or language_training.ready
                 node.capabilities["language_training_v1"]=language_training.ready and language_training.engine.base_name=='qwen3-0.6b'
@@ -290,6 +297,7 @@ def run(directory: Path, *, host="0.0.0.0", port=7338, interval=15, allow_privat
             learning.close()
             language_learning.close()
             language_follow.close()
+            public_memory.close()
             compute.ready=False
             language.ready=False
             language_training.ready=False

@@ -141,7 +141,7 @@ class SwarmWindow(QMainWindow):
         self.chat_status=QLabel("Esperando un experto de lenguaje disponible")
         self.chat_status.setWordWrap(True);chat.addWidget(self.chat_status)
         self.chat_transcript=QTextEdit();self.chat_transcript.setReadOnly(True);chat.addWidget(self.chat_transcript)
-        self.chat_privacy=QLabel("El historial queda cifrado si el almacén protegido está disponible. A la red se envía la pregunta actual.")
+        self.chat_privacy=QLabel("El historial queda cifrado si el almacén protegido está disponible. La pregunta y la memoria pública que actives pueden enviarse al experto.")
         self.chat_privacy.setWordWrap(True);chat.addWidget(self.chat_privacy)
         memory_actions=QHBoxLayout()
         self.chat_memory=QCheckBox('Recuperar recuerdos de esta conversación')
@@ -151,7 +151,11 @@ class SwarmWindow(QMainWindow):
         self.chat_forget.setToolTip('Vacía la memoria local y la desactiva. Conserva el historial visible.')
         self.chat_forget.clicked.connect(self.forget_chat_memory);memory_actions.addWidget(self.chat_forget)
         chat.addLayout(memory_actions)
-        self.chat_context=QCheckBox("Enviar también contexto y recuerdos seleccionados al experto de la red")
+        self.chat_public_memory=QCheckBox('Usar memoria pública verificada de la red')
+        self.chat_public_memory.setChecked(self.controller.public_memory_settings().enabled)
+        self.chat_public_memory.toggled.connect(lambda enabled:self._action(lambda:self.controller.set_public_memory(enabled)))
+        chat.addWidget(self.chat_public_memory)
+        self.chat_context=QCheckBox("Enviar también contexto y recuerdos personales al experto de la red")
         self.chat_context.toggled.connect(self.save_chat_history);chat.addWidget(self.chat_context)
         self.chat_input = QTextEdit(); self.chat_input.setPlaceholderText("Pregunta al enjambre…")
         self.chat_input.setMaximumHeight(110);chat.addWidget(self.chat_input)
@@ -317,7 +321,7 @@ class SwarmWindow(QMainWindow):
         self.chat_memory.blockSignals(True);self.chat_memory.setChecked(history.memory_enabled);self.chat_memory.blockSignals(False)
         self.chat_memory.setEnabled(True);self.chat_forget.setEnabled(True)
         self.render_chat()
-        self.chat_privacy.setText("Historial y recuerdos cifrados en este equipo. A la red se envía solo la pregunta actual salvo que autorices contexto y recuerdos seleccionados.")
+        self.chat_privacy.setText("Historial y recuerdos personales cifrados en este equipo. La pregunta y la memoria pública activada pueden enviarse al experto; el contexto personal requiere tu autorización.")
         if current:self.save_chat_history()
 
     def render_chat(self):
@@ -371,6 +375,8 @@ class SwarmWindow(QMainWindow):
             self.chat_messages.append({"role":"assistant","content":result["answer"]});self.render_chat();self.save_chat_history()
             self.chat_status.setText(("Respuesta en este equipo" if result["route"]=="local" else "Respuesta de la red")+" · recibo verificado")
             if self.chat_last_memories:self.chat_status.setText(self.chat_status.text()+f' · {self.chat_last_memories} recuerdo(s) recuperado(s)')
+            if result.get('public_memory',{}).get('used'):
+                self.chat_status.setText(self.chat_status.text()+f" · memoria pública v{result['public_memory']['release']['sequence']}")
         else:self.chat_status.setText(str(result))
         self.chat_cancel.setEnabled(False)
         if self.close_pending:self.close()
@@ -428,6 +434,9 @@ class SwarmWindow(QMainWindow):
         self.language_button.setText('Reanudar preparación del experto' if phase in {'waiting','stopped'} else 'Preparar experto de lenguaje')
         self.language_stop.setEnabled(language_busy or phase=='waiting')
         chat=diagnostic.get("chat",{}) if snapshot["fresh"] else {}
+        public_memory=chat.get('public_memory') or {}
+        self.chat_public_memory.setText('Usar memoria pública verificada de la red'+
+            (f" ({public_memory['records']} registros)" if public_memory.get('available') else ''))
         asking=self.chat_pending or self.chat_worker is not None and self.chat_worker.isRunning()
         self.chat_send.setEnabled(bool(chat.get("available")) and not asking)
         self.chat_cancel.setEnabled(asking)

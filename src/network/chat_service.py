@@ -27,8 +27,9 @@ class ChatUnavailable(RuntimeError):pass
 
 
 class ChatBroker:
-    def __init__(self,node,work,language):
+    def __init__(self,node,work,language,public_memory=None):
         self.node,self.work,self.language=node,work,language
+        self.public_memory=public_memory
         self.lock=threading.RLock();self.requests={};self.cancelled={};self.connected=False;self.closed=False
         self.discovery_thread=None;self.last_discovery=0.0
         self.catalog_error=None
@@ -124,7 +125,8 @@ class ChatBroker:
         local=bool(model_id and self.language.ready and self.language.engine.adapter_id==model_id)
         return {"connected":self.connected,"available":self.connected and not pending and (local or bool(providers)),
                 "local":local,"remote_providers":len(providers),"model_id":model_id,"active":len(self.requests),
-                'catalog_pending':pending,'catalog_error':self.catalog_error}
+                'catalog_pending':pending,'catalog_error':self.catalog_error,
+                'public_memory':self.public_memory.snapshot() if self.public_memory is not None else None}
 
     def cancel(self,request_id):
         if not isinstance(request_id,str) or not REQUEST_ID.fullmatch(request_id):raise ValueError("Invalid chat cancellation")
@@ -151,6 +153,12 @@ class ChatBroker:
             if not model_id:raise ChatUnavailable('No se pudo verificar la versión de lenguaje conservada')
             local=self.language.ready and self.language.engine.adapter_id==model_id
             messages=value["messages"] if local or value["remote_context"] else [value["messages"][-1]]
+            memory_release=None;memory_records=[]
+            if self.public_memory is not None:
+                from .public_memory import augment_messages
+                cards,memory_release=self.public_memory.retrieve(value['messages'][-1]['content'])
+                messages,memory_records=augment_messages(messages,cards)
+            validate_messages(messages)
             payload={"model_artifact_id":model_id,"messages":messages}
             requirements=ResourceRequirements(kind="inference",gpu_required=True,ram_gb=5)
             if local:
@@ -170,7 +178,9 @@ class ChatBroker:
                 raise ChatUnavailable("El experto devolvió una respuesta inválida")
             return {"answer":output["answer"],"provider_id":provider,"model_id":model_id,
                     "route":"local" if local else "network","context_sent":not local and value["remote_context"],"receipt":result.receipt,
-                    "signed_result":result.to_dict()}
+                    "signed_result":result.to_dict(),'context_bytes':sum(len(row['content'].encode()) for row in messages),
+                    'context_messages':len(messages),'public_memory':{'release':memory_release if memory_records else None,
+                        'record_ids':memory_records,'used':bool(memory_records)}}
         finally:
             with self.lock:self.requests.pop(request_id,None)
 
