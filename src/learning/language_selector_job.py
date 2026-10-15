@@ -14,18 +14,20 @@ from .language_retention import PARENT_MODEL,PARENT_RELEASE
 os.environ['HF_HUB_OFFLINE']='1';os.environ['TRANSFORMERS_OFFLINE']='1'
 
 
-def validate_request(request):
+def validate_request(request,*,protocol=None,identifier=None):
+    protocol=definition() if protocol is None else protocol
+    identifier=protocol_id() if identifier is None else identifier
     fields={'action','protocol_id','compute_dtype','streamed_base','base_directory','adapter_file','model_id',
         'parent_release_id','training_file','evaluation_file','output_directory','device','cpu_threads','gpu_fraction','deadline'}
-    if (not isinstance(request,dict) or set(request)!=fields or request['action']!=definition()['action']
-            or request['protocol_id']!=protocol_id() or request['model_id']!=PARENT_MODEL
+    if (not isinstance(request,dict) or set(request)!=fields or request['action']!=protocol['action']
+            or request['protocol_id']!=identifier or request['model_id']!=PARENT_MODEL
             or request['parent_release_id']!=PARENT_RELEASE or request['compute_dtype']!='float32'
             or request['streamed_base'] is not True or request['device'] not in {'cuda','cpu'}):
         raise ValueError('Unknown public expert-selector protocol')
     if (type(request['cpu_threads']) is not int or not 1<=request['cpu_threads']<=16
             or type(request['gpu_fraction']) not in (int,float) or not 0<request['gpu_fraction']<=1
             or type(request['deadline']) not in (int,float) or not math.isfinite(request['deadline'])
-            or not time.time()<request['deadline']<=time.time()+definition()['maximum_seconds']):
+            or not time.time()<request['deadline']<=time.time()+protocol['maximum_seconds']):
         raise ValueError('Invalid expert-selector resource bounds')
     for key in ['base_directory','adapter_file','training_file','evaluation_file','output_directory']:
         if not isinstance(request[key],str) or not Path(request[key]).is_absolute():raise ValueError('Selector paths are locally selected absolute paths')

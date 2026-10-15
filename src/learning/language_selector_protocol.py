@@ -36,13 +36,17 @@ def protocol_id():
     return hashlib.sha256(json.dumps(definition(),sort_keys=True,separators=(',',':')).encode()).hexdigest()
 
 
-def verify_loss_report(report):
+def verify_loss_report(report,*,protocol=None,identifier=None):
     """Independent scalar reconstruction; does not authorize model promotion."""
-    p=definition();historical=len(public_corpus()['evaluation']);count=historical+p['math_evaluation_examples']
+    p=definition() if protocol is None else protocol
+    identifier=protocol_id() if identifier is None else identifier
+    historical=len(public_corpus()['evaluation']);count=historical+p['math_evaluation_examples']
     losses=report['heldout_expert_nll'];tokens=report['heldout_answer_tokens'];rows=report['evaluations'];fit=report['fit']
-    names={'accepted-parent','upstream-base','oracle-only-diagnostic','dolphin',*p['memory_modes']}
-    if (report['protocol_id']!=protocol_id() or report['held_out_data_used_for_training_or_selection'] is not False
-            or report['eligible_for_native_promotion'] is not False or report['generation_performed'] is not False
+    second=p.get('comparison_expert_name','upstream-base');choice_count=p.get('choice_count_field','upstream_base_choices')
+    names={'accepted-parent',second,'oracle-only-diagnostic','dolphin',*p['memory_modes']}
+    if (report['protocol_id']!=identifier or report['held_out_data_used_for_training_or_selection'] is not False
+            or report['eligible_for_native_promotion'] is not False
+            or (protocol is None and report['generation_performed'] is not False)
             or set(rows)!=names or len(losses)!=count or len(tokens)!=count
             or any(len(v)!=2 or any(type(n) not in (float,int) or not math.isfinite(n) or n<0 for n in v) for v in losses)
             or any(type(n) not in (float,int) or not math.isfinite(n) or not 1<=n<=512 or int(n)!=n for n in tokens)):
@@ -56,7 +60,7 @@ def verify_loss_report(report):
         raise ValueError('Selector TRAIN partition or equal budget changed')
     for name,row in rows.items():
         if name=='accepted-parent':choices=[0]*count
-        elif name=='upstream-base':choices=[1]*count
+        elif name==second:choices=[1]*count
         elif name=='oracle-only-diagnostic':choices=[int(b<a) for a,b in losses]
         else:
             choices=row['choices'];probabilities=row['probabilities']
@@ -70,7 +74,8 @@ def verify_loss_report(report):
             value=row[group]
             if (not math.isclose(value['nll'],expected,abs_tol=1e-12,rel_tol=1e-12)
                     or value['examples']!=end-start or value['tokens']!=sum(tokens[start:end])
-                    or value['upstream_base_choices']!=sum(choices[start:end])):
+                    or value[choice_count]!=sum(choices[start:end])):
                 raise ValueError('Selector aggregate NLL does not reconstruct from frozen expert losses')
     return {'losses_reconstructed':True,'examples':count,'equal_training_budget_verified':True,
-            'full_generation_gates_evaluated':False,'native_promotion_authorized':False}
+            'full_generation_gates_evaluated':report.get('full_generation_gates_evaluated',False) if protocol is not None else False,
+            'native_promotion_authorized':False}

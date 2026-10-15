@@ -130,7 +130,7 @@ def train_selectors(queries,teacher_nll,vocab_size,protocol,*,device='cpu',check
     model.eval();variants['dolphin']=model
     return variants,{'phase1':phase1,'phase2':training,'support_indices':support,
         'query_indices':query_indices,'dolphin_state_id':encoder_id,'initial_dolphin_state_id':initial_encoder_id,
-        'memory_feature_space':'lixyswarm-public-language-expert-echo-v1',
+        'memory_feature_space':protocol.get('memory_feature_space','lixyswarm-public-language-expert-echo-v1'),
         'memory_scope':'public-training-only','held_out_used_for_training_or_selection':False},{
         'dolphin':optimizer1,'memory':optimizers}
 
@@ -172,8 +172,15 @@ class RoutedFrozenExperts:
 
 def validate_binding(metadata):
     fields={'protocol_id','base_hash','tokenizer_id','dolphin_state_id','feature_space','memory_scope','variant'}
+    version2=isinstance(metadata,dict) and 'expert_ids' in metadata
+    if version2:
+        fields.add('expert_ids')
+        ids=metadata['expert_ids']
+        if (not isinstance(ids,list) or len(ids)!=2 or len(set(v for v in ids if isinstance(v,str)))!=2
+                or any(not isinstance(v,str) or len(v)!=64 or any(c not in '0123456789abcdef' for c in v) for v in ids)):
+            raise ValueError('Ordered frozen expert identities are invalid')
     if (not isinstance(metadata,dict) or set(metadata)!=fields or metadata['memory_scope']!='public-training-only'
-            or metadata['feature_space']!='lixyswarm-public-language-expert-echo-v1'
+            or metadata['feature_space']!=('lixyswarm-public-language-adapter-selection-v2' if version2 else 'lixyswarm-public-language-expert-echo-v1')
             or metadata['variant'] not in {'zero','shuffled','public','dolphin'}
             or any(not isinstance(metadata[key],str) or len(metadata[key])!=64 or any(c not in '0123456789abcdef' for c in metadata[key])
                 for key in ['protocol_id','base_hash','tokenizer_id','dolphin_state_id'])):
@@ -186,14 +193,14 @@ def save_selector(model,path,metadata):
     if (any(not torch.isfinite(v).all() for v in tensors.values())
             or sum(v.numel()*v.element_size() for v in tensors.values())>31*1024**2):raise ValueError('Invalid bounded selector state')
     if tensor_digest(model.dolphin.state_dict())!=metadata['dolphin_state_id']:raise ValueError('Memory feature space differs from its frozen Dolphin')
-    save_file(tensors,str(path),metadata={'format':'lixyswarm-language-selector-v1','binding':json.dumps(metadata,sort_keys=True,separators=(',',':'))})
+    save_file(tensors,str(path),metadata={'format':'lixyswarm-language-selector-v2' if 'expert_ids' in metadata else 'lixyswarm-language-selector-v1','binding':json.dumps(metadata,sort_keys=True,separators=(',',':'))})
 
 
 def load_selector(model,path,metadata):
     validate_binding(metadata)
     path=Path(path)
     if path.stat().st_size>32*1024**2:raise ValueError('Selector artifact exceeds its bound')
-    expected={'format':'lixyswarm-language-selector-v1','binding':json.dumps(metadata,sort_keys=True,separators=(',',':'))}
+    expected={'format':'lixyswarm-language-selector-v2' if 'expert_ids' in metadata else 'lixyswarm-language-selector-v1','binding':json.dumps(metadata,sort_keys=True,separators=(',',':'))}
     with safe_open(path,framework='pt',device='cpu') as source:
         if source.metadata()!=expected or metadata.get('memory_scope')!='public-training-only':raise ValueError('Selector feature space or public scope mismatch')
     state=load_file(str(path),device='cpu');parameters=model.state_dict()
