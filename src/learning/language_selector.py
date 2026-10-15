@@ -73,16 +73,21 @@ class LanguageExpertSelector(nn.Module):
         return probabilities.argmax(dim=-1),probabilities
 
 
-def train_selectors(queries,teacher_nll,vocab_size,protocol,*,device='cpu',check=lambda:None,progress=lambda *_:None):
+def train_selectors(queries,teacher_nll,vocab_size,protocol,*,teacher_targets=None,device='cpu',check=lambda:None,progress=lambda *_:None):
     """Both phases see TRAIN only; all memory variants use the same budget."""
-    if (teacher_nll.shape!=(len(queries),2) or not torch.isfinite(teacher_nll).all()
-            or torch.any(teacher_nll<0) or len(queries)<8):
-        raise ValueError('Invalid public TRAIN expert losses')
+    if len(queries)<8:raise ValueError('Invalid public TRAIN query count')
+    if teacher_targets is None:
+        if (not isinstance(teacher_nll,torch.Tensor) or teacher_nll.shape!=(len(queries),2) or not torch.isfinite(teacher_nll).all() or torch.any(teacher_nll<0)):
+            raise ValueError('Invalid public TRAIN expert losses')
+    elif (teacher_nll is not None or not isinstance(teacher_targets,torch.Tensor) or teacher_targets.shape!=(len(queries),2) or not torch.is_floating_point(teacher_targets)
+            or not torch.isfinite(teacher_targets).all() or torch.any(teacher_targets<0) or torch.any(teacher_targets>1)
+            or not torch.allclose(teacher_targets.sum(-1),torch.ones_like(teacher_targets.sum(-1)),atol=1e-6,rtol=0)):
+        raise ValueError('Invalid public TRAIN expert outcome probabilities')
     torch.manual_seed(protocol['seed'])
     support=list(range(0,len(queries),protocol['support_stride']))
     query_indices=[i for i in range(len(queries)) if i not in support]
     model=LanguageExpertSelector(vocab_size,n_embd=protocol['dolphin_n_embd'],support_count=len(support)).to(device)
-    targets=(-teacher_nll.float()/protocol['teacher_temperature']).softmax(dim=-1).to(device)
+    targets=((-teacher_nll.float()/protocol['teacher_temperature']).softmax(dim=-1) if teacher_targets is None else teacher_targets.float()).to(device)
     def fit(net,indices,parameters,*,memory,seed,phase):
         generator=torch.Generator().manual_seed(seed)
         optimizer=torch.optim.AdamW(parameters,lr=protocol['learning_rate'],weight_decay=protocol['weight_decay'])
