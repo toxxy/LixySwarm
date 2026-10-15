@@ -126,9 +126,9 @@ def test_artifact_fetch_wait_is_cancellable(tmp_path):
         Coordinator(), ArtifactStore(tmp_path / "cancelled-store")
     )
     artifact_id = "ab" * 32
-    occupied = threading.Lock()
+    entry = service.store._transfers.entry(artifact_id)
+    occupied = entry.lock
     occupied.acquire()
-    service._fetch_locks[artifact_id] = occupied
     cancelled = threading.Event()
     cancelled.set()
     try:

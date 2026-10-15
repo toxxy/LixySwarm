@@ -13,6 +13,7 @@ import json
 import os
 import re
 import threading
+from contextlib import contextmanager
 import time
 from collections import OrderedDict, deque
 from concurrent.futures import ThreadPoolExecutor
@@ -393,6 +394,7 @@ class WorkCoordinator:
         self.max_completed_bytes=max(1024,min(int(max_completed_bytes),256*1024**2))
         self._lock = threading.RLock()
         self._closed = False
+        self._artifact_fetch_slots: dict[str, threading.BoundedSemaphore] = {}
         self._max_workers = max(1, min(int(max_workers), 64))
         self.max_queued_offers = max(0, min(int(max_queued_offers), 1024))
         self.max_offers_per_peer = max(1, min(int(max_offers_per_peer), 64))
@@ -423,6 +425,24 @@ class WorkCoordinator:
         lost_callback = getattr(node, "on_peer_lost", None)
         if callable(lost_callback):
             lost_callback(self._on_peer_lost)
+
+    @contextmanager
+    def artifact_request_slot(self,peer_id,*,deadline,cancel_event):
+        """Share two chunk requests per provider across all artifact namespaces.
+
+        Providers negotiate this only when they reserve at least four inbound
+        offers. Leave the remaining offers available to metadata and compute.
+        """
+        with self._lock:
+            gate=self._artifact_fetch_slots.setdefault(peer_id,threading.BoundedSemaphore(2))
+        while True:
+            if self._closed or cancel_event.is_set():raise WorkProtocolError('Artifact request cancelled')
+            if time.monotonic()>=deadline:raise WorkProtocolError('Artifact request deadline exceeded')
+            if gate.acquire(timeout=min(.05,max(.001,deadline-time.monotonic()))):break
+        try:
+            if self._closed or cancel_event.is_set():raise WorkProtocolError('Artifact request cancelled')
+            yield
+        finally:gate.release()
 
     def register_handler(self, operation: str, kind: str, handler: Callable, *, permit_cached=None):
         if not _OPERATION_RE.fullmatch(operation):

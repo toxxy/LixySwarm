@@ -23,6 +23,10 @@ from src.network.lsp_v3 import LSPNodeV3
 from src.network.public_knowledge import BandwidthBudget, KnowledgeSettings, managed_public_bytes
 from src.network.telemetry import atomic_json
 from src.network.work_protocol import WorkCoordinator
+from desktop.backend import NodeController
+from .cold_recovery import accounted_bytes
+from .research_artifact import RESEARCH_NAMES
+from .prepare_public_math import fingerprints,outside_checkout
 
 
 def main():
@@ -34,21 +38,31 @@ def main():
     parser.add_argument('--provider')
     parser.add_argument('--legacy-provider', help='Optional existing physical provider for new-to-old compatibility')
     parser.add_argument('--mbps', type=float, default=2.5)
+    parser.add_argument('--compare-windows',action='store_true',help='Compare serial and two-chunk reception with identical lossless encoding')
+    parser.add_argument('--active-node-directory',type=Path,help='Active cold-trial participant; existing operator controls stay at node-directory')
     args = parser.parse_args()
     repo = Path(__file__).resolve().parents[1]
     physical, root = args.node_directory.resolve(), args.directory.resolve()
-    if (root.is_relative_to(repo) or root.is_relative_to(physical) or physical.is_relative_to(root)
+    active=(args.active_node_directory or physical).resolve()
+    if (not outside_checkout(root) or root.is_relative_to(repo) or root.is_relative_to(physical) or physical.is_relative_to(root)
+            or root.is_relative_to(active) or active.is_relative_to(root)
             or root.exists() or not re.fullmatch('[0-9a-f]{64}', args.artifact_id)
             or not 0 < args.mbps <= 5):
         parser.error('Use fresh bounded experiment state outside the checkout and physical node state')
     if args.action == 'receive' and (not args.provider or any(
             not re.fullmatch('[0-9a-f]{64}', value) for value in [args.provider]+([args.legacy_provider] if args.legacy_provider else []))):
         parser.error('Receiving requires explicit public provider identities')
+    original=NodeController(active).snapshot();pid=original['diagnostics'].get('pid');before=fingerprints(physical)
+    if not original['fresh']:raise ValueError('The physical participant must be active')
+    extra=[Path.home()/'.local/state'/name for name in RESEARCH_NAMES]
     def allowed():
         settings = ClientSettings.load(physical)
+        live=NodeController(active).snapshot()
         return (settings.connected and not settings.paused and KnowledgeSettings.load(physical).enabled
                 and settings.policy.mode != 'disabled' and settings.policy.max_bandwidth_mbps >= 2*args.mbps
-                and managed_public_bytes(physical)+managed_public_bytes(root) <= settings.policy.max_disk_gb*1024**3)
+                and live['fresh'] and live['diagnostics'].get('pid')==pid and fingerprints(physical)==before
+                and (active==physical or live['diagnostics'].get('language_preparation',{}).get('state','').startswith('engine-'))
+                and accounted_bytes([physical,active,root],extra) <= settings.policy.max_disk_gb*1024**3)
     if not allowed():
         raise ValueError('Physical operator sharing, storage and bandwidth consent are required')
     controls_before = (physical/'controls.json').read_bytes()
@@ -70,10 +84,11 @@ def main():
     policy = ContributionPolicy.for_mode('relay'); policy.max_bandwidth_mbps = args.mbps
     governor = ResourceGovernor(policy, hardware=SimpleNamespace(cpu_cores=1, ram_gb=1, disk_gb=1,
         has_gpu=False, gpu_vram_gb=0), storage_path=root)
-    work = WorkCoordinator(node, governor, max_workers=2, max_offers_per_minute=600)
+    work = WorkCoordinator(node, governor, max_workers=2,max_offers_per_peer=4, max_offers_per_minute=600)
     budget = BandwidthBudget(lambda: args.mbps if allowed() else 0)
     report = {'success': False, 'started_at': time.time(), 'helper_id': identity.node_id_hex,
         'helper_is_additional_physical_pc': False, 'gpu_work_requested': False, 'mbps': args.mbps,
+        'comparison':'receive-window' if args.compare_windows else 'encoding','physical_node_id':original['diagnostics']['node_id'],
         'artifact_id': args.artifact_id, 'trials': [],
         'scope': 'Artifact transfer only; unchanged bytes and model semantics, not a training speedup or accepted learning claim'}
     atomic_json(root/'report.json', report)
@@ -123,14 +138,16 @@ def main():
                 if not route['encrypted'] or not ipaddress.ip_address(route.get('relay_host') or route['host']).is_global:
                     raise ValueError('Artifact experiment requires encrypted public Internet transport')
                 routes[provider] = {key: route[key] for key in ['transport', 'encrypted', 'relay_host'] if key in route}
-            order = [('raw', args.provider, False), ('encoded', args.provider, True),
-                     ('encoded', args.provider, True), ('raw', args.provider, False)]
+            order = ([('serial',args.provider,True,1),('pipelined',args.provider,True,2),
+                ('pipelined',args.provider,True,2),('serial',args.provider,True,1)] if args.compare_windows else
+                [('raw', args.provider, False,1), ('encoded', args.provider, True,1),
+                     ('encoded', args.provider, True,1), ('raw', args.provider, False,1)])
             if args.legacy_provider:
-                order.append(('legacy-provider', args.legacy_provider, True))
-            for index, (label, provider, encoded) in enumerate(order):
+                order.append(('legacy-provider', args.legacy_provider, True,2))
+            for index, (label, provider, encoded,window) in enumerate(order):
                 store = ArtifactStore(root/'public'/f'trial-{index}', max_artifact_bytes=32*1024**2, max_total_bytes=40*1024**2)
                 client = ArtifactService(work, store, namespace='language.artifact', register_handlers=False,
-                    prefer_compressed=encoded, receive_budget=budget)
+                    prefer_compressed=encoded, receive_budget=budget,fetch_window=window)
                 stats = []; began = time.monotonic()
                 downloaded = client.fetch(args.artifact_id, peer_id=provider, timeout_s=120,
                     cancel_event=cancel, observer=stats.append)
@@ -141,9 +158,12 @@ def main():
                 report['trials'].append({'mode': label, 'provider_id': provider, 'seconds': elapsed,
                     'artifact_bytes': size, 'sha256_verified': True, 'chunks': len(stats),
                     'encoded_data_bytes': sum(row['encoded_data_bytes'] for row in stats),
-                    'encodings': sorted({row['encoding'] for row in stats}), 'route': routes[provider]})
+                    'encodings': sorted({row['encoding'] for row in stats}),'requested_window':window,
+                    'negotiated_windows':sorted({row['fetch_window'] for row in stats}),
+                    'summed_rpc_seconds':sum(row['rpc_seconds'] for row in stats),'route': routes[provider]})
                 atomic_json(root/'report.json', report)
-            groups = {label: [row for row in report['trials'] if row['mode'] == label] for label in ['raw', 'encoded']}
+            groups = {label: [row for row in report['trials'] if row['mode'] == label]
+                for label in (['serial','pipelined'] if args.compare_windows else ['raw','encoded'])}
             report['comparison'] = {label: {'median_seconds': statistics.median(row['seconds'] for row in rows),
                 'encoded_data_bytes': rows[0]['encoded_data_bytes']} for label, rows in groups.items()}
         if (physical/'controls.json').read_bytes() != controls_before:

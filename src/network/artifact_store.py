@@ -9,9 +9,13 @@ import os
 import re
 import threading
 import time
+from collections import deque
+from concurrent.futures import ThreadPoolExecutor,TimeoutError as FutureTimeout
+from contextlib import nullcontext
 from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Optional
+from weakref import WeakValueDictionary
 
 from src.contribution import ResourceRequirements
 from .artifact_codec import CHUNK_BYTES as ARTIFACT_CHUNK_BYTES, ENCODING, encode_chunk, decode_chunk
@@ -26,6 +30,25 @@ _MEDIA_TYPE_RE = re.compile(r"^[a-z0-9][a-z0-9.+-]{0,63}/[a-z0-9][a-z0-9.+-]{0,6
 
 class ArtifactError(ValueError):
     pass
+
+
+class _TransferLock:
+    def __init__(self):self.lock=threading.Lock()
+
+
+class _StoreTransfers:
+    def __init__(self):
+        self.guard=threading.Lock();self.entries=WeakValueDictionary()
+
+    def entry(self,identifier):
+        with self.guard:
+            value=self.entries.get(identifier)
+            if value is None:value=_TransferLock();self.entries[identifier]=value
+            return value
+
+
+_TRANSFER_STORES=WeakValueDictionary()
+_TRANSFER_STORES_GUARD=threading.Lock()
 
 
 def digest_file(path: str | Path) -> tuple[str, int]:
@@ -99,6 +122,12 @@ class ArtifactStore:
         self._lock = threading.RLock()
         for directory in (self.objects, self.manifests, self.incoming):
             directory.mkdir(parents=True, exist_ok=True)
+        # Different services/store objects must not append to the same partial
+        # concurrently. Keep only active stores and transfers in this registry.
+        with _TRANSFER_STORES_GUARD:
+            key=str(self.root.resolve());manager=_TRANSFER_STORES.get(key)
+            if manager is None:manager=_StoreTransfers();_TRANSFER_STORES[key]=manager
+            self._transfers=manager
 
     def _object_path(self, artifact_id: str) -> Path:
         if not _HEX_64_RE.fullmatch(str(artifact_id)):
@@ -281,7 +310,7 @@ class ArtifactStore:
 class ArtifactService:
     """Register artifact read operations and fetch verified objects from peers."""
 
-    def __init__(self, coordinator, store: ArtifactStore, *, receive_budget=None, namespace="artifact",register_handlers=True,prefer_compressed=True):
+    def __init__(self, coordinator, store: ArtifactStore, *, receive_budget=None, namespace="artifact",register_handlers=True,prefer_compressed=True,fetch_window=2):
         if namespace not in {"artifact", "language.artifact", "public-memory.artifact"}:
             raise ArtifactError("unsupported artifact operation namespace")
         self.coordinator = coordinator
@@ -291,8 +320,13 @@ class ArtifactService:
         if type(prefer_compressed) is not bool:
             raise ArtifactError('Invalid local artifact encoding preference')
         self.prefer_compressed = prefer_compressed
-        self._fetch_locks: dict[str, threading.Lock] = {}
-        self._fetch_locks_guard = threading.Lock()
+        if type(fetch_window) is not int or fetch_window not in {1,2}:
+            raise ArtifactError('Artifact receive window must be one or two chunks')
+        self.fetch_window=fetch_window
+        node=getattr(coordinator,'node',None)
+        if (isinstance(getattr(node,'capabilities',None),dict) and getattr(coordinator,'max_offers_per_peer',2)>=4
+                and getattr(coordinator,'_max_workers',1)>=2):
+            node.capabilities['artifact_read_window_v1']=2
         if register_handlers:
             coordinator.register_handler(f"{namespace}.describe.v1", "artifact", self._describe)
             coordinator.register_handler(f"{namespace}.read-chunk.v1", "artifact", self._read_chunk)
@@ -339,24 +373,24 @@ class ArtifactService:
         deadline = time.monotonic() + max(
             1.0, min(float(timeout_s), 60.0 * 60.0)
         )
-        with self._fetch_locks_guard:
-            fetch_lock = self._fetch_locks.setdefault(
-                artifact_id, threading.Lock()
-            )
+        entry=self.store._transfers.entry(artifact_id);fetch_lock=entry.lock
         while not fetch_lock.acquire(
             timeout=min(0.1, self._remaining_timeout(deadline, cancel_event))
         ):
             pass
         try:
-            return self._fetch_locked(
-                artifact_id,
-                peer_id=peer_id,
-                deadline=deadline,
-                cancel_event=cancel_event,
-                expected_size=expected_size,
-                progress=progress,
-                observer=observer,
-            )
+            try:
+                return self._fetch_locked(
+                    artifact_id,
+                    peer_id=peer_id,
+                    deadline=deadline,
+                    cancel_event=cancel_event,
+                    expected_size=expected_size,
+                    progress=progress,
+                    observer=observer,
+                )
+            except ArtifactError:raise
+            except ValueError as error:raise ArtifactError(str(error)) from error
         finally:
             fetch_lock.release()
 
@@ -395,50 +429,82 @@ class ArtifactService:
             raise ArtifactError("peer artifact size differs from the signed dependency")
         encodings = describe.output.get('chunk_encodings')
         encoded = self.prefer_compressed and isinstance(encodings, list) and 'raw' in encodings and ENCODING in encodings
+        # Negotiate through peer capabilities, preserving the exact signed
+        # describe.v1 response used by historical dataset transfer proofs.
+        peers=getattr(getattr(self.coordinator,'node',None),'peers',None)
+        peer=next((p for p in peers() if p['node_id']==peer_id),{}) if callable(peers) else {}
+        limit=peer.get('capabilities',{}).get('artifact_read_window_v1',1)
+        if type(limit) is not int or not 1<=limit<=64:
+            raise ArtifactError('Invalid provider artifact receive window')
+        window=min(self.fetch_window,limit)
         partial, offset = self.store.begin_receive(manifest)
         if offset == manifest.size:
             return self.store.finalize_receive(manifest, partial)
         mode = "ab" if offset else "wb"
-        with partial.open(mode) as destination:
-            progress(offset,manifest.size)
-            while offset < manifest.size:
-                length = min(ARTIFACT_CHUNK_BYTES, manifest.size - offset)
+        # Workers receive and verify bounded chunks; only this thread appends
+        # an ordered contiguous prefix. A failure never leaves an unwritten gap.
+        internal_cancel=threading.Event()
+        pool=ThreadPoolExecutor(max_workers=window,thread_name_prefix='lixy-artifact') if window>1 else None
+        pending=deque();requested=offset
+        def request_chunk(position,length):
+            request_cancel=internal_cancel if pool is not None else cancel_event or internal_cancel
+            slot=getattr(self.coordinator,'artifact_request_slot',None)
+            guard=slot(peer_id,deadline=deadline,cancel_event=request_cancel) if callable(slot) else nullcontext()
+            with guard:
                 began=time.monotonic()
-                result = self.coordinator.submit(
+                result=self.coordinator.submit(
                     f"{self.namespace}.read-chunk.v2" if encoded else f"{self.namespace}.read-chunk.v1",
-                    {"artifact_id": artifact_id, "offset": offset, "length": length},
-                    ResourceRequirements(kind="artifact"),
-                    peer_id=peer_id,
-                    timeout_s=self._remaining_timeout(deadline, cancel_event),
-                    cancel_event=cancel_event,
-                )
-                if result.status != "ok":
-                    raise ArtifactError(result.error or "artifact chunk request failed")
-                if result.output.get("offset") != offset:
-                    raise ArtifactError("peer returned a chunk at the wrong offset")
+                    {'artifact_id':artifact_id,'offset':position,'length':length},ResourceRequirements(kind='artifact'),
+                    peer_id=peer_id,timeout_s=self._remaining_timeout(deadline,request_cancel),
+                    cancel_event=request_cancel)
+                if result.status!='ok':raise ArtifactError(result.error or 'artifact chunk request failed')
+                if result.output.get('offset')!=position:raise ArtifactError('peer returned a chunk at the wrong offset')
                 try:
-                    chunk = decode_chunk(result.output, length) if encoded else base64.b64decode(
-                        result.output.get("data", ""), validate=True
-                    )
-                except (ValueError, TypeError) as exc:
-                    raise ArtifactError("peer returned invalid chunk encoding") from exc
-                if len(chunk) != length:
-                    raise ArtifactError("peer returned an invalid chunk length")
-                if hashlib.sha256(chunk).hexdigest() != result.output.get("chunk_sha256"):
-                    raise ArtifactError("artifact chunk hash does not match")
+                    chunk=decode_chunk(result.output,length) if encoded else base64.b64decode(result.output.get('data',''),validate=True)
+                except (ValueError,TypeError) as error:raise ArtifactError('peer returned invalid chunk encoding') from error
+                if len(chunk)!=length:raise ArtifactError('peer returned an invalid chunk length')
+                if hashlib.sha256(chunk).hexdigest()!=result.output.get('chunk_sha256'):raise ArtifactError('artifact chunk hash does not match')
                 received=time.monotonic()
                 if self.receive_budget is not None:
-                    self.receive_budget.wait(len(result.output["data"])+2048,
-                        cancel_event=cancel_event, deadline=time.time()+max(0, deadline-time.monotonic()))
-                destination.write(chunk)
-                offset += len(chunk)
-                progress(offset,manifest.size)
-                if observer is not None:
-                    observer({'offset':offset,'bytes':len(chunk),'rpc_seconds':received-began,
-                        'encoded_data_bytes':len(result.output['data']), 'encoding':result.output.get('encoding','raw'),
-                        'receive_and_write_seconds':time.monotonic()-received})
-            destination.flush()
-            os.fsync(destination.fileno())
+                    # Charge every received valid block, including prefetched
+                    # data that will not be committed after another block fails.
+                    self.receive_budget.wait(len(result.output['data'])+2048,
+                        cancel_event=internal_cancel if pool is not None else cancel_event,
+                        deadline=time.time()+max(0,deadline-time.monotonic()))
+                return chunk,{'rpc_seconds':received-began,'received_at':received,
+                    'encoded_data_bytes':len(result.output['data']),'encoding':result.output.get('encoding','raw')}
+        def fill_window():
+            nonlocal requested
+            while pool is not None and len(pending)<window and requested<manifest.size:
+                length=min(ARTIFACT_CHUNK_BYTES,manifest.size-requested)
+                pending.append(pool.submit(request_chunk,requested,length));requested+=length
+        def next_chunk(position,length):
+            if pool is None:return request_chunk(position,length)
+            future=pending.popleft()
+            while True:
+                self._remaining_timeout(deadline,cancel_event)
+                try:return future.result(timeout=min(.05,self._remaining_timeout(deadline,cancel_event)))
+                except FutureTimeout:
+                    if future.done():return future.result()
+        with partial.open(mode) as destination:
+            try:
+                progress(offset,manifest.size);fill_window()
+                while offset<manifest.size:
+                    length=min(ARTIFACT_CHUNK_BYTES,manifest.size-offset)
+                    chunk,stats=next_chunk(offset,length)
+                    self._remaining_timeout(deadline,cancel_event)
+                    destination.write(chunk);offset+=len(chunk);progress(offset,manifest.size)
+                    if observer is not None:
+                        received=stats.pop('received_at')
+                        observer({'offset':offset,'bytes':len(chunk),**stats,
+                            'receive_and_write_seconds':time.monotonic()-received,'fetch_window':window})
+                    fill_window()
+                destination.flush();os.fsync(destination.fileno())
+            finally:
+                internal_cancel.set()
+                if pool is not None:
+                    for future in pending:future.cancel()
+                    pool.shutdown(wait=True,cancel_futures=True)
         return self.store.finalize_receive(manifest, partial)
 
     @staticmethod
