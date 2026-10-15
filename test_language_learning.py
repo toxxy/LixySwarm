@@ -123,6 +123,18 @@ def test_tampered_saved_receipt_stops_before_new_work(monkeypatch,tmp_path):
     assert coordinator.ledger['error'] and coordinator._registry().head()==head
 
 
+def test_replica_wait_preserves_attempt_budget_and_cursor(monkeypatch,tmp_path):
+    coordinator,controls,head,calls=setup(monkeypatch,tmp_path)
+    def unavailable(*_a,**_kw):raise TimeoutError('fixture replica reconnecting')
+    monkeypatch.setattr(learning,'fetch_history',unavailable)
+    for _ in range(4):coordinator._run(threading.Event())
+    assert coordinator.ledger['status']=='waiting_replicas'
+    assert coordinator.ledger['pending']['attempts']==0 and coordinator.ledger['cursor']==0 and calls==[]
+    monkeypatch.setattr(learning,'fetch_history',lambda *_a,**_kw:[head])
+    coordinator._run(threading.Event())
+    assert coordinator.ledger['round']==1 and coordinator.ledger['cursor']==8
+
+
 def test_quality_rejection_is_recorded_without_publishing(monkeypatch,tmp_path):
     coordinator,controls,head,calls=setup(monkeypatch,tmp_path)
     execute=coordinator.knowledge.work.execute_local

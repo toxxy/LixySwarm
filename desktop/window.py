@@ -184,6 +184,7 @@ class SwarmWindow(QMainWindow):
         activity = self._page("Actividad")
         self.learning_label=QLabel("Aprendizaje distribuido: preparando coordinación")
         self.learning_label.setWordWrap(True); activity.addWidget(self.learning_label)
+        self.follow_label=QLabel('');self.follow_label.setWordWrap(True);self.follow_label.hide();activity.addWidget(self.follow_label)
         learning_actions=QHBoxLayout()
         self.learning_button=QPushButton("Aprender una ronda")
         self.learning_button.clicked.connect(lambda:self._action(self.controller.start_learning))
@@ -421,7 +422,7 @@ class SwarmWindow(QMainWindow):
         computation=diagnostic.get("compute",{}) if snapshot["fresh"] else {}
         channel=self.controller.learning_channel()
         learning=diagnostic.get(channel,{}) if snapshot["fresh"] else {}
-        learning_states={"idle":"Listo para una ronda", "collecting":"Repartiendo y recuperando fragmentos", "evaluating":"Evaluando la versión candidata", "promoting":"Conservando y publicando la mejora", "complete":"Ronda finalizada", "interrupted":"Trabajo conservado; esperando recuperación", "no_improvement":"En pausa: las últimas rondas no mejoraron el modelo", "needs_attention":"En pausa: revisa el error antes de reintentar"}
+        learning_states={"idle":"Listo para una ronda", "collecting":"Repartiendo y recuperando fragmentos", "evaluating":"Evaluando la versión candidata", "promoting":"Conservando y publicando la mejora", "complete":"Ronda finalizada", "interrupted":"Trabajo conservado; esperando recuperación", "no_improvement":"En pausa: las últimas rondas no mejoraron el modelo", "needs_attention":"En pausa: revisa el error antes de reintentar", "waiting_replicas":"Esperando que los equipos compartan la misma versión"}
         self.learning_label.setText(learning_states.get(learning.get("status"),"Preparando coordinación")
             + f" · {learning.get('round') or 0} rondas terminadas"
             + (f" · versión {learning['accepted_sequence']}" if learning.get("accepted_sequence") is not None else ""))
@@ -432,6 +433,12 @@ class SwarmWindow(QMainWindow):
         self.learning_button.setEnabled(bool(learning_ready) and len(prepared.workers)==2 and bool(prepared.signing_key_file)
             and not (prepared.enabled and learning.get("status") in {"collecting","evaluating","promoting"}))
         self.learning_stop.setEnabled(prepared.enabled)
+        following=diagnostic.get('language_follow',{}) if snapshot['fresh'] else {}
+        follow_states={'checking':'Comprobando el conocimiento compartido','acquiring':'Adquiriendo conocimiento de la red',
+            'current':'Conocimiento compartido actualizado','waiting':'Esperando un proveedor de conocimiento','paused':'Seguimiento de conocimiento en pausa'}
+        self.follow_label.setVisible(bool(following.get('enabled')))
+        self.follow_label.setText(follow_states.get(following.get('state'),'Preparando conocimiento compartido')
+            +(f" · versión {following['sequence']}" if following.get('sequence') is not None else ''))
         if chat.get("available"):
             self.stage.setText("Puedes preguntar al experto disponible. Tus permisos controlan el aporte de este equipo.")
         elif computation.get("installed"):

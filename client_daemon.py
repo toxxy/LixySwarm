@@ -31,6 +31,7 @@ from src.network.language_families import LanguageFamilies
 from src.network.language_training import LanguageTraining
 from src.network.language_preparation import LanguagePreparation
 from src.network.language_learning import LanguageLearningCoordinator
+from src.network.language_follow import LanguageVersionFollower
 
 log = logging.getLogger("lixy.client")
 
@@ -129,6 +130,7 @@ def run(directory: Path, *, host="0.0.0.0", port=7338, interval=15, allow_privat
         chat=ChatBroker(node,knowledge.work,language);chat_api=LocalChatAPI(chat,directory,preparation);chat_api.start()
         learning = LearningCoordinator(knowledge,compute,directory)
         language_learning=LanguageLearningCoordinator(knowledge,language_training,directory)
+        language_follow=LanguageVersionFollower(knowledge,families,directory)
         stop = threading.Event()
         for signum in (signal.SIGINT, signal.SIGTERM):
             signal.signal(signum, lambda *_: stop.set())
@@ -158,7 +160,7 @@ def run(directory: Path, *, host="0.0.0.0", port=7338, interval=15, allow_privat
             atomic_json(directory / "diagnostics.json", {
                 "node_id": identity.node_id_hex, "timestamp_ms": status["timestamp_ms"],
                 "port": node.port, "peers": peers,
-                "pid": os.getpid(), "runtime_version": "0.4.0a11", "controls_version": 1,
+                "pid": os.getpid(), "runtime_version": "0.4.0a12", "controls_version": 1,
                 "settings": asdict(settings), "worker_ready": computation["ready"] or conversation["ready"] or training["ready"], "control_error": error,
                 "knowledge": public_knowledge,
                 "compute":computation,
@@ -169,6 +171,7 @@ def run(directory: Path, *, host="0.0.0.0", port=7338, interval=15, allow_privat
                 "chat":chat.snapshot(),
                 "learning":learning.snapshot(),
                 "language_learning":language_learning.snapshot(),
+                "language_follow":language_follow.snapshot(),
             })
             eligible = time.monotonic() - last_sent >= 2
             if eligible:
@@ -221,6 +224,7 @@ def run(directory: Path, *, host="0.0.0.0", port=7338, interval=15, allow_privat
                 chat.update(settings)
                 learning.update()
                 language_learning.update()
+                language_follow.update()
                 current_state = "disconnected" if not running else "paused" if settings.paused else "connected" if node.peer_count else "connecting"
                 public_state = knowledge.snapshot()
                 available={"artifact"} if public_state["sharing"] else set()
@@ -252,6 +256,8 @@ def run(directory: Path, *, host="0.0.0.0", port=7338, interval=15, allow_privat
                 preparing=preparation.snapshot()['state']
                 if running and not settings.paused and preparing not in {'idle','waiting','stopped','complete'}:
                     current_state='working' if preparing=='testing' else 'preparing'
+                if running and not settings.paused and language_follow.settings.enabled and language_follow.snapshot()['state']=='acquiring':
+                    current_state='preparing'
                 if running and not settings.paused and (compute.snapshot()["active"] or language.snapshot()["active"] or language_training.snapshot()['active']):
                     current_state="working"
                 if knowledge_change != last_knowledge:
@@ -266,6 +272,8 @@ def run(directory: Path, *, host="0.0.0.0", port=7338, interval=15, allow_privat
                     learning.changed.clear(); refresh.set()
                 if language_learning.changed.is_set():
                     language_learning.changed.clear();refresh.set()
+                if language_follow.changed.is_set():
+                    language_follow.changed.clear();refresh.set()
                 if changed or refresh.is_set() or time.monotonic() >= next_publish:
                     refresh.clear()
                     eligible = publish(current_state, settings, error)
@@ -278,6 +286,7 @@ def run(directory: Path, *, host="0.0.0.0", port=7338, interval=15, allow_privat
             chat_api.close()
             learning.close()
             language_learning.close()
+            language_follow.close()
             compute.ready=False
             language.ready=False
             language_training.ready=False

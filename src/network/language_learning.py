@@ -232,20 +232,28 @@ class LanguageLearningCoordinator:
             if self.ledger['round']>=self.settings.cycles:
                 self._save(status='complete');return
             self._prepare_round()
-            pending=deepcopy(self.ledger['pending']);pending['attempts']+=1;self._save(pending=pending,error=None)
+            pending=deepcopy(self.ledger['pending'])
             signer=LSPIdentity.load(self.settings.signing_key_file)
             if signer is None or signer.node_id_hex!=SIGNER:raise ValueError('Language publisher is not locally authorized')
             if pending['bundle'] is not None:self._recover_publication();return
             head=self._registry().head()
-            if head!=pending['head']:raise ValueError('Pending public shards belong to a different accepted head')
+            if head!=pending['head']:
+                atomic_json(self.root/'cycles'/pending['id']/'superseded.json',{'pending':pending,
+                    'reason':'Accepted parent changed; replan the same corpus position without reusing old gradients','observed_head':head})
+                self._save(pending=None,status='waiting_replicas',error=None);return
             for index,assignment in enumerate(pending['plan']):
                 if str(index) in pending['contributions']:self._verify_saved(pending['contributions'][str(index)],assignment)
             for assignment in pending['plan']:
                 worker=assignment['worker_id']
                 if worker!=self.knowledge.node.identity.node_id_hex:
-                    if worker not in self.knowledge.node.connected_node_ids:self.knowledge.node.connect_node(worker,timeout=12)
-                    if fetch_history(self.knowledge.work,self.settings.base_name,worker,cancel_event=cancel)[-1]!=head:
-                        raise ValueError('Physical workers must acquire the same accepted language version')
+                    try:
+                        if worker not in self.knowledge.node.connected_node_ids:self.knowledge.node.connect_node(worker,timeout=12)
+                        remote=fetch_history(self.knowledge.work,self.settings.base_name,worker,cancel_event=cancel)
+                    except (OSError,ValueError,RuntimeError):
+                        self._save(status='waiting_replicas',error='Waiting for the physical worker language history');return
+                    if remote[-1]!=head:
+                        self._save(status='waiting_replicas',error='Waiting for both workers to acquire the same accepted version');return
+            pending['attempts']+=1;self._save(pending=pending,error=None)
             # One local and one remote shard; both remain within each node's leases.
             self._save(status='collecting')
             with ThreadPoolExecutor(max_workers=2) as pool:
