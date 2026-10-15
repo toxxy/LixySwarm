@@ -1,0 +1,26 @@
+{
+  "acquired_objects": {
+    "44506c00ff89502498c07120986aa4463b518f1b06ca335c97dc82f14419bdb0": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+    "8e526788ef461c8ac20f2c1e9c510258b1862d8520b83d84e8ca2cce73a38e8d": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+    "991990ff43220a922a7db416234338b02d9316ddc4ed0767fa6911dda46ed3e0": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255"
+  },
+  "active_expert_changed": false,
+  "base_name": "qwen3-1.7b",
+  "finished_at": 1792022293.4000967,
+  "history_failures": [],
+  "metadata_providers": [
+    "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255"
+  ],
+  "model_id": "8e526788ef461c8ac20f2c1e9c510258b1862d8520b83d84e8ca2cce73a38e8d",
+  "providers": [
+    "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255"
+  ],
+  "release_id": "4e478620e27f3e28041a23d8e942d5fa45ca8c04ab04c8f7d5aae83db6fba594",
+  "resource_permissions_changed": false,
+  "sequence": 1,
+  "started_at": 1792021863.3694773,
+  "success": true,
+  "visitor_is_extra_physical_worker": false,
+  "physical_receiver": "ea914d97caafef310e50385034abae9a50ba86496b0e9cbf4679e6070e4c25b0",
+  "scope": "Physical laptop acquired and fully verified accepted sequence-one update over public LSP with unchanged resource/expert permissions; local inference and producer-offline use not yet proved"
+}

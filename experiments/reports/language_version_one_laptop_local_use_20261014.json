@@ -1,0 +1,72 @@
+{
+  "authorized_resources": {
+    "expert_id": "8e526788ef461c8ac20f2c1e9c510258b1862d8520b83d84e8ca2cce73a38e8d",
+    "physical_ram_gib": 30.978195190429688,
+    "policy": {
+      "cpu_percent": 100,
+      "gpu_percent": 100,
+      "max_bandwidth_mbps": 10.0,
+      "max_cpu_jobs": 19,
+      "max_disk_gb": 10.0,
+      "max_gpu_jobs": 1,
+      "max_ram_gb": 30,
+      "mode": "maximum",
+      "only_when_idle": false,
+      "pause_above_cpu_percent": 80,
+      "pause_above_gpu_temp_c": 82,
+      "pause_on_battery": true,
+      "version": 1
+    },
+    "temporary": false
+  },
+  "encrypted": true,
+  "finished_at": 1792022707.5850167,
+  "model_id": "8e526788ef461c8ac20f2c1e9c510258b1862d8520b83d84e8ca2cce73a38e8d",
+  "physical_power_off": false,
+  "producer_service_recovered": true,
+  "producer_service_stopped_during_query": true,
+  "public_internet": true,
+  "release_id": "4e478620e27f3e28041a23d8e942d5fa45ca8c04ab04c8f7d5aae83db6fba594",
+  "resources_after": {
+    "cpu_percent": 100,
+    "gpu_percent": 100,
+    "max_bandwidth_mbps": 10.0,
+    "max_cpu_jobs": 19,
+    "max_disk_gb": 10.0,
+    "max_gpu_jobs": 1,
+    "max_ram_gb": 30,
+    "mode": "maximum",
+    "only_when_idle": false,
+    "pause_above_cpu_percent": 80,
+    "pause_above_gpu_temp_c": 82,
+    "pause_on_battery": true,
+    "version": 1
+  },
+  "result": {
+    "error": "",
+    "finished_at": 1792022706.7388544,
+    "job_id": "4c7bf32882f96ed7d6d48badea3a87c6aaea642767051f2b2a26f85266b7dd27",
+    "output": {
+      "answer": "parís",
+      "model_id": "8e526788ef461c8ac20f2c1e9c510258b1862d8520b83d84e8ca2cce73a38e8d",
+      "output_tokens": 3
+    },
+    "receipt": {
+      "finished_at": 1792022706.7388544,
+      "job_id": "4c7bf32882f96ed7d6d48badea3a87c6aaea642767051f2b2a26f85266b7dd27",
+      "requester_node_id": "25561b31d02ab455cefd958c0d1b37b611580e86cd0158961e631726de7345ae",
+      "result_digest": "964654a9b9a4b0b88973a27decb288523fc8b1231af69c09010d33b1033a6d2c",
+      "signature": "sRO9mIC2+pfOh+uS5+OOdD3oeU1y172kvvGmOy5RkBrK2wwNiO8XQoWcRxiM4Rtjukw933ghinndZpDjXe8eAQ==",
+      "version": 1,
+      "worker_node_id": "ea914d97caafef310e50385034abae9a50ba86496b0e9cbf4679e6070e4c25b0"
+    },
+    "status": "ok"
+  },
+  "scope": "Existing physical laptop uses its local learned replica with the producer node service stopped; host remains powered on",
+  "seconds": 7.311060396954417,
+  "started_at": 1792022692.251396,
+  "success": true,
+  "transport": "relay",
+  "visitor_is_extra_physical_worker": false,
+  "worker_id": "ea914d97caafef310e50385034abae9a50ba86496b0e9cbf4679e6070e4c25b0"
+}

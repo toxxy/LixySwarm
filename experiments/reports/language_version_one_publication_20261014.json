@@ -13,5 +13,6 @@
   },
   "source_candidate_job": "5e8630941ff679d1a0ca5237dd5f52d9af24dfa0ea1224ad1d5c6e7a626c5e6f",
   "producer_physical_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
-  "physical_replica_verified": false
+  "physical_replica_verified": true,
+  "replica_evidence": "language_version_one_physical_replica_20261014.json"
 }
