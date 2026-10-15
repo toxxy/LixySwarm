@@ -47,7 +47,9 @@ def run(args,cancel):
     if finite:
         from src.learning.language_finite_protocol import definition as finite_definition,protocol_id as finite_id
         group=getattr(args,'group_direction',False)
-        protocol=finite_definition(args.precision,group_direction=group);identifier=finite_id(args.precision,group_direction=group)
+        streamed=getattr(args,'streamed_base',False)
+        protocol=finite_definition(args.precision,group_direction=group,streamed_base=streamed)
+        identifier=finite_id(args.precision,group_direction=group,streamed_base=streamed)
     else:protocol=definition(args.precision);identifier=protocol_id(args.precision)
     ram_gb=protocol['ram_gb']
     trial=selected_trial(repo);before=fingerprints(node);controls=ClientSettings.load(node);policy=asdict(controls.policy)
@@ -82,7 +84,7 @@ def run(args,cancel):
     directory.mkdir(mode=0o700,parents=True)
     atomic_json(directory/'invariants-before.json',before)
     atomic_json(directory/'protocol.json',{'protocol_id':identifier,'definition':protocol})
-    deadline=time.time()+900
+    deadline=time.time()+protocol.get('maximum_seconds',900)
     class Execution:
         def raise_if_cancelled(self):
             if cancel.is_set():raise RuntimeError('Retention research cancelled')
@@ -92,6 +94,7 @@ def run(args,cancel):
         'parent_release_id':PARENT_RELEASE,'training_file':str(training),'contributions':rows,
         'output_directory':str(directory/'engine'),'device':'cuda','cpu_threads':min(4,max(1,int(4*policy['cpu_percent']/100))),
         'gpu_fraction':policy['gpu_percent']/100/max(1,policy['max_gpu_jobs']),'deadline':deadline}
+    if finite and streamed:request['streamed_base']=True
     lease,reason=governor.acquire(ResourceRequirements(kind='training',gpu_required=True,ram_gb=ram_gb,disk_gb=.008))
     if lease is None:raise ValueError('Retention research reservation denied: '+reason)
     try:
@@ -134,8 +137,11 @@ def main():
     parser.add_argument('--precision',choices=['float32','bfloat16'],default='float32')
     parser.add_argument('--finite-step',action='store_true',help='Run the prospective TRAIN-only backtracking protocol')
     parser.add_argument('--group-direction',action='store_true',help='Constrain the saved direction against each protected TRAIN gradient')
+    parser.add_argument('--streamed-base',action='store_true',help='Keep original frozen BF16 matrices while computing in FP32')
     args=parser.parse_args();cancel=threading.Event()
     if args.group_direction and not args.finite_step:parser.error('--group-direction requires --finite-step')
+    if args.streamed_base and (not args.finite_step or not args.group_direction or args.precision!='float32'):
+        parser.error('--streamed-base requires --finite-step --group-direction --precision float32')
     for sig in [signal.SIGINT,signal.SIGTERM]:signal.signal(sig,lambda *_:cancel.set())
     try:run(args,cancel)
     except BaseException as error:

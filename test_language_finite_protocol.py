@@ -28,6 +28,19 @@ def test_group_protocol_is_distinct_and_preserves_original_finite_policy():
     assert projected['version']==2 and projected['maximum_projection_sweeps']==512
     assert projected['rates']==definition()['rates'] and projected['protected']==definition()['protected']
     assert protocol_id(group_direction=True)!=protocol_id()
+    assert protocol_id('bfloat16',group_direction=True)=='1be071b88143aca7aca0997d209523a4498313018adf9402908f8229b57d1531'
+    assert protocol_id('float32',group_direction=True)=='eb13274e8ce616f4d4094c2bda6a832b2932f1ebf0c95fdb3cc532a69a44732f'
+
+
+def test_streamed_protocol_preserves_compute_and_training_gates_with_smaller_reservation():
+    value=definition('float32',group_direction=True,streamed_base=True)
+    assert value['version']==3 and value['ram_gb']==6 and value['model_compute_dtype']=='float32'
+    assert value['base_matrix_storage_dtype']=='bfloat16' and value['maximum_seconds']==1200
+    previous=definition('float32',group_direction=True)
+    for key in ['rates','protected','target','absolute_tolerance','relative_tolerance','minimum_absolute_gain','minimum_relative_gain']:
+        assert value[key]==previous[key]
+    with pytest.raises(ValueError):definition('bfloat16',group_direction=True,streamed_base=True)
+    with pytest.raises(ValueError):definition('float32',streamed_base=True)
 
 
 @pytest.mark.parametrize('change',['heldout','schedule','action','protocol','precision','direction'])
@@ -48,4 +61,17 @@ def test_group_request_requires_its_own_protocol(tmp_path):
     value=request(tmp_path);value.update(action='public-group-finite-step-v2',protocol_id=protocol_id('float32',group_direction=True))
     validate_request(value)
     value['protocol_id']=protocol_id('float32')
+    with pytest.raises(ValueError):validate_request(value)
+
+
+@pytest.mark.parametrize('change',['omitted','false','precision','heldout','action'])
+def test_streamed_request_cannot_substitute_mode_or_scope(tmp_path,change):
+    value=request(tmp_path);value.update(action='public-streamed-group-finite-step-v3',streamed_base=True,
+        protocol_id=protocol_id('float32',group_direction=True,streamed_base=True))
+    validate_request(value)
+    if change=='omitted':value.pop('streamed_base')
+    elif change=='false':value['streamed_base']=False
+    elif change=='precision':value['compute_dtype']='bfloat16'
+    elif change=='heldout':value['evaluation_file']=str(tmp_path/'eval')
+    else:value['action']='public-group-finite-step-v2'
     with pytest.raises(ValueError):validate_request(value)

@@ -1,0 +1,109 @@
+{
+  "status": "fixed-before-physical-compute",
+  "protocol_id": "5c1979bf92f1618af327630ad0d98d5c98716a7fff0cbeb0441b8cd39ef26e56",
+  "definition": {
+    "parent_release_id": "df231f9b93f6300ba7242da793d457880a416448f00d0e9b914e6a3f7b1e533a",
+    "model_id": "506317cc9f40da9dea40e6d14a94910ac6625ae478b5f2d0248cb1bbbb93a6c3",
+    "source_report_id": "b5d9358df1d49b4d14c3991c781aef9319cf10e3c100b8233e00744b3309eea8",
+    "source_trial": "offset0-p4-distributed",
+    "training_policy_id": "de2929818310546b588e93640cd34f6459d2bf157f3d79d64f542889c1234d95",
+    "math_training_artifact_id": "a1a36bc0cea6f5a8dbf81a5828a01da3ca0674c534431ef51583f3f46a915be6",
+    "historical_dataset_id": "24eb8b9e9c268021ededa84a171a4b6804cbe58263edbb2b2944f49dd4de64a5",
+    "math_range": [
+      0,
+      192
+    ],
+    "gradient_metadata": [
+      [
+        "18c219146676d9e8f99fc303c03cd906e910184e7ecffef7e2c2bc619d18a580",
+        3223824,
+        0,
+        64,
+        5759
+      ],
+      [
+        "12ec2a4311f6b253b4518f7d2ccf1809520fb7ea33cf1be7141ad7819721db80",
+        3223824,
+        64,
+        64,
+        5103
+      ],
+      [
+        "b942d0362da0f8f7d21348da792eb93df78bf97f5b45441b226eb1cbc95cfa30",
+        3223832,
+        128,
+        64,
+        5717
+      ]
+    ],
+    "historical_training_prefix": 64,
+    "historical_training_full": 200,
+    "model_compute_dtype": "float32",
+    "float32_matmul_precision": "highest",
+    "cuda_tf32": false,
+    "ram_gb": 6,
+    "version": 3,
+    "action": "public-streamed-group-finite-step-v3",
+    "target": "math_train192",
+    "protected": [
+      "old_prefix64",
+      "old_full200",
+      "old_kind_arithmetic",
+      "old_kind_context",
+      "old_kind_exact",
+      "old_kind_explanation",
+      "old_kind_extraction",
+      "old_kind_sorting"
+    ],
+    "rates": [
+      0.001,
+      0.0005,
+      0.00025,
+      0.000125,
+      6.25e-05,
+      3.125e-05,
+      1.5625e-05,
+      7.8125e-06,
+      3.90625e-06,
+      1.953125e-06,
+      9.765625e-07,
+      4.8828125e-07
+    ],
+    "rate_selection": "first measured safe rate in descending fixed schedule",
+    "absolute_tolerance": 1e-07,
+    "relative_tolerance": 1e-06,
+    "minimum_absolute_gain": 1e-05,
+    "minimum_relative_gain": 0.0001,
+    "execution": "train-with-autograd in every loss pass; identical no-update control before search",
+    "rollback": "restore parent before every trial; exceptions and exhaustion restore; experimental accepted step restored before exit",
+    "held_out_data_used_in_compute": false,
+    "generation_performed": false,
+    "new_model_publication_authorized": false,
+    "scope": "Prospective finite safeguard for one saved two-PC update on public training groups; not new held-out quality or a native learning cycle",
+    "direction_preparation": "Normalize each protected TRAIN gradient; bounded dual coordinate halfspace projection of saved two-PC direction",
+    "maximum_projection_sweeps": 512,
+    "projection_relative_tolerance": 1e-07,
+    "reference": "https://papers.neurips.cc/paper/2017/file/f87522788a2be2d171666752f97ddebb-Paper.pdf",
+    "reference_scope": "Separate first-order task constraints from GEM equations 7-8; bounded local solver and different model/data, not a benchmark reproduction",
+    "projection_failure": "No finite-step search when returned representation violates a group constraint",
+    "maximum_seconds": 1200,
+    "base_matrix_storage_dtype": "bfloat16",
+    "base_execution": "frozen-bf16-storage-fp32-linear-recompute-v1",
+    "precision_conversion": "Original public checkpoint tensors are BF16; exact FP32 conversion per linear, FP32 embedding output and small frozen parameters; no extra quantization",
+    "backward_storage": "Save original frozen BF16 matrices only; recompute temporary FP32 matrices during first-order backward",
+    "memory_acceptance": "Measure actual peak allocation in each physical GPU; no presumed laptop fit",
+    "implementation_reference": "https://docs.pytorch.org/docs/2.12/notes/extending.html#extending-torch-autograd"
+  },
+  "checkpoint_inspection": {
+    "tensor_dtypes": {
+      "BF16": 311
+    },
+    "checkpoint_shards": 2,
+    "additional_model_quantization": false
+  },
+  "physical_trials": [
+    "desktop-streamed-fp32",
+    "laptop-streamed-fp32"
+  ],
+  "comparison_reference": "group_finite_step_training_20261015.json"
+}
