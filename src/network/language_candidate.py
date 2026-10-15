@@ -6,7 +6,7 @@ import shutil
 
 from src.learning.public_quality import preservation_verdict as factual_verdict
 from src.learning.public_language_gate import preservation_verdict as instruction_verdict
-from src.learning.language_policy import BATCH_POLICY_ID
+from src.learning.language_policy import policy_id,descriptor_policy,enabled_policy
 from src.release.language_versions import verify_contributions,gate_id
 from src.release import language_versions
 from src.release.adapter_format import validate_adapter
@@ -22,9 +22,9 @@ OPERATION='language.candidate.v1'
 
 def run_candidate(training,payload,execution,*,policy_version=1):
     expected={'base_name','release_id','adapter_id','dataset_id','contributions','learning_rate'}
-    if policy_version==2:expected.add('training_policy_id')
+    if policy_version>=2:expected.add('training_policy_id')
     if not isinstance(payload,dict) or set(payload)!=expected:raise ValueError('Invalid public language candidate payload')
-    if policy_version==2 and (not training.engine.batching_enabled or payload['training_policy_id']!=BATCH_POLICY_ID):
+    if policy_version>=2 and (not enabled_policy(training.engine,policy_version) or payload['training_policy_id']!=policy_id(policy_version)):
         raise ComputeProcessError('Public batch candidate policy is not locally enabled')
     if (not training.ready or not training.engine.candidates_enabled or not training.knowledge.allowed
             or execution.work.origin_node_id not in training.engine.requesters
@@ -36,7 +36,7 @@ def run_candidate(training,payload,execution,*,policy_version=1):
     if not requirements.gpu_required or requirements.ram_gb<training.required_ram():
         raise ComputeProcessError('Language candidate requires its full GPU/RAM lease')
     head=training._head()
-    if head.get('descriptor',{}).get('version')==3 and policy_version!=2:
+    if head.get('descriptor') and descriptor_policy(head['descriptor'])>policy_version:
         raise ComputeProcessError('This accepted parent requires the batch candidate policy')
     if payload['release_id']!=head['release']['release_id'] or payload['adapter_id']!=head['release']['model_artifact_id']:
         raise ValueError('Language candidate refers to a stale parent')
@@ -66,6 +66,7 @@ def run_candidate(training,payload,execution,*,policy_version=1):
         if digest_file(path)!=(identifier,output['gradient_bytes']):raise ValueError('Candidate gradient hash or size mismatch')
         contributions.append({'path':str(path),**{k:output[k] for k in
             ['gradient_id','gradient_bytes','base_hash','adapter_id','dataset_id','start','count','tokens']}})
+        if policy_version==3:contributions[-1]['quantization_relative_l2_error']=output['quantization_relative_l2_error']
     check();directory=training.directory/'language-candidates'/execution.work.job_id
     directory.mkdir(parents=True,exist_ok=False,mode=0o700);path=directory/'adapter.safetensors'
     request={'action':'candidate','base_name':payload['base_name'],'base_directory':str(base),
@@ -73,7 +74,7 @@ def run_candidate(training,payload,execution,*,policy_version=1):
         'parent_release_id':payload['release_id'],'contributions':contributions,'learning_rate':payload['learning_rate'],
         'output_file':str(path),'cpu_threads':max(1,min(4,int(training.resources['cpu_cores']*permission['cpu_percent']/100))),
         'gpu_fraction':permission['gpu_percent']/100/max(1,permission['max_gpu_jobs']),'device':'cuda','deadline':execution.deadline}
-    if policy_version==2:request['training_policy_id']=BATCH_POLICY_ID
+    if policy_version>=2:request['training_policy_id']=policy_id(policy_version)
     with training.lock:training.active+=1
     training.changed.set()
     complete=False
@@ -108,7 +109,7 @@ def run_candidate(training,payload,execution,*,policy_version=1):
             'baseline_nll':before,'candidate_nll':after,'factual_verdict':facts,'instruction_verdict':instructions,
             **proof,'numerical_gates_passed':numerical,'distributed_worker_gate_passed':distributed,
             'eligible_for_publication':numerical and distributed,'published':False}
-        if policy_version==2:summary['training_policy_id']=BATCH_POLICY_ID
+        if policy_version>=2:summary['training_policy_id']=policy_id(policy_version)
         if not summary['eligible_for_publication']:path.unlink()
         check();atomic_json(directory/'summary.json',summary);complete=True
         with training.lock:

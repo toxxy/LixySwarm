@@ -8,9 +8,11 @@ sys.path.insert(0,str(Path(__file__).resolve().parents[2]))
 
 
 def run(request):
-    from src.learning.language_policy import BATCH_POLICY_ID,limits,retention_plan
-    policy_version=2 if request.get('action')=='gradient-batch' else 1
-    if policy_version==2 and request.get('training_policy_id')!=BATCH_POLICY_ID:
+    from src.learning.language_policy import policy_id,limits,retention_plan
+    actions={'gradient':1,'gradient-batch':2,'gradient-half':3}
+    if request.get('action') not in actions:raise ValueError('Unknown public gradient action')
+    policy_version=actions[request['action']]
+    if policy_version>=2 and request.get('training_policy_id')!=policy_id(policy_version):
         raise ValueError('Unknown public batch training policy')
     from src.learning.public_bases import BASES,base_hash
     from src.learning.public_conversation import public_corpus,corpus_digest
@@ -45,7 +47,7 @@ def run(request):
         if time.time()>=request['deadline']:raise TimeoutError('Language gradient deadline exceeded')
         loss=model(input_ids=inputs,labels=labels,use_cache=False).loss
         (loss*n/tokens).backward();loss_sum+=float(loss.detach())*n/tokens
-    anchors=retention_plan(start,[row[2] for row in encoded]) if policy_version==2 else [(start%len(corpus['retention']),1)]
+    anchors=retention_plan(start,[row[2] for row in encoded]) if policy_version>=2 else [(start%len(corpus['retention']),1)]
     retention_loss=0
     for anchor_index,weight in anchors:
         if time.time()>=request['deadline']:raise TimeoutError('Language retention deadline exceeded')
@@ -57,8 +59,8 @@ def run(request):
     torch.nn.utils.clip_grad_norm_(parameters.values(),1,error_if_nonfinite=True)
     if time.time()>=request['deadline']:raise TimeoutError('Language gradient deadline exceeded')
     path=Path(request['output_file']);path.parent.mkdir(parents=True,exist_ok=True)
-    save_gradient(model,path,base_hash=base_hash(name),adapter_id=request['adapter_id'],dataset_id=request['dataset_id'],start=start,count=count,tokens=tokens)
-    return {**({'training_policy_id':BATCH_POLICY_ID} if policy_version==2 else {}),'base_hash':base_hash(name),'adapter_id':request['adapter_id'],'dataset_id':request['dataset_id'],
+    precision=save_gradient(model,path,base_hash=base_hash(name),adapter_id=request['adapter_id'],dataset_id=request['dataset_id'],start=start,count=count,tokens=tokens,policy_version=policy_version)
+    return {**({'training_policy_id':policy_id(policy_version)} if policy_version>=2 else {}),**precision,'base_hash':base_hash(name),'adapter_id':request['adapter_id'],'dataset_id':request['dataset_id'],
             'start':start,'count':count,'tokens':tokens,'loss':loss_sum,'retention_loss':retention_loss,
             'gradient_id':digest_file(path)[0],'gradient_bytes':path.stat().st_size}
 

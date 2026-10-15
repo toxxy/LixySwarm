@@ -1,5 +1,6 @@
 """Synthetic physical receipts and tensor-format fixtures; no learning claim."""
 from copy import deepcopy
+from dataclasses import replace
 from pathlib import Path
 from types import SimpleNamespace
 import time
@@ -14,16 +15,25 @@ from src.network.language_training import LanguageTraining
 from test_language_versions import fixture as versions_fixture
 
 
-def service(monkeypatch,tmp_path):
+def service(monkeypatch,tmp_path,*,policy_version=1):
     root=tmp_path/'public/language'
     store,first,update,publisher=versions_fixture(monkeypatch,root)
     second,report=update(first)
+    if policy_version==3:
+        from src.learning.language_policy import HALF_POLICY_ID
+        from src.network.work_protocol import WorkResult,ResultReceipt
+        report.update(version=3)
+        for index,row in enumerate(report['contributions']):
+            value=replace(WorkResult.from_dict(row),output={**row['output'],'training_policy_id':HALF_POLICY_ID,
+                'quantization_relative_l2_error':.0002})
+            report['contributions'][index]=replace(value,receipt=ResultReceipt.create(value,update.workers[index],publisher.node_id_hex).to_dict()).to_dict()
     knowledge=SimpleNamespace(allowed=True,work=SimpleNamespace(register_handler=lambda *_a,**_kw:None))
     families=SimpleNamespace(root=root,store=store,artifacts=SimpleNamespace(fetch=lambda *_a,**_kw:pytest.fail('all gradients already local')))
     training=LanguageTraining(knowledge,families,tmp_path,{'has_gpu':True,'gpu_vram_gb':8,'cpu_cores':4})
     training.ready=True;training.engine.enabled=True;training.engine.candidates_enabled=True
     training.engine.requesters=[publisher.node_id_hex]
     training.settings=ClientSettings(policy=ContributionPolicy.for_mode('maximum'))
+    if policy_version==3:training.engine.batching_enabled=True;training.engine.half_precision_enabled=True
     monkeypatch.setattr(training,'_head',lambda:first)
     base=tmp_path/'base';base.mkdir()
     config=store.object_path(first['descriptor']['files'][next(i for i,r in enumerate(first['descriptor']['files']) if r['name']=='config.json')]['artifact_id'])
@@ -33,11 +43,15 @@ def service(monkeypatch,tmp_path):
     payload={'base_name':'qwen3-0.6b','release_id':first['release']['release_id'],
         'adapter_id':first['release']['model_artifact_id'],'dataset_id':report['dataset_id'],
         'contributions':deepcopy(report['contributions']),'learning_rate':.001}
+    if policy_version==3:payload['training_policy_id']=HALF_POLICY_ID
     execution=SimpleNamespace(work=SimpleNamespace(origin_node_id=publisher.node_id_hex,job_id='f'*64,payload=payload),
         resource_requirements=lambda:ResourceRequirements(kind='training',gpu_required=True,ram_gb=4),
         deadline=time.time()+60,raise_if_cancelled=lambda:None)
     def run(_command,request,_execution,**kwargs):
         assert kwargs['allowed']() and request['action']=='candidate'
+        if policy_version==3:
+            assert request['training_policy_id']==HALF_POLICY_ID
+            assert all('quantization_relative_l2_error' in row for row in request['contributions'])
         Path(request['output_file']).write_bytes(store.object_path(second['release']['model_artifact_id']).read_bytes())
         return {**deepcopy(report),'adapter_bytes':second['descriptor']['adapter_bytes']}
     monkeypatch.setattr(training.supervisor,'run',run)
@@ -81,3 +95,26 @@ def test_candidate_requires_explicit_local_operation_permission(monkeypatch,tmp_
     training.engine.candidates_enabled=False
     with pytest.raises(ComputeProcessError,match='not locally approved'):run_candidate(training,payload,execution)
     assert not (tmp_path/'language-candidates').exists()
+
+
+@pytest.mark.parametrize('withdraw_during_compute',[False,True])
+def test_half_candidate_binds_policy_and_stops_when_precision_permission_changes(monkeypatch,tmp_path,withdraw_during_compute):
+    from src.learning.language_policy import HALF_POLICY_ID
+    training,payload,execution,_=service(monkeypatch,tmp_path,policy_version=3)
+    training.engine.half_precision_enabled=False
+    with pytest.raises(ComputeProcessError,match='locally enabled'):run_candidate(training,payload,execution,policy_version=3)
+    training.engine.half_precision_enabled=True
+    if withdraw_during_compute:
+        original=training.supervisor.run
+        def changed(*args,**kw):
+            result=original(*args,**kw);training.engine.half_precision_enabled=False;return result
+        monkeypatch.setattr(training.supervisor,'run',changed)
+        with pytest.raises(ComputeProcessError,match='permission or parent'):run_candidate(training,payload,execution,policy_version=3)
+        assert training.completed==0 and not (tmp_path/'language-candidates'/execution.work.job_id).exists()
+    else:
+        result=run_candidate(training,payload,execution,policy_version=3)
+        assert result['summary']['training_policy_id']==HALF_POLICY_ID and result['evaluation']['version']==3
+        assert result['summary']['eligible_for_publication'] and not result['summary']['published']
+        assert training._permit_candidate_cached(execution,result)
+        training.engine.half_precision_enabled=False
+        assert not training._permit_candidate_cached(execution,result)

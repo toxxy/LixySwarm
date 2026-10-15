@@ -9,7 +9,7 @@ from pathlib import Path
 from .public_bases import BASES,base_hash
 from .public_conversation import public_corpus,corpus_digest
 from .weights_io import digest_file
-from .language_policy import BATCH_POLICY_ID,limits
+from .language_policy import policy_from_id,limits,HALF_POLICY
 
 HEX=re.compile(r'[0-9a-f]{64}')
 FIELDS={'action','base_name','base_directory','adapter_file','adapter_id','dataset_id',
@@ -21,11 +21,10 @@ GRADIENT_FIELDS={'path','gradient_id','gradient_bytes','base_hash','adapter_id',
 
 def validate_request(request):
     """A local supervisor supplies paths; peers cannot choose this request."""
-    policy_version=2 if isinstance(request,dict) and 'training_policy_id' in request else 1
-    expected=FIELDS|({'training_policy_id'} if policy_version==2 else set())
+    policy_version=policy_from_id(request.get('training_policy_id')) if isinstance(request,dict) else 1
+    expected=FIELDS|({'training_policy_id'} if policy_version>=2 else set())
     if not isinstance(request,dict) or set(request)!=expected or request['action']!='candidate':
         raise ValueError('Invalid language candidate request')
-    if policy_version==2 and request['training_policy_id']!=BATCH_POLICY_ID:raise ValueError('Unknown public batch candidate policy')
     if request['base_name'] not in BASES or request['device'] not in {'cpu','cuda'}:
         raise ValueError('Unknown candidate base or device')
     if any(not isinstance(request[k],str) or not HEX.fullmatch(request[k])
@@ -48,7 +47,7 @@ def validate_request(request):
     rows=request['contributions']
     if not isinstance(rows,list) or not 1<=len(rows)<=16:raise ValueError('Invalid number of candidate contributions')
     for row in rows:
-        if (not isinstance(row,dict) or set(row)!=GRADIENT_FIELDS
+        if (not isinstance(row,dict) or set(row)!=(GRADIENT_FIELDS|({'quantization_relative_l2_error'} if policy_version==3 else set()))
                 or row['base_hash']!=base_hash(request['base_name']) or row['adapter_id']!=request['adapter_id']
                 or row['dataset_id']!=request['dataset_id'] or not isinstance(row['gradient_id'],str)
                 or not HEX.fullmatch(row['gradient_id']) or type(row['gradient_bytes']) is not int
@@ -56,23 +55,27 @@ def validate_request(request):
                 or type(row['start']) is not int or type(row['count']) is not int
                 or not 1<=row['count']<=limits(policy_version)[0] or not 0<=row['start']<=len(corpus['train'])-row['count']
                 or type(row['tokens']) is not int or not 1<=row['tokens']<=limits(policy_version)[1]
-                or policy_version==2 and row['tokens']>192*row['count']
+                or policy_version>=2 and row['tokens']>192*row['count']
                 or not isinstance(row['path'],str) or not Path(row['path']).is_absolute()):
             raise ValueError('Candidate contribution has incompatible version, data, shard or bounds')
+        if policy_version==3:
+            error=row['quantization_relative_l2_error']
+            if type(error) not in (int,float) or not math.isfinite(error) or not 0<=error<=HALF_POLICY['maximum_relative_l2_error']:
+                raise ValueError('Candidate half-precision error exceeds its bound')
     ranges=sorted((row['start'],row['start']+row['count']) for row in rows)
     if any(a[1]>b[0] for a,b in zip(ranges,ranges[1:])):raise ValueError('Candidate shards overlap')
     if len({row['gradient_id'] for row in rows})!=len(rows):raise ValueError('Candidate repeats a gradient')
     return corpus
 
 
-def apply_update(model,contributions,learning_rate):
+def apply_update(model,contributions,learning_rate,*,policy_version=1):
     """One token-weighted SGD step on compatible adapter parameters only."""
     import torch
     from .language_adapter import adapter_parameters
     from .language_gradient import combine_gradients
     if type(learning_rate) not in (int,float) or not 1e-6<=learning_rate<=1e-3:
         raise ValueError('Invalid bounded candidate learning rate')
-    combined=combine_gradients(model,contributions)
+    combined=combine_gradients(model,contributions,policy_version=policy_version)
     with torch.no_grad():
         for name,parameter in adapter_parameters(model).items():
             parameter.add_(combined[name].to(parameter.device),alpha=-learning_rate)
@@ -137,7 +140,8 @@ def run(request):
         dtype=torch.bfloat16 if device=='cuda' else torch.float32,device_map={'':device}).eval()
     install_adapter(model);load_adapter(model,request['adapter_file'],base_hash(request['base_name']))
     before=evaluate(model,tokenizer,corpus,device,request['deadline'])
-    apply_update(model,request['contributions'],request['learning_rate'])
+    policy_version=policy_from_id(request.get('training_policy_id'))
+    apply_update(model,request['contributions'],request['learning_rate'],policy_version=policy_version)
     after=evaluate(model,tokenizer,corpus,device,request['deadline'])
     if time.time()>=request['deadline']:raise TimeoutError('Candidate evaluation deadline exceeded')
     path=Path(request['output_file']);save_adapter(model,path,base_hash(request['base_name']))
@@ -147,7 +151,7 @@ def run(request):
     baseline,value=before['nll'],after['nll']
     factual=factual_verdict(before['quality'],after['quality'])
     instruction=instruction_verdict(before['instructions'],after['instructions'])
-    return {'version':2 if 'training_policy_id' in request else 1,'private_inputs':False,'base_name':request['base_name'],'base_hash':base_hash(request['base_name']),
+    return {'version':policy_version,'private_inputs':False,'base_name':request['base_name'],'base_hash':base_hash(request['base_name']),
         'dataset_id':request['dataset_id'],'parent_release_id':request['parent_release_id'],
         'adapter_id':identifier,'adapter_bytes':size,'baseline_nll':baseline,'candidate_nll':value,
         'quality_before':before['quality'],'quality_after':after['quality'],

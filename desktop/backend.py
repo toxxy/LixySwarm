@@ -119,10 +119,13 @@ class NodeController:
         if completed>=10: raise ValueError("La ventana inicial de diez rondas terminó")
         if isinstance(settings,LanguageLearningSettings):
             diagnostic=self.snapshot()['diagnostics']
-            if diagnostic.get('language_learning',{}).get('required_training_policy_version')==2:
+            required=diagnostic.get('language_learning',{}).get('required_training_policy_version',1)
+            if required>=2:
                 if not diagnostic.get('language_training',{}).get('batching_enabled'):
                     raise ValueError('Este equipo necesita habilitar el aprendizaje por lotes antes de continuar')
-                settings.training_policy_version=2
+                if required==3 and not diagnostic.get('language_training',{}).get('half_precision_enabled'):
+                    raise ValueError('Este equipo necesita habilitar la precisión de 16 bits antes de continuar')
+                settings.training_policy_version=required
             settings.generation+=1
         settings.cycles=completed+1; settings.enabled=True; settings.save(self.directory)
 

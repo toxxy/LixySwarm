@@ -17,7 +17,7 @@ def self_test():
     from src.learning.language_gradient import save_gradient,load_gradient
     from src.learning.language_gradient_job import run as gradient_job
     from src.learning.language_candidate_job import apply_update
-    from src.learning.language_policy import BATCH_POLICY_ID,retention_plan
+    from src.learning.language_policy import BATCH_POLICY_ID,HALF_POLICY_ID,retention_plan
     torch.set_num_threads(2);torch.manual_seed(20261014)
     config=Qwen3Config(vocab_size=128,hidden_size=32,intermediate_size=64,num_hidden_layers=2,
                       num_attention_heads=2,num_key_value_heads=1,head_dim=16)
@@ -34,6 +34,11 @@ def self_test():
         fields={'base_hash':'a'*64,'adapter_id':'b'*64,'dataset_id':'c'*64,'start':0,'count':1,'tokens':3}
         save_gradient(model,path,**fields);gradient=load_gradient(model,path,**fields)
         assert any(torch.count_nonzero(tensor) for tensor in gradient.values()) and callable(gradient_job)
+        half_path=Path(directory)/'gradient-half.safetensors'
+        precision=save_gradient(model,half_path,**fields,policy_version=3)
+        reconstructed=load_gradient(model,half_path,**fields,policy_version=3,**precision)
+        assert precision['quantization_relative_l2_error']<=.001
+        assert all(t.dtype==torch.float32 for t in reconstructed.values())
         before={name:parameter.detach().clone() for name,parameter in model.named_parameters()}
         apply_update(model,[{'path':str(path),**fields}],.001)
         assert any(not torch.equal(before[name],parameter) for name,parameter in model.named_parameters() if parameter.requires_grad)
@@ -46,6 +51,7 @@ def self_test():
             'qwen3_logits':128,'adapter_fixture_verified':True,'personal_state_loaded':False,
             'gradient_fixture_verified':True,'signing_identity_loaded':False,
             'candidate_fixture_verified':True,'batch_policy_id':BATCH_POLICY_ID,'batch_retention_fixture_verified':True,
+            'half_policy_id':HALF_POLICY_ID,'half_gradient_fixture_verified':True,
             'scope':'Synthetic architecture/gradient/update fixture; not public-model learning'}
 
 
@@ -63,7 +69,7 @@ def main():
     if action=='inference':
         from src.learning.language_job import run
         run(request)
-    elif action in {'gradient','gradient-batch'}:
+    elif action in {'gradient','gradient-batch','gradient-half'}:
         from src.learning.language_gradient_job import run
         print(json.dumps(run(request),allow_nan=False),flush=True)
     elif action=='candidate':

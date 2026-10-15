@@ -6,13 +6,13 @@ import threading
 import time
 
 from src.contribution import ResourceRequirements
-from src.learning.language_policy import BATCH_POLICY_ID
+from src.learning.language_policy import policy_id,work_policy,enabled_policy
 from src.learning.public_conversation import public_corpus,corpus_digest
 from src.release.language_versions import WORKERS,verify_contributions
 from .artifact_store import ArtifactService,digest_file
 from .work_protocol import ResultReceipt
 
-OPERATIONS={'language.gradient.v2','language.gradient.v3','language.candidate.v1','language.candidate.v2'}
+OPERATIONS={'language.gradient.v2','language.gradient.v3','language.gradient.v4','language.candidate.v1','language.candidate.v2','language.candidate.v3'}
 
 
 class LocalLanguageWork:
@@ -39,13 +39,13 @@ class LocalLanguageWork:
             raise RuntimeError('The autonomous coordinator has pending work')
         if self.coordinator.thread is not None and self.coordinator.thread.is_alive():
             raise RuntimeError('The autonomous coordinator is working')
-        batch=operation in {'language.gradient.v3','language.candidate.v2'}
+        version=work_policy(operation);batch=version>=2
         expected={'base_name','release_id','adapter_id','dataset_id'}
         expected|={'start','count'} if operation.startswith('language.gradient.') else {'contributions','learning_rate'}
         if batch:expected.add('training_policy_id')
         if set(payload)!=expected or payload['dataset_id']!=corpus_digest(public_corpus()):
             raise ValueError('Local work cannot select private data, paths or programs')
-        if batch and (not self.training.engine.batching_enabled or payload.get('training_policy_id')!=BATCH_POLICY_ID):
+        if batch and (not enabled_policy(self.training.engine,version) or payload.get('training_policy_id')!=policy_id(version)):
             raise ValueError('Batch policy has not been locally enabled')
         head=self.training._head()
         if (payload.get('base_name')!=self.training.engine.base_name
@@ -59,7 +59,7 @@ class LocalLanguageWork:
             for old in list(self.jobs):
                 if len(self.jobs)<32:break
                 if self.jobs[old]['state']!='running':self.jobs.pop(old)
-            job={'state':'running','operation':operation,'batch':batch,'cancel':threading.Event(),'lease':time.monotonic()+30,'started_at':time.time()}
+            job={'state':'running','operation':operation,'batch':batch,'half':version==3,'cancel':threading.Event(),'lease':time.monotonic()+30,'started_at':time.time()}
             self.jobs[request]=job
             job['thread']=threading.Thread(target=self._run,args=(job,worker,operation,deepcopy(payload)),daemon=True)
             job['thread'].start()
@@ -82,6 +82,7 @@ class LocalLanguageWork:
                 for job in self.jobs.values():
                     if job['state']=='running' and (time.monotonic()>job['lease'] or not self.knowledge.allowed
                             or job['batch'] and not self.training.engine.batching_enabled
+                            or job['half'] and not enabled_policy(self.training.engine,3)
                             or job['operation'].startswith('language.candidate.') and not self.training.engine.candidates_enabled
                             or not self.training.ready or self.coordinator.thread is not None and self.coordinator.thread.is_alive()):
                         job['cancel'].set()
@@ -107,7 +108,7 @@ class LocalLanguageWork:
             if gradient:
                 output=result.output
                 verify_contributions([result.to_dict()],base_name=payload['base_name'],adapter_id=payload['adapter_id'],
-                    dataset_id=payload['dataset_id'],require_distributed=False,policy_version=2 if 'training_policy_id' in payload else 1)
+                    dataset_id=payload['dataset_id'],require_distributed=False,policy_version=work_policy(operation))
                 if any(output[key]!=payload[key] for key in ['start','count']):raise ValueError('Native result belongs to another shard')
                 store=self.training.families.store;initially_local=store.has(output['gradient_id'])
                 path=self.transfer.fetch(output['gradient_id'],peer_id=worker,expected_size=output['gradient_bytes'],timeout_s=120,

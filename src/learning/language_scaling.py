@@ -4,15 +4,16 @@ import math
 from src.learning.public_conversation import public_corpus,corpus_digest
 from src.network.work_protocol import ResultReceipt
 from src.release.language_versions import verify_chain,verify_contributions
+from .language_policy import work_policy
 
 
 def verify_timed_run(report):
-    if report.get('success') is not True or report.get('operation') not in {'language.gradient.v2','language.gradient.v3'}:
+    if report.get('success') is not True or report.get('operation') not in {'language.gradient.v2','language.gradient.v3','language.gradient.v4'}:
         raise ValueError('Scaling requires completed versioned gradient trials')
     if report.get('eligible_for_uncontended_scaling_comparison') is False or report.get('concurrent_initial_model_copy') is True:
         raise ValueError('A trial with known initial-download contention is only a warm-up')
     head=report['head'];history=report.get('history',[head]);verify_chain(history)
-    policy_version=2 if report['operation']=='language.gradient.v3' else 1
+    policy_version=work_policy(report['operation'])
     if report.get('training_policy_version',1)!=policy_version:raise ValueError('Trial operation and immutable training policy differ')
     if history[-1]!=head:raise ValueError('Trial head differs from its verified history')
     results=report['signed_results']

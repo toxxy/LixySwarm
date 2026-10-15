@@ -14,12 +14,12 @@ from src.network.work_protocol import ResultReceipt,WorkResult
 from src.release.language_versions import verify_contributions,validate_bundle
 from .language_scaling import verify_timed_run
 from .public_conversation import public_corpus,corpus_digest
-from .language_policy import limits
+from .language_policy import limits,policy_from_id
 
 
 def observation(result,*,base_name,release_id,request_seconds,transfer_seconds=0):
     value=WorkResult.from_dict(result);receipt=ResultReceipt.from_dict(value.receipt)
-    policy_version=2 if 'training_policy_id' in value.output else 1
+    policy_version=policy_from_id(value.output.get('training_policy_id'))
     verify_contributions([result],base_name=base_name,adapter_id=value.output['adapter_id'],
         dataset_id=corpus_digest(public_corpus()),require_distributed=False,policy_version=policy_version)
     if (not re.fullmatch('[0-9a-f]{64}',str(release_id))
@@ -40,7 +40,7 @@ def profile(rows,*,base_name,release_id,adapter_id,workers,exact_version=True,po
         if job in jobs:raise ValueError('Capacity evidence repeats a signed calculation')
         jobs.add(job)
         if (row['base_name']==base_name and checked['worker_id'] in workers
-                and (2 if 'training_policy_id' in result['output'] else 1)==policy_version
+                and policy_from_id(result['output'].get('training_policy_id'))==policy_version
                 and (not exact_version or row['release_id']==release_id and result['output']['adapter_id']==adapter_id)):
             grouped[checked['worker_id']].append(checked)
     if any(len(grouped[worker])<2 for worker in workers):

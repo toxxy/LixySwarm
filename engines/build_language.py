@@ -15,7 +15,8 @@ from pathlib import Path
 def main():
     parser=argparse.ArgumentParser();parser.add_argument('--device',choices=['cpu','cuda'],required=True)
     parser.add_argument('--output',type=Path,required=True)
-    parser.add_argument('--batch-policy',action='store_true');args=parser.parse_args()
+    parser.add_argument('--batch-policy',action='store_true');parser.add_argument('--half-policy',action='store_true');args=parser.parse_args()
+    if args.half_policy:args.batch_policy=True
     if args.batch_policy and args.device!='cuda':raise ValueError('The batch training profile requires CUDA')
     import torch
     if (torch.version.cuda is not None)!=(args.device=='cuda'):raise ValueError('Use the matching isolated CPU/CUDA runtime')
@@ -54,6 +55,7 @@ def main():
         'operations':(['language.inference.v1','language.gradient.v2','language.candidate.v1','language.gradient.v3','language.candidate.v2'] if args.batch_policy else ['language.inference.v1','language.gradient.v2','language.candidate.v1'] if args.device=='cuda'
                       else ['language.inference.v1']),
         'entrypoint':name+('.exe' if sys.platform=='win32' else ''),'files':files}
+    if args.half_policy:manifest['operations']+=['language.gradient.v4','language.candidate.v3']
     (package/'engine-package.json').write_text(json.dumps(manifest,indent=2)+'\n')
     print(json.dumps({'files':len(files),'bytes':sum(row['bytes'] for row in files)}))
 

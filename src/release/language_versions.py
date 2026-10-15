@@ -13,7 +13,8 @@ from src.learning.public_bases import BASES
 from src.learning.public_conversation import public_corpus, corpus_digest
 from src.learning.public_quality import preservation_verdict,digest_cases as factual_digest
 from src.learning.public_language_gate import preservation_verdict as instruction_verdict,digest_cases as instruction_digest
-from src.learning.language_policy import BATCH_POLICY_ID, BATCH_CLIENT_VERSION, limits
+from src.learning.language_policy import (BATCH_POLICY_ID, BATCH_CLIENT_VERSION, HALF_CLIENT_VERSION,
+    HALF_POLICY, limits, policy_id, descriptor_policy)
 from src.network.artifact_store import ArtifactManifest
 from src.network.telemetry import atomic_json
 from src.network.work_protocol import ResultReceipt, WorkResult
@@ -38,8 +39,8 @@ def gate_id(policy_version=1):
         'minimum_instruction_passed':37,'mandatory_instructions':['en_instruction','en_public_context','es_instruction','es_public_context'],
         'physical_workers':sorted(WORKERS),'minimum_tokens':16,'maximum_contributions':16,'maximum_shard_examples':8,
         'decoding':'greedy','max_output_tokens':128,'scope':'Known-operator public instruction/context pilot'}
-    if policy_version==2:
-        definition.update(version=2,maximum_shard_examples=maximum,training_policy_id=BATCH_POLICY_ID)
+    if policy_version>=2:
+        definition.update(version=policy_version,maximum_shard_examples=maximum,training_policy_id=policy_id(policy_version))
     return hashlib.sha256(genesis.canonical(definition)).hexdigest()
 
 
@@ -51,10 +52,11 @@ def validate_bundle(bundle):
     if isinstance(descriptor, dict) and descriptor.get('version') == 1:
         return genesis.verify_bundle(bundle)
     fields = {'version', 'base_name', 'base_hash', 'files', 'adapter_id', 'adapter_bytes', 'evaluation_id', 'evaluation_bytes'}
-    if isinstance(descriptor,dict) and descriptor.get('version')==3:fields.add('training_policy_id')
-    if not isinstance(descriptor, dict) or set(descriptor) != fields or type(descriptor['version']) is not int or descriptor['version'] not in {2,3}:
+    if isinstance(descriptor,dict) and descriptor.get('version') in {3,4}:fields.add('training_policy_id')
+    if not isinstance(descriptor, dict) or set(descriptor) != fields or type(descriptor['version']) is not int or descriptor['version'] not in {2,3,4}:
         raise ReleaseError('Invalid language update descriptor')
-    if descriptor['version']==3 and descriptor['training_policy_id']!=BATCH_POLICY_ID:
+    training_policy=descriptor_policy(descriptor)
+    if training_policy>=2 and descriptor['training_policy_id']!=policy_id(training_policy):
         raise ReleaseError('Unknown immutable batch training policy')
     name = descriptor['base_name']
     if name not in BASES or not HEX.fullmatch(str(descriptor['adapter_id'])) or type(descriptor['adapter_bytes']) is not int or not 0 < descriptor['adapter_bytes'] <= 32*1024**2:
@@ -69,6 +71,8 @@ def validate_bundle(bundle):
     release = ReleaseManifest.from_dict(bundle['release'])
     if descriptor['version']==3 and release.minimum_client_version!=BATCH_CLIENT_VERSION:
         raise ReleaseError('Batch language updates require a compatible client')
+    if descriptor['version']==4 and release.minimum_client_version!=HALF_CLIENT_VERSION:
+        raise ReleaseError('Half-precision language updates require a compatible client')
     if (release.sequence < 1 or release.sequence >= MAX_CHAIN or release.model_format != 'safetensors-v1'
             or release.model_artifact_id != descriptor['adapter_id']
             or release.config_artifact_id != hashlib.sha256(genesis.canonical(descriptor)).hexdigest()
@@ -110,14 +114,14 @@ def verify_evaluation(report, parent_bundle, candidate_bundle):
 
 
 def _verify_evaluation(report,parent,before,candidate,after):
-    policy_version=2 if after['version']==3 else 1
+    policy_version=descriptor_policy(after)
     fields = {'version','gate_id', 'private_inputs', 'base_name', 'base_hash', 'dataset_id', 'parent_release_id',
         'adapter_id', 'baseline_nll', 'candidate_nll', 'quality_before', 'quality_after',
         'instruction_before','instruction_after','contributions'}
     if (not isinstance(report, dict) or set(report) != fields or type(report['version']) is not int or report['version'] != policy_version
             or report['private_inputs'] is not False or report['base_name'] != before['base_name']
             or report['gate_id']!=gate_id(policy_version)
-            or before['version']==3 and policy_version!=2
+            or descriptor_policy(before)>policy_version
             or report['base_hash'] != before['base_hash'] or after['base_hash'] != before['base_hash']
             or report['parent_release_id'] != parent.release_id or candidate.previous_release_id != parent.release_id
             or candidate.sequence!=parent.sequence+1 or before['base_name']!=after['base_name']
@@ -162,16 +166,21 @@ def verify_contributions(contributions,*,base_name,adapter_id,dataset_id,require
         output = result.output
         expected = {'base_hash', 'adapter_id', 'dataset_id', 'start', 'count', 'tokens', 'loss', 'retention_loss',
             'gradient_id', 'gradient_bytes', 'gradient'}
-        if policy_version==2:expected.add('training_policy_id')
+        if policy_version>=2:expected.add('training_policy_id')
+        if policy_version==3:expected.add('quantization_relative_l2_error')
         if (set(output) != expected or output['base_hash'] != genesis.base_hash(base_name)
-                or policy_version==2 and output.get('training_policy_id')!=BATCH_POLICY_ID
+                or policy_version>=2 and output.get('training_policy_id')!=policy_id(policy_version)
                 or output['adapter_id'] != adapter_id or output['dataset_id'] != dataset_id
                 or type(output['start']) is not int or type(output['count']) is not int
                 or not 1 <= output['count'] <= maximum or not 0 <= output['start'] <= len(public_corpus()['train'])-output['count']
                 or type(output['tokens']) is not int or not 1 <= output['tokens'] <= maximum_tokens
-                or policy_version==2 and output['tokens']>192*output['count']
+                or policy_version>=2 and output['tokens']>192*output['count']
                 or any(type(output[k]) not in (int, float) or not math.isfinite(output[k]) for k in ('loss', 'retention_loss'))):
             raise ReleaseError('Language contribution is from another version, dataset or shard')
+        if policy_version==3:
+            error=output['quantization_relative_l2_error']
+            if type(error) not in (int,float) or not math.isfinite(error) or not 0<=error<=HALF_POLICY['maximum_relative_l2_error']:
+                raise ReleaseError('Half-precision contribution exceeds its reconstruction bound')
         manifest = ArtifactManifest.from_dict(output['gradient'], max_bytes=32*1024**2)
         if (manifest.kind != 'gradient' or manifest.artifact_id != output['gradient_id']
                 or type(output['gradient_bytes']) is not int or manifest.size != output['gradient_bytes']):
@@ -200,11 +209,13 @@ def build_update(chain,adapter,evaluation,report,publisher):
     descriptor={'version':2,'base_name':before['base_name'],'base_hash':before['base_hash'],'files':before['files'],
         'adapter_id':adapter.artifact_id,'adapter_bytes':adapter.size,'evaluation_id':evaluation.artifact_id,
         'evaluation_bytes':evaluation.size}
-    if report.get('version')==2:descriptor.update(version=3,training_policy_id=BATCH_POLICY_ID)
+    training_policy=report.get('version',1)
+    limits(training_policy)
+    if training_policy>=2:descriptor.update(version=training_policy+1,training_policy_id=policy_id(training_policy))
     draft=ReleaseManifest.create(model_artifact_id=adapter.artifact_id,model_format='safetensors-v1',
         sequence=parent.sequence+1,previous_release_id=parent.release_id,
         config_artifact_id=hashlib.sha256(genesis.canonical(descriptor)).hexdigest(),
-        tokenizer_artifact_id=parent.tokenizer_artifact_id,minimum_client_version=BATCH_CLIENT_VERSION if report.get('version')==2 else '0.4.0a8')
+        tokenizer_artifact_id=parent.tokenizer_artifact_id,minimum_client_version={1:'0.4.0a8',2:BATCH_CLIENT_VERSION,3:HALF_CLIENT_VERSION}[training_policy])
     _verify_evaluation(report,parent,before,draft,descriptor)
     bundle={'release':draft.sign(publisher).to_dict(),'descriptor':descriptor}
     validate_bundle(bundle)

@@ -1,5 +1,9 @@
 # Motores de lenguaje
 
+La fuente A17 añade el perfil `language-cuda-half`, construido con `--device cuda --half-policy`. Conserva las operaciones anteriores y añade `language.gradient.v4` y `language.candidate.v3`. La política 3 fija gradientes float16, error L2 relativo máximo de 0,1 %, reconstrucción float32 y clipping antes de agregarlos por tokens. Los adaptadores publicados conservan su formato float32.
+
+El permiso local `half_precision_enabled` empieza desactivado y requiere también `batching_enabled`; la migración de controles anteriores no los habilita. Los límites de GPU, RAM, disco y red se mantienen. Las contribuciones firman el hash real del archivo float16 y su error declarado; no reutilizan los recibos de los archivos float32 del experimento. La evaluación mantiene los criterios históricos de calidad y exige aportes distintos de las dos PCs para publicar. Esta integración necesita aún su verificación física en los ejecutables A17 antes de presentarla como desplegada.
+
 Los motores CPU y CUDA incluyen su intérprete, PyTorch, Transformers y la arquitectura Qwen3. Los pesos, tokenizer y adaptaciones se adquieren por LSP y se verifican por separado. El proceso no importa identidad de transporte, publicador, Matriarca ni almacén personal. Las operaciones normales usan archivos locales fijados por hash y modo offline; las restricciones de filesystem del proceso siguen pendientes.
 
 `build_language.py --device cpu|cuda --output /directorio/de/build` requiere un entorno con el runtime correspondiente. El paquete mantiene licencias, manifiesto y hash de cada archivo. `language_main.py --self-test` comprueba arquitectura y adaptador con un fixture pequeño; no mide la calidad del modelo público.

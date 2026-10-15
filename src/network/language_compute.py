@@ -87,9 +87,17 @@ class LanguageComputeService:
                 if store.object_path(row['release']['model_artifact_id']).is_file()}
         except (OSError,ValueError,TypeError,KeyError,StopIteration):return {}
 
-    def approved_models(self):
+    def approved_models(self,*,maximum_descriptor=4):
         if not self.ready:return []
-        return list(dict.fromkeys([self.engine.adapter_id,*self._ancestors()]))
+        models=list(dict.fromkeys([self.engine.adapter_id,*self._ancestors()]))
+        if maximum_descriptor>=4:return models
+        from src.release.language_versions import LanguageVersionRegistry
+        try:
+            registry=LanguageVersionRegistry(self.directory/'public/language',self.engine.base_name)
+            chain=registry.history(registry.head()['release']['release_id'])
+            compatible={row['release']['model_artifact_id'] for row in chain if row['descriptor']['version']<=maximum_descriptor}
+            return [identifier for identifier in models if identifier in compatible]
+        except (OSError,ValueError,TypeError,KeyError):return []
 
     def update(self,settings):
         self.settings=settings

@@ -18,7 +18,7 @@ from src.contribution import ResourceRequirements
 from src.learning.public_bases import BASES
 from src.learning.public_conversation import public_corpus,corpus_digest
 from src.learning.language_capacity import CapacityHistory,allocate_shards,observation
-from src.learning.language_policy import BATCH_POLICY_ID,limits
+from src.learning.language_policy import policy_id,limits,descriptor_policy,enabled_policy,gradient_operation,candidate_operation
 from src.release.language_family import SIGNER
 from src.release.language_publish import publish_update
 from src.release.language_versions import LanguageVersionRegistry,WORKERS,verify_contributions,verify_evaluation
@@ -106,7 +106,7 @@ class LanguageLearningCoordinator:
 
     def snapshot(self):
         with self.lock:
-            try:required=2 if self._registry().head()['descriptor']['version']==3 else 1
+            try:required=descriptor_policy(self._registry().head()['descriptor'])
             except (OSError,ValueError):required=1
             if self.ledger is None:return {'status':'idle','round':0,'cursor':0,'epoch':0,'enabled':self.settings.enabled,
                 'required_training_policy_version':required,'training_policy_version':self.settings.training_policy_version}
@@ -161,15 +161,15 @@ class LanguageLearningCoordinator:
     def _prepare_round(self):
         if self.ledger['pending'] is not None:return
         head=self._registry().head();start=self.ledger['cursor']
-        if ((self.settings.training_policy_version==2 and not self.training.engine.batching_enabled)
-                or head['descriptor']['version']==3 and self.settings.training_policy_version!=2):
+        if (not enabled_policy(self.training.engine,self.settings.training_policy_version)
+                or descriptor_policy(head['descriptor'])>self.settings.training_policy_version):
             self._save(status='waiting_policy',error='The selected batch policy needs local batch-worker permission');return
         measured=None
         slots=self._slots()
         if any(count==0 for count in slots.values()):
             self._save(status='waiting_capacity',error=None);return
         if self.settings.allocation=='observed':
-            try:measured=self.capacity.estimate(head,self.settings.workers,**({'policy_version':2} if self.settings.training_policy_version==2 else {}))
+            try:measured=self.capacity.estimate(head,self.settings.workers,**({'policy_version':self.settings.training_policy_version} if self.settings.training_policy_version>=2 else {}))
             except ValueError:pass
         plan=allocate_shards(self.settings.workers,self.settings.examples_per_worker,self.settings.shards_per_cycle,
             start=start,capacity=measured,slots=slots,policy_version=self.settings.training_policy_version)
@@ -184,6 +184,8 @@ class LanguageLearningCoordinator:
         peers={peer['node_id']:peer.get('resources',{}) for peer in getattr(self.knowledge.node,'peers',lambda:[])()}
         batch_workers={peer['node_id'] for peer in getattr(self.knowledge.node,'peers',lambda:[])()
             if peer.get('capabilities',{}).get('language_gradient_batches_v1') is True}
+        half_workers={peer['node_id'] for peer in getattr(self.knowledge.node,'peers',lambda:[])()
+            if peer.get('capabilities',{}).get('language_gradient_half_v1') is True}
         result={}
         for worker in self.settings.workers:
             count=getattr(policy,'max_gpu_jobs',1) if worker==own else peers.get(worker,{}).get('max_gpu_jobs',1)
@@ -192,6 +194,8 @@ class LanguageLearningCoordinator:
             if worker!=own and isinstance(available,dict) and available.get('training') is False:result[worker]=0
             if worker!=own and self.settings.training_policy_version==2 and worker not in batch_workers:result[worker]=0
             if worker==own and self.settings.training_policy_version==2 and not self.training.engine.batching_enabled:result[worker]=0
+            if worker!=own and self.settings.training_policy_version==3 and worker not in half_workers:result[worker]=0
+            if worker==own and self.settings.training_policy_version==3 and not enabled_policy(self.training.engine,3):result[worker]=0
         return result
 
     def _check(self,cancel,configuration):
@@ -230,11 +234,11 @@ class LanguageLearningCoordinator:
             'adapter_id':head['release']['model_artifact_id'],'dataset_id':self.ledger['dataset_id'],
             'start':assignment['start'],'count':assignment['count']}
         policy_version=self.ledger['pending'].get('training_policy_version',1)
-        if policy_version==2:payload['training_policy_id']=BATCH_POLICY_ID
+        if policy_version>=2:payload['training_policy_id']=policy_id(policy_version)
         if saved is None:
             with self.calculation_slots.get(worker,threading.BoundedSemaphore(1)):
                 self._check(cancel,configuration);began=time.monotonic()
-                result=self._request('language.gradient.v3' if policy_version==2 else 'language.gradient.v2',payload,worker,
+                result=self._request(gradient_operation(policy_version),payload,worker,
                     ResourceRequirements(kind='training',gpu_required=True,ram_gb=self.training.required_ram(),disk_gb=.04),cancel,240)
                 ready_seconds=time.monotonic()-began
             saved=result.to_dict()
@@ -335,8 +339,8 @@ class LanguageLearningCoordinator:
                     'adapter_id':head['release']['model_artifact_id'],'dataset_id':self.ledger['dataset_id'],
                     'contributions':results,'learning_rate':pending['learning_rate']}
                 policy_version=pending.get('training_policy_version',1)
-                if policy_version==2:payload['training_policy_id']=BATCH_POLICY_ID
-                result=self._request('language.candidate.v2' if policy_version==2 else 'language.candidate.v1',payload,self.knowledge.node.identity.node_id_hex,
+                if policy_version>=2:payload['training_policy_id']=policy_id(policy_version)
+                result=self._request(candidate_operation(policy_version),payload,self.knowledge.node.identity.node_id_hex,
                     ResourceRequirements(kind='training',gpu_required=True,ram_gb=self.training.required_ram(),disk_gb=.1),cancel,900)
                 candidate=result.to_dict();changed=deepcopy(self.ledger['pending']);changed['candidate']=candidate;self._save(pending=changed)
             self._check(cancel,configuration)
