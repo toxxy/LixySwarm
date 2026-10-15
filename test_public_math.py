@@ -6,6 +6,7 @@ import json
 from pathlib import Path
 import subprocess
 import sys
+import time
 
 import pytest
 
@@ -148,3 +149,18 @@ def test_dataset_quota_and_withdrawal_are_checked_before_fetch(snapshots, tmp_pa
     def denied(_bytes):raise ValueError('Consent quota insufficient')
     with pytest.raises(ValueError, match='quota'):dataset.replicate_dataset(work, target, [provider], preflight=denied)
     assert not proofs
+
+
+def test_math_child_request_is_bounded_to_public_baseline_only(snapshots, tmp_path):
+    from src.learning.public_math_job import validate_request
+    request = {'action': 'public-math-baseline-v1', 'base_name': 'qwen3-1.7b', 'base_directory': str(tmp_path/'public-base'),
+               'adapter_file': str(tmp_path/'public-base/adapter.safetensors'), 'model_id': 'a'*64, 'parent_release_id': 'b'*64,
+               'evaluation_file': str(snapshots['evaluation'][0]), 'output_directory': str(tmp_path/'new-output'),
+               'device': 'cuda', 'cpu_threads': 4, 'gpu_fraction': .5, 'deadline': time.time()+20, 'gate_id': math.gate_id()}
+    assert validate_request(request) == snapshots['evaluation'][1]
+    for key, value in [('action', 'train'), ('base_name', 'qwen3-0.6b'), ('device', 'shell'), ('cpu_threads', True),
+                       ('gpu_fraction', True), ('deadline', float('inf')), ('output_directory', str(tmp_path)),
+                       ('output_directory', str(tmp_path/'public-base/new')), ('evaluation_file', str(snapshots['train'][0])),
+                       ('adapter_file', 'relative.safetensors'), ('gate_id', '0'*64)]:
+        with pytest.raises(ValueError):validate_request({**request, key: value})
+    with pytest.raises(ValueError):validate_request({**request, 'command': 'unapproved'})

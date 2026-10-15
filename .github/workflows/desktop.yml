@@ -59,6 +59,7 @@ on:
       - 'src/learning/language_distillation_job.py'
       - 'experiments/distill_public_language.py'
       - 'experiments/prepare_public_math.py'
+      - 'experiments/evaluate_public_math.py'
       - 'test_adapter_format.py'
       - '.github/workflows/desktop.yml'
       - '.gitmodules'
