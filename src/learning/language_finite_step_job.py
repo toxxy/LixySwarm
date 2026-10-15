@@ -15,8 +15,9 @@ os.environ['HF_HUB_OFFLINE']='1';os.environ['TRANSFORMERS_OFFLINE']='1'
 def validate_request(request):
     from .language_retention import protocol_id as prior_id
     from .language_retention_job import validate_request as prior_validate
-    if (not isinstance(request,dict) or request.get('action')!='public-finite-step-v1'
-            or request.get('protocol_id')!=protocol_id(request.get('compute_dtype'))):
+    if (not isinstance(request,dict) or request.get('action') not in {'public-finite-step-v1','public-group-finite-step-v2'}
+            or request.get('protocol_id')!=protocol_id(request.get('compute_dtype'),
+                group_direction=request.get('action')=='public-group-finite-step-v2')):
         raise ValueError('Unknown prospective finite-step protocol')
     # Same pinned public inputs and resource/path constraints, a distinct action.
     prior_validate({**request,'action':'public-retention-diagnostic-v3',
@@ -24,7 +25,8 @@ def validate_request(request):
 
 
 def run(request):
-    validate_request(request);started=time.monotonic();protocol=definition(request['compute_dtype'])
+    validate_request(request);started=time.monotonic();group_direction=request['action']=='public-group-finite-step-v2'
+    protocol=definition(request['compute_dtype'],group_direction=group_direction);identifier=protocol_id(request['compute_dtype'],group_direction=group_direction)
     from .public_bases import BASES,base_hash
     from .public_math import load_snapshot,canonical
     from .public_conversation import public_corpus
@@ -66,23 +68,39 @@ def run(request):
         passes+=1;progress('training-loss-pass-'+str(passes))
         return public_training_measurement(model,tokenizer,old_rows,math_rows,request['device'],request['deadline'])
     try:
-        guard=safeguarded_step(parameters,direction,measure,check=check,**{key:protocol[key] for key in
-            ['protected','target','rates','absolute_tolerance','relative_tolerance','minimum_absolute_gain','minimum_relative_gain']})
+        projection={'performed':False}
+        if group_direction:
+            from .language_group_direction import project_groups
+            from .language_retention_job import training_statistics
+            groups={'old_prefix64':old_rows[:64],'old_full200':old_rows}
+            groups.update({'old_kind_'+kind:[row for row in old_rows if row['kind']==kind] for kind in sorted({r['kind'] for r in old_rows})})
+            if set(groups)!=set(protocol['protected']):raise ValueError('Protected gradient groups changed')
+            references={};statistics={}
+            for name,rows in groups.items():
+                check();progress('group-reference-'+name)
+                statistics[name],references[name]=training_statistics(model,tokenizer,rows,request['device'],request['deadline'],gradient=True)
+            direction,projection=project_groups(direction,references,maximum_sweeps=protocol['maximum_projection_sweeps'],
+                relative_tolerance=protocol['projection_relative_tolerance'])
+            projection.update(performed=True,reference_training_statistics=statistics)
+        if not group_direction or projection['converged']:
+            guard=safeguarded_step(parameters,direction,measure,check=check,**{key:protocol[key] for key in
+                ['protected','target','rates','absolute_tolerance','relative_tolerance','minimum_absolute_gain','minimum_relative_gain']})
+        else:guard={'applied':False,'accepted_rate':None,'trials':[],'reason':'group-projection-not-converged','publication_authorized':False}
     finally:
         with torch.no_grad():
             for name,p in parameters.items():p.copy_(originals[name])
         if not all(torch.equal(p,originals[n]) for n,p in parameters.items()):raise ValueError('Experimental finite-step rollback failed')
     check()
     if digest_file(request['adapter_file'])!=parent_digest:raise ValueError('Finite-step parent file changed')
-    result={'success':True,'protocol_id':protocol_id(request['compute_dtype']),'model_id':PARENT_MODEL,'parent_release_id':PARENT_RELEASE,
+    result={'success':True,'protocol_id':identifier,'model_id':PARENT_MODEL,'parent_release_id':PARENT_RELEASE,
         'model_compute_dtype':request['compute_dtype'],'float32_matmul_precision':'highest','cuda_tf32':False,
-        'guard':guard,'training_loss_passes':passes,'no_update_control_passed':True,
-        'loss_execution_mode':'train-with-autograd-for-every-loss-pass; no backward or generation',
+        'guard':guard,'projection':projection,'training_loss_passes':passes,'no_update_control_passed':True if passes else None,
+        'loss_execution_mode':'train-with-autograd-for-every-loss-pass; backward-only-for-protected-training-references',
         'held_out_data_used_in_compute':False,'generation_performed':False,'parent_parameters_restored':True,
         'updated_model_files_written':False,'model_published':False,'new_promotion_authorized':False,
         'seconds':time.monotonic()-started,'peak_gpu_allocated_bytes':torch.cuda.max_memory_allocated() if request['device']=='cuda' else 0}
     raw=canonical(result);(output/'diagnostic.json').write_bytes(raw);progress('complete')
-    return {'success':True,'protocol_id':protocol_id(request['compute_dtype']),'report_id':hashlib.sha256(raw).hexdigest(),'bytes':len(raw)}
+    return {'success':True,'protocol_id':identifier,'report_id':hashlib.sha256(raw).hexdigest(),'bytes':len(raw)}
 
 
 def main():

@@ -21,6 +21,15 @@ def test_finite_protocol_fixed_before_training_and_has_no_publication_authority(
     subprocess.run([sys.executable,'-c',"import sys; import experiments.diagnose_language_retention; import src.learning.language_finite_step_job; assert 'torch' not in sys.modules"],check=True)
 
 
+def test_group_protocol_is_distinct_and_preserves_original_finite_policy():
+    assert protocol_id('bfloat16')=='5d2639b43923dee48e2d44282261c68eb1b5b79701be990da5bed190afba0246'
+    assert protocol_id('float32')=='5a4365e24a26c8207dcb1599019bd1b80e8a5f04081ea125ba08ce51fff4dafa'
+    projected=definition(group_direction=True)
+    assert projected['version']==2 and projected['maximum_projection_sweeps']==512
+    assert projected['rates']==definition()['rates'] and projected['protected']==definition()['protected']
+    assert protocol_id(group_direction=True)!=protocol_id()
+
+
 @pytest.mark.parametrize('change',['heldout','schedule','action','protocol','precision','direction'])
 def test_finite_request_cannot_change_pinned_scope(tmp_path,change):
     value=request(tmp_path);value.update(action='public-finite-step-v1',protocol_id=protocol_id('float32'))
@@ -32,4 +41,11 @@ def test_finite_request_cannot_change_pinned_scope(tmp_path,change):
     elif change=='protocol':value['protocol_id']='0'*64
     elif change=='precision':value['compute_dtype']='bfloat16'
     else:value['contributions'][0]['count']=63
+    with pytest.raises(ValueError):validate_request(value)
+
+
+def test_group_request_requires_its_own_protocol(tmp_path):
+    value=request(tmp_path);value.update(action='public-group-finite-step-v2',protocol_id=protocol_id('float32',group_direction=True))
+    validate_request(value)
+    value['protocol_id']=protocol_id('float32')
     with pytest.raises(ValueError):validate_request(value)

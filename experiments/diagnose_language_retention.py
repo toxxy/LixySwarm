@@ -46,7 +46,8 @@ def run(args,cancel):
     finite=getattr(args,'finite_step',False)
     if finite:
         from src.learning.language_finite_protocol import definition as finite_definition,protocol_id as finite_id
-        protocol=finite_definition(args.precision);identifier=finite_id(args.precision)
+        group=getattr(args,'group_direction',False)
+        protocol=finite_definition(args.precision,group_direction=group);identifier=finite_id(args.precision,group_direction=group)
     else:protocol=definition(args.precision);identifier=protocol_id(args.precision)
     ram_gb=protocol['ram_gb']
     trial=selected_trial(repo);before=fingerprints(node);controls=ClientSettings.load(node);policy=asdict(controls.policy)
@@ -132,7 +133,9 @@ def main():
     parser.add_argument('--engine-python',type=Path,required=True)
     parser.add_argument('--precision',choices=['float32','bfloat16'],default='float32')
     parser.add_argument('--finite-step',action='store_true',help='Run the prospective TRAIN-only backtracking protocol')
+    parser.add_argument('--group-direction',action='store_true',help='Constrain the saved direction against each protected TRAIN gradient')
     args=parser.parse_args();cancel=threading.Event()
+    if args.group_direction and not args.finite_step:parser.error('--group-direction requires --finite-step')
     for sig in [signal.SIGINT,signal.SIGTERM]:signal.signal(sig,lambda *_:cancel.set())
     try:run(args,cancel)
     except BaseException as error:
