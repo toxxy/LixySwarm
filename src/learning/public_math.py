@@ -26,6 +26,7 @@ ARTIFACTS = {
     'evaluation': ('188812577d2a7834eff5fc0ac0fad5f09f121b3587b34b7ba5d88ba37537be50', 83241),
 }
 SELECTION = 'sort-sha256(version:upstream-split:exact-question)-then-take-count-v1'
+HISTORICAL_GATE_ID = 'cb33111cc44098bc845ffff8eb51888527d6667fd872f03407a55928b9b8020b'
 MAX_SNAPSHOT_BYTES = 8*1024**2
 PROMPT_PREFIX = ('Solve this word problem. Explain the calculations briefly, then end with '
                  'a line containing #### followed by the final number.\n\n')
@@ -146,12 +147,11 @@ def curriculum_id():
 
 
 def gate_definition():
-    from src.release.language_versions import gate_id as legacy_gate
     return {'version': 1, 'curriculum_id': curriculum_id(), 'evaluation_artifact_id': ARTIFACTS['evaluation'][0],
             'prompt_prefix': PROMPT_PREFIX,
             'minimum_exact_answer_gain': 4, 'maximum_exact_answer_regressions': 0,
             'minimum_relative_math_nll_improvement': .01, 'minimum_absolute_math_nll_improvement': 1e-5,
-            'historical_gate_id': legacy_gate(3), 'historical_nll_relative_improvement': .001,
+            'historical_gate_id': HISTORICAL_GATE_ID, 'historical_nll_relative_improvement': .001,
             'historical_nll_absolute_improvement': 1e-7, 'historical_fact_and_instruction_preservation': True,
             'decoding': 'greedy-no-calculator-no-tools', 'enable_thinking': False, 'maximum_new_tokens': 384,
             'maximum_sequence_tokens': 1024, 'maximum_answer_tokens': 512,

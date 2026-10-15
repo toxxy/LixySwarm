@@ -39,8 +39,10 @@ def test_real_pins_and_old_quality_policy_are_immutable():
     assert gate_id(1) == '8b1163d42606b34937f70442e08f81eb024ea8c8099f970e0e4b1827e75f41c7'
     assert gate_id(2) == '54dee8396ee05693b28affb0c08c24910f0e302992a1e1b37d48cb96c2b95a69'
     assert gate_id(3) == 'cb33111cc44098bc845ffff8eb51888527d6667fd872f03407a55928b9b8020b'
+    assert math.HISTORICAL_GATE_ID == gate_id(3)
     assert math.gate_id() == '5e085b48da4be5c0e2b3176bb387466405005a0ec61c44b2372f521dbb8e4507'
     subprocess.run([sys.executable, '-c', 'import src.learning.public_math,src.network.public_math_dataset,sys;assert "torch" not in sys.modules'], check=True)
+    subprocess.run([sys.executable, '-c', 'from src.learning.public_math import gate_id;gate_id();import sys;assert "src.network.work_protocol" not in sys.modules;assert "src.network.lsp" not in sys.modules'], check=True)
 
 
 @pytest.mark.parametrize(('answer', 'expected'), [
