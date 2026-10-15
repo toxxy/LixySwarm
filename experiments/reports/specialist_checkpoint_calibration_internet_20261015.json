@@ -1,0 +1,513 @@
+{
+  "version": 1,
+  "scope": "Preservation of a research specialist and TRAIN-only answer calibration on two known physical PCs",
+  "specialist_accepted_for_native_chat": false,
+  "accepted_language_model_unchanged": true,
+  "new_native_learning_cycles": 0,
+  "generated_calibration_examples_in_git": false,
+  "learned_weights_or_optimizer_in_git": false,
+  "new_helper_identities_are_additional_physical_workers": false,
+  "independent_operators_or_public_quorum_proven": false,
+  "new_native_app_or_cuda_engine_installed": false,
+  "root_collection": {
+    "diagnostic": {
+      "base_execution": {
+        "base_matrix_storage_dtype": "bfloat16",
+        "converted_base_matrices_saved_for_backward": false,
+        "embedding_modules": 1,
+        "higher_order_derivatives_supported": false,
+        "linear_compute_dtype": "float32",
+        "linear_modules": 197,
+        "reference": "https://docs.pytorch.org/docs/2.12/notes/extending.html#extending-torch-autograd",
+        "scheme": "frozen-bf16-storage-fp32-linear-recompute-v1",
+        "small_frozen_parameters_promoted": 113,
+        "stored_parameter_bytes": 3447820288
+      },
+      "examples": 64,
+      "experts": {
+        "accepted-parent": {
+          "correct": 26,
+          "generation_seconds": 106.55385060387198,
+          "nll": 1.0495888044699182,
+          "output_tokens": 8086,
+          "total": 64,
+          "valid_format": 32
+        },
+        "research-specialist": {
+          "correct": 9,
+          "generation_seconds": 86.10809641762171,
+          "nll": 0.6830738083765192,
+          "output_tokens": 6530,
+          "total": 64,
+          "valid_format": 18
+        }
+      },
+      "native_learning_cycles_added": 0,
+      "native_publication_authorized": false,
+      "outcome_artifact_id": "a6016b3aaaa19b8bd9a8cfb0aa3207fe27a2eafce9fd9802228a786514dd6a73",
+      "outcome_bytes": 58325,
+      "parent_parameters_restored": true,
+      "peak_gpu_allocated_bytes": 4961847296,
+      "protocol_id": "0b6df03a881e0cb939890c783b61fc0a4e1765628c425ef499b4260a746afd8a",
+      "public_training_only": true,
+      "seconds": 201.40337771200575,
+      "shard": 0,
+      "success": true,
+      "updated_model_files_written": false
+    },
+    "extra_physical_workers": 0,
+    "native_controls_unchanged": true,
+    "native_learning_cycles_added": 0,
+    "physical_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+    "physical_pid": 2984496,
+    "source_commit": "3b5d12ebaea6b2fbd7f67bab601892af12384773",
+    "success": true
+  },
+  "laptop_collection": {
+    "diagnostic": {
+      "base_execution": {
+        "base_matrix_storage_dtype": "bfloat16",
+        "converted_base_matrices_saved_for_backward": false,
+        "embedding_modules": 1,
+        "higher_order_derivatives_supported": false,
+        "linear_compute_dtype": "float32",
+        "linear_modules": 197,
+        "reference": "https://docs.pytorch.org/docs/2.12/notes/extending.html#extending-torch-autograd",
+        "scheme": "frozen-bf16-storage-fp32-linear-recompute-v1",
+        "small_frozen_parameters_promoted": 113,
+        "stored_parameter_bytes": 3447820288
+      },
+      "examples": 64,
+      "experts": {
+        "accepted-parent": {
+          "correct": 25,
+          "generation_seconds": 724.6381411509938,
+          "nll": 1.1273953926001723,
+          "output_tokens": 9254,
+          "total": 64,
+          "valid_format": 31
+        },
+        "research-specialist": {
+          "correct": 18,
+          "generation_seconds": 652.4378803539439,
+          "nll": 0.7826322898970625,
+          "output_tokens": 8308,
+          "total": 64,
+          "valid_format": 22
+        }
+      },
+      "native_learning_cycles_added": 0,
+      "native_publication_authorized": false,
+      "outcome_artifact_id": "f74817ffa03108933d63249bd25238c3627c26909a4f6b9d77353f81256bb1b4",
+      "outcome_bytes": 67596,
+      "parent_parameters_restored": true,
+      "peak_gpu_allocated_bytes": 4962066944,
+      "protocol_id": "0b6df03a881e0cb939890c783b61fc0a4e1765628c425ef499b4260a746afd8a",
+      "public_training_only": true,
+      "seconds": 1411.302248942986,
+      "shard": 1,
+      "success": true,
+      "updated_model_files_written": false
+    },
+    "extra_physical_workers": 0,
+    "native_controls_unchanged": true,
+    "native_learning_cycles_added": 0,
+    "physical_node_id": "ea914d97caafef310e50385034abae9a50ba86496b0e9cbf4679e6070e4c25b0",
+    "physical_pid": 569147,
+    "source_commit": "b706cfaee33a592cd77594b5f10b60dd4303d212",
+    "success": true
+  },
+  "initial_laptop_attempt": {
+    "status": {
+      "error": "Compute permission withdrawn or deadline exceeded",
+      "error_type": "ComputeProcessError",
+      "phase": "failed",
+      "success": false
+    },
+    "cause_isolated": false,
+    "numerical_protocol_or_thresholds_changed": false
+  },
+  "identical_numerical_source_files": {
+    "src/learning/language_outcomes.py": "1bb080a22620616df023bb3c48e9e6165c41fbd0118b5f24ece1a7619d4f8749",
+    "src/learning/language_outcome_job.py": "2425c88a8bebed41ceb6f8f93590c6edd4a37767dd050b0928787cce4670fe4d",
+    "src/learning/public_math_job.py": "d1454481ecc7a57e5356cd39daec6ea1b5ddad89a6ee23b66f328c69d7ecf03b"
+  },
+  "combined_independent_verification": {
+    "root": {
+      "summary": {
+        "protocol_id": "0b6df03a881e0cb939890c783b61fc0a4e1765628c425ef499b4260a746afd8a",
+        "artifact_ids": [
+          "a6016b3aaaa19b8bd9a8cfb0aa3207fe27a2eafce9fd9802228a786514dd6a73",
+          "f74817ffa03108933d63249bd25238c3627c26909a4f6b9d77353f81256bb1b4"
+        ],
+        "distinct_training_cases": 128,
+        "generated_answers": 256,
+        "train_only": true,
+        "evaluation_data_used": false,
+        "selector_training_performed": false,
+        "native_learning_cycles_added": 0,
+        "newly_correct_specialist": 13,
+        "regressions_specialist": 37,
+        "oracle_union_ceiling": 64,
+        "oracle_is_achieved_router_accuracy": false,
+        "experts": {
+          "accepted-parent": {
+            "correct": 51,
+            "total": 128,
+            "valid_format": 63,
+            "output_tokens": 17340
+          },
+          "research-specialist": {
+            "correct": 27,
+            "total": 128,
+            "valid_format": 40,
+            "output_tokens": 14838
+          }
+        },
+        "scope": "TRAIN outcome calibration, not held-out quality, training speedup or native promotion"
+      },
+      "canonical_summary_sha256": "1a31a09ac503de7dbd4d741d5f7b2ca1edfdb89f4c7844911b26b36bc0dcaec0",
+      "native_fingerprints_unchanged": true
+    },
+    "laptop": {
+      "summary": {
+        "protocol_id": "0b6df03a881e0cb939890c783b61fc0a4e1765628c425ef499b4260a746afd8a",
+        "artifact_ids": [
+          "a6016b3aaaa19b8bd9a8cfb0aa3207fe27a2eafce9fd9802228a786514dd6a73",
+          "f74817ffa03108933d63249bd25238c3627c26909a4f6b9d77353f81256bb1b4"
+        ],
+        "distinct_training_cases": 128,
+        "generated_answers": 256,
+        "train_only": true,
+        "evaluation_data_used": false,
+        "selector_training_performed": false,
+        "native_learning_cycles_added": 0,
+        "newly_correct_specialist": 13,
+        "regressions_specialist": 37,
+        "oracle_union_ceiling": 64,
+        "oracle_is_achieved_router_accuracy": false,
+        "experts": {
+          "accepted-parent": {
+            "correct": 51,
+            "total": 128,
+            "valid_format": 63,
+            "output_tokens": 17340
+          },
+          "research-specialist": {
+            "correct": 27,
+            "total": 128,
+            "valid_format": 40,
+            "output_tokens": 14838
+          }
+        },
+        "scope": "TRAIN outcome calibration, not held-out quality, training speedup or native promotion"
+      },
+      "canonical_summary_sha256": "1a31a09ac503de7dbd4d741d5f7b2ca1edfdb89f4c7844911b26b36bc0dcaec0",
+      "native_fingerprints_unchanged": true
+    },
+    "identical_independent_audits": true
+  },
+  "research_replication": {
+    "specialist_transfer": {
+      "action": "receive",
+      "artifact_bytes": 6434736,
+      "artifact_id": "b0127aeb99fae82990f8e97cdb450af2c827c4d89a8b4b29eb1caa8ee340568a",
+      "bytes_received": 6434736,
+      "chunks": 66,
+      "extra_physical_worker": false,
+      "finished_at": 1792077200.655868,
+      "helper_id": "9373bf01578bd59c1d15550578b7379f26e59b0034d3b228e70851f2b3adc5b5",
+      "model_release_published": false,
+      "native_controls_unchanged": true,
+      "native_learning_cycles_added": 0,
+      "peer_id": "58c87859a8d3a8f0de9660bb00d5bba6ead930d8614e038fbff73928a5d09311",
+      "physical_node_id": "ea914d97caafef310e50385034abae9a50ba86496b0e9cbf4679e6070e4c25b0",
+      "physical_pid": 569147,
+      "route": {
+        "encrypted": true,
+        "public_internet": true,
+        "transport": "relay"
+      },
+      "scope": "Research preservation only; no release registration, public inference or model promotion",
+      "seconds": 26.522838013013825,
+      "sha256_verified": true,
+      "started_at": 1792077168.0939069,
+      "success": true
+    },
+    "optimizer_transfer": {
+      "action": "receive",
+      "artifact_bytes": 12943357,
+      "artifact_id": "f9dc16893a893efe9966384709b46657506892a60ef952f02e76e163a5a21fdb",
+      "bytes_received": 12943357,
+      "chunks": 132,
+      "extra_physical_worker": false,
+      "finished_at": 1792078716.4743972,
+      "helper_id": "eb9ffaf4508f074a7c763c856714fff9e68f76221cfd72c5f3a0e4895a59a25e",
+      "model_release_published": false,
+      "native_controls_unchanged": true,
+      "native_learning_cycles_added": 0,
+      "peer_id": "0511e4559c3077264fb81db07c94122b4721ad808a787d1307719d7b7f337c7e",
+      "physical_node_id": "ea914d97caafef310e50385034abae9a50ba86496b0e9cbf4679e6070e4c25b0",
+      "physical_pid": 569147,
+      "route": {
+        "encrypted": true,
+        "public_internet": true,
+        "transport": "relay"
+      },
+      "scope": "Research preservation only; no release registration, public inference or model promotion",
+      "seconds": 51.88059644200257,
+      "sha256_verified": true,
+      "started_at": 1792078658.5466657,
+      "success": true
+    },
+    "checkpoint_reload_on_laptop": {
+      "accepted_registry_changed": false,
+      "all_optimizer_steps": 48,
+      "base_parameters_on_meta": true,
+      "gpu_used": false,
+      "optimizer_id": "f9dc16893a893efe9966384709b46657506892a60ef952f02e76e163a5a21fdb",
+      "optimizer_states_reloaded": 112,
+      "real_adapter_parameters_reloaded": 112,
+      "research_only": true,
+      "resume_step_executed": false,
+      "specialist_id": "b0127aeb99fae82990f8e97cdb450af2c827c4d89a8b4b29eb1caa8ee340568a"
+    },
+    "root_calibration_transfer": {
+      "action": "receive",
+      "artifact_bytes": 58325,
+      "artifact_id": "a6016b3aaaa19b8bd9a8cfb0aa3207fe27a2eafce9fd9802228a786514dd6a73",
+      "bytes_received": 58325,
+      "chunks": 1,
+      "extra_physical_worker": false,
+      "finished_at": 1792077466.612779,
+      "helper_id": "1ea1c18518222adae0054123f98a778a11e49885172c97b5908f0765e2a14b84",
+      "model_release_published": false,
+      "native_controls_unchanged": true,
+      "native_learning_cycles_added": 0,
+      "peer_id": "af94697767b4e3beac833add8dfd15d66af3f78726abe3b3197fb760b8902fc6",
+      "physical_node_id": "ea914d97caafef310e50385034abae9a50ba86496b0e9cbf4679e6070e4c25b0",
+      "physical_pid": 569147,
+      "route": {
+        "encrypted": true,
+        "public_internet": true,
+        "transport": "relay"
+      },
+      "scope": "Research preservation only; no release registration, public inference or model promotion",
+      "seconds": 0.5906726869870909,
+      "sha256_verified": true,
+      "started_at": 1792077459.983364,
+      "success": true
+    },
+    "laptop_calibration_transfer": {
+      "action": "receive",
+      "artifact_bytes": 67596,
+      "artifact_id": "f74817ffa03108933d63249bd25238c3627c26909a4f6b9d77353f81256bb1b4",
+      "bytes_received": 67596,
+      "chunks": 1,
+      "extra_physical_worker": false,
+      "finished_at": 1792079259.5061188,
+      "helper_id": "8638469634bf2b0cd3b5e2daf8df5b5baea57f317782a1ae66d198a89fd4ce8a",
+      "model_release_published": false,
+      "native_controls_unchanged": true,
+      "native_learning_cycles_added": 0,
+      "peer_id": "d73f1a8372362c4ba1dabf2d12bbc884fba2752a2be48764d06f2859842e5e2f",
+      "physical_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+      "physical_pid": 2984496,
+      "route": {
+        "encrypted": true,
+        "public_internet": true,
+        "transport": "relay"
+      },
+      "scope": "Research preservation only; no release registration, public inference or model promotion",
+      "seconds": 0.8269006770569831,
+      "sha256_verified": true,
+      "started_at": 1792079230.5598717,
+      "success": true
+    },
+    "replicas": 2,
+    "physical_nodes": [
+      "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+      "ea914d97caafef310e50385034abae9a50ba86496b0e9cbf4679e6070e4c25b0"
+    ],
+    "independent_operator_replicas": false,
+    "full_base_model_resident_on_cpu_during_checkpoint_audit": false
+  },
+  "late_provider_internet_recovery": {
+    "seed_events": [
+      {
+        "identity_prefix": "8638469634bf2b0c",
+        "timestamp_us": 1792079230663634,
+        "seed_pid": 1663092
+      },
+      {
+        "identity_prefix": "d73f1a8372362c4b",
+        "timestamp_us": 1792079253036946,
+        "seed_pid": 1663092
+      }
+    ],
+    "receiver_registered_before_provider": true,
+    "receiver_had_no_provider_address_before_provider_started": true,
+    "provider_identity_fresh": true,
+    "manual_provider_address_injection": false,
+    "receiver_reconnected_after_provider_started": false,
+    "successful_transfer": {
+      "action": "receive",
+      "artifact_bytes": 67596,
+      "artifact_id": "f74817ffa03108933d63249bd25238c3627c26909a4f6b9d77353f81256bb1b4",
+      "bytes_received": 67596,
+      "chunks": 1,
+      "extra_physical_worker": false,
+      "finished_at": 1792079259.5061188,
+      "helper_id": "8638469634bf2b0cd3b5e2daf8df5b5baea57f317782a1ae66d198a89fd4ce8a",
+      "model_release_published": false,
+      "native_controls_unchanged": true,
+      "native_learning_cycles_added": 0,
+      "peer_id": "d73f1a8372362c4ba1dabf2d12bbc884fba2752a2be48764d06f2859842e5e2f",
+      "physical_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+      "physical_pid": 2984496,
+      "route": {
+        "encrypted": true,
+        "public_internet": true,
+        "transport": "relay"
+      },
+      "scope": "Research preservation only; no release registration, public inference or model promotion",
+      "seconds": 0.8269006770569831,
+      "sha256_verified": true,
+      "started_at": 1792079230.5598717,
+      "success": true
+    },
+    "failure_before_fix": {
+      "action": "receive",
+      "artifact_bytes": 67596,
+      "artifact_id": "f74817ffa03108933d63249bd25238c3627c26909a4f6b9d77353f81256bb1b4",
+      "extra_physical_worker": false,
+      "finished_at": 1792078878.8799968,
+      "helper_id": "8638469634bf2b0cd3b5e2daf8df5b5baea57f317782a1ae66d198a89fd4ce8a",
+      "model_release_published": false,
+      "native_learning_cycles_added": 0,
+      "peer_id": "f7471dbab7794ddc11800a09850639dc7e5f2380cdf4e662084603428165cb33",
+      "physical_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+      "physical_pid": 2984496,
+      "scope": "Research preservation only; no release registration, public inference or model promotion",
+      "started_at": 1792078788.8570762,
+      "success": false
+    }
+  },
+  "vps_deployment": {
+    "source": "149674dc4b7378f20c6aee915cd75d1b0f9b630a",
+    "before": {
+      "lixyswarm-seed.service": [
+        "MainPID=1653276",
+        "ExecMainStartTimestampMonotonic=24121462263102",
+        "ActiveState=active"
+      ],
+      "lixyswarm-api.service": [
+        "MainPID=1651909",
+        "ExecMainStartTimestampMonotonic=24114462329167",
+        "ActiveState=active"
+      ]
+    },
+    "after": {
+      "lixyswarm-seed.service": [
+        "MainPID=1663092",
+        "ExecMainStartTimestampMonotonic=24175444601174",
+        "ActiveState=active"
+      ],
+      "lixyswarm-api.service": [
+        "MainPID=1651909",
+        "ExecMainStartTimestampMonotonic=24114462329167",
+        "ActiveState=active"
+      ]
+    },
+    "seed_restarted": true,
+    "reason": "Load authenticated late-provider introduction fix; not cosmetic",
+    "timestamp": 1792079176.4260962
+  },
+  "engine_archive_preflight": {
+    "clean_gpu_installation_proven": false,
+    "declared_files": 6232,
+    "file_aliases": 28,
+    "flattened_alias_content_bytes": 2435764852,
+    "logical_payload_bytes": 7199847969,
+    "manifest_bytes": 1172052,
+    "manifest_sha256": "43229bc8e32f8703552335efe6d19f17dd9d2c5834d14df15b141b30260b3c18",
+    "new_cuda_archive_built": false,
+    "new_engine_installed": false,
+    "profile": "language-cuda-math",
+    "regular_payload_bytes": 4764083117,
+    "verified_existing_package": true
+  },
+  "continuity": {
+    "healthy": true,
+    "failures": 23,
+    "consecutive_healthy_seconds": 260.14,
+    "longest_healthy_seconds": 23888.6,
+    "satisfied": false,
+    "nodes": [
+      {
+        "healthy": true,
+        "node_id": "28c218f34cd6b90e99955346711921d94b54852e4b8f29fb840207388f73444e",
+        "process_instance_id": "14878a3e3ce5f796ae2abd27acc6eb2e",
+        "sequence": 8691,
+        "state": "connected",
+        "timestamp_ms": 1792079462545,
+        "uptime_reset_or_clock_jump": false,
+        "uptime_s": 285.7
+      },
+      {
+        "healthy": true,
+        "node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+        "process_instance_id": "73d589075fa3f4439cf7f5a0c53814b2",
+        "sequence": 12988,
+        "state": "connected",
+        "timestamp_ms": 1792079466250,
+        "uptime_reset_or_clock_jump": false,
+        "uptime_s": 24895.6
+      },
+      {
+        "healthy": true,
+        "node_id": "ea914d97caafef310e50385034abae9a50ba86496b0e9cbf4679e6070e4c25b0",
+        "process_instance_id": "e253fee7d79ec5497a2a462d9c4071e2",
+        "sequence": 12497,
+        "state": "connected",
+        "timestamp_ms": 1792079472657,
+        "uptime_reset_or_clock_jump": false,
+        "uptime_s": 24891.5
+      }
+    ]
+  },
+  "continuity_observer_restarted_or_reset": false,
+  "validation": {
+    "root_outcome_and_privacy_tests": {
+      "passed": 25
+    },
+    "laptop_outcome_tests": {
+      "passed": 15
+    },
+    "root_packaging_and_preparation_tests": {
+      "passed": 41
+    },
+    "laptop_packaging_and_preparation_tests": {
+      "passed": 41
+    },
+    "root_network_privacy_tests": {
+      "passed": 37
+    },
+    "ci": [
+      "https://github.com/toxxy/LixySwarm/actions/runs/38758200837",
+      "https://github.com/toxxy/LixySwarm/actions/runs/38758200841",
+      "https://github.com/toxxy/LixySwarm/actions/runs/38758200906",
+      "https://github.com/toxxy/LixySwarm/actions/runs/38760485108",
+      "https://github.com/toxxy/LixySwarm/actions/runs/38760485036",
+      "https://github.com/toxxy/LixySwarm/actions/runs/38763222864"
+    ],
+    "ci_dependency_failure_42824cc": "Missing certifi in CPU test environment; fixed in 2957720 and subsequent CPU CI passed"
+  },
+  "limits": [
+    "TRAIN calibration does not establish held-out improvement or a useful learned selector",
+    "No same-quality training speedup is demonstrated by these different hardware shards",
+    "The optimizer was reloaded without executing a subsequent optimizer step",
+    "No physical producer shutdown, third independent replica or 24-hour continuity claim",
+    "Clean GPU install and total transient disk budget remain pending"
+  ]
+}
