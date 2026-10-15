@@ -1,0 +1,130 @@
+{
+  "schema_version": 1,
+  "success": true,
+  "release_url": "https://github.com/toxxy/LixySwarm/releases/tag/v0.4.0a18",
+  "source_revision": "2023a1ef9afe9878cb632022f8f071bb511479f7",
+  "desktop_ci_run": 38708509887,
+  "archive_bytes": 82030386,
+  "archive_sha256": "38405495d16c0ad784756c78e36cd4e0b92307944d00fc35b5db8797b9ef470e",
+  "anonymous_https_verified_on_both_physical_PCs": true,
+  "desktop": {
+    "success": true,
+    "authenticated_requests": false,
+    "assets": [
+      {
+        "name": "LixySwarm-0.4.0a18-linux-x86_64.tar.gz.json",
+        "sha256": "586ff904ce361a370c5234af035d0464e00979a2b6a5975b2c9a1f373a423fa0",
+        "bytes": 205
+      },
+      {
+        "name": "desktop-native-preflight.json",
+        "sha256": "b0716de54bbeb37b68c9e5951dd824272d3b52ca3d2971ff8edeb2c016b84a90",
+        "bytes": 1289
+      },
+      {
+        "name": "laptop-native-preflight.json",
+        "sha256": "9f8a776f2abe03ce2471af715b31e374981866a836443301e03ae5060cc0b4c5",
+        "bytes": 1290
+      },
+      {
+        "name": "native-math-comparison.json",
+        "sha256": "b5d9358df1d49b4d14c3991c781aef9319cf10e3c100b8233e00744b3309eea8",
+        "bytes": 594522
+      },
+      {
+        "name": "native-math-trial-policy.json",
+        "sha256": "0a31ff14043cf642b6c78b3e85e18f228d07e5521472e5f4f39b051d1fc53418",
+        "bytes": 3822
+      },
+      {
+        "name": "physical-deployment.json",
+        "sha256": "7599a03cc98af86ee69d784043c9bf25474a1228352a20ba02e8c121ae223ba7",
+        "bytes": 10297
+      },
+      {
+        "name": "provenance.json",
+        "sha256": "5dd5ffc43f23a5b0b41712f98f0fdfb95802cc5b8672bb03f3a6cd7f7d5caacb",
+        "bytes": 777
+      },
+      {
+        "name": "SHA256SUMS.txt",
+        "sha256": "08b0c90d29b0537ff7fcfd810432587ee7a36980bdefa352e24bdac2d033d1d8",
+        "bytes": 769
+      }
+    ],
+    "archive": {
+      "success": true,
+      "physical_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+      "authenticated_request": false,
+      "bytes": 82030386,
+      "sha256": "38405495d16c0ad784756c78e36cd4e0b92307944d00fc35b5db8797b9ef470e",
+      "url": "https://github.com/toxxy/LixySwarm/releases/download/v0.4.0a18/LixySwarm-0.4.0a18-linux-x86_64.tar.gz",
+      "verified_at": 1792056852.0406327
+    },
+    "verified_at": 1792056899.4644914
+  },
+  "laptop": {
+    "success": true,
+    "authenticated_requests": false,
+    "assets": [
+      {
+        "name": "LixySwarm-0.4.0a18-linux-x86_64.tar.gz.json",
+        "sha256": "586ff904ce361a370c5234af035d0464e00979a2b6a5975b2c9a1f373a423fa0",
+        "bytes": 205
+      },
+      {
+        "name": "desktop-native-preflight.json",
+        "sha256": "b0716de54bbeb37b68c9e5951dd824272d3b52ca3d2971ff8edeb2c016b84a90",
+        "bytes": 1289
+      },
+      {
+        "name": "laptop-native-preflight.json",
+        "sha256": "9f8a776f2abe03ce2471af715b31e374981866a836443301e03ae5060cc0b4c5",
+        "bytes": 1290
+      },
+      {
+        "name": "native-math-comparison.json",
+        "sha256": "b5d9358df1d49b4d14c3991c781aef9319cf10e3c100b8233e00744b3309eea8",
+        "bytes": 594522
+      },
+      {
+        "name": "native-math-trial-policy.json",
+        "sha256": "0a31ff14043cf642b6c78b3e85e18f228d07e5521472e5f4f39b051d1fc53418",
+        "bytes": 3822
+      },
+      {
+        "name": "physical-deployment.json",
+        "sha256": "7599a03cc98af86ee69d784043c9bf25474a1228352a20ba02e8c121ae223ba7",
+        "bytes": 10297
+      },
+      {
+        "name": "provenance.json",
+        "sha256": "5dd5ffc43f23a5b0b41712f98f0fdfb95802cc5b8672bb03f3a6cd7f7d5caacb",
+        "bytes": 777
+      },
+      {
+        "name": "SHA256SUMS.txt",
+        "sha256": "08b0c90d29b0537ff7fcfd810432587ee7a36980bdefa352e24bdac2d033d1d8",
+        "bytes": 769
+      }
+    ],
+    "archive": {
+      "success": true,
+      "physical_node_id": "ea914d97caafef310e50385034abae9a50ba86496b0e9cbf4679e6070e4c25b0",
+      "authenticated_request": false,
+      "bytes": 82030386,
+      "sha256": "38405495d16c0ad784756c78e36cd4e0b92307944d00fc35b5db8797b9ef470e",
+      "url": "https://github.com/toxxy/LixySwarm/releases/download/v0.4.0a18/LixySwarm-0.4.0a18-linux-x86_64.tar.gz",
+      "verified_at": 1792056789.1570227
+    },
+    "verified_at": 1792056907.0476336
+  },
+  "native_physical_deployment_report": "app_a18_physical_deployment_20261015.json",
+  "native_math_comparison_report": "language_math_native_scaling_20261015.json",
+  "cuda_engine_bundled": false,
+  "public_installer_signature_verified": false,
+  "clean_GPU_install_verified": false,
+  "new_math_model_promoted": false,
+  "benchmark_finished_before_public_downloads": true,
+  "recorded_at": 1792056987.7813065
+}

@@ -1,0 +1,39 @@
+{
+  "schema_version": 1,
+  "success": true,
+  "public_client_version": "0.4.0a17",
+  "public_archive_sha256": "3c7467876fc229156d856b08f75d9d87399fc2caf70c6ee3435951cbb8f8ca99",
+  "provider_runtime": "0.4.0a18",
+  "provider_source_revision": "2023a1ef9afe9878cb632022f8f071bb511479f7",
+  "provider_physical_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+  "accepted_model_id": "506317cc9f40da9dea40e6d14a94910ac6625ae478b5f2d0248cb1bbbb93a6c3",
+  "native_selftest": {
+    "success": true,
+    "internet": true,
+    "expected_chat_model_id": "506317cc9f40da9dea40e6d14a94910ac6625ae478b5f2d0248cb1bbbb93a6c3",
+    "language_preparation_permission_gate": true,
+    "chat_model_id": "506317cc9f40da9dea40e6d14a94910ac6625ae478b5f2d0248cb1bbbb93a6c3",
+    "chat_first_answer": "Una red descentralizada es una red de computadoras que no está controlada por un solo punto central.",
+    "chat_ui_verified": true,
+    "chat_remote_context_opt_in": true,
+    "chat_history_survives_reopen": true,
+    "chat_history_encrypted": true,
+    "chat_receipt": {
+      "version": 1,
+      "job_id": "a60935c2443acac338152f4e9776d163cf1f7e8470861ef1ef202f861efbe4f2",
+      "worker_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+      "requester_node_id": "2240702f81455a88c30bd19c3692cff616323cc51d3db5b04aaf515ff500a3d0",
+      "result_digest": "89addc560b4ee1d15ed8e1e60e154c5f2fdfef871ff61425f03ebf2cf435d0fb",
+      "finished_at": 1792056552.386655,
+      "signature": "Q+8hvFt1w81xXiGtUthps+lWB24A9KBE/ppVR5P6YFnFKen2GTg0psINC2kUagvdcLe/C3TTgtAh7QOCPtWQCA=="
+    },
+    "chat_cancellation_verified": true,
+    "connection_s": 0.82,
+    "controls_confirmed": true,
+    "pause_keeps_connection": true,
+    "reconnect_keeps_identity": true,
+    "calculation_engines_loaded": false
+  },
+  "recorded_at": 1792056690.9154043,
+  "scope": "Anonymous public A17 archive, new temporary light-client state on laptop, actual public A18 provider; no new physical machine"
+}
