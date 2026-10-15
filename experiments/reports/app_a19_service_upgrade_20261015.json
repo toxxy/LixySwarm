@@ -1,0 +1,161 @@
+{
+  "schema": "lixyswarm-native-service-upgrade-v1",
+  "source_revision": "344f5927f4c3d7a95ad93c1de16ead1ae33129d4",
+  "release_url": "https://github.com/toxxy/LixySwarm/releases/tag/v0.4.0a19",
+  "ci": {
+    "run_id": 38777408898,
+    "conclusion": "success",
+    "tests_passed": 503
+  },
+  "archive": {
+    "archive": "LixySwarm-0.4.0a19-linux-x86_64.tar.gz",
+    "bytes": 82047113,
+    "sha256": "801fea863882024dab34b95b7070f5d4db7cb509215f76b9b774324b7f3db114",
+    "platform": "linux",
+    "machine": "x86_64",
+    "source_revision": "344f5927f4c3d7a95ad93c1de16ead1ae33129d4",
+    "ci_run": 38777408898
+  },
+  "native_temporary_checks": {
+    "desktop": {
+      "success": true,
+      "internet": true,
+      "expected_chat_model_id": "506317cc9f40da9dea40e6d14a94910ac6625ae478b5f2d0248cb1bbbb93a6c3",
+      "runtime_upgrade": {
+        "from": "0.4.0a18",
+        "to": "0.4.0a19",
+        "identity_preserved": true,
+        "controls_preserved": true,
+        "new_process": true,
+        "native_executable": true,
+        "physical_node": false
+      },
+      "language_preparation_permission_gate": true,
+      "chat_model_id": "506317cc9f40da9dea40e6d14a94910ac6625ae478b5f2d0248cb1bbbb93a6c3",
+      "chat_ui_verified": true,
+      "chat_remote_context_opt_in": true,
+      "chat_history_survives_reopen": true,
+      "chat_history_encrypted": true,
+      "chat_cancellation_verified": true,
+      "connection_s": 0.52,
+      "controls_confirmed": true,
+      "pause_keeps_connection": true,
+      "reconnect_keeps_identity": true,
+      "calculation_engines_loaded": false
+    },
+    "laptop": {
+      "success": true,
+      "internet": true,
+      "expected_chat_model_id": "506317cc9f40da9dea40e6d14a94910ac6625ae478b5f2d0248cb1bbbb93a6c3",
+      "runtime_upgrade": {
+        "from": "0.4.0a18",
+        "to": "0.4.0a19",
+        "identity_preserved": true,
+        "controls_preserved": true,
+        "new_process": true,
+        "native_executable": true,
+        "physical_node": false
+      },
+      "language_preparation_permission_gate": true,
+      "chat_model_id": "506317cc9f40da9dea40e6d14a94910ac6625ae478b5f2d0248cb1bbbb93a6c3",
+      "chat_ui_verified": true,
+      "chat_remote_context_opt_in": true,
+      "chat_history_survives_reopen": true,
+      "chat_history_encrypted": true,
+      "chat_cancellation_verified": true,
+      "connection_s": 0.5,
+      "controls_confirmed": true,
+      "pause_keeps_connection": true,
+      "reconnect_keeps_identity": true,
+      "calculation_engines_loaded": false
+    }
+  },
+  "physical_deployment": {
+    "desktop": {
+      "success": true,
+      "fingerprints_unchanged": true,
+      "before_pid": 2984496,
+      "pid": 3134618,
+      "runtime": "0.4.0a19",
+      "node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+      "process_instance_id": "9f2a3a1d6d8d80d169b6d77fb566bf13",
+      "model_id": "506317cc9f40da9dea40e6d14a94910ac6625ae478b5f2d0248cb1bbbb93a6c3",
+      "training_ready": true,
+      "language_learning": {
+        "accepted_sequence": 2,
+        "cursor": 96,
+        "dataset_id": "24eb8b9e9c268021ededa84a171a4b6804cbe58263edbb2b2944f49dd4de64a5",
+        "enabled": true,
+        "epoch": 0,
+        "error": null,
+        "historical_rounds": 0,
+        "paused": false,
+        "required_training_policy_version": 1,
+        "round": 5,
+        "status": "no_improvement",
+        "training_policy_version": 1
+      }
+    },
+    "laptop": {
+      "success": true,
+      "fingerprints_unchanged": true,
+      "before_pid": 569147,
+      "pid": 680411,
+      "runtime": "0.4.0a19",
+      "node_id": "ea914d97caafef310e50385034abae9a50ba86496b0e9cbf4679e6070e4c25b0",
+      "process_instance_id": "5ebe53027f1e79ac1ce3342a15238465",
+      "model_id": "506317cc9f40da9dea40e6d14a94910ac6625ae478b5f2d0248cb1bbbb93a6c3",
+      "training_ready": true,
+      "language_learning": {
+        "cursor": 0,
+        "dataset_id": "24eb8b9e9c268021ededa84a171a4b6804cbe58263edbb2b2944f49dd4de64a5",
+        "enabled": false,
+        "epoch": 0,
+        "historical_rounds": 0,
+        "required_training_policy_version": 1,
+        "round": 0,
+        "status": "idle",
+        "training_policy_version": 1
+      }
+    }
+  },
+  "expanded_memory_checks": {
+    "desktop": "harness_timeout_300s",
+    "laptop": "harness_timeout_300s",
+    "full_comparison_claimed": false
+  },
+  "distribution": {
+    "github_server_asset_digests_verified": true,
+    "anonymous_metadata_verified": true,
+    "anonymous_complete_archive_check": {
+      "desktop": {
+        "success": true,
+        "anonymous_public_https": true,
+        "bytes": 82047113,
+        "sha256": "801fea863882024dab34b95b7070f5d4db7cb509215f76b9b774324b7f3db114",
+        "rate_bytes_per_second": 312500,
+        "seconds": 262.9765777679859,
+        "model_downloaded": false
+      },
+      "laptop": {
+        "success": true,
+        "anonymous_public_https": true,
+        "bytes": 82047113,
+        "sha256": "801fea863882024dab34b95b7070f5d4db7cb509215f76b9b774324b7f3db114",
+        "rate_bytes_per_second": 625000,
+        "seconds": 131.31479839101667,
+        "model_downloaded": false
+      }
+    }
+  },
+  "scope": {
+    "native_app_without_system_python": true,
+    "temporary_checks_are_extra_physical_participants": false,
+    "model_updated": false,
+    "fresh_public_training_donation_proven": false,
+    "whole_clean_gpu_install_proven": false,
+    "storage_permissions_expanded": false,
+    "new_native_learning_cycles": 0,
+    "full_goal_complete": false
+  }
+}
