@@ -17,6 +17,7 @@ on:
       - 'test_cold_recovery.py'
       - 'test_language_cache_repair.py'
       - 'experiments/cold_recovery.py'
+      - 'experiments/cold_checkpoint.py'
       - 'desktop/**'
       - 'client_daemon.py'
       - 'src/network/**'

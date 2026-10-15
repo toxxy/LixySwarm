@@ -126,3 +126,55 @@ def test_app_pinned_engine_and_its_resumable_cache_move_without_reinstalling(tmp
     merge_engine_downloads(source,target,[entry])
     assert (target/'engines'/entry.manifest_sha256/binary.name).stat().st_ino==inode
     assert (target/'engine-downloads'/(entry.sha256+'.part')).read_bytes()==data[:23]
+
+
+def test_durable_checkpoint_restores_owned_changes_but_keeps_a_new_operator_choice(tmp_path):
+    from experiments.cold_checkpoint import ColdCheckpoint
+    identity=LSPIdentity.generate();a=tmp_path/'old';b=tmp_path/'trial'
+    checkpoint(a,identity,12345);b.mkdir()
+    (a/'controls.json').write_bytes(b'original resource budget')
+    (a/'language-engine.json').write_bytes(b'original inference command')
+    (a/'identity.key').write_bytes(b'private identity never copied into journal')
+    (a/'personal.enc').write_bytes(b'private encrypted bank')
+    (a/'language-learning').mkdir();(a/'language-learning/ledger.json').write_text('{"round":5,"cursor":96}')
+    c=ColdCheckpoint.capture(a,b,tmp_path/'journal.json')
+    assert b'private identity' not in c.path.read_bytes() and b'private encrypted bank' not in c.path.read_bytes()
+    with pytest.raises(ValueError):c.set_owned_control('language-learning/ledger.json',b'{"round":0}')
+    c.set_owned_control('language-engine.json',b'temporarily disabled')
+    (a/'controls.json').write_bytes(b'operator withdrew resource permission')
+    checkpoint(b,identity,12360)
+    result=ColdCheckpoint(c.path).recover_metadata()
+    assert (a/'language-engine.json').read_bytes()==b'original inference command'
+    assert (a/'controls.json').read_bytes()==b'operator withdrew resource permission'
+    assert result['operator_controls']['external_changes_preserved']==['controls.json']
+    assert (a/'language-learning/ledger.json').read_text()=='{"round":5,"cursor":96}'
+    assert all(result['private_files_unchanged'].values())
+
+
+def test_checkpoint_retry_after_counter_write_and_before_final_journal_does_not_double_credit(tmp_path,monkeypatch):
+    import experiments.cold_checkpoint as module
+    identity=LSPIdentity.generate();a=tmp_path/'old';b=tmp_path/'trial'
+    checkpoint(a,identity,10);b.mkdir();name='language-training-status.json'
+    (a/name).write_text('{"completed":84}')
+    c=module.ColdCheckpoint.capture(a,b,tmp_path/'journal.json')
+    checkpoint(b,identity,20);(b/name).write_text('{"completed":1}')
+    real=module.atomic_json
+    def crash(path,value):
+        if Path(path)==c.path and value['phase']=='metadata_recovered':raise OSError('power loss before journal commit')
+        return real(path,value)
+    monkeypatch.setattr(module,'atomic_json',crash)
+    with pytest.raises(OSError):c.recover_metadata()
+    assert json.loads((a/name).read_text())['completed']==85
+    monkeypatch.setattr(module,'atomic_json',real)
+    module.ColdCheckpoint(c.path).recover_metadata()
+    assert json.loads((a/name).read_text())['completed']==85
+
+
+def test_tampered_checkpoint_cannot_claim_ownership_of_a_learning_ledger(tmp_path):
+    from experiments.cold_checkpoint import ColdCheckpoint
+    identity=LSPIdentity.generate();a=tmp_path/'old';b=tmp_path/'trial'
+    checkpoint(a,identity,10);b.mkdir()
+    c=ColdCheckpoint.capture(a,b,tmp_path/'journal.json')
+    value=json.loads(c.path.read_text());value['owned_hashes']['language-learning/ledger.json']=['0'*64]
+    c.path.write_text(json.dumps(value))
+    with pytest.raises(ValueError,match='ownership'):ColdCheckpoint(c.path)
