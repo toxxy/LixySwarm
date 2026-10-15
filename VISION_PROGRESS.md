@@ -201,6 +201,19 @@ El [protocolo de selección por resultados](experiments/reports/outcome_selector
 
 Cada partición conserva los 256 pasos de Dolphin y otros 256 por brazo de Matriarca, con bancos vacío, barajado y público, iguales estados iniciales y orden de lotes. El brazo primario sigue siendo `public`; Dolphin solo tiene menor presupuesto. Se guardan los cuatro selectores y todos los optimizadores de cada partición fuera de Dropbox, con reserva total de 1,4 GiB y cuatro GiB de RAM dentro de los permisos del escritorio. Los hashes de los dos artefactos físicos, los expertos en orden, el tokenizer, el espacio Dolphin y el protocolo vinculan el estado. Este ensayo mide predicciones sobre calibración TRAIN; la ejecución real de respuestas enrutadas y los gates originales conservan su propia aceptación. En particular, no elimina la insuficiencia histórica ya demostrada para el conjunto congelado ni autoriza incorporarlo al chat. El ensayo nativo vacío de la laptop continúa de forma independiente.
 
+El [ensayo por resultados](experiments/reports/outcome_selector_crossfit_20261015.json) terminó en 27,37 segundos y conservó 1.168.846.824 bytes de selectores y optimizadores, dentro de la reserva. Otra ejecución recargó los 32 selectores, reprodujo exactamente sus probabilidades y decisiones y comprobó los 256 pasos y momentos finitos de los optimizadores: 45 estados de parámetros Dolphin y 18 por brazo de memoria en cada partición. Pasaron 30 pruebas focales, incluida la ejecución completa con tensores y la prohibición de abrir EVAL o cargar expertos de lenguaje. El modelo aceptado y las cinco rondas nativas permanecieron intactos.
+
+| Componente sobre calibración TRAIN, fuera de su ajuste | Aciertos/128 | Nuevos frente al padre | Aciertos del padre perdidos |
+|---|---:|---:|---:|
+| Generalista congelado | 51 | 0 | 0 |
+| Especialista congelado | 27 | 13 | 37 |
+| Dolphin, 256 pasos por partición | 42 | 4 | 13 |
+| Memoria vacía, 512 pasos totales por partición | 44 | 4 | 11 |
+| Memoria con resultados barajados, mismo presupuesto | 44 | 4 | 11 |
+| Memoria pública, mismo presupuesto | 44 | 4 | 11 |
+
+La supervisión por aciertos redujo la preferencia indiscriminada por el especialista, pero el selector primario sigue siendo peor que conservar el generalista. Los tres bancos tomaron las mismas decisiones; sus probabilidades pueden diferir, sin demostrar utilidad adicional de los resultados de memoria. Los dos aciertos de diferencia frente a Dolphin no se atribuyen a memoria: el brazo vacío también los obtiene y tiene una segunda fase de entrenamiento. Los tokens elegidos se reconstruyen de respuestas ya recogidas; no son latencia ni generación nueva. El resultado se conserva como negativo y no se activa en el chat. Requiere mejorar la representación de utilidad y contrastarla con calibración nueva; repetir decisiones sobre estos mismos 128 ejemplos no acreditaría generalización independiente. Continúan los gates originales y todas las condiciones pendientes de las ocho etapas.
+
 ### Resultado físico del aprendizaje matemático
 
 La [tanda nativa completa](experiments/reports/language_math_native_scaling_20261015.json) terminó con dos comparaciones sobre rangos distintos de 192 problemas. Se mantuvieron padre 2, tasa 0,001, tres fragmentos de 64, dos plazas en el escritorio y una en la laptop, y recepción del escritorio de 5 Mbps. El escritorio procesó 128 ejemplos y la laptop 64 en cada caso distribuido. Cada candidata evaluó padre y actualización en el mismo proceso del escritorio. Un calentamiento aparte queda excluido.

@@ -1,0 +1,347 @@
+{
+  "schema": "lixyswarm-outcome-selector-crossfit-v1",
+  "timestamp": 1792095600.2165034,
+  "training": {
+    "learned_state_bytes": 1168846824,
+    "model_promoted": false,
+    "native_controls_unchanged": true,
+    "native_learning_cycles_added": 0,
+    "numerical_source_files": {
+      "src/agents/dolphin_agent.py": "b41f1a0b80824ef1a7cd4a6726ccdc52619ecc4211b4b0aa104677aa64e0f4ab",
+      "src/learning/language_outcome_selector.py": "731ea26dad10bc3bc90cc41da546f36ff379134ed10b91b3c879f5087f991ec2",
+      "src/learning/language_outcome_selector_job.py": "a37de3093945fc703775a4357c8d2ef82e42c56a0442cbe2d1807fa253ccc09d",
+      "src/learning/language_selector.py": "f69cb1910eadd634f667ea8ae0dda759402f74c1486d54d99493229a5c963351",
+      "src/matriarca/matriarca.py": "f77f83b62546f32c93aa00808601ba659e6728523319af57b18aa5dd19c832c3"
+    },
+    "original_evaluation_opened": false,
+    "peak_gpu_allocated_bytes": 262256128,
+    "physical_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+    "physical_pid": 3134618,
+    "protocol_id": "1faa64c03c96b89ed9a3799563edc70a309eb9dcb3d0270a96ead1a4a081b663",
+    "report_bytes": 64575,
+    "report_id": "1709cfb89e280d644f541227e5408929530ca6259556c67986758ddc249969cf",
+    "seconds": 27.366008648998104,
+    "source_revision": "e586c2996d1fa792e85bacdfd290e48a3fe6b99c",
+    "success": true,
+    "verification": {
+      "equal_memory_training_budget_verified": true,
+      "examples": 128,
+      "native_promotion_authorized": false,
+      "original_evaluation_opened": false,
+      "out_of_fit_predictions_verified": true,
+      "parent_correct": 51,
+      "specialist_correct": 27,
+      "variants": {
+        "dolphin": {
+          "correct": 42,
+          "newly_correct": 4,
+          "output_tokens_if_selected": 16668,
+          "regressions": 13,
+          "specialist_choices": 47
+        },
+        "public": {
+          "correct": 44,
+          "newly_correct": 4,
+          "output_tokens_if_selected": 16791,
+          "regressions": 11,
+          "specialist_choices": 44
+        },
+        "shuffled": {
+          "correct": 44,
+          "newly_correct": 4,
+          "output_tokens_if_selected": 16791,
+          "regressions": 11,
+          "specialist_choices": 44
+        },
+        "zero": {
+          "correct": 44,
+          "newly_correct": 4,
+          "output_tokens_if_selected": 16791,
+          "regressions": 11,
+          "specialist_choices": 44
+        }
+      }
+    }
+  },
+  "independent_recovery": {
+    "maximum_probability_absolute_difference": 0.0,
+    "native_controls_unchanged": true,
+    "native_promotion_authorized": false,
+    "new_answer_generation": false,
+    "new_optimizer_steps": 0,
+    "optimizer_parameter_states_per_fold": [
+      {
+        "dolphin": 45,
+        "public": 18,
+        "shuffled": 18,
+        "zero": 18
+      },
+      {
+        "dolphin": 45,
+        "public": 18,
+        "shuffled": 18,
+        "zero": 18
+      },
+      {
+        "dolphin": 45,
+        "public": 18,
+        "shuffled": 18,
+        "zero": 18
+      },
+      {
+        "dolphin": 45,
+        "public": 18,
+        "shuffled": 18,
+        "zero": 18
+      },
+      {
+        "dolphin": 45,
+        "public": 18,
+        "shuffled": 18,
+        "zero": 18
+      },
+      {
+        "dolphin": 45,
+        "public": 18,
+        "shuffled": 18,
+        "zero": 18
+      },
+      {
+        "dolphin": 45,
+        "public": 18,
+        "shuffled": 18,
+        "zero": 18
+      },
+      {
+        "dolphin": 45,
+        "public": 18,
+        "shuffled": 18,
+        "zero": 18
+      }
+    ],
+    "original_evaluation_opened": false,
+    "protocol_id": "1faa64c03c96b89ed9a3799563edc70a309eb9dcb3d0270a96ead1a4a081b663",
+    "selectors_reloaded": 32,
+    "success": true,
+    "timestamp": 1792095270.019406,
+    "verification": {
+      "equal_memory_training_budget_verified": true,
+      "examples": 128,
+      "native_promotion_authorized": false,
+      "original_evaluation_opened": false,
+      "out_of_fit_predictions_verified": true,
+      "parent_correct": 51,
+      "specialist_correct": 27,
+      "variants": {
+        "dolphin": {
+          "correct": 42,
+          "newly_correct": 4,
+          "output_tokens_if_selected": 16668,
+          "regressions": 13,
+          "specialist_choices": 47
+        },
+        "public": {
+          "correct": 44,
+          "newly_correct": 4,
+          "output_tokens_if_selected": 16791,
+          "regressions": 11,
+          "specialist_choices": 44
+        },
+        "shuffled": {
+          "correct": 44,
+          "newly_correct": 4,
+          "output_tokens_if_selected": 16791,
+          "regressions": 11,
+          "specialist_choices": 44
+        },
+        "zero": {
+          "correct": 44,
+          "newly_correct": 4,
+          "output_tokens_if_selected": 16791,
+          "regressions": 11,
+          "specialist_choices": 44
+        }
+      }
+    }
+  },
+  "learned_artifact_manifest": {
+    "0/dolphin.safetensors": {
+      "bytes": 24335988,
+      "sha256": "c667154170a58f31087f3a940adf0714ec9f1074c56ae834142ff2c87d18d4ed"
+    },
+    "0/optimizer-state.pt": {
+      "bytes": 48761893,
+      "sha256": "64c69c663f8dae4922124d4b138d72bcbd687cce04c67f4633e9e199017d7d54"
+    },
+    "0/public.safetensors": {
+      "bytes": 24335988,
+      "sha256": "31dd42ed3b184c3de7a476b625ac9769d4b71e487a15da043d80ef3b4f0cb609"
+    },
+    "0/shuffled.safetensors": {
+      "bytes": 24335996,
+      "sha256": "34dd78779bfa1188e53a503703202283aea958d4210cb1509c153249acc006ff"
+    },
+    "0/zero.safetensors": {
+      "bytes": 24335988,
+      "sha256": "4c7ff20f73b7f8292fc5f272528a1ccc5bfa280b5d95e0459be70769f61b7142"
+    },
+    "1/dolphin.safetensors": {
+      "bytes": 24335988,
+      "sha256": "dcbb8a90a7947b8a2dbfbdaa3f1e826633d60728684974c8513958bf37072c98"
+    },
+    "1/optimizer-state.pt": {
+      "bytes": 48761893,
+      "sha256": "cfc03ca60cea3981833de432a24c1017dc6592349c72c64d4605375551389505"
+    },
+    "1/public.safetensors": {
+      "bytes": 24335988,
+      "sha256": "657117a203438743bd8a910aa3d6c0cfddb372d087cdc5af3b41b909a0931507"
+    },
+    "1/shuffled.safetensors": {
+      "bytes": 24335996,
+      "sha256": "78fd519e15c9b2db9925c4e514c4b65cb4ddafb60866e3876eb97d846208313d"
+    },
+    "1/zero.safetensors": {
+      "bytes": 24335988,
+      "sha256": "aced71efcd6e3ee16ffbc72b0ebbc5168ebd8671e294ab0242cf4f6f5b2acca3"
+    },
+    "2/dolphin.safetensors": {
+      "bytes": 24335988,
+      "sha256": "e42122f818865aef393f6820050728eb2d4ae4fc7ab3dd172cd7558b74b9cadf"
+    },
+    "2/optimizer-state.pt": {
+      "bytes": 48761893,
+      "sha256": "d38da3aaab46dcba8cacb5025f319e44348661c4ec4a45445f76b9b4365ba9c2"
+    },
+    "2/public.safetensors": {
+      "bytes": 24335988,
+      "sha256": "33e5f49f5758a023c703d0e4b918ea9195b820a32b4a04fdec8f8b3500cb5aea"
+    },
+    "2/shuffled.safetensors": {
+      "bytes": 24335996,
+      "sha256": "7a1c2787624ebe78a0a2bbe3e918b5cc4d243b43099f0b0849e66fbaf60f3ef8"
+    },
+    "2/zero.safetensors": {
+      "bytes": 24335988,
+      "sha256": "f5e8fc3fa6de41e8016e524fe0924323d46bface686141d2329a630905302dbf"
+    },
+    "3/dolphin.safetensors": {
+      "bytes": 24335988,
+      "sha256": "88a6640e7a720924dbe61330c7fa669194920c2ce43ea18dd219a15c27f99e31"
+    },
+    "3/optimizer-state.pt": {
+      "bytes": 48761893,
+      "sha256": "ee7ce81876f2de4ac311595cbfbcbeb228552d0bfdcd2d72e7efc721d1387362"
+    },
+    "3/public.safetensors": {
+      "bytes": 24335988,
+      "sha256": "ec8c6d7fb82580c784a376de30eaf33dea028c2edfe5af8a3bea17447bc1ff2f"
+    },
+    "3/shuffled.safetensors": {
+      "bytes": 24335996,
+      "sha256": "b35b6ead380e1635d9a3a3ba8e137822a61c243d58bf02c40f73d354e571b1e1"
+    },
+    "3/zero.safetensors": {
+      "bytes": 24335988,
+      "sha256": "d5acb69a1622a1f9083ff1e823278a2e074a4e7b0891ad98987419212c7bd445"
+    },
+    "4/dolphin.safetensors": {
+      "bytes": 24335988,
+      "sha256": "41e527fb128c508451c41266cc85815c9dd72bcd612c9dfa5e886e8584e9a8a5"
+    },
+    "4/optimizer-state.pt": {
+      "bytes": 48761893,
+      "sha256": "dae6d2a4b8caa51d0328307193a08a339a0e0aeb7a173f1cb1bc1f89189362b1"
+    },
+    "4/public.safetensors": {
+      "bytes": 24335988,
+      "sha256": "1b5926840ce112df2cc943d499e5b57b1e85692539416931409b80858f18764e"
+    },
+    "4/shuffled.safetensors": {
+      "bytes": 24335996,
+      "sha256": "f8d443dc9988cdb7e4526d508f425b8abcf7df892e471e6506e6db4992c282e4"
+    },
+    "4/zero.safetensors": {
+      "bytes": 24335988,
+      "sha256": "a6e060b47001c50e8d5808596fcf4b026b721f9fc2d8695291753b68d424ef9b"
+    },
+    "5/dolphin.safetensors": {
+      "bytes": 24335988,
+      "sha256": "addc44c423d87c7a6497762408be8a0552d247178bd0a96a8fa2519dd7113d9a"
+    },
+    "5/optimizer-state.pt": {
+      "bytes": 48761893,
+      "sha256": "9ec067551497d2d2606b3a53f1cb9196f620fa5b1ac55f5ffeddb4eeb7542391"
+    },
+    "5/public.safetensors": {
+      "bytes": 24335988,
+      "sha256": "c8ffb9438b701c58858e33ba6adf8abd7bd24f7923a1fe23d8ed4d6bc44252c9"
+    },
+    "5/shuffled.safetensors": {
+      "bytes": 24335996,
+      "sha256": "568f6d9f616d1fe335913cf2c941d7c386d4fc3f759e498df4cee823ea96e200"
+    },
+    "5/zero.safetensors": {
+      "bytes": 24335988,
+      "sha256": "a92b8aca44e870cdf7d0f40b97e4e360a179cd2b02f0dcb79db685977c67ea81"
+    },
+    "6/dolphin.safetensors": {
+      "bytes": 24335988,
+      "sha256": "b8248c4c7c3881f53381a05b7dde82262a8bed249661f101693c0c0480aacaac"
+    },
+    "6/optimizer-state.pt": {
+      "bytes": 48761893,
+      "sha256": "52669b63116863695dd7a05bb29a7123b7bafa16e974027e06f1903e9a35e46b"
+    },
+    "6/public.safetensors": {
+      "bytes": 24335988,
+      "sha256": "7af01067c6b814d40e76a536c05a53e28fb4d54f6d4afbe343f893914aa2da82"
+    },
+    "6/shuffled.safetensors": {
+      "bytes": 24335996,
+      "sha256": "b39ebfd8b5567733aa831ff270d550b4dec284f1c60642c7a08481b5ec59ddac"
+    },
+    "6/zero.safetensors": {
+      "bytes": 24335988,
+      "sha256": "4b06b42fcda86ec1b995f5fb7d856645b48a7c5def1af7f40f49174b33f4f26a"
+    },
+    "7/dolphin.safetensors": {
+      "bytes": 24335988,
+      "sha256": "94dac1bbbc90c8d043436e52f7c7363c9893386a67fa4b3c073481bf6022cb17"
+    },
+    "7/optimizer-state.pt": {
+      "bytes": 48761893,
+      "sha256": "2397c094f3bdd8bac8bffe8acb3b78271be7f0bd3e7a226cf1c6ff3067cb9a63"
+    },
+    "7/public.safetensors": {
+      "bytes": 24335988,
+      "sha256": "9a5c29d8add2ba8a69e9cecacd3de42a6c20fc5aa0c1652b91baffd7474497e2"
+    },
+    "7/shuffled.safetensors": {
+      "bytes": 24335996,
+      "sha256": "00596e4ede57510ef62769732730eef3d7da26629e9ac6cd8182ff787b8de954"
+    },
+    "7/zero.safetensors": {
+      "bytes": 24335988,
+      "sha256": "5698c3a53c7d016125f4205208712ec137ee8d7048ac12e5eb05e009d707e998"
+    }
+  },
+  "all_memory_choices_identical": true,
+  "maximum_public_zero_probability_difference": 0.0511726438999176,
+  "verdict": {
+    "useful_selection_demonstrated": false,
+    "memory_benefit_demonstrated": false,
+    "native_promotion_authorized": false,
+    "reason": "Primary memory selector has 44/128 correct against parent 51/128, adds four correct answers and loses eleven; all three equal-budget memory arms make identical choices"
+  },
+  "scope": {
+    "training_calibration_only": true,
+    "original_evaluation_opened": false,
+    "real_routed_generation_performed": false,
+    "language_experts_updated": false,
+    "private_inputs": false,
+    "native_learning_cycles_added": 0,
+    "extra_physical_workers": 0,
+    "new_model_published": false
+  }
+}
