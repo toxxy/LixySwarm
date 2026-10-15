@@ -10,6 +10,8 @@ La política matemática A18 se construye con `python engines/build_language.py 
 
 ## Construcción y verificación
 
+El archivo de descarga se crea con el perfil local correspondiente. Para la política matemática: `python engines/archive.py --package /ruta/LixySwarmLanguageCUDA --output /ruta/descargas/language.zip --profile language-cuda-math`. El perfil se elige al invocar el empaquetador; el manifiesto del paquete no concede esa selección. Los perfiles de lenguaje conservan enlaces a archivos internos para evitar repetir bibliotecas en el ZIP y al instalar. La metadata mantiene `installed_bytes` como tamaño lógico compatible con el catálogo y añade `regular_file_bytes` y `preserved_file_aliases`; estos datos no certifican el espacio máximo de todo el proceso de descarga e instalación. El perfil predeterminado sigue siendo `reference-cpu`.
+
 Crear un entorno separado fuera del checkout. Instalar `torch==2.12.0` desde el índice CPU oficial y las dependencias fijadas en `requirements-cpu.txt`, junto con `PyInstaller==6.22.3`. Después:
 
 ```bash
