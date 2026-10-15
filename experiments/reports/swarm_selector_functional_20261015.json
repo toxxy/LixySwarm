@@ -1,0 +1,178 @@
+{
+  "ci": {
+    "conclusion": "success",
+    "headSha": "60223edee2d538ef4bc542891c934990a11771ca",
+    "jobs": [
+      {
+        "completedAt": "2026-10-15T13:04:48Z",
+        "conclusion": "success",
+        "databaseId": 116436210972,
+        "name": "package (ubuntu-22.04)",
+        "startedAt": "2026-10-15T13:01:21Z",
+        "status": "completed",
+        "steps": [
+          {
+            "conclusion": "success",
+            "name": "Set up job",
+            "number": 1,
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Run actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09",
+            "number": 2,
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Run actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1",
+            "number": 3,
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Install the CPU-only tensor runtime",
+            "number": 4,
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Install engine and build dependencies",
+            "number": 5,
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Verify package trust and permissions",
+            "number": 6,
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Build a separate CPU engine",
+            "number": 7,
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Execute frozen inference and gradient checks",
+            "number": 8,
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02",
+            "number": 9,
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Post Run actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1",
+            "number": 17,
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Post Run actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09",
+            "number": 18,
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Complete job",
+            "number": 19,
+            "status": "completed"
+          }
+        ],
+        "url": "https://github.com/toxxy/LixySwarm/actions/runs/38739209940/job/116436210972"
+      }
+    ],
+    "status": "completed",
+    "url": "https://github.com/toxxy/LixySwarm/actions/runs/38739209940"
+  },
+  "experiment": "swarm_selector_functional_verification_v1",
+  "laptop_tests": {
+    "clean_checkout": true,
+    "command": "OMP_NUM_THREADS=2 MKL_NUM_THREADS=2 PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 .venv/bin/python -m pytest -q test_swarm_selection.py test_collective_learning.py",
+    "device": "cpu",
+    "passed": 13,
+    "seconds": 2.87,
+    "source_revision": "60223edee2d538ef4bc542891c934990a11771ca"
+  },
+  "reference_backward_compatibility": {
+    "checks": {
+      "eval": {
+        "logits_bitwise_equal": true,
+        "loss_bitwise_equal": true,
+        "pheromone_bitwise_equal": true
+      },
+      "train": {
+        "gradients_bitwise_equal": true,
+        "logits_bitwise_equal": true,
+        "loss_bitwise_equal": true,
+        "pheromone_bitwise_equal": true
+      }
+    },
+    "device": "cpu",
+    "experiment": "reference_selector_legacy_compatibility_v1",
+    "legacy_revision": "192b06e97916b50c852457ba97900229dab890fb",
+    "legacy_source_sha256": "a491e3387555f71f615377c99cd28b892b61563621e77ffde3d38fdbe3e903af",
+    "parameters": 245676,
+    "reference_config": {
+      "block_size": 64,
+      "family": "lixyswarm-byte-reference-v1",
+      "feromon_dim": 8,
+      "n_agents": 3,
+      "n_embd": 32,
+      "n_head": 4,
+      "n_layer": 1,
+      "swarm_rounds": 2,
+      "vocab_size": 256
+    },
+    "same_state_keys": true,
+    "scope": {
+      "memory_enabled": false,
+      "native_models_published": false,
+      "network_learning_claim": false,
+      "personal_memory_read": false,
+      "state_written_to_node": false
+    },
+    "seed": 20261015,
+    "source_revision": "60223edee2d538ef4bc542891c934990a11771ca",
+    "strict_legacy_checkpoint_load": true,
+    "success": true,
+    "tensor_count": 164,
+    "torch": "2.12.0+cu130"
+  },
+  "remaining": [
+    "Prospective equal-budget ablations of memory, Dolphin, pheromones and cooperation",
+    "Learned selection and independent experts in the public language response path",
+    "Versioned compatible signal spaces and resumable specialization state",
+    "All unfulfilled PLAN_VISION.md stage acceptance gates"
+  ],
+  "root_tests": {
+    "command": "OMP_NUM_THREADS=2 MKL_NUM_THREADS=2 PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 .venv/bin/python -m pytest -q test_engine_package.py test_compute_process.py test_language_adapter.py test_language_gradient.py test_public_quality.py test_collective_learning.py test_swarm_selection.py test_distributed_learning.py test_distributed_inference.py test_matriarca_legacy.py -k \"not test_13_swarm_uses_enriched and not test_14_route_and_kill_integrated\"",
+    "deselected": 1,
+    "device": "cpu",
+    "passed": 61,
+    "seconds": 28.72,
+    "selection_note": "The first named test was deselected to avoid its full-sized swarm. No test matches the second name; test_14_full_integration did run and passed."
+  },
+  "scope": {
+    "dolphin_sect_router_trained": false,
+    "equal_budget_quality_ablation": false,
+    "functional_regression_tests": true,
+    "general_language_quality_claim": false,
+    "internet_learning_claim": false,
+    "memory_encoder_trained": false,
+    "memory_vote_trainable": true,
+    "method": "Unit tests run locally on each PC; SSH used only for administration, not data or model transfer",
+    "new_accepted_model": false,
+    "new_native_release": false,
+    "production_services_restarted": false,
+    "synthetic_memory_only": true,
+    "tiny_real_neural_networks": true
+  },
+  "source_revision": "60223edee2d538ef4bc542891c934990a11771ca",
+  "success": true
+}
