@@ -13,13 +13,13 @@ from pathlib import Path
 
 import psutil
 
-from client_daemon import node_command
+from client_daemon import node_command,hardware_resources
 from src.network.client_state import ClientSettings,NodeStateLock
 from src.network.telemetry import verify_status
 from src.network.public_knowledge import KnowledgeSettings
 from src.network.learning_coordinator import LearningSettings
 from src.network.language_learning import LanguageLearningSettings
-from src.network.engine_catalog import cpu_engine
+from src.network.engine_catalog import cpu_engine,language_engine
 from src.network.engine_download import prepare_engine
 from src.version import VERSION
 
@@ -42,6 +42,24 @@ class NodeController:
 
     def settings(self):
         return ClientSettings.load(self.directory)
+
+    def resources(self):
+        snapshot=self.snapshot()
+        return (snapshot['status'].get('resources') if snapshot['fresh'] else None) or hardware_resources()
+
+    def automatic_preparation_target(self):
+        """Select one useful engine after the node reports actual hardware."""
+        snapshot=self.snapshot();settings=self.settings();policy=settings.policy
+        if not snapshot['fresh'] or not settings.connected or settings.paused:return None
+        resources=snapshot['status'].get('resources',{})
+        from src.network.language_preparation import eligible
+        try:
+            eligible(settings,resources,True,language_engine('cuda'))
+            return 'language'
+        except ValueError:pass
+        if (cpu_engine() is not None and policy.mode in {'balanced','maximum'} and policy.cpu_percent>0
+                and policy.max_cpu_jobs>0 and policy.max_ram_gb>=2):return 'cpu'
+        return None
 
     def snapshot(self):
         diagnostics = self._read("diagnostics.json")

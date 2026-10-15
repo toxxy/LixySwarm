@@ -37,6 +37,67 @@ def test_learning_button_uses_the_configured_language_progress(tmp_path,monkeypa
     assert not LanguageLearningSettings.load(tmp_path).enabled
 
 
+@pytest.mark.parametrize('vram,jobs,fresh,expected',[(8,1,True,'language'),
+    (32,2,True,'language'),(0,1,True,'cpu'),(8,2,True,'language'),
+    (7.99,2,True,'cpu'),(8,1,False,None)])
+def test_preparation_selects_gpu_first_with_actual_hardware_and_per_job_budget(tmp_path,monkeypatch,vram,jobs,fresh,expected):
+    import desktop.backend as backend
+    policy=ContributionPolicy.for_mode('maximum');policy.max_ram_gb=8;policy.gpu_percent=100;policy.max_gpu_jobs=jobs
+    ClientSettings(policy=policy).save(tmp_path)
+    controller=backend.NodeController(tmp_path)
+    monkeypatch.setattr(backend,'cpu_engine',lambda:object())
+    monkeypatch.setattr(backend,'language_engine',lambda device:object())
+    monkeypatch.setattr(controller,'snapshot',lambda:{'fresh':fresh,'status':{
+        'resources':{'has_gpu':vram>0,'gpu_vram_gb':vram}}})
+    assert controller.automatic_preparation_target()==expected
+
+
+def test_gpu_choice_preserves_hidden_operator_limits_and_waits_for_the_node(tmp_path,monkeypatch):
+    pytest.importorskip('PySide6')
+    os.environ.setdefault('QT_QPA_PLATFORM','offscreen')
+    from PySide6.QtWidgets import QApplication
+    from PySide6.QtCore import QCoreApplication,QEvent
+    from desktop.window import SwarmWindow
+    from desktop.backend import NodeController
+    policy=ContributionPolicy.for_mode('maximum');policy.max_gpu_jobs=1
+    policy.gpu_percent=100;policy.max_ram_gb=8;policy.max_disk_gb=8;policy.pause_above_cpu_percent=80
+    ClientSettings(policy=policy).save(tmp_path)
+    controller=NodeController(tmp_path);fresh=[False];calls=[]
+    monkeypatch.setattr(controller,'snapshot',lambda:{'fresh':fresh[0],'running':fresh[0],
+        'status':{'node_id':'0'*64,'state':'connected','resources':{'has_gpu':True,'gpu_vram_gb':7.99}},'diagnostics':{}})
+    monkeypatch.setattr(controller,'prepare_language',lambda:calls.append('gpu'))
+    app=QApplication.instance() or QApplication([])
+    window=SwarmWindow(controller,initialize_personal=False)
+    try:
+        assert window.chosen_policy().max_gpu_jobs==1
+        assert window.chosen_policy().pause_above_cpu_percent==80
+        monkeypatch.setattr(window,'prepare_engine',lambda:pytest.fail('Unneeded CPU engine was requested'))
+        window.preparation_requested=True;window.maybe_prepare_engine()
+        assert not calls and window.preparation_requested
+        fresh[0]=True;window.refresh();app.processEvents()
+        assert calls==['gpu'] and not window.preparation_requested
+    finally:
+        window.close();window.deleteLater();QCoreApplication.sendPostedEvents(None,QEvent.DeferredDelete);app.processEvents()
+
+
+def test_new_maximum_profile_uses_one_gpu_slot_on_an_eight_gib_laptop(tmp_path,monkeypatch):
+    pytest.importorskip('PySide6')
+    os.environ.setdefault('QT_QPA_PLATFORM','offscreen')
+    from PySide6.QtWidgets import QApplication
+    from PySide6.QtCore import QCoreApplication,QEvent
+    from desktop.window import SwarmWindow
+    from desktop.backend import NodeController
+    controller=NodeController(tmp_path)
+    monkeypatch.setattr(controller,'resources',lambda:{'has_gpu':True,'gpu_vram_gb':7.99})
+    app=QApplication.instance() or QApplication([])
+    window=SwarmWindow(controller,initialize_personal=False,auto_prepare=False)
+    try:
+        window.profile.setCurrentIndex(1)
+        assert window.chosen_policy().max_gpu_jobs==1
+    finally:
+        window.close();window.deleteLater();QCoreApplication.sendPostedEvents(None,QEvent.DeferredDelete);app.processEvents()
+
+
 def test_personal_content_is_encrypted_and_survives_a_new_store_instance(tmp_path):
     backend = KeyStore()
     store = PersonalStore(tmp_path, backend=backend)

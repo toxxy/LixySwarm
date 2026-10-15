@@ -1,6 +1,7 @@
 """Simple participant UI. No model is loaded by the interface."""
 from __future__ import annotations
 from dataclasses import asdict
+from copy import deepcopy
 from pathlib import Path
 import sys
 import threading
@@ -113,6 +114,7 @@ class SwarmWindow(QMainWindow):
         super().__init__()
         self.controller = controller or NodeController(state_directory())
         self.auto_prepare=auto_prepare; self.engine_preparation=None; self.engine_phase=""
+        self.preparation_requested=False
         self.chat_worker=None;self.chat_pending=False;self.chat_messages=[];self.chat_history=None;self.chat_last_result=None;self.close_pending=False
         self.chat_pending_memories=0;self.chat_last_memories=0
         self.setWindowTitle("LixySwarm")
@@ -259,13 +261,20 @@ class SwarmWindow(QMainWindow):
 
     def chosen_policy(self):
         index = self.profile.currentIndex()
-        policy = ContributionPolicy.for_mode("maximum" if index == 1 else "relay" if index == 3 else "balanced")
+        mode="maximum" if index==1 else "relay" if index==3 else "balanced"
+        current=self.controller.settings().policy
+        changed=mode!=current.mode or (index==2)!=current.only_when_idle
+        policy=ContributionPolicy.for_mode(mode) if changed else deepcopy(current)
         policy.only_when_idle = index == 2
         if policy.only_when_idle:
             policy.pause_above_cpu_percent = 35
         policy.cpu_percent = self.cpu.value(); policy.gpu_percent = self.gpu.value()
         policy.max_ram_gb = self.ram.value(); policy.max_disk_gb = self.disk.value()
         policy.max_bandwidth_mbps = self.bandwidth.value(); policy.pause_on_battery = self.battery.isChecked()
+        if changed and policy.max_gpu_jobs and policy.gpu_percent:
+            resources=self.controller.resources()
+            available=resources.get('gpu_vram_gb',0)*policy.gpu_percent/100
+            policy.max_gpu_jobs=min(policy.max_gpu_jobs,max(1,int(available//4)))
         if index == 3:
             policy.gpu_percent = 0
         policy.validate()
@@ -297,6 +306,7 @@ class SwarmWindow(QMainWindow):
             settings.policy = self.chosen_policy(); settings.paused = False
             self.controller.start(settings)
         self._action(action)
+        self.preparation_requested=True
         self.maybe_prepare_engine()
 
     def pause_node(self):
@@ -314,16 +324,24 @@ class SwarmWindow(QMainWindow):
 
     def save_resources(self):
         self._action(lambda: self.controller.save_policy(self.chosen_policy()))
+        self.preparation_requested=True
         self.maybe_prepare_engine()
 
     def maybe_prepare_engine(self):
+        if not self.auto_prepare:return
         if self.controller.runtime_update_available(): return
         try: settings=self.controller.settings()
         except (OSError,ValueError,TypeError): return
+        if not self.controller.snapshot()['fresh']:return
+        self.preparation_requested=False
+        target=self.controller.automatic_preparation_target()
+        if target is None:return
+        if not (self.controller.directory/"public-knowledge.json").exists():
+            self.controller.share_knowledge(True)
+        if target=='language':
+            self.maybe_prepare_language();return
         policy=settings.policy
         if self.auto_prepare and settings.connected and not settings.paused and policy.mode in {"balanced","maximum"} and policy.cpu_percent>0 and policy.max_ram_gb>=2 and not self.controller.cpu_engine_prepared() and cpu_engine() is not None:
-            if not (self.controller.directory/"public-knowledge.json").exists():
-                self.controller.share_knowledge(True)
             self.prepare_engine()
         self.maybe_prepare_language()
 
@@ -539,6 +557,9 @@ class SwarmWindow(QMainWindow):
         except (ValueError, TypeError, OSError):
             self.applied.setText("La configuración necesita revisión")
         self.activity.setPlainText(self.controller.log_tail())
+        if self.preparation_requested and snapshot['fresh'] and not needs_update:
+            self.preparation_requested=False
+            QTimer.singleShot(0,self.maybe_prepare_engine)
 
     def install_app(self):
         self.install_button.setEnabled(False)
