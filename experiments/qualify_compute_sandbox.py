@@ -6,6 +6,7 @@ weights, production model, learned memory or signing key is mounted in it.
 import argparse
 from dataclasses import asdict
 import json
+import math
 from pathlib import Path
 import signal
 import subprocess
@@ -22,6 +23,33 @@ from src.network.public_knowledge import managed_public_bytes
 from src.network.telemetry import atomic_json
 from .prepare_public_math import fingerprints, outside_checkout
 from .research_artifact import retained_bytes
+
+
+def verify_fixture_result(value):
+    common={'success','frozen','torch_version','cuda_runtime','inference_logits','gradient_tokens','personal_state_loaded'}
+    original=common|{'network_identity_loaded'}
+    expanded=common|{'candidate_evaluated','candidate_signed_or_promoted','candidate_loss_before',
+        'candidate_loss_after','test_fixture_signers','job_process_signing_keys_loaded'}
+    if (not isinstance(value,dict) or set(value) not in (original,expanded)
+            or value.get('success') is not True or value.get('frozen') is not True
+            or value.get('cuda_runtime') is not False or value.get('personal_state_loaded') is not False
+            or not isinstance(value.get('torch_version'),str) or not 1<=len(value['torch_version'])<=128
+            or type(value.get('inference_logits')) is not int or value['inference_logits']!=256
+            or type(value.get('gradient_tokens')) is not int or value['gradient_tokens']!=64):
+        raise ValueError('Frozen sandbox result does not match a known CPU fixture format')
+    if set(value)==original:
+        if value['network_identity_loaded'] is not False:raise ValueError('Legacy CPU fixture loaded an identity')
+        return {'inference_exercised':True,'gradient_exercised':True,'candidate_evaluation_exercised':False,
+            'fixture_format':'original-inference-gradient','fixture_identity_scope':'no identity loaded'}
+    if (value['candidate_evaluated'] is not True or value['candidate_signed_or_promoted'] is not False
+            or value['job_process_signing_keys_loaded'] is not False
+            or type(value['test_fixture_signers']) is not int or value['test_fixture_signers']!=3
+            or any(type(value[k]) not in (int,float) or not math.isfinite(value[k]) or value[k]<=0
+                for k in ('candidate_loss_before','candidate_loss_after'))
+            or value['candidate_loss_after']>=value['candidate_loss_before']):
+        raise ValueError('Expanded CPU fixture exceeded its unsigned evaluation scope')
+    return {'inference_exercised':True,'gradient_exercised':True,'candidate_evaluation_exercised':True,
+        'fixture_format':'expanded-unsigned-candidate','fixture_identity_scope':'three synthetic fixture identities only'}
 
 
 def run(args):
@@ -65,11 +93,8 @@ def run(args):
             value=ComputeSupervisor().run([str(executable),'--self-test'],{'device':'cpu'},execution,
                 allowed=allowed,ram_gb=2,sandbox=CPUComputeSandbox((package,),(),output))
         report['engine_self_test']=value
-        if (value.get('success') is not True or value.get('frozen') is not True or value.get('cuda_runtime') is not False
-                or value.get('candidate_evaluated') is not True or value.get('candidate_signed_or_promoted') is not False
-                or value.get('personal_state_loaded') is not False or value.get('job_process_signing_keys_loaded') is not False):
-            raise ValueError('Frozen sandbox result does not match its restricted fixture scope')
-        report.update(success=True,engine_self_test=value,finished_at=time.time())
+        checks=verify_fixture_result(value)
+        report.update(success=True,checks=checks,finished_at=time.time())
     except BaseException as error:
         report.update(error_type=type(error).__name__,error=str(error)[:1024]);raise
     finally:

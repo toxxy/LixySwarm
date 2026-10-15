@@ -15,6 +15,7 @@ import psutil
 
 from src.network.compute_process import ComputeProcessError, ComputeSupervisor
 from src.network.compute_sandbox import CPUComputeSandbox, ComputeSandboxError
+from experiments.qualify_compute_sandbox import verify_fixture_result
 
 
 @pytest.fixture
@@ -153,3 +154,17 @@ time.sleep(60)
         assert all(not p.is_running() or p.status()==psutil.STATUS_ZOMBIE for p in owned)
     finally:
         permission.clear();thread.join(4)
+
+
+def test_cpu_fixture_formats_do_not_invent_candidate_evaluation_for_old_engine():
+    original={'success':True,'frozen':True,'torch_version':'2.12.0+cpu','cuda_runtime':False,
+        'inference_logits':256,'gradient_tokens':64,'personal_state_loaded':False,'network_identity_loaded':False}
+    assert verify_fixture_result(original)['candidate_evaluation_exercised'] is False
+    expanded={k:v for k,v in original.items() if k!='network_identity_loaded'}
+    expanded.update(candidate_evaluated=True,candidate_signed_or_promoted=False,candidate_loss_before=.9,
+        candidate_loss_after=.8,test_fixture_signers=3,job_process_signing_keys_loaded=False)
+    assert verify_fixture_result(expanded)['candidate_evaluation_exercised'] is True
+    for value in [{**original,'network_identity_loaded':True},{**original,'gradient_tokens':True},
+                  {**original,'unexpected_peer_claim':True},{**expanded,'candidate_signed_or_promoted':True},
+                  {**expanded,'job_process_signing_keys_loaded':True}]:
+        with pytest.raises(ValueError):verify_fixture_result(value)
