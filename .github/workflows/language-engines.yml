@@ -9,6 +9,7 @@ on:
   push:
     branches: [main]
     paths:
+      - 'src/artifact_io.py'
       - 'engines/build_language.py'
       - 'engines/language_main.py'
       - 'src/learning/**'

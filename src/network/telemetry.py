@@ -17,6 +17,7 @@ from pathlib import Path
 
 from cryptography.exceptions import InvalidSignature
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PublicKey
+from src.artifact_io import atomic_json
 
 MAX_STATUS_BYTES = 16 * 1024
 FRESH_SECONDS = 60
@@ -30,28 +31,6 @@ ROLES = {"participant", "seed", "relay"}
 
 def canonical(value: dict) -> bytes:
     return json.dumps(value, sort_keys=True, separators=(",", ":"), allow_nan=False).encode()
-
-
-def atomic_json(path: Path, value: dict) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    fd, temporary = tempfile.mkstemp(prefix=f".{path.name}.", dir=path.parent)
-    try:
-        with os.fdopen(fd, "w") as stream:
-            json.dump(value, stream, sort_keys=True, allow_nan=False)
-        # Windows readers and scanners may temporarily deny replacement.
-        # Preserve the previous complete record and retry the atomic rename.
-        deadline = time.monotonic() + 1.0
-        while True:
-            try:
-                os.replace(temporary, path)
-                break
-            except PermissionError:
-                if time.monotonic() >= deadline:
-                    raise
-                time.sleep(0.02)
-    finally:
-        if os.path.exists(temporary):
-            os.unlink(temporary)
 
 
 def _number(value, minimum, maximum, *, integer=False):

@@ -10,6 +10,7 @@ on:
   push:
     branches: [main]
     paths:
+      - 'src/artifact_io.py'
       - 'desktop/**'
       - 'client_daemon.py'
       - 'src/network/**'

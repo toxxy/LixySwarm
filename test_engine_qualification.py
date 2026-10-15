@@ -1,5 +1,7 @@
 from copy import deepcopy
 from pathlib import Path
+import subprocess
+import sys
 
 import pytest
 
@@ -24,3 +26,11 @@ def test_bound_public_reference_and_exact_outputs_never_promote_a_model():
 def test_reference_cannot_be_replaced_by_a_peer_report(tmp_path):
     path=tmp_path/'untrusted.json';path.write_text('{}')
     with pytest.raises(ValueError,match='bound published'):reference(path)
+
+
+def test_artifact_report_io_is_standalone_and_preserves_previous_complete_record(tmp_path):
+    from src.artifact_io import atomic_json
+    path=tmp_path/'report.json';atomic_json(path,{'success':True});before=path.read_bytes()
+    with pytest.raises(ValueError):atomic_json(path,{'loss':float('nan')})
+    assert path.read_bytes()==before and not list(tmp_path.glob('.report.json.*'))
+    subprocess.run([sys.executable,'-c',"import sys;from src.artifact_io import atomic_json;assert 'torch' not in sys.modules;assert not any(k.startswith('src.network') for k in sys.modules)"],check=True)

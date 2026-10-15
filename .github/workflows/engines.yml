@@ -10,6 +10,7 @@ on:
   push:
     branches: [main]
     paths:
+      - 'src/artifact_io.py'
       - 'engines/**'
       - 'src/network/reference_job.py'
       - 'src/network/reference_model.py'

@@ -89,7 +89,7 @@ def run(request):
     if digest_file(request['adapter_file'])[0] != request['model_id']:
         raise ValueError('Math evaluation adapter differs from the declared accepted model')
     output = Path(request['output_directory']);output.mkdir(parents=True, exist_ok=False)
-    from src.network.telemetry import atomic_json
+    from src.artifact_io import atomic_json
     def progress(done, total):
         atomic_json(output/'progress.json', {'phase': 'public-math', 'completed': done, 'total': total, 'timestamp': time.time()})
     import torch
