@@ -1,0 +1,6 @@
+#!/bin/sh
+set -eu
+if [ "${RENEWED_LINEAGE:-}" = /etc/lixyswarm-acme/live/lixyswarm-ip ]; then
+    /usr/sbin/nginx -t
+    /usr/bin/systemctl reload nginx.service
+fi

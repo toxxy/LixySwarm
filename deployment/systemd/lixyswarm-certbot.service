@@ -1,0 +1,15 @@
+[Unit]
+Description=Renew the LixySwarm public IP certificate
+Wants=network-online.target
+After=network-online.target nginx.service
+
+[Service]
+Type=oneshot
+ExecStart=/opt/lixyswarm-certbot-5.8.0/bin/certbot renew --non-interactive --no-random-sleep-on-renew --config-dir /etc/lixyswarm-acme --work-dir /var/lib/lixyswarm-acme/work --logs-dir /var/log/lixyswarm-acme
+UMask=0077
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectHome=true
+ProtectSystem=full
+ReadWritePaths=/etc/lixyswarm-acme
+TimeoutStartSec=300

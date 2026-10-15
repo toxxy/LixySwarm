@@ -1,0 +1,11 @@
+[Unit]
+Description=Check the short-lived LixySwarm certificate every four hours
+
+[Timer]
+OnCalendar=*-*-* 00/4:00:00
+RandomizedDelaySec=15m
+Persistent=true
+Unit=lixyswarm-certbot.service
+
+[Install]
+WantedBy=timers.target
