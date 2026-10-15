@@ -1,0 +1,31 @@
+{
+  "success": true,
+  "source_revision": "83ad43f99213ab4cd4880d90efb7de638c84207b",
+  "main": {
+    "controls_preserved": true,
+    "expert_preserved": true,
+    "follower_initially_disabled": true,
+    "identity_preserved": true,
+    "node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+    "pid": 2809149,
+    "runtime_version": "0.4.0a12",
+    "success": true,
+    "timestamp": 1792024492.2782118
+  },
+  "laptop": {
+    "controls_preserved": true,
+    "expert_preserved": true,
+    "follower_initially_disabled": true,
+    "identity_preserved": true,
+    "node_id": "ea914d97caafef310e50385034abae9a50ba86496b0e9cbf4679e6070e4c25b0",
+    "pid": 460668,
+    "runtime_version": "0.4.0a12",
+    "success": true,
+    "timestamp": 1792024522.2466397
+  },
+  "scope": "Native A12 upgrades of existing two physical Linux nodes; identity, resource controls and expert preserved; not clean-machine GPU installation",
+  "public_relay_routes_use_physical_interfaces": {
+    "main": "enp5s0",
+    "laptop": "wlp0s20f3"
+  }
+}

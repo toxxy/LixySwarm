@@ -1,0 +1,60 @@
+{
+  "artifact_bytes": 6434736,
+  "error": null,
+  "expert_enabled_after": true,
+  "expert_enabled_before": true,
+  "finished_at": 1792024580.459043,
+  "model_bytes": 6434736,
+  "model_id": "8e526788ef461c8ac20f2c1e9c510258b1862d8520b83d84e8ca2cce73a38e8d",
+  "physical_receiver": "ea914d97caafef310e50385034abae9a50ba86496b0e9cbf4679e6070e4c25b0",
+  "previous_selected_model": "badef4394af180ab75ca25f0d9d47f2406b92809b53b5845ab65d451cf9c4b3c",
+  "producer": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+  "release_id": "4e478620e27f3e28041a23d8e942d5fa45ca8c04ab04c8f7d5aae83db6fba594",
+  "repair_record": {
+    "acquired_objects": {
+      "8e526788ef461c8ac20f2c1e9c510258b1862d8520b83d84e8ca2cce73a38e8d": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255"
+    },
+    "active_expert_changed": true,
+    "history_failures": [],
+    "metadata_providers": [
+      "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255"
+    ],
+    "model_id": "8e526788ef461c8ac20f2c1e9c510258b1862d8520b83d84e8ca2cce73a38e8d",
+    "physical_receiver": "ea914d97caafef310e50385034abae9a50ba86496b0e9cbf4679e6070e4c25b0",
+    "providers": [
+      "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255"
+    ],
+    "release_id": "4e478620e27f3e28041a23d8e942d5fa45ca8c04ab04c8f7d5aae83db6fba594",
+    "resource_permissions_changed": false,
+    "routes": [
+      {
+        "encrypted": true,
+        "host": "187.189.64.24",
+        "node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+        "relay_host": "31.97.9.54",
+        "transport": "relay"
+      }
+    ],
+    "selection": "selected",
+    "sequence": 1,
+    "verified_at": 1792024576.7601738
+  },
+  "resource_controls_unchanged": true,
+  "restored_original_selected_expert": true,
+  "scope": "Same physical laptop automatically repairs accepted sequence-one adapter and selects it from its local enabled ancestor; no new learning or extra physical replica",
+  "selected_model": "8e526788ef461c8ac20f2c1e9c510258b1862d8520b83d84e8ca2cce73a38e8d",
+  "setup": {
+    "model_id": "8e526788ef461c8ac20f2c1e9c510258b1862d8520b83d84e8ca2cce73a38e8d",
+    "physical_receiver": "ea914d97caafef310e50385034abae9a50ba86496b0e9cbf4679e6070e4c25b0",
+    "prepared": true,
+    "previous_selected_model": "badef4394af180ab75ca25f0d9d47f2406b92809b53b5845ab65d451cf9c4b3c",
+    "release_id": "4e478620e27f3e28041a23d8e942d5fa45ca8c04ab04c8f7d5aae83db6fba594",
+    "started_at": 1792024545.141291
+  },
+  "sha256_verified": true,
+  "state": "current",
+  "success": true,
+  "source_revision": "83ad43f99213ab4cd4880d90efb7de638c84207b",
+  "runtime_version": "0.4.0a12",
+  "visitor_is_extra_physical_worker": false
+}

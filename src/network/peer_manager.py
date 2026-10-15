@@ -519,7 +519,21 @@ class PeerManager:
         self._wake.set()
 
     def addresses_for_exchange(self, limit: int = 100) -> list[dict]:
-        return self.address_book.export(limit=limit)
+        # Gossip can repeatedly refresh old visitors. Recency alone must not
+        # push a currently connected provider out of the bounded exchange.
+        limit=max(0,min(int(limit),MAX_KNOWN_PEERS))
+        current=getattr(self.node,'peers',lambda:[])()
+        live=[{'host':peer['host'],'port':peer['port'],'node_id':peer['node_id'],'last_seen':time.time()}
+            for peer in current
+            if validate_peer_address(peer.get('host'),peer.get('port'),allow_private=self.address_book.allow_private)
+            and isinstance(peer.get('node_id'),str) and re.fullmatch('[0-9a-f]{64}',peer['node_id'])]
+        result=[];seen=set()
+        for peer in live+self.address_book.export(limit=limit):
+            key=(peer['host'],peer['port'])
+            if key in seen:continue
+            seen.add(key);result.append(peer)
+            if len(result)>=limit:break
+        return result if limit else []
 
     async def _maintain(self):
         while self._running:

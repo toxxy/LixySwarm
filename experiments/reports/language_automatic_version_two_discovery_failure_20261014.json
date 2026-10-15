@@ -1,0 +1,15 @@
+{
+  "finished_at": 1792024854.4956343,
+  "model_id": "506317cc9f40da9dea40e6d14a94910ac6625ae478b5f2d0248cb1bbbb93a6c3",
+  "scope": "Failed fresh lightweight requester discovery before the seed peer-exchange fix; sequence-two model was already replicated by the physical services",
+  "started_at": 1792024809.4922693,
+  "success": false,
+  "visitor_has_model_or_engine": false,
+  "visitor_is_extra_physical_worker": false,
+  "worker_id": "ea914d97caafef310e50385034abae9a50ba86496b0e9cbf4679e6070e4c25b0",
+  "failure_stage": "provider_discovery",
+  "seed_advertised_entries": 100,
+  "laptop_present_in_seed_exchange": false,
+  "timeout_s": 45,
+  "retry_success_claimed": false
+}

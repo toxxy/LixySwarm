@@ -1,0 +1,229 @@
+{
+  "scope": "Four automatically scheduled rounds after one earlier controlled round; five total; stopped by the unchanged three-consecutive-rejection limit; ten-round criterion not yet met",
+  "source_revision": "83ad43f99213ab4cd4880d90efb7de638c84207b",
+  "success": true,
+  "automatic_rounds_completed": 4,
+  "total_completed_rounds": 5,
+  "round_limit": 10,
+  "consecutive_rejection_limit": 3,
+  "stop_reason": "no_improvement",
+  "rejections_at_stop": 3,
+  "cursor_before_window": 32,
+  "cursor_after_window": 96,
+  "active_training_at_stop": 0,
+  "accepted_sequence_at_stop": 2,
+  "rounds": [
+    {
+      "round": 0,
+      "accepted": false,
+      "cursor_before": 16,
+      "cursor_after": 32,
+      "finished_at": 1792023696.3890388,
+      "summary": {
+        "adapter_bytes": 6434736,
+        "adapter_id": "76d1ca2eb75662ecc0fc446716be499a7cd6fc5adccab0fbd90ec9535cdc0be2",
+        "baseline_nll": 0.00040111959138678424,
+        "candidate_nll": 0.0004180186905486163,
+        "distributed_worker_gate_passed": true,
+        "eligible_for_publication": false,
+        "factual_verdict": {
+          "baseline_passed": 40,
+          "candidate_passed": 40,
+          "case_digest": "5514ae9f1ca84f9afe7311eee76ae7adf694ddf2d2419e246f5bf931a3371c19",
+          "eligible_for_promotion": true,
+          "regressions": [],
+          "scope": "Factual paraphrase preservation only; not a general conversation score",
+          "total": 40
+        },
+        "instruction_verdict": {
+          "baseline_passed": 38,
+          "candidate_passed": 38,
+          "case_digest": "584a1363bdada696e8b757e8b478e05328096ba922a4f8d6903609b8ba46cfd2",
+          "eligible_for_promotion": true,
+          "regressions": [],
+          "scope": "Elementary public instruction/context screening; not broad reasoning certification",
+          "total": 40
+        },
+        "numerical_gates_passed": false,
+        "parent_release_id": "4e478620e27f3e28041a23d8e942d5fa45ca8c04ab04c8f7d5aae83db6fba594",
+        "physical_workers": [
+          "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+          "ea914d97caafef310e50385034abae9a50ba86496b0e9cbf4679e6070e4c25b0"
+        ],
+        "published": false,
+        "tokens": 86
+      },
+      "parent_release_id": "4e478620e27f3e28041a23d8e942d5fa45ca8c04ab04c8f7d5aae83db6fba594"
+    },
+    {
+      "round": 1,
+      "accepted": true,
+      "cursor_before": 32,
+      "cursor_after": 48,
+      "finished_at": 1792024678.162651,
+      "summary": {
+        "adapter_bytes": 6434736,
+        "adapter_id": "506317cc9f40da9dea40e6d14a94910ac6625ae478b5f2d0248cb1bbbb93a6c3",
+        "baseline_nll": 0.00040111959138678424,
+        "candidate_nll": 0.00038240729173403203,
+        "distributed_worker_gate_passed": true,
+        "eligible_for_publication": true,
+        "factual_verdict": {
+          "baseline_passed": 40,
+          "candidate_passed": 40,
+          "case_digest": "5514ae9f1ca84f9afe7311eee76ae7adf694ddf2d2419e246f5bf931a3371c19",
+          "eligible_for_promotion": true,
+          "regressions": [],
+          "scope": "Factual paraphrase preservation only; not a general conversation score",
+          "total": 40
+        },
+        "instruction_verdict": {
+          "baseline_passed": 38,
+          "candidate_passed": 38,
+          "case_digest": "584a1363bdada696e8b757e8b478e05328096ba922a4f8d6903609b8ba46cfd2",
+          "eligible_for_promotion": true,
+          "regressions": [],
+          "scope": "Elementary public instruction/context screening; not broad reasoning certification",
+          "total": 40
+        },
+        "numerical_gates_passed": true,
+        "parent_release_id": "4e478620e27f3e28041a23d8e942d5fa45ca8c04ab04c8f7d5aae83db6fba594",
+        "physical_workers": [
+          "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+          "ea914d97caafef310e50385034abae9a50ba86496b0e9cbf4679e6070e4c25b0"
+        ],
+        "published": false,
+        "tokens": 96
+      },
+      "parent_release_id": "4e478620e27f3e28041a23d8e942d5fa45ca8c04ab04c8f7d5aae83db6fba594"
+    },
+    {
+      "round": 2,
+      "accepted": false,
+      "cursor_before": 48,
+      "cursor_after": 64,
+      "finished_at": 1792024785.1506634,
+      "summary": {
+        "adapter_bytes": 6434736,
+        "adapter_id": "d4a910c6cfd913fddc24c9e92c7dd74579653f9eb9cecfd60d8720a018403b99",
+        "baseline_nll": 0.00038240729173403203,
+        "candidate_nll": 0.0004012267176911111,
+        "distributed_worker_gate_passed": true,
+        "eligible_for_publication": false,
+        "factual_verdict": {
+          "baseline_passed": 40,
+          "candidate_passed": 40,
+          "case_digest": "5514ae9f1ca84f9afe7311eee76ae7adf694ddf2d2419e246f5bf931a3371c19",
+          "eligible_for_promotion": true,
+          "regressions": [],
+          "scope": "Factual paraphrase preservation only; not a general conversation score",
+          "total": 40
+        },
+        "instruction_verdict": {
+          "baseline_passed": 38,
+          "candidate_passed": 38,
+          "case_digest": "584a1363bdada696e8b757e8b478e05328096ba922a4f8d6903609b8ba46cfd2",
+          "eligible_for_promotion": true,
+          "regressions": [],
+          "scope": "Elementary public instruction/context screening; not broad reasoning certification",
+          "total": 40
+        },
+        "numerical_gates_passed": false,
+        "parent_release_id": "df231f9b93f6300ba7242da793d457880a416448f00d0e9b914e6a3f7b1e533a",
+        "physical_workers": [
+          "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+          "ea914d97caafef310e50385034abae9a50ba86496b0e9cbf4679e6070e4c25b0"
+        ],
+        "published": false,
+        "tokens": 79
+      },
+      "parent_release_id": "df231f9b93f6300ba7242da793d457880a416448f00d0e9b914e6a3f7b1e533a"
+    },
+    {
+      "round": 3,
+      "accepted": false,
+      "cursor_before": 64,
+      "cursor_after": 80,
+      "finished_at": 1792024861.5065262,
+      "summary": {
+        "adapter_bytes": 6434736,
+        "adapter_id": "2a08218f765f0e9cebbbbec74a755db8417318a1fdc3d9f5cc387e3ec2c49669",
+        "baseline_nll": 0.00038240729173403203,
+        "candidate_nll": 0.00043475731559137007,
+        "distributed_worker_gate_passed": true,
+        "eligible_for_publication": false,
+        "factual_verdict": {
+          "baseline_passed": 40,
+          "candidate_passed": 40,
+          "case_digest": "5514ae9f1ca84f9afe7311eee76ae7adf694ddf2d2419e246f5bf931a3371c19",
+          "eligible_for_promotion": true,
+          "regressions": [],
+          "scope": "Factual paraphrase preservation only; not a general conversation score",
+          "total": 40
+        },
+        "instruction_verdict": {
+          "baseline_passed": 38,
+          "candidate_passed": 38,
+          "case_digest": "584a1363bdada696e8b757e8b478e05328096ba922a4f8d6903609b8ba46cfd2",
+          "eligible_for_promotion": true,
+          "regressions": [],
+          "scope": "Elementary public instruction/context screening; not broad reasoning certification",
+          "total": 40
+        },
+        "numerical_gates_passed": false,
+        "parent_release_id": "df231f9b93f6300ba7242da793d457880a416448f00d0e9b914e6a3f7b1e533a",
+        "physical_workers": [
+          "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+          "ea914d97caafef310e50385034abae9a50ba86496b0e9cbf4679e6070e4c25b0"
+        ],
+        "published": false,
+        "tokens": 87
+      },
+      "parent_release_id": "df231f9b93f6300ba7242da793d457880a416448f00d0e9b914e6a3f7b1e533a"
+    },
+    {
+      "round": 4,
+      "accepted": false,
+      "cursor_before": 80,
+      "cursor_after": 96,
+      "finished_at": 1792024937.9094248,
+      "summary": {
+        "adapter_bytes": 6434736,
+        "adapter_id": "a078e7e30eaf374e6033b8ebc00331886ee9b1cd518807c4f5065f18987bbbc5",
+        "baseline_nll": 0.00038240729173403203,
+        "candidate_nll": 0.00038792771924522993,
+        "distributed_worker_gate_passed": true,
+        "eligible_for_publication": false,
+        "factual_verdict": {
+          "baseline_passed": 40,
+          "candidate_passed": 40,
+          "case_digest": "5514ae9f1ca84f9afe7311eee76ae7adf694ddf2d2419e246f5bf931a3371c19",
+          "eligible_for_promotion": true,
+          "regressions": [],
+          "scope": "Factual paraphrase preservation only; not a general conversation score",
+          "total": 40
+        },
+        "instruction_verdict": {
+          "baseline_passed": 38,
+          "candidate_passed": 38,
+          "case_digest": "584a1363bdada696e8b757e8b478e05328096ba922a4f8d6903609b8ba46cfd2",
+          "eligible_for_promotion": true,
+          "regressions": [],
+          "scope": "Elementary public instruction/context screening; not broad reasoning certification",
+          "total": 40
+        },
+        "numerical_gates_passed": false,
+        "parent_release_id": "df231f9b93f6300ba7242da793d457880a416448f00d0e9b914e6a3f7b1e533a",
+        "physical_workers": [
+          "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+          "ea914d97caafef310e50385034abae9a50ba86496b0e9cbf4679e6070e4c25b0"
+        ],
+        "published": false,
+        "tokens": 59
+      },
+      "parent_release_id": "df231f9b93f6300ba7242da793d457880a416448f00d0e9b914e6a3f7b1e533a"
+    }
+  ],
+  "started_at": 1792024628.6018014,
+  "finished_at": 1792024939.3469722
+}
