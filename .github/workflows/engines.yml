@@ -15,6 +15,8 @@ on:
       - 'src/network/reference_job.py'
       - 'src/network/reference_model.py'
       - 'src/network/engine_package.py'
+      - 'src/network/engine_cache.py'
+      - 'test_engine_cache.py'
       - 'src/agents/**'
       - 'src/swarm/**'
       - 'src/matriarca/**'
@@ -50,7 +52,7 @@ jobs:
       - name: Install engine and build dependencies
         run: python -m pip install -r engines/requirements-cpu.txt PyInstaller==6.22.3 pytest==8.4.2 safetensors==0.7.0 certifi==2026.7.22
       - name: Verify package trust and permissions
-        run: python -m pytest -q test_engine_package.py test_engine_archive.py test_engine_qualification.py test_compute_process.py test_language_adapter.py test_language_gradient.py test_public_quality.py test_collective_learning.py test_swarm_selection.py
+        run: python -m pytest -q test_engine_package.py test_engine_cache.py test_engine_archive.py test_engine_qualification.py test_compute_process.py test_language_adapter.py test_language_gradient.py test_public_quality.py test_collective_learning.py test_swarm_selection.py
       - name: Build a separate CPU engine
         run: python engines/build.py --output engine-package
       - name: Execute frozen inference and gradient checks

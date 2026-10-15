@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 import platform
 import re
 import shutil
@@ -25,10 +26,21 @@ MAX_PACKAGE_FILES = 10000
 
 
 def digest_file(path):
+    return _checked_digest(path,lambda:None)
+
+
+def _checked_digest(path,check):
     digest = hashlib.sha256()
     with Path(path).open("rb") as stream:
+        before=os.fstat(stream.fileno())
         for block in iter(lambda: stream.read(1024**2), b""):
+            check()
             digest.update(block)
+        after=os.fstat(stream.fileno())
+        current=Path(path).stat()
+        signature=lambda s:(s.st_dev,s.st_ino,s.st_size,s.st_mtime_ns,s.st_ctime_ns)
+        if signature(before)!=signature(after) or signature(after)!=signature(current):
+            raise ValueError('Engine file changed while its hash was verified')
     return digest.hexdigest()
 
 
@@ -41,15 +53,17 @@ def safe_relative(value):
     return path
 
 
-def verify_package(directory, trusted_manifest_sha256, *, target_platform=None, target_machine=None,profile='reference-cpu'):
+def verify_package(directory, trusted_manifest_sha256, *, target_platform=None, target_machine=None,profile='reference-cpu',check=None):
     selected=engine_profile(profile);maximum=selected['max_package_bytes']
     root = Path(directory).resolve()
+    checked_digest=digest_file if check is None else lambda p:_checked_digest(p,check)
+    if check is not None:check()
     if not isinstance(trusted_manifest_sha256, str) or not HEX.fullmatch(trusted_manifest_sha256):
         raise ValueError("Engine installation requires a locally trusted manifest digest")
     manifest_path = root / "engine-package.json"
     if manifest_path.is_symlink() or manifest_path.stat().st_size > MAX_MANIFEST_BYTES:
         raise ValueError("Engine manifest exceeds its bound or is a symlink")
-    if digest_file(manifest_path) != trusted_manifest_sha256:
+    if checked_digest(manifest_path) != trusted_manifest_sha256:
         raise ValueError("Engine package manifest is not trusted")
     manifest = json.loads(manifest_path.read_text())
     if not isinstance(manifest, dict) or set(manifest) != {"version", "name", "platform", "machine", "torch", "operations", "entrypoint", "files"}:
@@ -67,6 +81,7 @@ def verify_package(directory, trusted_manifest_sha256, *, target_platform=None, 
     declared = set()
     size = 0
     for item in files:
+        if check is not None:check()
         if not isinstance(item, dict) or set(item) != {"path", "bytes", "sha256"}:
             raise ValueError("Invalid engine file schema")
         relative = safe_relative(item["path"])
@@ -79,10 +94,11 @@ def verify_package(directory, trusted_manifest_sha256, *, target_platform=None, 
         if size > maximum:
             raise ValueError("Engine package exceeds its disk bound")
         path = root.joinpath(*relative.parts)
-        if not path.resolve().is_relative_to(root) or not path.is_file() or path.stat().st_size != item["bytes"] or digest_file(path) != item["sha256"]:
+        if not path.resolve().is_relative_to(root) or not path.is_file() or path.stat().st_size != item["bytes"] or checked_digest(path) != item["sha256"]:
             raise ValueError("Engine package file failed verification")
     actual = set()
     for path in root.rglob("*"):
+        if check is not None:check()
         if path.is_symlink() and not path.resolve().is_relative_to(root):
             raise ValueError("Engine package symlink escaped its root")
         if path.is_file():

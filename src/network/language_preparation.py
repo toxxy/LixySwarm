@@ -15,6 +15,7 @@ from .client_state import ClientSettings,NodeStateLock
 from .engine_catalog import language_engine,engine_regular_bytes
 from .engine_download import PreparationCancelled, prepare_engine
 from .engine_package import verify_package
+from .engine_cache import candidate_cache_bytes,_reclaim_locked,local_entries
 from .language_compute import LanguageSettings
 from .language_install import materialize_version,model_hardlinks_available
 from .language_replication import replicate_version
@@ -131,9 +132,10 @@ class LanguagePreparation:
             eligible(settings, self.resources, self.knowledge.allowed, entry)
             LanguageSettings.load(self.directory).validate()
             required = remaining_budget(self.directory, self.families.store, entry)
-            if managed_public_bytes(self.directory)+required > settings.policy.max_disk_gb*1024**3:
+            reclaimable=candidate_cache_bytes(self.directory,(*local_entries(),entry))
+            if managed_public_bytes(self.directory)+required-reclaimable > settings.policy.max_disk_gb*1024**3:
                 raise ValueError(f'Autoriza al menos {(managed_public_bytes(self.directory)+required)/1024**3:.1f} GB de almacenamiento para esta preparación')
-            if shutil.disk_usage(self.directory).free < required:
+            if shutil.disk_usage(self.directory).free+reclaimable < required:
                 raise ValueError('No hay suficiente espacio libre para preparar el experto')
             atomic_json(self.intent, {'version': 1, 'requested': True})
             self.cancel = threading.Event()
@@ -166,16 +168,23 @@ class LanguagePreparation:
     def _run(self, settings, entry):
         permission = asdict(settings.policy)
         previous = asdict(LanguageSettings.load(self.directory))
-        def allowed():
+        def authorized():
             current = ClientSettings.load(self.directory)
             return (not self.closed and not self.cancel.is_set() and current.connected and not current.paused
                 and self.knowledge.allowed and asdict(current.policy) == permission
-                and asdict(LanguageSettings.load(self.directory)) == previous
-                and managed_public_bytes(self.directory) <= current.policy.max_disk_gb*1024**3)
+                and asdict(LanguageSettings.load(self.directory)) == previous)
+        def allowed():
+            return authorized() and managed_public_bytes(self.directory)<=ClientSettings.load(self.directory).policy.max_disk_gb*1024**3
         guard=NodeStateLock(self.directory/'preparation-lock');acquired=False
         try:
             guard.__enter__();acquired=True
             required=remaining_budget(self.directory,self.families.store,entry)
+            if managed_public_bytes(self.directory)+required>settings.policy.max_disk_gb*1024**3 or shutil.disk_usage(self.directory).free<required:
+                self._status('reclaiming-cache',message='Recuperando espacio de descargas verificadas')
+                def check_reclaim():
+                    if not authorized():raise PreparationCancelled('Preparación detenida; los archivos se conservan')
+                _reclaim_locked(self.directory,(*local_entries(),entry),check=check_reclaim)
+                required=remaining_budget(self.directory,self.families.store,entry)
             if managed_public_bytes(self.directory)+required>settings.policy.max_disk_gb*1024**3 or shutil.disk_usage(self.directory).free<required:
                 raise ValueError('El almacenamiento disponible cambió; la preparación se conserva para reanudarla')
             if not allowed():
