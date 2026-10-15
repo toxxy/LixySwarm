@@ -55,16 +55,18 @@ def cpu_engine():
 
 
 LANGUAGE_URL='https://github.com/toxxy/LixySwarm/releases/download/language-engine-0.4.0a1/'
+EAGER_LANGUAGE_URL='https://github.com/toxxy/LixySwarm/releases/download/language-engine-0.4.0a19/'
 LANGUAGE_ENGINES={
     'cpu':EngineDownload(LANGUAGE_URL+'LixySwarmLanguageCPU-linux-x86_64.zip',
         'c075af9813e8ea8124c0dfae38b7ad30014cdad3d7b7749af3deec5e0cfa5f3b',286019554,
         '231e0866dd651fe38eb211d248295d4321ff25b5fd0ca7bc42048ae03b1723b6',879096011,profile='language-cpu'),
-    'cuda':EngineDownload(LANGUAGE_URL+'LixySwarmLanguageCUDA-linux-x86_64.zip',
-        '32159cba0106fd124c3bdb07361d0cf91d4188b07ba30f202f20f54950674e74',2725324662,
-        'f93d4310d0178cfb7f61ac829da507adff992b01e29b91ced2e71bc1c7159bb8',7200954897,profile='language-cuda',parts=(
-            EnginePart(LANGUAGE_URL+'LixySwarmLanguageCUDA-linux-x86_64.zip.part1','6129e35d465fa761c46b9f592e8ea4ebd47a6e2ebc2a7f02afee9a4246fa9a08',1073741824),
-            EnginePart(LANGUAGE_URL+'LixySwarmLanguageCUDA-linux-x86_64.zip.part2','2290e7c14d76c7ca2bea14bd91d9f5ba1aaabba0047404755ac13bde12d7ab14',1073741824),
-            EnginePart(LANGUAGE_URL+'LixySwarmLanguageCUDA-linux-x86_64.zip.part3','17852d3f75a0d071897e72a4da1afdb998d123708fe0a704450beda867ceb367',577841014))),
+    'cuda':EngineDownload(EAGER_LANGUAGE_URL+'LixySwarmLanguageCUDA-linux-x86_64.zip',
+        '10a46a823e0b9bf396493671123645ba047d9c6229f72dc075d99e8d8a9b5a2d',2524941592,
+        '6270e1ee65f1886aa27db4a06c63961461e06a0c3a7784e2ef1280e369a7b247',6004344627,profile='language-cuda-math',parts=(
+            EnginePart(EAGER_LANGUAGE_URL+'LixySwarmLanguageCUDA-linux-x86_64.zip.part1','04cc14e887fd3979d8327a0cd873ce77cd824e5b67981f38a616900e2f8e678f',1073741824),
+            EnginePart(EAGER_LANGUAGE_URL+'LixySwarmLanguageCUDA-linux-x86_64.zip.part2','7f078fdf9c17e1f181fe656d4d4fc53803a3ec38d4a50b64093723edc0eb5298',1073741824),
+            EnginePart(EAGER_LANGUAGE_URL+'LixySwarmLanguageCUDA-linux-x86_64.zip.part3','71180781da1dbafcd49bdab8af9b0636fc4fd62efac93b2dc7d7afac5f23de01',377457944)),
+        regular_file_bytes=4038463047),
 }
 
 

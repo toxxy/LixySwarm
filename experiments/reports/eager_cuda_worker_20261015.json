@@ -1,0 +1,186 @@
+{
+  "version": 1,
+  "scope": "Qualified Linux CUDA code package and staged storage preparation; not a new model or clean end-to-end app installation",
+  "release_url": "https://github.com/toxxy/LixySwarm/releases/tag/language-engine-0.4.0a19",
+  "build": {
+    "device": "cuda",
+    "eager_only": true,
+    "excluded_optional_compilers": [
+      "triton"
+    ],
+    "source_commit": "67e1390ecfd9e4cc2d377a7784a43d71989a53b7",
+    "manifest_sha256": "6270e1ee65f1886aa27db4a06c63961461e06a0c3a7784e2ef1280e369a7b247",
+    "logical_payload_bytes": 6003233541,
+    "regular_payload_bytes": 4037351961
+  },
+  "archive": {
+    "platform": "linux",
+    "machine": "x86_64",
+    "archive": "LixySwarmLanguageCUDA-linux-x86_64.zip",
+    "sha256": "10a46a823e0b9bf396493671123645ba047d9c6229f72dc075d99e8d8a9b5a2d",
+    "profile": "language-cuda-math",
+    "bytes": 2524941592,
+    "manifest_sha256": "6270e1ee65f1886aa27db4a06c63961461e06a0c3a7784e2ef1280e369a7b247",
+    "installed_bytes": 6004344627,
+    "regular_file_bytes": 4038463047,
+    "preserved_file_aliases": 27,
+    "parts": [
+      {
+        "name": "LixySwarmLanguageCUDA-linux-x86_64.zip.part1",
+        "sha256": "04cc14e887fd3979d8327a0cd873ce77cd824e5b67981f38a616900e2f8e678f",
+        "bytes": 1073741824
+      },
+      {
+        "name": "LixySwarmLanguageCUDA-linux-x86_64.zip.part2",
+        "sha256": "7f078fdf9c17e1f181fe656d4d4fc53803a3ec38d4a50b64093723edc0eb5298",
+        "bytes": 1073741824
+      },
+      {
+        "name": "LixySwarmLanguageCUDA-linux-x86_64.zip.part3",
+        "sha256": "71180781da1dbafcd49bdab8af9b0636fc4fd62efac93b2dc7d7afac5f23de01",
+        "bytes": 377457944
+      }
+    ],
+    "source_commit": "67e1390ecfd9e4cc2d377a7784a43d71989a53b7",
+    "qualification": {
+      "baseline_report_id": "b5d9358df1d49b4d14c3991c781aef9319cf10e3c100b8233e00744b3309eea8",
+      "checks": {
+        "identical_factual_answers": true,
+        "identical_full_math_projection": true,
+        "identical_historical_nll": true,
+        "identical_instruction_answers": true
+      },
+      "factual_cases": 40,
+      "instruction_cases": 40,
+      "math_cases": 128,
+      "model_promotion_authorized": false,
+      "scope": "Exact public generation and loss preservation of unchanged weights; no training improvement claim",
+      "unchanged_public_outputs": true
+    }
+  },
+  "gpu_qualification": {
+    "clean_install_proven": false,
+    "model_updated": false,
+    "native_controls_unchanged": true,
+    "new_native_contributions": 0,
+    "peak_gpu_allocated_bytes": 4374663680,
+    "physical_pid": 2984496,
+    "qualification": {
+      "baseline_report_id": "b5d9358df1d49b4d14c3991c781aef9319cf10e3c100b8233e00744b3309eea8",
+      "checks": {
+        "identical_factual_answers": true,
+        "identical_full_math_projection": true,
+        "identical_historical_nll": true,
+        "identical_instruction_answers": true
+      },
+      "factual_cases": 40,
+      "instruction_cases": 40,
+      "math_cases": 128,
+      "model_promotion_authorized": false,
+      "scope": "Exact public generation and loss preservation of unchanged weights; no training improvement claim",
+      "unchanged_public_outputs": true
+    },
+    "response": {
+      "bytes": 75294,
+      "correct": 38,
+      "evaluation_id": "f2d5cefd470268ec2477e64c9476efe81c8212a62460eaccbb3ba6bac852f209",
+      "gate_id": "5e085b48da4be5c0e2b3176bb387466405005a0ec61c44b2372f521dbb8e4507",
+      "model_id": "506317cc9f40da9dea40e6d14a94910ac6625ae478b5f2d0248cb1bbbb93a6c3",
+      "success": true,
+      "total": 128
+    },
+    "seconds": 198.00632433209103,
+    "success": true
+  },
+  "server_asset_digests": [
+    {
+      "name": "LixySwarmLanguageCUDA-linux-x86_64.zip.part1",
+      "bytes": 1073741824,
+      "sha256": "04cc14e887fd3979d8327a0cd873ce77cd824e5b67981f38a616900e2f8e678f",
+      "server_sha256_verified": true
+    },
+    {
+      "name": "LixySwarmLanguageCUDA-linux-x86_64.zip.part2",
+      "bytes": 1073741824,
+      "sha256": "7f078fdf9c17e1f181fe656d4d4fc53803a3ec38d4a50b64093723edc0eb5298",
+      "server_sha256_verified": true
+    },
+    {
+      "name": "LixySwarmLanguageCUDA-linux-x86_64.zip.part3",
+      "bytes": 377457944,
+      "sha256": "71180781da1dbafcd49bdab8af9b0636fc4fd62efac93b2dc7d7afac5f23de01",
+      "server_sha256_verified": true
+    },
+    {
+      "name": "qualification.json",
+      "bytes": 535,
+      "sha256": "275415fa6d40e05d92a2a5dd6065c9179c5f934cc0c0aeab0581e870a0455d9a",
+      "server_sha256_verified": true
+    },
+    {
+      "name": "release-manifest.json",
+      "bytes": 1649,
+      "sha256": "dbea3088c2e2a709fa48286390e77d2aebe158f8a9c49662fe5b0111868cdd08",
+      "server_sha256_verified": true
+    },
+    {
+      "name": "SHA256SUMS.txt",
+      "bytes": 333,
+      "sha256": "1effbb9dd06d0d681b63f0369464239a24710aa4dde77b4315427009714453bb",
+      "server_sha256_verified": true
+    }
+  ],
+  "anonymous_metadata_downloads": [
+    {
+      "name": "release-manifest.json",
+      "bytes": 1649,
+      "sha256": "dbea3088c2e2a709fa48286390e77d2aebe158f8a9c49662fe5b0111868cdd08",
+      "anonymous_https_verified": true
+    },
+    {
+      "name": "qualification.json",
+      "bytes": 535,
+      "sha256": "275415fa6d40e05d92a2a5dd6065c9179c5f934cc0c0aeab0581e870a0455d9a",
+      "anonymous_https_verified": true
+    },
+    {
+      "name": "SHA256SUMS.txt",
+      "bytes": 333,
+      "sha256": "1effbb9dd06d0d681b63f0369464239a24710aa4dde77b4315427009714453bb",
+      "anonymous_https_verified": true
+    }
+  ],
+  "storage_estimates": {
+    "fresh_with_hardlinks_bytes": 8128279684,
+    "fresh_without_hardlinks_bytes": 12209707713,
+    "root_consent_bytes": 8589934592,
+    "laptop_consent_bytes": 10737418240,
+    "estimates_are_not_a_clean_install_proof": true
+  },
+  "backward_repeatability_diagnostic": {
+    "reference_versus_compact_relative_l2": 0.005549177527427673,
+    "reference_versus_reference_relative_l2": 0.005409735720604658,
+    "bitwise_repeatability_claimed": false,
+    "initial_exact_backward_check_rejected": true,
+    "functional_qualification_uses_unchanged_full_public_outputs": true
+  },
+  "validation": {
+    "root_storage_tests_passed": 60,
+    "laptop_storage_tests_passed": 50,
+    "root_atomic_io_telemetry_privacy_tests_passed": 21,
+    "ci": [
+      "https://github.com/toxxy/LixySwarm/actions/runs/38770013007",
+      "https://github.com/toxxy/LixySwarm/actions/runs/38770012939",
+      "https://github.com/toxxy/LixySwarm/actions/runs/38770013001"
+    ]
+  },
+  "native_nodes_or_operator_controls_changed": false,
+  "model_updated": false,
+  "new_native_learning_cycles": 0,
+  "clean_end_to_end_gpu_app_proven": false,
+  "remaining": [
+    "Anonymous full code-package download/extraction/install within measured bound",
+    "Fresh native app bootstrap plus model acquisition by public LSP inside quota",
+    "Training donation onboarding and remaining full PLAN_VISION stages"
+  ]
+}
