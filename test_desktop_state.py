@@ -21,6 +21,22 @@ class KeyStore:
         self.values[service, account] = value
 
 
+def test_learning_button_uses_the_configured_language_progress(tmp_path,monkeypatch):
+    from desktop.backend import NodeController
+    from src.network.language_learning import LanguageLearningSettings
+    from src.release.language_versions import WORKERS
+    controls=LanguageLearningSettings(workers=sorted(WORKERS),signing_key_file=str(tmp_path/'publisher.key'))
+    controls.save(tmp_path)
+    controller=NodeController(tmp_path)
+    monkeypatch.setattr(controller,'snapshot',lambda:{'diagnostics':{'learning':{'round':9},'language_learning':{'round':2}}})
+    controller.start_learning()
+    selected=LanguageLearningSettings.load(tmp_path)
+    assert controller.learning_channel()=='language_learning' and selected.enabled
+    assert selected.cycles==3 and selected.generation==1
+    controller.stop_learning()
+    assert not LanguageLearningSettings.load(tmp_path).enabled
+
+
 def test_personal_content_is_encrypted_and_survives_a_new_store_instance(tmp_path):
     backend = KeyStore()
     store = PersonalStore(tmp_path, backend=backend)

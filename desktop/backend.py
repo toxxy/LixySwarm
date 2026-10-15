@@ -16,6 +16,7 @@ from src.network.client_state import ClientSettings,NodeStateLock
 from src.network.telemetry import verify_status
 from src.network.public_knowledge import KnowledgeSettings
 from src.network.learning_coordinator import LearningSettings
+from src.network.language_learning import LanguageLearningSettings
 from src.network.engine_catalog import cpu_engine
 from src.network.engine_download import prepare_engine
 
@@ -104,14 +105,19 @@ class NodeController:
         except (OSError, ValueError, TypeError):
             return KnowledgeSettings()
 
+    def learning_channel(self):
+        return 'language_learning' if (self.directory/'language-learning-controls.json').exists() else 'learning'
+
     def learning_settings(self):
-        try: return LearningSettings.load(self.directory)
-        except (OSError,ValueError,TypeError): return LearningSettings()
+        kind=LanguageLearningSettings if self.learning_channel()=='language_learning' else LearningSettings
+        try: return kind.load(self.directory)
+        except (OSError,ValueError,TypeError): return kind()
 
     def start_learning(self):
         settings=self.learning_settings()
-        completed=self.snapshot()["diagnostics"].get("learning",{}).get("round") or 0
+        completed=self.snapshot()["diagnostics"].get(self.learning_channel(),{}).get("round") or 0
         if completed>=10: raise ValueError("La ventana inicial de diez rondas terminó")
+        if isinstance(settings,LanguageLearningSettings):settings.generation+=1
         settings.cycles=completed+1; settings.enabled=True; settings.save(self.directory)
 
     def stop_learning(self):
@@ -206,7 +212,7 @@ class NodeController:
             if snapshot["fresh"]:
                 status = snapshot["status"]
                 diagnostics=snapshot["diagnostics"]
-                knowledge=diagnostics.get("knowledge",{}); compute=diagnostics.get("compute",{}); learning=diagnostics.get("learning",{})
+                knowledge=diagnostics.get("knowledge",{}); compute=diagnostics.get("compute",{}); learning=diagnostics.get(self.learning_channel(),{})
                 states={"connected":"Conectado","preparing":"Preparando modelo","working":"Calculando","paused":"Pausado","connecting":"Conectando","disconnected":"Desconectado"}
                 lines=[f"Nodo {status['node_id'][:16]}",f"Estado: {states.get(status['state'],status['state'])}",
                     f"Conexiones cifradas: {len(diagnostics.get('peers',[]))}"]

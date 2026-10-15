@@ -419,15 +419,17 @@ class SwarmWindow(QMainWindow):
         self.resources_label.setText(f"Tu equipo: {r.get('cpu_cores', '—')} hilos CPU · {r.get('ram_gb', '—')} GB RAM · {r.get('gpu_vram_gb', '—')} GB VRAM")
         knowledge = diagnostic.get("knowledge", {}) if snapshot["fresh"] else {}
         computation=diagnostic.get("compute",{}) if snapshot["fresh"] else {}
-        learning=diagnostic.get("learning",{}) if snapshot["fresh"] else {}
-        learning_states={"idle":"Listo para una ronda", "collecting":"Repartiendo y recuperando fragmentos", "evaluating":"Evaluando la versión candidata", "promoting":"Conservando y publicando la mejora", "complete":"Ronda finalizada"}
+        channel=self.controller.learning_channel()
+        learning=diagnostic.get(channel,{}) if snapshot["fresh"] else {}
+        learning_states={"idle":"Listo para una ronda", "collecting":"Repartiendo y recuperando fragmentos", "evaluating":"Evaluando la versión candidata", "promoting":"Conservando y publicando la mejora", "complete":"Ronda finalizada", "interrupted":"Trabajo conservado; esperando recuperación", "no_improvement":"En pausa: las últimas rondas no mejoraron el modelo", "needs_attention":"En pausa: revisa el error antes de reintentar"}
         self.learning_label.setText(learning_states.get(learning.get("status"),"Preparando coordinación")
             + f" · {learning.get('round') or 0} rondas terminadas"
             + (f" · versión {learning['accepted_sequence']}" if learning.get("accepted_sequence") is not None else ""))
         if learning.get("paused"):
             self.learning_label.setText("Aprendizaje detenido; el trabajo pendiente se conserva.")
         prepared=self.controller.learning_settings()
-        self.learning_button.setEnabled(bool(computation.get("ready")) and len(prepared.workers)==2 and bool(prepared.signing_key_file)
+        learning_ready=diagnostic.get('language_training',{}).get('ready') if channel=='language_learning' else computation.get('ready')
+        self.learning_button.setEnabled(bool(learning_ready) and len(prepared.workers)==2 and bool(prepared.signing_key_file)
             and not (prepared.enabled and learning.get("status") in {"collecting","evaluating","promoting"}))
         self.learning_stop.setEnabled(prepared.enabled)
         if chat.get("available"):

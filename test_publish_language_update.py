@@ -6,6 +6,7 @@ import pytest
 
 from experiments import publish_language_update as publisher
 from src.release import language_family
+from src.release import language_publish
 from src.release.language_versions import LanguageVersionRegistry
 from test_language_versions import fixture
 
@@ -20,6 +21,7 @@ def test_publisher_stages_reviewed_files_into_the_real_store(monkeypatch,tmp_pat
     evaluation=tmp_path/'reviewed.json';evaluation.write_text(json.dumps(report))
     key=tmp_path/'publisher.key';identity.save(str(key))
     monkeypatch.setattr(publisher,'BASES',language_family.BASES)
+    monkeypatch.setattr(language_publish,'BASES',language_family.BASES)
     monkeypatch.setattr(sys,'argv',['publish','--directory',str(root),'--publisher-key',str(key),
         '--base-name','qwen3-0.6b','--adapter-file',str(model),'--report-file',str(evaluation)])
     if not valid:
