@@ -5,6 +5,8 @@ Las etapas se completan por sus pruebas de aceptación; una implementación parc
 
 **Orden de trabajo (2026-10-14):** el usuario pospuso Windows y macOS hasta el tramo final. Se priorizan Linux, el aprendizaje por Internet y la conservación de las mejoras. Los tres workflows de paquetes ejecutan Linux por defecto y permiten solicitar todas las plataformas manualmente mediante `all_platforms`; los paquetes publicados previamente siguen disponibles.
 
+**Preparación de calibración por respuestas (2026-10-15):** el especialista conservado tiene menor NLL, pero sus respuestas matemáticas son peores que las del generalista. El siguiente [protocolo prefijado](experiments/reports/language_outcome_protocol_20261015.json) recoge respuestas de ambos expertos congelados sobre TRAIN[0:128], repartido en dos fragmentos disjuntos entre las PCs. Registra aciertos numéricos estrictos, formato, tokens y tiempo; no usa EVAL ni actualiza parámetros. La réplica del especialista viaja por LSP cifrado a un almacén de investigación restringido a una identidad. Estos ayudantes de transporte no cuentan como nuevas PCs, releases ni ciclos nativos. La recolección y su utilidad para aprender rutas aún requieren evidencia física.
+
 | Etapa | Estado | Evidencia y trabajo restante |
 |---|---|---|
 | 1. Red continua | En observación | Servicios desplegados en dos PCs y VPS, estado por identidad en el Explorer y recuperación tras reinicio comprobados. Faltan operación de 24 horas y recuperación con otro relay público independiente. |

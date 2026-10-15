@@ -9,7 +9,8 @@ from src.learning.public_math_job import evaluate_math
 from test_public_math import snapshots
 
 
-def test_public_math_masks_prompt_and_uses_untruncated_fixed_generation(snapshots):
+@pytest.mark.parametrize('timing',[False,True])
+def test_public_math_masks_prompt_and_uses_untruncated_fixed_generation(snapshots,timing):
     evaluation = snapshots['evaluation'][1];calls = []
     class Tokenizer:
         eos_token_id = 9
@@ -33,9 +34,11 @@ def test_public_math_masks_prompt_and_uses_untruncated_fixed_generation(snapshot
             assert options['attention_mask'].tolist() == [[1, 1, 1, 1]]
             calls.append('generate')
             return torch.tensor([[1, 2, 3, 4, 7, 8]])
-    report = evaluate_math(Model(), Tokenizer(), evaluation, 'cpu', time.time()+20)
+    report = evaluate_math(Model(), Tokenizer(), evaluation, 'cpu', time.time()+20,record_generation_seconds=timing)
     assert report['nll'] == .25 and report['tokens'] == 24 and report['correct'] == 1
     assert len(calls) == 8 and not report['at_output_limit']
+    assert ('generation_seconds' in report) is timing
+    if timing:assert len(report['generation_seconds'])==8 and all(t>0 for t in report['generation_seconds'])
 
 
 def test_public_math_evaluation_expired_before_compute(snapshots):

@@ -34,14 +34,15 @@ def validate_request(request):
     return load_snapshot(request['evaluation_file'], 'evaluation')
 
 
-def evaluate_math(model, tokenizer, evaluation, device, deadline, *, progress=lambda *_: None):
+def evaluate_math(model, tokenizer, evaluation, device, deadline, *, progress=lambda *_: None,
+                  record_generation_seconds=False, score=score_answers):
     if time.time() >= deadline:raise TimeoutError('Public math evaluation deadline exceeded')
     import torch
     from transformers import StoppingCriteria, StoppingCriteriaList
     policy = gate_definition()
     class Deadline(StoppingCriteria):
         def __call__(self, *_a, **_kw):return time.time() >= deadline
-    total = 0.;tokens = 0;answers = [];lengths = []
+    total = 0.;tokens = 0;answers = [];lengths = [];generation_seconds = []
     model.eval()
     with torch.inference_mode():
         for index, row in enumerate(evaluation['rows']):
@@ -58,16 +59,22 @@ def evaluate_math(model, tokenizer, evaluation, device, deadline, *, progress=la
             if not math.isfinite(loss) or loss < 0:raise ValueError('Invalid public math held-out loss')
             total += loss*len(expected);tokens += len(expected)
             inputs = torch.tensor([prefix], device=device)
+            if record_generation_seconds and str(device).startswith('cuda'):torch.cuda.synchronize()
+            generation_started = time.monotonic()
             generated = model.generate(input_ids=inputs, attention_mask=torch.ones_like(inputs), do_sample=False,
                                        max_new_tokens=policy['maximum_new_tokens'], use_cache=True,
                                        stopping_criteria=StoppingCriteriaList([Deadline()]))
+            if record_generation_seconds:
+                if str(device).startswith('cuda'):torch.cuda.synchronize()
+                generation_seconds.append(time.monotonic()-generation_started)
             if time.time() >= deadline:raise TimeoutError('Public math generation deadline exceeded')
             answer = tokenizer.decode(generated[0, len(prefix):], skip_special_tokens=True).strip()
             if len(answer.encode()) > 8192:raise ValueError('Public math generation exceeds its result bound')
             answers.append({'case': row['case'], 'answer': answer});lengths.append(int(generated.shape[1]-len(prefix)))
             progress(index+1, len(evaluation['rows']))
-    correct = score_answers(answers, evaluation)
-    return {'nll': total/tokens, 'tokens': tokens, 'answers': answers, 'correct': sum(correct.values()),
+    correct = score(answers, evaluation)
+    return {**({'generation_seconds':generation_seconds} if record_generation_seconds else {}),
+            'nll': total/tokens, 'tokens': tokens, 'answers': answers, 'correct': sum(correct.values()),
             'total': len(correct), 'output_tokens': lengths,
             'at_output_limit': sum(n == policy['maximum_new_tokens'] for n in lengths)}
 
