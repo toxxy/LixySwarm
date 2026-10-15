@@ -8,18 +8,19 @@ from pathlib import Path
 import sys
 import time
 
-from .language_retention import PARENT_MODEL, PARENT_RELEASE, GRADIENTS, protocol_id
+from .language_retention import PARENT_MODEL, PARENT_RELEASE, GRADIENTS, protocol_id,definition
 
 os.environ['HF_HUB_OFFLINE']='1';os.environ['TRANSFORMERS_OFFLINE']='1'
 
 
 def validate_request(request):
     fields = {'action', 'protocol_id', 'base_directory', 'adapter_file', 'model_id', 'parent_release_id',
-              'training_file', 'contributions', 'output_directory', 'device', 'cpu_threads', 'gpu_fraction', 'deadline'}
-    if (not isinstance(request, dict) or set(request) != fields or request['action'] != 'public-retention-diagnostic-v2'
-            or request['protocol_id'] != protocol_id() or request['model_id'] != PARENT_MODEL
+              'training_file', 'contributions', 'output_directory', 'device', 'cpu_threads', 'gpu_fraction', 'deadline','compute_dtype'}
+    if (not isinstance(request, dict) or set(request) != fields or request['action'] != 'public-retention-diagnostic-v3'
+            or request['protocol_id'] != protocol_id(request['compute_dtype']) or request['model_id'] != PARENT_MODEL
             or request['parent_release_id'] != PARENT_RELEASE or request['device'] not in {'cpu', 'cuda'}):
         raise ValueError('Unknown bounded retention diagnostic or model')
+    if request['device']=='cpu' and request['compute_dtype']!='float32':raise ValueError('CPU diagnostics use float32')
     if (type(request['cpu_threads']) is not int or not 1 <= request['cpu_threads'] <= 16
             or type(request['gpu_fraction']) not in (int, float) or not 0 < request['gpu_fraction'] <= 1
             or type(request['deadline']) not in (int, float) or not math.isfinite(request['deadline'])
@@ -123,7 +124,7 @@ def temporary_step(parameters, direction, rate=.001):
 
 
 def run(request):
-    validate_request(request);started=time.monotonic()
+    validate_request(request);started=time.monotonic();protocol=definition(request['compute_dtype'])
     from .public_bases import BASES,base_hash
     from .public_math import load_snapshot,canonical
     from .weights_io import digest_file
@@ -142,11 +143,12 @@ def run(request):
     from .language_gradient import combine_gradients,load_gradient,save_gradient
     from .language_math_gradient import backward
     torch.set_num_threads(request['cpu_threads']);torch.manual_seed(20261014)
+    torch.set_float32_matmul_precision('highest');torch.backends.cuda.matmul.allow_tf32=False;torch.backends.cudnn.allow_tf32=False
     if request['device']=='cuda':
         torch.cuda.set_per_process_memory_fraction(request['gpu_fraction']);torch.cuda.reset_peak_memory_stats()
     tokenizer=AutoTokenizer.from_pretrained(request['base_directory'],local_files_only=True,trust_remote_code=False)
     model=AutoModelForCausalLM.from_pretrained(request['base_directory'],local_files_only=True,trust_remote_code=False,
-        dtype=torch.bfloat16 if request['device']=='cuda' else torch.float32,device_map={'':request['device']})
+        dtype=torch.bfloat16 if request['compute_dtype']=='bfloat16' else torch.float32,device_map={'':request['device']})
     parameters=install_adapter(model);load_adapter(model,request['adapter_file'],base_hash('qwen3-1.7b'))
     model.config.use_cache=False;model.gradient_checkpointing_enable(gradient_checkpointing_kwargs={'use_reentrant':False});model.train()
     baseline={};references={}
@@ -159,19 +161,24 @@ def run(request):
         fields={k:row[k] for k in ['base_hash','adapter_id','dataset_id','start','count','tokens','quantization_relative_l2_error']}
         directions['saved_start'+str(row['start'])]=load_gradient(model,row['path'],policy_version=4,**fields)
     combined=combine_gradients(model,request['contributions'],policy_version=4);directions['saved_token_weighted']=combined
-    progress('reconstruct-first-desktop-shard');model.train();model.zero_grad(set_to_none=True)
-    loss,replay_loss,tokens,replay_tokens=backward(model,tokenizer,sets['math_train192'][:64],request['device'],request['deadline'])
-    reconstructed={name:p.grad.detach().float().cpu().clone() for name,p in parameters.items()}
-    directions['reconstructed_float32_start0']=reconstructed
-    row=request['contributions'][0];fields={k:row[k] for k in ['base_hash','adapter_id','dataset_id','start','count','tokens']}
-    if tokens!=row['tokens']:raise ValueError('Reconstructed training tokens differ from the signed source')
-    path=output/'reconstructed-root-gradient.safetensors';precision=save_gradient(model,path,**fields,policy_version=4)
-    exact=digest_file(path)==(row['gradient_id'],row['gradient_bytes'])
-    directions['reconstructed_decoded_start0']=load_gradient(model,path,**fields,policy_version=4,**precision)
-    original=directions['saved_start0'];current=directions['reconstructed_decoded_start0']
-    norm=math.sqrt(sum(float(t.double().square().sum()) for t in original.values()))
-    difference=math.sqrt(sum(float((original[n].double()-current[n].double()).square().sum()) for n in original))
-    concordance={**direction_statistics(original,current),'relative_l2_difference':difference/norm if norm else None}
+    reconstruction={'performed':False,'reason':'Float32 arm measures the fixed saved directions; no source gradient reconstruction'}
+    if protocol['reconstruct_source_gradient']:
+        progress('reconstruct-first-desktop-shard');model.train();model.zero_grad(set_to_none=True)
+        loss,replay_loss,tokens,replay_tokens=backward(model,tokenizer,sets['math_train192'][:64],request['device'],request['deadline'])
+        reconstructed={name:p.grad.detach().float().cpu().clone() for name,p in parameters.items()}
+        directions['reconstructed_float32_start0']=reconstructed
+        row=request['contributions'][0];fields={k:row[k] for k in ['base_hash','adapter_id','dataset_id','start','count','tokens']}
+        if tokens!=row['tokens']:raise ValueError('Reconstructed training tokens differ from the signed source')
+        path=output/'reconstructed-root-gradient.safetensors';precision=save_gradient(model,path,**fields,policy_version=4)
+        exact=digest_file(path)==(row['gradient_id'],row['gradient_bytes'])
+        directions['reconstructed_decoded_start0']=load_gradient(model,path,**fields,policy_version=4,**precision)
+        original=directions['saved_start0'];current=directions['reconstructed_decoded_start0']
+        norm=math.sqrt(sum(float(t.double().square().sum()) for t in original.values()))
+        difference=math.sqrt(sum(float((original[n].double()-current[n].double()).square().sum()) for n in original))
+        reconstruction={'performed':True,'original_half_artifact_reproduced_exactly':exact,'artifact_id':digest_file(path)[0],
+            'math_training_nll':loss,'replay_training_nll':replay_loss,'tokens':tokens,'replay_tokens':replay_tokens,**precision,
+            'decoded_direction_concordance_with_saved':{**direction_statistics(original,current),'relative_l2_difference':difference/norm if norm else None},
+            'causal_scope':'Source-vs-codec comparison of the original artifact only if exact reproduction succeeded'}
     geometry={name:{key:direction_statistics(value,reference) for key,reference in references.items()}
               for name,value in directions.items()}
     progress('no-update-control')
@@ -187,20 +194,18 @@ def run(request):
         deltas[name].update(predicted_first_order_loss_change=predicted,
             finite_step_residual=deltas[name]['actual_loss_change']-predicted)
     if time.time()>=request['deadline']:raise TimeoutError('Retention diagnostic deadline exceeded')
-    result={'success':True,'protocol_id':protocol_id(),'model_id':PARENT_MODEL,'parent_release_id':PARENT_RELEASE,
+    result={'success':True,'protocol_id':protocol_id(request['compute_dtype']),'model_id':PARENT_MODEL,'parent_release_id':PARENT_RELEASE,
+        'model_compute_dtype':request['compute_dtype'],'float32_matmul_precision':'highest','cuda_tf32':False,
         'baseline':baseline,'after_signed_update':after,'loss_changes':deltas,'direction_geometry':geometry,
         'loss_execution_mode':'train-with-autograd-for-every-loss-pass; backward-only-when-requested',
         'no_update_control':control,'no_update_loss_changes':control_changes,'no_update_control_passed':control_passed,
         'prefix_vs_full_reference_alignment':direction_statistics(references['old_prefix64'],references['old_full200']),
-        'reconstruction':{'original_half_artifact_reproduced_exactly':exact,'artifact_id':digest_file(path)[0],
-            'math_training_nll':loss,'replay_training_nll':replay_loss,'tokens':tokens,'replay_tokens':replay_tokens,**precision,
-            'decoded_direction_concordance_with_saved':concordance,
-            'causal_scope':'Source-vs-codec comparison of the original artifact only if exact reproduction succeeded'},
+        'reconstruction':reconstruction,
         'held_out_data_used_in_compute':False,'generation_performed':False,'parent_parameters_restored':True,
         'updated_model_files_written':False,'model_published':False,'new_promotion_authorized':False,
         'seconds':time.monotonic()-started,'peak_gpu_allocated_bytes':torch.cuda.max_memory_allocated() if request['device']=='cuda' else 0}
     raw=canonical(result);path=output/'diagnostic.json';path.write_bytes(raw);progress('complete')
-    return {'success':True,'protocol_id':protocol_id(),'report_id':hashlib.sha256(raw).hexdigest(),'bytes':len(raw)}
+    return {'success':True,'protocol_id':protocol_id(request['compute_dtype']),'report_id':hashlib.sha256(raw).hexdigest(),'bytes':len(raw)}
 
 
 def main():

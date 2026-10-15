@@ -43,6 +43,7 @@ def run(args,cancel):
     if subprocess.check_output(['git','status','--porcelain'],cwd=repo,text=True).strip():
         raise ValueError('Commit the diagnostic source and protocol before physical compute')
     source_revision=subprocess.check_output(['git','rev-parse','HEAD'],cwd=repo,text=True).strip()
+    protocol=definition(args.precision);identifier=protocol_id(args.precision);ram_gb=protocol['ram_gb']
     trial=selected_trial(repo);before=fingerprints(node);controls=ClientSettings.load(node);policy=asdict(controls.policy)
     diagnostic=json.loads((node/'diagnostics.json').read_text());pid=diagnostic['pid']
     registry=LanguageVersionRegistry(node/'public/language','qwen3-1.7b');head=registry.head()
@@ -54,7 +55,7 @@ def run(args,cancel):
         try:
             now=ClientSettings.load(node);state=json.loads((node/'diagnostics.json').read_text())
             return (not cancel.is_set() and now.connected and not now.paused and asdict(now.policy)==policy
-                and now.policy.mode in {'balanced','maximum'} and now.policy.max_ram_gb>=6
+                and now.policy.mode in {'balanced','maximum'} and now.policy.max_ram_gb>=ram_gb
                 and now.policy.cpu_percent>0 and now.policy.gpu_percent>0 and now.policy.max_gpu_jobs>0
                 and managed_public_bytes(node)+8*1024**2<=now.policy.max_disk_gb*1024**3
                 and state['pid']==pid and time.time()*1000-state['timestamp_ms']<30000
@@ -63,7 +64,7 @@ def run(args,cancel):
                 and fingerprints(node)==before and registry.head()['release']['release_id']==PARENT_RELEASE
                 and not governor._system_busy())
         except (OSError,ValueError,TypeError,KeyError):return False
-    if not allowed():raise ValueError('Retention diagnosis needs idle, connected and permitted six-GiB GPU work')
+    if not allowed():raise ValueError('Retention diagnosis needs idle GPU work within its declared RAM reservation')
     from src.learning.public_math import ARTIFACTS
     training=store.object_path(ARTIFACTS['train'][0])
     base=materialize_version(node,'qwen3-1.7b',PARENT_RELEASE,allowed=allowed)
@@ -74,29 +75,29 @@ def run(args,cancel):
         row['path']=str(store.object_path(row['gradient_id']));rows.append(row)
     directory.mkdir(mode=0o700,parents=True)
     atomic_json(directory/'invariants-before.json',before)
-    atomic_json(directory/'protocol.json',{'protocol_id':protocol_id(),'definition':definition()})
+    atomic_json(directory/'protocol.json',{'protocol_id':identifier,'definition':protocol})
     deadline=time.time()+900
     class Execution:
         def raise_if_cancelled(self):
             if cancel.is_set():raise RuntimeError('Retention research cancelled')
     execution=Execution();execution.deadline=deadline
-    request={'action':'public-retention-diagnostic-v2','protocol_id':protocol_id(),
+    request={'action':'public-retention-diagnostic-v3','protocol_id':identifier,'compute_dtype':args.precision,
         'base_directory':str(base),'adapter_file':str(base/'adapter.safetensors'),'model_id':PARENT_MODEL,
         'parent_release_id':PARENT_RELEASE,'training_file':str(training),'contributions':rows,
         'output_directory':str(directory/'engine'),'device':'cuda','cpu_threads':min(4,max(1,int(4*policy['cpu_percent']/100))),
         'gpu_fraction':policy['gpu_percent']/100/max(1,policy['max_gpu_jobs']),'deadline':deadline}
-    lease,reason=governor.acquire(ResourceRequirements(kind='training',gpu_required=True,ram_gb=6,disk_gb=.008))
+    lease,reason=governor.acquire(ResourceRequirements(kind='training',gpu_required=True,ram_gb=ram_gb,disk_gb=.008))
     if lease is None:raise ValueError('Retention research reservation denied: '+reason)
     try:
         with lease,NodeStateLock(node/'research/public-math'):
             atomic_json(directory/'status.json',{'phase':'diagnosing','success':False})
             response=ComputeSupervisor().run([str(args.engine_python.absolute()),'-m','src.learning.language_retention_job'],
-                request,execution,allowed=allowed,ram_gb=6)
+                request,execution,allowed=allowed,ram_gb=ram_gb)
         path=directory/'engine/diagnostic.json'
         if path.is_symlink() or path.stat().st_size>256*1024:raise ValueError('Retention diagnostic output exceeds its bound')
         raw=path.read_bytes();result=json.loads(raw)
         if (hashlib.sha256(raw).hexdigest()!=response['report_id'] or len(raw)!=response['bytes']
-                or result['protocol_id']!=protocol_id() or result['model_id']!=PARENT_MODEL or not result['success']
+                or result['protocol_id']!=identifier or result['model_id']!=PARENT_MODEL or not result['success']
                 or result['held_out_data_used_in_compute'] is not False or result['updated_model_files_written'] is not False
                 or result['parent_parameters_restored'] is not True or fingerprints(node)!=before):
             raise ValueError('Retention diagnostic changed its scope or current native controls')
@@ -104,10 +105,10 @@ def run(args,cancel):
                 or subprocess.check_output(['git','status','--porcelain'],cwd=repo,text=True).strip()):
             raise ValueError('Diagnostic source changed during physical compute; preserve the saved result for review')
         report={'success':True,'physical_node_id':diagnostic['node_id'],'native_daemon_job':False,'research_path':True,
-            'protocol_id':protocol_id(),'definition':definition(),'source_revision':source_revision,
+            'protocol_id':identifier,'definition':protocol,'source_revision':source_revision,
             'engine_report_sha256':response['report_id'],'diagnostic':result,'controls_and_native_progress_unchanged':True,
             'native_learning_cycles_added':0,'new_model_published':False,'source_daemon_pid_unchanged':True,
-            'resource_reservation':{'ram_gb':6,'gpu_fraction':request['gpu_fraction']},'finished_at':time.time()}
+            'resource_reservation':{'ram_gb':ram_gb,'gpu_fraction':request['gpu_fraction']},'finished_at':time.time()}
         atomic_json(directory/'report.json',report);atomic_json(directory/'status.json',{'phase':'complete','success':True})
         print(json.dumps({'success':True,'loss_changes':result['loss_changes'],'reconstruction':result['reconstruction']}),flush=True)
     except BaseException as error:
@@ -120,6 +121,7 @@ def main():
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--node-directory',type=Path,required=True);parser.add_argument('--directory',type=Path,required=True)
     parser.add_argument('--engine-python',type=Path,required=True)
+    parser.add_argument('--precision',choices=['float32','bfloat16'],default='float32')
     args=parser.parse_args();cancel=threading.Event()
     for sig in [signal.SIGINT,signal.SIGTERM]:signal.signal(sig,lambda *_:cancel.set())
     try:run(args,cancel)

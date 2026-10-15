@@ -16,7 +16,7 @@ def request(tmp_path):
     rows=[dict(zip(['gradient_id','gradient_bytes','start','count','tokens'],row),
         path=str(tmp_path/(str(row[2])+'.safetensors')),base_hash=base_hash('qwen3-1.7b'),
         adapter_id=protocol.PARENT_MODEL,dataset_id=dataset_id(4),quantization_relative_l2_error=.0002) for row in protocol.GRADIENTS]
-    return {'action':'public-retention-diagnostic-v2','protocol_id':protocol.protocol_id(),
+    return {'action':'public-retention-diagnostic-v3','protocol_id':protocol.protocol_id(),'compute_dtype':'float32',
         'base_directory':str(tmp_path/'base'),'adapter_file':str(tmp_path/'adapter'),
         'model_id':protocol.PARENT_MODEL,'parent_release_id':protocol.PARENT_RELEASE,
         'training_file':str(tmp_path/'train'),'contributions':rows,'output_directory':str(tmp_path/'output'),
@@ -25,7 +25,10 @@ def request(tmp_path):
 
 def test_diagnostic_protocol_has_no_promotion_or_held_out_compute():
     definition=protocol.definition()
-    assert definition['version']==2 and definition['no_update_absolute_tolerance']==1e-7
+    assert definition['version']==3 and definition['no_update_absolute_tolerance']==1e-7
+    assert definition['model_compute_dtype']=='float32' and definition['ram_gb']==10
+    assert protocol.protocol_id('float32')!=protocol.protocol_id('bfloat16')
+    with pytest.raises(ValueError):protocol.definition('float16')
     assert definition['new_model_publication_authorized'] is False
     assert definition['held_out_data_used_in_compute'] is False and definition['learning_rate']==.001
     assert definition['math_range']==[0,192] and len(protocol.protocol_id())==64

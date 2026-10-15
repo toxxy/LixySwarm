@@ -12,7 +12,7 @@ GRADIENTS = (
 )
 
 
-def definition():
+def _version_two_definition():
     from .language_policy import MATH_POLICY_ID, dataset_id
     from .public_math import ARTIFACTS
     return {'version': 2, 'action': 'public-retention-diagnostic-v2',
@@ -38,5 +38,19 @@ def definition():
         'reference_scope': 'Reference-gradient projection motivates dot-product diagnostics; not a reproduction of A-GEM benchmarks'}
 
 
-def protocol_id():
-    return hashlib.sha256(json.dumps(definition(), sort_keys=True, separators=(',', ':')).encode()).hexdigest()
+def definition(precision='float32'):
+    if precision not in {'float32','bfloat16'}:raise ValueError('Unknown fixed diagnostic precision')
+    value=_version_two_definition()
+    value.update(version=3,action='public-retention-diagnostic-v3',model_compute_dtype=precision,
+        float32_matmul_precision='highest',cuda_tf32=False,ram_gb=10 if precision=='float32' else 6,
+        reconstruct_source_gradient=precision=='bfloat16',
+        scope='Retrospective precision control on public training data; no candidate selection or promotion')
+    if precision=='float32':
+        value['measurements']=[m for m in value['measurements'] if m not in {
+            'reconstructed-source-vs-saved-half-precision-first-desktop-shard',
+            'decoded-gradient-concordance-current-reconstruction-vs-saved'}]
+    return value
+
+
+def protocol_id(precision='float32'):
+    return hashlib.sha256(json.dumps(definition(precision), sort_keys=True, separators=(',', ':')).encode()).hexdigest()

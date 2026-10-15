@@ -1,0 +1,67 @@
+{
+  "protocol_id": "c82a431c4df0ffeb7c83e62b0541530516b14e12ba932e0723729b204691135d",
+  "definition": {
+    "version": 3,
+    "action": "public-retention-diagnostic-v3",
+    "parent_release_id": "df231f9b93f6300ba7242da793d457880a416448f00d0e9b914e6a3f7b1e533a",
+    "model_id": "506317cc9f40da9dea40e6d14a94910ac6625ae478b5f2d0248cb1bbbb93a6c3",
+    "source_report_id": "b5d9358df1d49b4d14c3991c781aef9319cf10e3c100b8233e00744b3309eea8",
+    "source_trial": "offset0-p4-distributed",
+    "training_policy_id": "de2929818310546b588e93640cd34f6459d2bf157f3d79d64f542889c1234d95",
+    "math_training_artifact_id": "a1a36bc0cea6f5a8dbf81a5828a01da3ca0674c534431ef51583f3f46a915be6",
+    "historical_dataset_id": "24eb8b9e9c268021ededa84a171a4b6804cbe58263edbb2b2944f49dd4de64a5",
+    "math_range": [
+      0,
+      192
+    ],
+    "historical_training_prefix": 64,
+    "historical_training_full": 200,
+    "loss_execution_mode": "train-with-autograd-for-every-loss-pass; backward-only-when-requested",
+    "no_update_control": "repeat-every-training-loss-with-identical-parameters-before-applying-step",
+    "no_update_absolute_tolerance": 1e-07,
+    "no_update_relative_tolerance": 1e-06,
+    "gradient_metadata": [
+      [
+        "18c219146676d9e8f99fc303c03cd906e910184e7ecffef7e2c2bc619d18a580",
+        3223824,
+        0,
+        64,
+        5759
+      ],
+      [
+        "12ec2a4311f6b253b4518f7d2ccf1809520fb7ea33cf1be7141ad7819721db80",
+        3223824,
+        64,
+        64,
+        5103
+      ],
+      [
+        "b942d0362da0f8f7d21348da792eb93df78bf97f5b45441b226eb1cbc95cfa30",
+        3223832,
+        128,
+        64,
+        5717
+      ]
+    ],
+    "learning_rate": 0.001,
+    "measurements": [
+      "baseline-training-loss-and-reference-gradients",
+      "decoded-signed-directions-vs-prefix-and-full-training-gradients",
+      "no-update-numerical-control",
+      "finite-sgd-training-loss-change-and-first-order-residual",
+      "restore-parent-parameters"
+    ],
+    "held_out_data_used_in_compute": false,
+    "generation_performed": false,
+    "scope": "Retrospective precision control on public training data; no candidate selection or promotion",
+    "new_model_publication_authorized": false,
+    "reference": "https://arxiv.org/abs/1812.00420v2",
+    "reference_scope": "Reference-gradient projection motivates dot-product diagnostics; not a reproduction of A-GEM benchmarks",
+    "model_compute_dtype": "float32",
+    "float32_matmul_precision": "highest",
+    "cuda_tf32": false,
+    "ram_gb": 10,
+    "reconstruct_source_gradient": false
+  },
+  "recorded_before_new_diagnostic_compute_at": 1792059893.6985745
+}
