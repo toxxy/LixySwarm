@@ -155,8 +155,9 @@ class DynamicRoleAdapter:
     """
     Adapta los pesos de confianza de los agentes en runtime según el tipo de query.
 
-    Se integra en RuntimeSession.turn() para ajustar la temperatura y los
-    pesos de confianza antes de la generación.
+    RuntimeSession usa profile_query() para metadatos y temperatura. La API
+    get_weights_for_query() conserva la heurística de roles para callers
+    anteriores; no sustituye la selección neuronal entrenada del enjambre.
 
     No modifica los pesos del modelo — solo sesga el sampling de confianza.
     """
@@ -166,6 +167,13 @@ class DynamicRoleAdapter:
         self.verbose = verbose
         self._last_profile: Optional[TaskProfile] = None
         self._profile_history: list[TaskProfile] = []
+
+    def profile_query(self, query: str) -> TaskProfile:
+        """Record task metadata without overriding learned agent selection."""
+        profile = classify_query(query)
+        self._last_profile = profile
+        self._profile_history.append(profile)
+        return profile
 
     def get_weights_for_query(
         self,
@@ -186,9 +194,7 @@ class DynamicRoleAdapter:
         Returns:
             (profile, adjusted_weights) donde adjusted_weights tiene shape [n_agents]
         """
-        profile = classify_query(query)
-        self._last_profile = profile
-        self._profile_history.append(profile)
+        profile = self.profile_query(query)
 
         # Pesos dinámicos del perfil de tarea
         dynamic_weights = torch.tensor(

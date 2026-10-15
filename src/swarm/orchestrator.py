@@ -16,7 +16,7 @@ Cambios v3:
 import sys
 import os
 from pathlib import Path
-from typing import List, Optional
+from typing import List, Optional, Tuple
 from dataclasses import dataclass, field, replace
 import json
 import shutil
@@ -653,21 +653,53 @@ class LixySwarm(nn.Module):
         """Consulta a la Matriarca y obtiene infrasónidos."""
         if self.matriarca is None:
             return None
-        state = feromon.mean(dim=0) if feromon.dim() > 1 else feromon
+        states = feromon.unsqueeze(0) if feromon.dim() == 1 else feromon
         embd_dim = self.config.matriarca_config.embd_dim
-        if state.shape[-1] != embd_dim:
-            state = F.interpolate(
-                state.unsqueeze(0).unsqueeze(0),
+        if states.shape[-1] != embd_dim:
+            states = F.interpolate(
+                states.unsqueeze(1),
                 size=embd_dim, mode='linear', align_corners=False
-            ).squeeze()
-        infrasound = self.matriarca.emit_infrasound(
-            state,
-            use_retrieval=True,
-            top_k=32,
-            update_importance=update_importance,
-            importance_delta=0.05,
-        )
-        return infrasound.to(feromon.device).unsqueeze(0).expand(feromon.shape[0], -1)
+            ).squeeze(1)
+        # Retrieval is per request. Averaging a batch gives every request the
+        # same vote and makes its response depend on unrelated batch members.
+        return torch.stack([
+            self.matriarca.emit_infrasound(
+                state, use_retrieval=True, top_k=32,
+                update_importance=update_importance, importance_delta=0.05,
+            ).to(feromon.device)
+            for state in states
+        ])
+
+    def aggregate_agent_logits(
+        self,
+        logits_list: List[torch.Tensor],
+        infrasound: Optional[torch.Tensor] = None,
+    ) -> Tuple[torch.Tensor, torch.Tensor]:
+        """Shared learned selector for training and RuntimeSession generation.
+
+        Matriarca retrieval remains frozen. Its readout belongs to the swarm
+        and must receive the collective prediction gradient. No lexical role
+        weights are applied here. Returned weights have shape [B, agents, 1].
+        """
+        if len(logits_list) != len(self.confidence_heads):
+            raise ValueError("Every agent must provide logits for aggregation")
+        n_embd = self.config.agent_configs[0].n_embd
+        scores = []
+        for logits, head in zip(logits_list, self.confidence_heads):
+            rep = logits.mean(dim=1)
+            rep = rep[:, :n_embd] if rep.shape[-1] >= n_embd else F.pad(
+                rep, (0, n_embd - rep.shape[-1])
+            )
+            scores.append(head(rep))
+        scores = torch.stack(scores, dim=1)
+        if infrasound is not None:
+            if infrasound.shape != (scores.shape[0], self.config.matriarca_config.infrasound_dim):
+                raise ValueError("One infrasound vector is required per request")
+            memory_vote = self.matriarca_conf_proj(infrasound).unsqueeze(-1)
+            scores = 0.8 * scores + 0.2 * memory_vote
+        weights = F.softmax(scores, dim=1)
+        aggregated = (torch.stack(logits_list, dim=1) * weights.unsqueeze(-1)).sum(dim=1)
+        return aggregated, weights
 
     @torch.no_grad()
     def _compute_fitness(
@@ -821,29 +853,7 @@ class LixySwarm(nn.Module):
                 all_round_feromons = round_feromons  # guardar para fitness
 
         # ─── 4. Agregación por confianza (con bias de la Matriarca) ───
-        # Calcular confianza de cada agente sobre el output
-        weights = []
-        for i, (logits, conf_head) in enumerate(zip(all_logits, self.confidence_heads)):
-            rep = logits.mean(dim=1)  # [B, vocab]
-            conf = conf_head(rep[:, :self.config.agent_configs[0].n_embd] if rep.shape[-1] >= self.config.agent_configs[0].n_embd else F.pad(rep, (0, self.config.agent_configs[0].n_embd - rep.shape[-1])))
-            weights.append(conf)  # [B, 1]
-
-        weights = torch.stack(weights, dim=1)  # [B, n_agents, 1]
-
-        # Bias de la Matriarca: los infrasónidos orientan qué agente debería tener más peso
-        # La Matriarca proyecta su "voto" sobre los n_agents agentes
-        if infrasound is not None and self.matriarca is not None:
-            with torch.no_grad():
-                # infrasound: [B, infrasound_dim] → [B, n_agents] → bias de confianza
-                mat_bias = self.matriarca_conf_proj(infrasound)  # [B, n_agents]
-                mat_bias = mat_bias.unsqueeze(-1)                # [B, n_agents, 1]
-                # Mezcla suave: 80% confidence head propio, 20% voto de la Matriarca
-                weights = 0.8 * weights + 0.2 * mat_bias
-
-        weights = F.softmax(weights, dim=1)
-
-        stacked = torch.stack(all_logits, dim=1)  # [B, n_agents, T, vocab]
-        aggregated = (stacked * weights.unsqueeze(-1)).sum(dim=1)  # [B, T, vocab]
+        aggregated, weights = self.aggregate_agent_logits(all_logits, infrasound)
 
         # ─── 5. Feedback a la Matriarca 🐘 ───
         if store_memory and self.matriarca is not None and context_text:

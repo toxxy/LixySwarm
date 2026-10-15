@@ -34,7 +34,7 @@ import torch
 import torch.nn.functional as F
 
 from src.utils.sampling import sample_token
-from src.swarm.dynamic_roles import DynamicRoleAdapter, classify_query
+from src.swarm.dynamic_roles import DynamicRoleAdapter
 
 
 @dataclass
@@ -420,7 +420,6 @@ class RuntimeSession:
         enc = self.enc
         device = self.device
         block_size = swarm.config.agent_configs[0].block_size
-        n_embd = swarm.config.agent_configs[0].n_embd
 
         ctx = (
             torch.amp.autocast(device_type="cuda", dtype=torch.bfloat16)
@@ -434,11 +433,10 @@ class RuntimeSession:
             if explicit_feedback != 0.0:
                 self._apply_explicit_feedback(explicit_feedback)
 
-        # Clasificar query y adaptar temperatura + roles de agentes
-        task_profile, role_weights = self._role_adapter.get_weights_for_query(
-            user_input,
-            base_weights=None,  # sin pesos base aún — se aplican post-warm-up
-        )
+        # Task metadata still supplies the default sampling temperature. Agent
+        # selection uses the same learned heads as training, without lexical
+        # role multipliers or a second softmax over normalized probabilities.
+        task_profile = self._role_adapter.profile_query(user_input)
         # Temperatura: override dinámico si el caller no especificó temperatura
         temp = temperature if temperature is not None else task_profile.temperature
 
@@ -450,6 +448,7 @@ class RuntimeSession:
 
         infrasound_norms: list[float] = []
         feromon_norms: list[float] = []
+        routing_infrasound = None
 
         if cancel_check is not None and cancel_check():
             return ""
@@ -491,11 +490,11 @@ class RuntimeSession:
 
             # Stats warm-up
             if use_memory and swarm.matriarca is not None:
-                infra = swarm._get_infrasound(
+                routing_infrasound = swarm._get_infrasound(
                     cached_feromon, update_importance=store_memory
                 )
-                if infra is not None:
-                    infrasound_norms.append(infra.norm().item())
+                if routing_infrasound is not None:
+                    infrasound_norms.append(routing_infrasound.norm().item())
                 # Registrar qué memorias se accedieron en este warm-up
                 if store_memory:
                     self._track_accessed_memories()
@@ -524,46 +523,27 @@ class RuntimeSession:
                     self._cached_feromon = cached_feromon
 
                     if use_memory and swarm.matriarca is not None:
-                        infra = swarm._get_infrasound(
+                        routing_infrasound = swarm._get_infrasound(
                             cached_feromon, update_importance=store_memory
                         )
-                        if infra is not None:
-                            infrasound_norms.append(infra.norm().item())
+                        if routing_infrasound is not None:
+                            infrasound_norms.append(routing_infrasound.norm().item())
                         if store_memory:
                             self._track_accessed_memories()
                     feromon_norms.append(cached_feromon.norm().item())
 
                 # Forward de agentes base con feromon fijo
                 all_logits = []
-                all_conf = []
-                for agent, conf_head in zip(swarm.agents, swarm.confidence_heads):
+                for agent in swarm.agents:
                     if cancel_check is not None and cancel_check():
                         break
                     ag_logits, _, _ = agent(x_cond, feromon_in=cached_feromon)
-                    rep = ag_logits.mean(dim=1)  # [B, vocab]
-                    rep_proj = (
-                        rep[:, :n_embd] if rep.shape[-1] >= n_embd
-                        else F.pad(rep, (0, n_embd - rep.shape[-1]))
-                    )
-                    conf = conf_head(rep_proj)
                     all_logits.append(ag_logits)
-                    all_conf.append(conf)
 
                 if len(all_logits) != len(swarm.agents):
                     break
 
-                # Confianza base de los agentes
-                base_conf = F.softmax(torch.cat(all_conf, dim=-1), dim=-1)  # [B, n_agents]
-
-                # Aplicar bias dinámico de roles (35% peso al perfil de tarea)
-                rw = role_weights.to(device)  # [n_agents]
-                weights = 0.65 * base_conf + 0.35 * rw.unsqueeze(0)  # broadcast [B, n_agents]
-                weights = F.softmax(weights, dim=-1)
-
-                logits = sum(
-                    w.unsqueeze(-1).unsqueeze(-1) * l
-                    for w, l in zip(weights.unbind(dim=-1), all_logits)
-                )
+                logits, _ = swarm.aggregate_agent_logits(all_logits, routing_infrasound)
 
                 # Sampling — rep_penalty + top_k + top_p
                 next_token = sample_token(

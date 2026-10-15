@@ -303,10 +303,10 @@ class MemoryBank:
 
         self.save()
 
-    def retrieve(self, query: torch.Tensor, top_k: int = 8) -> tuple:
+    def retrieve(self, query: torch.Tensor, top_k: int = 8, *, record_access: bool = True) -> tuple:
         """
         Busca las memorias más relevantes por similitud coseno con la query.
-        Actualiza access_count y last_access de las memorias recuperadas.
+        Actualiza access_count y last_access si record_access=True.
 
         query:  (embd_dim,) o (B, embd_dim)
         returns: (top_k_embeddings, top_k_indices, top_k_scores)
@@ -337,10 +337,11 @@ class MemoryBank:
         top_vals, top_idx = torch.topk(agg_scores, k)
 
         # Actualizar metadatos de acceso
-        now = time.time()
-        for idx in top_idx.tolist():
-            self.metadata[idx]["access_count"] = self.metadata[idx].get("access_count", 0) + 1
-            self.metadata[idx]["last_access"] = now
+        if record_access:
+            now = time.time()
+            for idx in top_idx.tolist():
+                self.metadata[idx]["access_count"] = self.metadata[idx].get("access_count", 0) + 1
+                self.metadata[idx]["last_access"] = now
 
         top_embeddings = bank[top_idx]  # (k, embd_dim)
         return top_embeddings, top_idx, top_vals
@@ -480,7 +481,7 @@ class Matriarca:
         state_embedding: torch.Tensor,
         use_retrieval: bool = True,
         top_k: int = 32,
-        update_importance: bool = True,    # activado por defecto en runtime
+        update_importance: bool = True,    # False: no cambiar importancia ni accesos
         importance_delta: float = 0.03,    # +3% por memoria usada (era 5%, más suave)
     ) -> torch.Tensor:
         """
@@ -503,7 +504,7 @@ class Matriarca:
         # Retrieval activo: usar solo memorias relevantes
         if use_retrieval and self.bank.size > top_k:
             relevant_bank, top_idx, top_scores = self.bank.retrieve(
-                state_embedding.mean(dim=0), top_k=top_k
+                state_embedding.mean(dim=0), top_k=top_k, record_access=update_importance
             )
             relevant_bank = relevant_bank.to(self.device)
 
