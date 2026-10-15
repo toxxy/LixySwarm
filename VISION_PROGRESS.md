@@ -8,13 +8,13 @@ Las etapas se completan por sus pruebas de aceptación; una implementación parc
 | Etapa | Estado | Evidencia y trabajo restante |
 |---|---|---|
 | 1. Red continua | En observación | Servicios desplegados en dos PCs y VPS, estado por identidad en el Explorer y recuperación tras reinicio comprobados. Faltan operación de 24 horas y recuperación con otro relay público independiente. |
-| 2. App sencilla | En implementación | Paquetes y motor CPU verificados en tres sistemas; app instalada en ambas PCs. Chat habilitado con proveedor en el escritorio y cliente en la laptop, con historial cifrado. Faltan preparación y distribución automáticas del experto de lenguaje, activación de motores CUDA, arranque automático por plataforma y gate completo de instalación limpia. |
-| 3. Aprendizaje distribuido | Ciclo de referencia integrado y verificado | Dos GPUs, coordinación desde la app y nodos persistentes, actualización candidata evaluada, publicación y recuperación de fragmentos tras reinicio. La referencia llegó a versión 6 y pérdida 5,38659. Faltan modelo conversacional, evaluación de calidad más amplia e instalación automática de motores. |
-| 4. Conocimiento persistente | Piloto verificado parcialmente | Ambos trabajadores replicaron el modelo; un cliente vacío lo recuperó desde la otra PC con los procesos productores detenidos y reprodujo la evaluación. Faltan apagado físico, descubrimiento y reparación automáticos, memoria global y tres réplicas independientes. |
-| 5. Capacidad heterogénea | Pendiente | Falta medir beneficio de dos PCs y transferencia entre agentes de tamaños distintos. |
+| 2. App sencilla | Vista previa Linux A12 publicada | Archivo de CI probado por Internet en ambas PCs; descarga anónima, chat remoto, historial cifrado, preparación y seguimiento implementados. Ambos nodos sirven lenguaje con CUDA. Faltan instalación GPU vacía integral, firma de distribución, arranque y validación final por plataforma. |
+| 3. Aprendizaje distribuido | Piloto físico conocido verificado | Referencia versión 6 y lenguaje secuencia 2 aceptados con aportes distintos de ambas GPUs. Coordinación duradera, evaluación fija, publicación, recuperación y uso de la mejora en otra PC comprobados. La calidad conversacional amplia y los operadores desconocidos requieren otros gates. |
+| 4. Conocimiento persistente | Réplicas y reparación del piloto verificadas | Ambas PCs adquieren y seleccionan automáticamente la secuencia 2; reparación por hash y uso de una réplica con el servicio productor detenido comprobados. Faltan apagado físico, descubrimiento global por contenido, memoria global y tercera réplica independiente. |
+| 5. Capacidad heterogénea | Reparto físico medido; aceleración pendiente | El escritorio procesó 24 ejemplos y la laptop ocho. La comparación equivalente resultó 2,1 % más lenta con ambas PCs. Faltan amortizar comunicación, demostrar rendimiento útil y transferir una mejora entre tamaños distintos. |
 | 6. Organismo funcional | Pendiente | Faltan integración persistente y comparaciones que demuestren utilidad de memoria, Dolphin y sectas. |
-| 7. Autonomía | Pendiente | Faltan decisiones por resultados, GrowthGate y diez ciclos auditables. |
-| 8. Red abierta | Pendiente | Faltan paquetes verificados, operadores independientes y condiciones de operación pública. |
+| 7. Autonomía | Ventana acotada comprobada parcialmente | Cuatro rondas automáticas: una mejora publicada y replicada, seguida de tres rechazos y parada. Cinco rondas totales registradas. Faltan diez ciclos, coste metabólico, consolidación y GrowthGate. |
+| 8. Red abierta | Pendiente | La vista previa Linux tiene procedencia, checksums y pruebas del archivo publicado. Faltan instalaciones nuevas integrales, aislamiento, operadores independientes, quórum abierto y condiciones de operación pública. |
 
 ## Decisiones del primer tramo
 
