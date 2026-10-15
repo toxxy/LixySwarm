@@ -165,7 +165,9 @@ def prepare_engine(entry, directory, *, allowed, rate_mbps, progress=lambda *_: 
     if extracted.exists(): shutil.rmtree(extracted)
     extracted.mkdir()
     try:
-        progress("extracting", 0, entry.installed_bytes)
+        # Compact CUDA packages include aliases to large libraries. Extraction
+        # writes regular files; installed logical bytes also count those aliases.
+        progress("extracting", 0, regular_bytes)
         with zipfile.ZipFile(archive) as zipped:
             members = zipped.infolist()
             if not 1 <= len(members) <= MAX_PACKAGE_FILES + 1:
@@ -192,7 +194,7 @@ def prepare_engine(entry, directory, *, allowed, rate_mbps, progress=lambda *_: 
                 with zipped.open(member) as source, target.open("wb") as destination:
                     while block := source.read(BLOCK_BYTES):
                         check(); destination.write(block); unpacked += len(block)
-                progress("extracting", unpacked, entry.installed_bytes)
+                progress("extracting", unpacked, regular_bytes)
             for relative,link in links:
                 check();target=extracted.joinpath(*relative.parts)
                 if not (target.parent/link).resolve().is_relative_to(extracted.resolve()):

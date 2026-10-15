@@ -1,0 +1,93 @@
+{
+  "checks": {
+    "candidate_evaluation_exercised": false,
+    "fixture_format": "original-inference-gradient",
+    "fixture_identity_scope": "no identity loaded",
+    "gradient_exercised": true,
+    "inference_exercised": true
+  },
+  "ci": {
+    "kernel_skipped": 6,
+    "native_bundle_self_test_passed": true,
+    "passed": 583,
+    "source_revision": "bb746860aa54316c386b6cabb3f1787e9c354da2",
+    "status": "success",
+    "url": "https://github.com/toxxy/LixySwarm/actions/runs/38809663937"
+  },
+  "cuda_devices_mounted": false,
+  "default_worker_isolation_enabled": false,
+  "earlier_attempts": [
+    {
+      "attempt": 1,
+      "reason": "Qualification expected expanded candidate fixture fields; pinned CPU package only exercises inference and gradients",
+      "success": false
+    },
+    {
+      "attempt": 2,
+      "reason": "Qualification expected expanded candidate fixture fields; pinned CPU package only exercises inference and gradients",
+      "success": false
+    }
+  ],
+  "engine_manifest_sha256": "26d73b28d1340fd9c2951f52ee3d154ccdb71e2cbeebf1272fd2c19af4ae12b9",
+  "engine_self_test": {
+    "cuda_runtime": false,
+    "frozen": true,
+    "gradient_tokens": 64,
+    "inference_logits": 256,
+    "network_identity_loaded": false,
+    "personal_state_loaded": false,
+    "success": true,
+    "torch_version": "2.12.0+cpu"
+  },
+  "finished_at": 1792099496.0547383,
+  "fixture_result_interpretation": "Inference and 64-token synthetic gradient only; no candidate evaluation, network donation, model learning or promotion credited",
+  "kernel_test_results": {
+    "desktop_development_context": {
+      "passed": 14,
+      "skipped": 0
+    },
+    "desktop_systemd_user_service": {
+      "passed": 8,
+      "skipped": 6
+    },
+    "laptop_ssh_context": {
+      "passed": 8,
+      "skipped": 6
+    }
+  },
+  "model_promoted": false,
+  "native_controls_unchanged": true,
+  "native_learning_cycles_added": 0,
+  "native_service_updated": false,
+  "network_namespace_shared": false,
+  "normal_user_deployment_qualified": false,
+  "operator_state_mounted": false,
+  "ordinary_context_failure": {
+    "component": "bubblewrap 0.9.0 network namespace setup",
+    "host_security_policy_modified": false,
+    "laptop_kernel_audit": {
+      "denied_capabilities": [
+        "setpcap",
+        "net_admin"
+      ],
+      "transition": "unconfined to unprivileged_userns"
+    },
+    "message": "loopback: Failed RTM_NEWADDR: Operation not permitted",
+    "network_isolation_removed_as_fallback": false
+  },
+  "physical_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+  "physical_pid": 3134618,
+  "production_weights_mounted": false,
+  "qualification_context": "Codex development AppArmor profile: chatgpt (unconfined)",
+  "scope": "Verified frozen CPU engine synthetic self-test inside explicit Linux sandbox",
+  "source_files": {
+    "experiments/qualify_compute_sandbox.py": "44c8f83ddb37d35fc67ce7dcb459f8c4b6998c4ab78e99aebecace5421662e26",
+    "src/network/compute_process.py": "667815ec4cc33cfd5b66e725c5cafeac8d7959cbcb6f2e8b3af705dc88ed305f",
+    "src/network/compute_sandbox.py": "1b89bc5c6a781069d417f59446e22c032dc8bd1152bd9df421564969be8aa7b4",
+    "test_compute_sandbox.py": "cfae8cfc4e4c016c474652a3d3b645ef6fce9229437bb00470e6c689039b5f78"
+  },
+  "source_revision": "bb746860aa54316c386b6cabb3f1787e9c354da2",
+  "started_at": 1792099493.6264455,
+  "success": true,
+  "unknown_peer_execution_authorized": false
+}
