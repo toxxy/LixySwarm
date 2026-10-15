@@ -1,0 +1,583 @@
+{
+  "schema_version": 1,
+  "success": true,
+  "same_parent_public_weights_and_saved_directions": true,
+  "source_inputs_verified": true,
+  "no_update_controls_exactly_equal_in_all_training_sets": true,
+  "native_controls_progress_and_head_unchanged": true,
+  "rows": [
+    {
+      "training_set": "math_train192",
+      "bfloat16_before": 1.0924283286344374,
+      "bfloat16_after": 1.0879792430064483,
+      "bfloat16_change": -0.004449085627989069,
+      "float32_before": 1.0878309716314205,
+      "float32_after": 1.0834331194169056,
+      "float32_change": -0.004397852214514941
+    },
+    {
+      "training_set": "old_full200",
+      "bfloat16_before": 0.4788019252900107,
+      "bfloat16_after": 0.477998708543963,
+      "bfloat16_change": -0.0008032167460477191,
+      "float32_before": 0.4778429117046598,
+      "float32_after": 0.47765495248367784,
+      "float32_change": -0.00018795922098197027
+    },
+    {
+      "training_set": "old_prefix64",
+      "bfloat16_before": 0.7107713829733197,
+      "bfloat16_after": 0.7115276119712767,
+      "bfloat16_change": 0.0007562289979570203,
+      "float32_before": 0.7114674053598554,
+      "float32_after": 0.7111368566866674,
+      "float32_change": -0.0003305486731880469
+    }
+  ],
+  "bfloat16_arm": {
+    "controls_and_native_progress_unchanged": true,
+    "definition": {
+      "action": "public-retention-diagnostic-v2",
+      "generation_performed": false,
+      "gradient_metadata": [
+        [
+          "18c219146676d9e8f99fc303c03cd906e910184e7ecffef7e2c2bc619d18a580",
+          3223824,
+          0,
+          64,
+          5759
+        ],
+        [
+          "12ec2a4311f6b253b4518f7d2ccf1809520fb7ea33cf1be7141ad7819721db80",
+          3223824,
+          64,
+          64,
+          5103
+        ],
+        [
+          "b942d0362da0f8f7d21348da792eb93df78bf97f5b45441b226eb1cbc95cfa30",
+          3223832,
+          128,
+          64,
+          5717
+        ]
+      ],
+      "held_out_data_used_in_compute": false,
+      "historical_dataset_id": "24eb8b9e9c268021ededa84a171a4b6804cbe58263edbb2b2944f49dd4de64a5",
+      "historical_training_full": 200,
+      "historical_training_prefix": 64,
+      "learning_rate": 0.001,
+      "loss_execution_mode": "train-with-autograd-for-every-loss-pass; backward-only-when-requested",
+      "math_range": [
+        0,
+        192
+      ],
+      "math_training_artifact_id": "a1a36bc0cea6f5a8dbf81a5828a01da3ca0674c534431ef51583f3f46a915be6",
+      "measurements": [
+        "baseline-training-loss-and-reference-gradients",
+        "decoded-signed-directions-vs-prefix-and-full-training-gradients",
+        "reconstructed-source-vs-saved-half-precision-first-desktop-shard",
+        "decoded-gradient-concordance-current-reconstruction-vs-saved",
+        "no-update-numerical-control",
+        "finite-sgd-training-loss-change-and-first-order-residual",
+        "restore-parent-parameters"
+      ],
+      "model_id": "506317cc9f40da9dea40e6d14a94910ac6625ae478b5f2d0248cb1bbbb93a6c3",
+      "new_model_publication_authorized": false,
+      "no_update_absolute_tolerance": 1e-07,
+      "no_update_control": "repeat-every-training-loss-with-identical-parameters-before-applying-step",
+      "no_update_relative_tolerance": 1e-06,
+      "parent_release_id": "df231f9b93f6300ba7242da793d457880a416448f00d0e9b914e6a3f7b1e533a",
+      "reference": "https://arxiv.org/abs/1812.00420v2",
+      "reference_scope": "Reference-gradient projection motivates dot-product diagnostics; not a reproduction of A-GEM benchmarks",
+      "scope": "Retrospective diagnosis of one fixed rejected update; not a fresh quality test or training-method selection",
+      "source_report_id": "b5d9358df1d49b4d14c3991c781aef9319cf10e3c100b8233e00744b3309eea8",
+      "source_trial": "offset0-p4-distributed",
+      "training_policy_id": "de2929818310546b588e93640cd34f6459d2bf157f3d79d64f542889c1234d95",
+      "version": 2
+    },
+    "diagnostic": {
+      "after_signed_update": {
+        "math_train192": {
+          "examples": 192,
+          "nll": 1.0879792430064483,
+          "tokens": 16579
+        },
+        "old_full200": {
+          "examples": 200,
+          "nll": 0.477998708543963,
+          "tokens": 963
+        },
+        "old_prefix64": {
+          "examples": 64,
+          "nll": 0.7115276119712767,
+          "tokens": 371
+        }
+      },
+      "baseline": {
+        "math_train192": {
+          "examples": 192,
+          "nll": 1.0924283286344374,
+          "tokens": 16579
+        },
+        "old_full200": {
+          "examples": 200,
+          "nll": 0.4788019252900107,
+          "tokens": 963
+        },
+        "old_prefix64": {
+          "examples": 64,
+          "nll": 0.7107713829733197,
+          "tokens": 371
+        }
+      },
+      "direction_geometry": {
+        "reconstructed_decoded_start0": {
+          "old_full200": {
+            "cosine": 0.4021014510383234,
+            "direction_norm": 0.9999999913754523,
+            "dot": 0.19651221357743212,
+            "predicted_first_order_loss_change": -0.0001965122135774321,
+            "reference_norm": 0.488713021962042
+          },
+          "old_prefix64": {
+            "cosine": 0.44829664641094813,
+            "direction_norm": 0.9999999913754523,
+            "dot": 0.3328537067578255,
+            "predicted_first_order_loss_change": -0.00033285370675782553,
+            "reference_norm": 0.7424853883993039
+          }
+        },
+        "reconstructed_float32_start0": {
+          "old_full200": {
+            "cosine": 0.40210518654832594,
+            "direction_norm": 0.9999997829784522,
+            "dot": 0.19651399821686172,
+            "predicted_first_order_loss_change": -0.00019651399821686173,
+            "reference_norm": 0.488713021962042
+          },
+          "old_prefix64": {
+            "cosine": 0.448300785792257,
+            "direction_norm": 0.9999997829784522,
+            "dot": 0.33285671082158286,
+            "predicted_first_order_loss_change": -0.0003328567108215829,
+            "reference_norm": 0.7424853883993039
+          }
+        },
+        "saved_start0": {
+          "old_full200": {
+            "cosine": 0.4020607378601912,
+            "direction_norm": 0.9999999519580643,
+            "dot": 0.19649230877207113,
+            "predicted_first_order_loss_change": -0.00019649230877207113,
+            "reference_norm": 0.488713021962042
+          },
+          "old_prefix64": {
+            "cosine": 0.44826162648433204,
+            "direction_norm": 0.9999999519580643,
+            "dot": 0.3328276918550356,
+            "predicted_first_order_loss_change": -0.00033282769185503556,
+            "reference_norm": 0.7424853883993039
+          }
+        },
+        "saved_start128": {
+          "old_full200": {
+            "cosine": 0.39875357214861806,
+            "direction_norm": 0.9999999797357366,
+            "dot": 0.19487605931389043,
+            "predicted_first_order_loss_change": -0.00019487605931389044,
+            "reference_norm": 0.488713021962042
+          },
+          "old_prefix64": {
+            "cosine": 0.44532776320638917,
+            "direction_norm": 0.9999999797357366,
+            "dot": 0.3306493505289234,
+            "predicted_first_order_loss_change": -0.0003306493505289234,
+            "reference_norm": 0.7424853883993039
+          }
+        },
+        "saved_start64": {
+          "old_full200": {
+            "cosine": 0.390175335012711,
+            "direction_norm": 0.999996580739753,
+            "dot": 0.19068311507168964,
+            "predicted_first_order_loss_change": -0.00019068311507168965,
+            "reference_norm": 0.488713021962042
+          },
+          "old_prefix64": {
+            "cosine": 0.43620080096923386,
+            "direction_norm": 0.999996580739753,
+            "dot": 0.3238716137226086,
+            "predicted_first_order_loss_change": -0.0003238716137226086,
+            "reference_norm": 0.7424853883993039
+          }
+        },
+        "saved_token_weighted": {
+          "old_full200": {
+            "cosine": 0.39825345098537024,
+            "direction_norm": 0.9975094192816927,
+            "dot": 0.19414690170934207,
+            "predicted_first_order_loss_change": -0.00019414690170934206,
+            "reference_norm": 0.488713021962042
+          },
+          "old_prefix64": {
+            "cosine": 0.44464456206372344,
+            "direction_norm": 0.9975094192816927,
+            "dot": 0.329319844838961,
+            "predicted_first_order_loss_change": -0.000329319844838961,
+            "reference_norm": 0.7424853883993039
+          }
+        }
+      },
+      "generation_performed": false,
+      "held_out_data_used_in_compute": false,
+      "loss_changes": {
+        "math_train192": {
+          "actual_loss_change": -0.004449085627989069
+        },
+        "old_full200": {
+          "actual_loss_change": -0.0008032167460477191,
+          "finite_step_residual": -0.000609069844338377,
+          "predicted_first_order_loss_change": -0.00019414690170934206
+        },
+        "old_prefix64": {
+          "actual_loss_change": 0.0007562289979570203,
+          "finite_step_residual": 0.0010855488427959812,
+          "predicted_first_order_loss_change": -0.000329319844838961
+        }
+      },
+      "loss_execution_mode": "train-with-autograd-for-every-loss-pass; backward-only-when-requested",
+      "model_id": "506317cc9f40da9dea40e6d14a94910ac6625ae478b5f2d0248cb1bbbb93a6c3",
+      "model_published": false,
+      "new_promotion_authorized": false,
+      "no_update_control": {
+        "math_train192": {
+          "examples": 192,
+          "nll": 1.0924283286344374,
+          "tokens": 16579
+        },
+        "old_full200": {
+          "examples": 200,
+          "nll": 0.4788019252900107,
+          "tokens": 963
+        },
+        "old_prefix64": {
+          "examples": 64,
+          "nll": 0.7107713829733197,
+          "tokens": 371
+        }
+      },
+      "no_update_control_passed": true,
+      "no_update_loss_changes": {
+        "math_train192": 0.0,
+        "old_full200": 0.0,
+        "old_prefix64": 0.0
+      },
+      "parent_parameters_restored": true,
+      "parent_release_id": "df231f9b93f6300ba7242da793d457880a416448f00d0e9b914e6a3f7b1e533a",
+      "peak_gpu_allocated_bytes": 4374663680,
+      "prefix_vs_full_reference_alignment": {
+        "cosine": 0.9376910277561508,
+        "direction_norm": 0.7424853883993039,
+        "dot": 0.34025270232357324,
+        "predicted_first_order_loss_change": -0.00034025270232357325,
+        "reference_norm": 0.488713021962042
+      },
+      "protocol_id": "1588449bacb8e29445fbc0897db14c697db2583c945156dc6e8bf96e469c71f4",
+      "reconstruction": {
+        "artifact_id": "bdca2d9d5855746e6a2d44db786d703de235c44b19b02faea42eb46b17deb006",
+        "causal_scope": "Source-vs-codec comparison of the original artifact only if exact reproduction succeeded",
+        "decoded_direction_concordance_with_saved": {
+          "cosine": 0.9999989798475389,
+          "direction_norm": 0.9999999519580643,
+          "dot": 0.9999989231811137,
+          "predicted_first_order_loss_change": -0.0009999989231811138,
+          "reference_norm": 0.9999999913754523,
+          "relative_l2_difference": 0.0014283924545619097
+        },
+        "math_training_nll": 1.1278525410292153,
+        "original_half_artifact_reproduced_exactly": false,
+        "quantization_relative_l2_error": 0.00020082621420591131,
+        "replay_tokens": 371,
+        "replay_training_nll": 0.7107713829733198,
+        "tokens": 5759
+      },
+      "seconds": 54.72941852000076,
+      "success": true,
+      "updated_model_files_written": false
+    },
+    "engine_report_sha256": "e86b55e133dc5a3839d1a81e5b67ad183560d8eaace8131ee8e6bcdf373058e3",
+    "finished_at": 1792059407.7157059,
+    "native_daemon_job": false,
+    "native_learning_cycles_added": 0,
+    "new_model_published": false,
+    "physical_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+    "protocol_id": "1588449bacb8e29445fbc0897db14c697db2583c945156dc6e8bf96e469c71f4",
+    "research_path": true,
+    "resource_reservation": {
+      "gpu_fraction": 0.5,
+      "ram_gb": 6
+    },
+    "source_daemon_pid_unchanged": true,
+    "source_revision": "f950bbac8486623c4cad0fd34d01bf2dfdb2ad5f",
+    "success": true
+  },
+  "float32_arm": {
+    "controls_and_native_progress_unchanged": true,
+    "definition": {
+      "action": "public-retention-diagnostic-v3",
+      "cuda_tf32": false,
+      "float32_matmul_precision": "highest",
+      "generation_performed": false,
+      "gradient_metadata": [
+        [
+          "18c219146676d9e8f99fc303c03cd906e910184e7ecffef7e2c2bc619d18a580",
+          3223824,
+          0,
+          64,
+          5759
+        ],
+        [
+          "12ec2a4311f6b253b4518f7d2ccf1809520fb7ea33cf1be7141ad7819721db80",
+          3223824,
+          64,
+          64,
+          5103
+        ],
+        [
+          "b942d0362da0f8f7d21348da792eb93df78bf97f5b45441b226eb1cbc95cfa30",
+          3223832,
+          128,
+          64,
+          5717
+        ]
+      ],
+      "held_out_data_used_in_compute": false,
+      "historical_dataset_id": "24eb8b9e9c268021ededa84a171a4b6804cbe58263edbb2b2944f49dd4de64a5",
+      "historical_training_full": 200,
+      "historical_training_prefix": 64,
+      "learning_rate": 0.001,
+      "loss_execution_mode": "train-with-autograd-for-every-loss-pass; backward-only-when-requested",
+      "math_range": [
+        0,
+        192
+      ],
+      "math_training_artifact_id": "a1a36bc0cea6f5a8dbf81a5828a01da3ca0674c534431ef51583f3f46a915be6",
+      "measurements": [
+        "baseline-training-loss-and-reference-gradients",
+        "decoded-signed-directions-vs-prefix-and-full-training-gradients",
+        "no-update-numerical-control",
+        "finite-sgd-training-loss-change-and-first-order-residual",
+        "restore-parent-parameters"
+      ],
+      "model_compute_dtype": "float32",
+      "model_id": "506317cc9f40da9dea40e6d14a94910ac6625ae478b5f2d0248cb1bbbb93a6c3",
+      "new_model_publication_authorized": false,
+      "no_update_absolute_tolerance": 1e-07,
+      "no_update_control": "repeat-every-training-loss-with-identical-parameters-before-applying-step",
+      "no_update_relative_tolerance": 1e-06,
+      "parent_release_id": "df231f9b93f6300ba7242da793d457880a416448f00d0e9b914e6a3f7b1e533a",
+      "ram_gb": 10,
+      "reconstruct_source_gradient": false,
+      "reference": "https://arxiv.org/abs/1812.00420v2",
+      "reference_scope": "Reference-gradient projection motivates dot-product diagnostics; not a reproduction of A-GEM benchmarks",
+      "scope": "Retrospective precision control on public training data; no candidate selection or promotion",
+      "source_report_id": "b5d9358df1d49b4d14c3991c781aef9319cf10e3c100b8233e00744b3309eea8",
+      "source_trial": "offset0-p4-distributed",
+      "training_policy_id": "de2929818310546b588e93640cd34f6459d2bf157f3d79d64f542889c1234d95",
+      "version": 3
+    },
+    "diagnostic": {
+      "after_signed_update": {
+        "math_train192": {
+          "examples": 192,
+          "nll": 1.0834331194169056,
+          "tokens": 16579
+        },
+        "old_full200": {
+          "examples": 200,
+          "nll": 0.47765495248367784,
+          "tokens": 963
+        },
+        "old_prefix64": {
+          "examples": 64,
+          "nll": 0.7111368566866674,
+          "tokens": 371
+        }
+      },
+      "baseline": {
+        "math_train192": {
+          "examples": 192,
+          "nll": 1.0878309716314205,
+          "tokens": 16579
+        },
+        "old_full200": {
+          "examples": 200,
+          "nll": 0.4778429117046598,
+          "tokens": 963
+        },
+        "old_prefix64": {
+          "examples": 64,
+          "nll": 0.7114674053598554,
+          "tokens": 371
+        }
+      },
+      "cuda_tf32": false,
+      "direction_geometry": {
+        "saved_start0": {
+          "old_full200": {
+            "cosine": 0.39910955583606006,
+            "direction_norm": 0.9999999519580643,
+            "dot": 0.19122058463490632,
+            "predicted_first_order_loss_change": -0.00019122058463490633,
+            "reference_norm": 0.47911805424187937
+          },
+          "old_prefix64": {
+            "cosine": 0.44573927354602855,
+            "direction_norm": 0.9999999519580643,
+            "dot": 0.3353642735683249,
+            "predicted_first_order_loss_change": -0.0003353642735683249,
+            "reference_norm": 0.7523777005600645
+          }
+        },
+        "saved_start128": {
+          "old_full200": {
+            "cosine": 0.3959384407499111,
+            "direction_norm": 0.9999999797357366,
+            "dot": 0.18970125148750483,
+            "predicted_first_order_loss_change": -0.00018970125148750483,
+            "reference_norm": 0.47911805424187937
+          },
+          "old_prefix64": {
+            "cosine": 0.44284581293061276,
+            "direction_norm": 0.9999999797357366,
+            "dot": 0.3331873076835914,
+            "predicted_first_order_loss_change": -0.0003331873076835914,
+            "reference_norm": 0.7523777005600645
+          }
+        },
+        "saved_start64": {
+          "old_full200": {
+            "cosine": 0.38766774301554463,
+            "direction_norm": 0.999996580739753,
+            "dot": 0.18573797963728697,
+            "predicted_first_order_loss_change": -0.00018573797963728698,
+            "reference_norm": 0.47911805424187937
+          },
+          "old_prefix64": {
+            "cosine": 0.43363537257256624,
+            "direction_norm": 0.999996580739753,
+            "dot": 0.32625646893806526,
+            "predicted_first_order_loss_change": -0.0003262564689380653,
+            "reference_norm": 0.7523777005600645
+          }
+        },
+        "saved_token_weighted": {
+          "old_full200": {
+            "cosine": 0.39547881269743845,
+            "direction_norm": 0.9975094192816927,
+            "dot": 0.1890091214106856,
+            "predicted_first_order_loss_change": -0.00018900912141068562,
+            "reference_norm": 0.47911805424187937
+          },
+          "old_prefix64": {
+            "cosine": 0.44211658944650484,
+            "direction_norm": 0.9975094192816927,
+            "dot": 0.3318101995071195,
+            "predicted_first_order_loss_change": -0.00033181019950711947,
+            "reference_norm": 0.7523777005600645
+          }
+        }
+      },
+      "float32_matmul_precision": "highest",
+      "generation_performed": false,
+      "held_out_data_used_in_compute": false,
+      "loss_changes": {
+        "math_train192": {
+          "actual_loss_change": -0.004397852214514941
+        },
+        "old_full200": {
+          "actual_loss_change": -0.00018795922098197027,
+          "finite_step_residual": 1.04990042871535e-06,
+          "predicted_first_order_loss_change": -0.00018900912141068562
+        },
+        "old_prefix64": {
+          "actual_loss_change": -0.0003305486731880469,
+          "finite_step_residual": 1.2615263190725399e-06,
+          "predicted_first_order_loss_change": -0.00033181019950711947
+        }
+      },
+      "loss_execution_mode": "train-with-autograd-for-every-loss-pass; backward-only-when-requested",
+      "model_compute_dtype": "float32",
+      "model_id": "506317cc9f40da9dea40e6d14a94910ac6625ae478b5f2d0248cb1bbbb93a6c3",
+      "model_published": false,
+      "new_promotion_authorized": false,
+      "no_update_control": {
+        "math_train192": {
+          "examples": 192,
+          "nll": 1.0878309716314205,
+          "tokens": 16579
+        },
+        "old_full200": {
+          "examples": 200,
+          "nll": 0.4778429117046598,
+          "tokens": 963
+        },
+        "old_prefix64": {
+          "examples": 64,
+          "nll": 0.7114674053598554,
+          "tokens": 371
+        }
+      },
+      "no_update_control_passed": true,
+      "no_update_loss_changes": {
+        "math_train192": 0.0,
+        "old_full200": 0.0,
+        "old_prefix64": 0.0
+      },
+      "parent_parameters_restored": true,
+      "parent_release_id": "df231f9b93f6300ba7242da793d457880a416448f00d0e9b914e6a3f7b1e533a",
+      "peak_gpu_allocated_bytes": 8438129152,
+      "prefix_vs_full_reference_alignment": {
+        "cosine": 0.9393860177397488,
+        "direction_norm": 0.7523777005600645,
+        "dot": 0.33862774861293526,
+        "predicted_first_order_loss_change": -0.0003386277486129353,
+        "reference_norm": 0.47911805424187937
+      },
+      "protocol_id": "c82a431c4df0ffeb7c83e62b0541530516b14e12ba932e0723729b204691135d",
+      "reconstruction": {
+        "performed": false,
+        "reason": "Float32 arm measures the fixed saved directions; no source gradient reconstruction"
+      },
+      "seconds": 53.74591841001529,
+      "success": true,
+      "updated_model_files_written": false
+    },
+    "engine_report_sha256": "3ccf3e8e4b4431a49f201030b6ebd7400d1ae1987c38999b982e84d7f0707d19",
+    "finished_at": 1792060061.3919363,
+    "native_daemon_job": false,
+    "native_learning_cycles_added": 0,
+    "new_model_published": false,
+    "physical_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+    "protocol_id": "c82a431c4df0ffeb7c83e62b0541530516b14e12ba932e0723729b204691135d",
+    "research_path": true,
+    "resource_reservation": {
+      "gpu_fraction": 0.5,
+      "ram_gb": 10
+    },
+    "source_daemon_pid_unchanged": true,
+    "source_revision": "79e1397b55c5dac2a14225b1fa6be5c837364894",
+    "success": true
+  },
+  "findings": {
+    "historical_prefix_loss_change_flipped_sign_across_compute_regimes": true,
+    "favorable_gradient_dot_is_not_a_finite_bfloat16_loss_guarantee": true,
+    "original_source_gradient_reproduction_achieved": false,
+    "held_out_quality_or_new_model_promotion_verified": false
+  },
+  "scope": "One retrospective training-only precision comparison; does not isolate a layer or explain all prior held-out regressions",
+  "inference": "Changing the compute-precision regime changes the observed finite-step retention outcome here; direct loss checks are needed alongside gradient geometry",
+  "native_learning_cycles_added": 0,
+  "new_model_published": false
+}
