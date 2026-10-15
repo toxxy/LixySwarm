@@ -45,3 +45,12 @@ def test_specialist_request_cannot_substitute_inputs_or_scope(tmp_path,key,value
 def test_specialist_protocol_matches_its_prospective_fixture():
     path=Path(__file__).parent/'experiments/reports/language_specialist_protocol_20261015.json'
     assert json.loads(path.read_text())=={'protocol_id':protocol_id(),'definition':definition()}
+
+
+def test_answer_diagnostic_is_a_separate_read_only_protocol():
+    from src.learning.language_specialist_answers import definition as answers_definition,protocol_id as answers_id
+    value=answers_definition()
+    assert not value['training_performed'] and not value['selection_or_hyperparameter_updates']
+    assert value['original_combined_system_rejection_retained'] and not value['native_publication_authorized']
+    assert json.loads((Path(__file__).parent/'experiments/reports/specialist_answer_protocol_20261015.json').read_text())=={
+        'protocol_id':answers_id(),'definition':value}

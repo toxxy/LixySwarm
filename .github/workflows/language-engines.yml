@@ -25,6 +25,7 @@ on:
       - 'test_language_selector_job_tensors.py'
       - 'test_language_specialist_tensors.py'
       - 'test_language_specialist_job_tensors.py'
+      - 'test_language_specialist_answers_tensors.py'
       - 'test_public_math.py'
       - 'test_public_math_tensors.py'
       - 'src/network/engine_profiles.py'
@@ -48,7 +49,7 @@ jobs:
           python-version: '3.12'
       - run: python -m pip install --index-url https://download.pytorch.org/whl/cpu torch==2.12.0
       - run: python -m pip install -r engines/requirements-cpu.txt -r src/learning/requirements-research.txt PyInstaller==6.22.3 pytest==8.4.2
-      - run: python -m pytest -q test_language_adapter.py test_language_gradient.py test_language_candidate.py test_language_half_tensors.py test_language_math_tensors.py test_language_retention_tensors.py test_language_finite_step_tensors.py test_language_group_direction_tensors.py test_language_finite_job_tensors.py test_language_streamed_float_tensors.py test_language_block_tensors.py test_language_block_quality_tensors.py test_language_selector_tensors.py test_language_selector_job_tensors.py test_language_specialist_tensors.py test_language_specialist_job_tensors.py test_public_math_tensors.py test_public_quality.py test_engine_package.py test_engine_download.py test_language_install.py
+      - run: python -m pytest -q test_language_adapter.py test_language_gradient.py test_language_candidate.py test_language_half_tensors.py test_language_math_tensors.py test_language_retention_tensors.py test_language_finite_step_tensors.py test_language_group_direction_tensors.py test_language_finite_job_tensors.py test_language_streamed_float_tensors.py test_language_block_tensors.py test_language_block_quality_tensors.py test_language_selector_tensors.py test_language_selector_job_tensors.py test_language_specialist_tensors.py test_language_specialist_job_tensors.py test_language_specialist_answers_tensors.py test_public_math_tensors.py test_public_quality.py test_engine_package.py test_engine_download.py test_language_install.py
       - run: python engines/build_language.py --device cpu --output language-package
       - name: Verify frozen model architecture and adapter fixture
         shell: bash

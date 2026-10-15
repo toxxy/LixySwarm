@@ -47,9 +47,13 @@ def run(args,cancel):
     quality_block=getattr(args,'quality_block',False)
     selector=getattr(args,'expert_selector',False)
     specialist=getattr(args,'math_specialist',False)
+    answers=getattr(args,'specialist_answers',False)
     neural=selector or specialist
     streamed=getattr(args,'streamed_base',False)
-    if specialist:
+    if answers:
+        from src.learning.language_specialist_answers import definition as answers_definition,protocol_id as answers_id
+        protocol=answers_definition();identifier=answers_id()
+    elif specialist:
         from src.learning.language_specialist_protocol import definition as specialist_definition,protocol_id as specialist_id
         protocol=specialist_definition();identifier=specialist_id()
     elif selector:
@@ -65,7 +69,7 @@ def run(args,cancel):
         identifier=finite_id(args.precision,group_direction=group,streamed_base=streamed)
     else:protocol=definition(args.precision);identifier=protocol_id(args.precision)
     ram_gb=protocol['ram_gb'];disk_gb=protocol.get('disk_reservation_gb',.008)
-    trial=None if neural else selected_trial(repo);before=fingerprints(node);controls=ClientSettings.load(node);policy=asdict(controls.policy)
+    trial=None if neural or answers else selected_trial(repo);before=fingerprints(node);controls=ClientSettings.load(node);policy=asdict(controls.policy)
     diagnostic=json.loads((node/'diagnostics.json').read_text());pid=diagnostic['pid']
     registry=LanguageVersionRegistry(node/'public/language','qwen3-1.7b');head=registry.head()
     if head['release']['release_id']!=PARENT_RELEASE or head['release']['model_artifact_id']!=PARENT_MODEL:
@@ -90,7 +94,7 @@ def run(args,cancel):
     training=store.object_path(ARTIFACTS['train'][0])
     base=materialize_version(node,'qwen3-1.7b',PARENT_RELEASE,allowed=allowed)
     rows=[]
-    for result in ([] if neural else trial['signed_results']):
+    for result in ([] if neural or answers else trial['signed_results']):
         output=result['output'];row={key:output[key] for key in
             ['gradient_id','gradient_bytes','base_hash','adapter_id','dataset_id','start','count','tokens','quantization_relative_l2_error']}
         row['path']=str(store.object_path(row['gradient_id']));rows.append(row)
@@ -107,26 +111,44 @@ def run(args,cancel):
         'parent_release_id':PARENT_RELEASE,'training_file':str(training),'contributions':rows,
         'output_directory':str(directory/'engine'),'device':'cuda','cpu_threads':min(4,max(1,int(4*policy['cpu_percent']/100))),
         'gpu_fraction':policy['gpu_percent']/100/max(1,policy['max_gpu_jobs']),'deadline':deadline}
-    if neural:
+    if neural or answers:
         request.pop('contributions');request['streamed_base']=True
     if quality_block or finite and streamed:request['streamed_base']=True
-    if quality_block or neural:request['evaluation_file']=str(store.object_path(ARTIFACTS['evaluation'][0]))
+    if quality_block or neural or answers:request['evaluation_file']=str(store.object_path(ARTIFACTS['evaluation'][0]))
+    if answers:
+        request['specialist_file']=str(Path.home()/'.local/state/lixyswarm-math-specialist-20261015/engine/specialist.safetensors')
+        request['cached_baseline_file']=str(repo/'experiments/reports/block_quality_20261015.json')
     lease,reason=governor.acquire(ResourceRequirements(kind='training',gpu_required=True,ram_gb=ram_gb,disk_gb=disk_gb))
     if lease is None:raise ValueError('Retention research reservation denied: '+reason)
     try:
         with lease,NodeStateLock(node/'research/public-math'):
             atomic_json(directory/'status.json',{'phase':'diagnosing','success':False})
-            module='src.learning.language_specialist_job' if specialist else 'src.learning.language_selector_job' if selector else 'src.learning.language_block_quality_job' if quality_block else 'src.learning.language_finite_step_job' if finite else 'src.learning.language_retention_job'
+            module='src.learning.language_specialist_answers' if answers else 'src.learning.language_specialist_job' if specialist else 'src.learning.language_selector_job' if selector else 'src.learning.language_block_quality_job' if quality_block else 'src.learning.language_finite_step_job' if finite else 'src.learning.language_retention_job'
             response=ComputeSupervisor().run([str(args.engine_python.absolute()),'-m',module],
                 request,execution,allowed=allowed,ram_gb=ram_gb)
         path=directory/'engine/diagnostic.json'
-        if path.is_symlink() or path.stat().st_size>(1024**2 if quality_block or neural else 256*1024):raise ValueError('Retention diagnostic output exceeds its bound')
+        if path.is_symlink() or path.stat().st_size>(1024**2 if quality_block or neural or answers else 256*1024):raise ValueError('Retention diagnostic output exceeds its bound')
         raw=path.read_bytes();result=json.loads(raw)
         if (hashlib.sha256(raw).hexdigest()!=response['report_id'] or len(raw)!=response['bytes']
                 or result['protocol_id']!=identifier or result['model_id']!=PARENT_MODEL or not result['success']
-                or result['held_out_data_used_in_compute'] is not (quality_block or neural) or result['updated_model_files_written'] is not specialist
+                or result['held_out_data_used_in_compute'] is not (quality_block or neural or answers) or result['updated_model_files_written'] is not specialist
                 or result['parent_parameters_restored'] is not True or fingerprints(node)!=before):
             raise ValueError('Retention diagnostic changed its scope or current native controls')
+        if answers:
+            from src.learning.public_math import canonical,load_snapshot,score_answers,compact_evaluation,MAX_TRACE_BYTES
+            trace_path=directory/'engine/math-traces.json'
+            if trace_path.is_symlink() or trace_path.stat().st_size>MAX_TRACE_BYTES:raise ValueError('Specialist answer trace exceeds its bound')
+            trace=json.loads(trace_path.read_text());raw_trace=canonical(trace);evaluation=load_snapshot(request['evaluation_file'],'evaluation')
+            first=score_answers(trace['before']['answers'],evaluation);second=score_answers(trace['after']['answers'],evaluation)
+            if (hashlib.sha256(raw_trace).hexdigest()!=result['math_trace_id'] or len(raw_trace)!=result['math_trace_bytes']
+                    or compact_evaluation(trace['before'])!=result['math_before'] or compact_evaluation(trace['after'])!=result['math_after']
+                    or result['correct_before']!=sum(first.values()) or result['correct_after']!=sum(second.values())
+                    or result['accuracy_gain']!=sum(second.values())-sum(first.values())
+                    or result['regressions']!=sorted(k for k in first if first[k] and not second[k])
+                    or result.get('training_performed') is not False or result.get('selection_or_hyperparameter_updates') is not False
+                    or result.get('native_publication_authorized') is not False or result.get('full_global_quality_gate_evaluated') is not False
+                    or result.get('original_combined_system_rejection_retained') is not True
+                    or result.get('evaluated_specialist_id')!=protocol['specialist_id']):raise ValueError('Specialist answer evidence does not reconstruct')
         if neural:
             from src.learning.language_selector_protocol import verify_loss_report
             from src.learning.weights_io import digest_file
@@ -178,7 +200,7 @@ def run(args,cancel):
             'native_learning_cycles_added':0,'new_model_published':False,'source_daemon_pid_unchanged':True,
             'resource_reservation':{'ram_gb':ram_gb,'gpu_fraction':request['gpu_fraction']},'finished_at':time.time()}
         atomic_json(directory/'report.json',report);atomic_json(directory/'status.json',{'phase':'complete','success':True})
-        summary={'success':True,'selector_evaluations':{k:{g:r[g]['nll'] for g in ['historical','math']} for k,r in result['evaluations'].items()}} if neural else {'success':True,'accepted_microsteps':result['block']['accepted_steps'],
+        summary={'success':True,'math_accuracy_gain':result['accuracy_gain'],'math_regressions':len(result['regressions'])} if answers else {'success':True,'selector_evaluations':{k:{g:r[g]['nll'] for g in ['historical','math']} for k,r in result['evaluations'].items()}} if neural else {'success':True,'accepted_microsteps':result['block']['accepted_steps'],
             'quality_verdict':result['quality']['math_verdict']} if quality_block else {'success':True,'applied_in_temporary_model':result['guard']['applied'],
             'accepted_rate':result['guard']['accepted_rate']} if finite else {
             'success':True,'loss_changes':result['loss_changes'],'reconstruction':result['reconstruction']}
@@ -200,11 +222,12 @@ def main():
     parser.add_argument('--quality-block',action='store_true',help='Run the prospective fixed block and paired held-out quality evaluation')
     parser.add_argument('--expert-selector',action='store_true',help='Train public-only Dolphin/Matriarca routing over two frozen experts')
     parser.add_argument('--math-specialist',action='store_true',help='Train a separate public specialist and evaluate learned adapter routing')
+    parser.add_argument('--specialist-answers',action='store_true',help='Read-only answer diagnostic of the saved specialist without a training retry')
     args=parser.parse_args();cancel=threading.Event()
     if args.group_direction and not args.finite_step:parser.error('--group-direction requires --finite-step')
-    if (args.expert_selector or args.math_specialist) and (args.finite_step or args.group_direction or args.quality_block or args.precision!='float32' or not args.streamed_base or args.expert_selector and args.math_specialist):
+    if (args.expert_selector or args.math_specialist or args.specialist_answers) and (args.finite_step or args.group_direction or args.quality_block or args.precision!='float32' or not args.streamed_base or sum([args.expert_selector,args.math_specialist,args.specialist_answers])!=1):
         parser.error('Choose one selector experiment with --streamed-base --precision float32, without update experiments')
-    if args.streamed_base and not (args.expert_selector or args.math_specialist) and (not args.finite_step or not args.group_direction or args.precision!='float32'):
+    if args.streamed_base and not (args.expert_selector or args.math_specialist or args.specialist_answers) and (not args.finite_step or not args.group_direction or args.precision!='float32'):
         parser.error('--streamed-base requires --finite-step --group-direction --precision float32')
     if args.quality_block and not args.streamed_base:parser.error('--quality-block requires --streamed-base')
     for sig in [signal.SIGINT,signal.SIGTERM]:signal.signal(sig,lambda *_:cancel.set())

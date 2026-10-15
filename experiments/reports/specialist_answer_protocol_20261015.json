@@ -1,0 +1,24 @@
+{
+  "definition": {
+    "action": "public-specialist-answer-diagnostic-v1",
+    "cached_parent_report_id": "4a0bfc91aaf9e8d8bd754ad9df456cda5ec0901963b63eabb875c06776e72c3a",
+    "compute_dtype": "float32",
+    "disk_reservation_gb": 0.01,
+    "evaluation_artifact_id": "188812577d2a7834eff5fc0ac0fad5f09f121b3587b34b7ba5d88ba37537be50",
+    "full_global_quality_gate_evaluated": false,
+    "gate_id": "5e085b48da4be5c0e2b3176bb387466405005a0ec61c44b2372f521dbb8e4507",
+    "maximum_seconds": 1800,
+    "native_publication_authorized": false,
+    "original_combined_system_rejection_retained": true,
+    "parent_model_id": "506317cc9f40da9dea40e6d14a94910ac6625ae478b5f2d0248cb1bbbb93a6c3",
+    "parent_release_id": "df231f9b93f6300ba7242da793d457880a416448f00d0e9b914e6a3f7b1e533a",
+    "ram_gb": 10,
+    "scope": "Read-only mathematical answer measurement after the separate system rejection, no promotion or training retry",
+    "selection_or_hyperparameter_updates": false,
+    "specialist_id": "b0127aeb99fae82990f8e97cdb450af2c827c4d89a8b4b29eb1caa8ee340568a",
+    "streamed_base": true,
+    "training_performed": false,
+    "version": 1
+  },
+  "protocol_id": "e36716dcc5612bb6cf0b8cf9f1825489f0214839ed30cc883eb363c92c4a7914"
+}
