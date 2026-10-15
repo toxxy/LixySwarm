@@ -990,6 +990,20 @@ class LSPNodeV3:
                 ttl=1,
                 encryption_key=session.encryption_key,
             ))
+        # A receiver may join the relay just before its requested provider.
+        # Its initial peer list cannot contain that later arrival. Introduce
+        # this authenticated session to existing neighbors without requiring
+        # them to disconnect and fetch another initial list.
+        introduced = [peer for peer in peers if peer.get('node_id') == session.node_id][:1]
+        if introduced:
+            payload = json.dumps({'peers':introduced},separators=(',',':')).encode()
+            async def introduce(neighbor):
+                try:
+                    await asyncio.wait_for(neighbor.send_raw(self._new_packet(
+                        PacketType.PEERS,payload,ttl=1,encryption_key=neighbor.encryption_key)),timeout=1.)
+                except (ConnectionError,OSError,asyncio.TimeoutError):
+                    log.debug('LSP peer introduction failed for %s',neighbor.node_id[:12])
+            await asyncio.gather(*(introduce(peer) for peer in list(self._sessions.values()) if peer is not session))
         proof_payload = self._useful_work_proof_payload()
         if proof_payload is not None:
             await session.send_raw(self._new_packet(

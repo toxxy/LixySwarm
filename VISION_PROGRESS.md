@@ -11,6 +11,8 @@ Las etapas se completan por sus pruebas de aceptación; una implementación parc
 
 La preparación HTTPS también instala mediante movimiento de su etapa temporal propia, con verificación antes y después del movimiento y antes de activar el motor. La instalación desde otras carpetas conserva la copia anterior. Pasaron 41 pruebas focales, incluyendo rechazo de cambios entre verificaciones y conservación de permisos. Aún no se redujeron la reserva conservadora de la app ni la caché comprimida, ni se presentó este avance como una instalación GPU vacía aprobada.
 
+**Descubrimiento de proveedores que llegan después (2026-10-15):** la transferencia inversa de calibración reveló una carrera: el receptor conectó primero y su lista inicial no incluía al proveedor que llegó después; el relay sólo enviaba esa lista al establecer cada sesión. LSP ahora introduce una sesión autenticada recién conectada a los vecinos existentes, mediante un mensaje PEERS de una entrada, cifrado por sesión y con envío acotado. El test reproduce el receptor conectado primero, 120 rumores previos y un proveedor posterior detrás de NAT; descubre al proveedor y establece el túnel sin reconectar al receptor. Pasaron 37 pruebas de red y privacidad. Desplegar la corrección requiere cargar el código nuevo del seed; no se considera un reinicio cosmético ni se conserva artificialmente una ventana de continuidad a través de ese reinicio.
+
 | Etapa | Estado | Evidencia y trabajo restante |
 |---|---|---|
 | 1. Red continua | En observación | Servicios desplegados en dos PCs y VPS, estado por identidad en el Explorer y recuperación tras reinicio comprobados. Faltan operación de 24 horas y recuperación con otro relay público independiente. |

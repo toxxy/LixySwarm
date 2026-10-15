@@ -46,3 +46,35 @@ def test_fresh_receiver_discovers_a_live_provider_through_a_crowded_seed(tmp_pat
         assert next(peer for peer in receiver.peers() if peer['node_id']==provider.identity.node_id_hex)['encrypted']
     finally:
         for n in reversed(nodes):n.stop()
+
+
+def test_already_connected_receiver_discovers_later_provider_without_reconnecting_seed(tmp_path):
+    nodes=[]
+    def node(name,relay=False):
+        n=LSPNodeV3(LSPIdentity.generate(),host='127.0.0.1',port=0,address_book_path=tmp_path/f'{name}.json',
+            target_outbound=0,allow_private=True,relay_enabled=relay)
+        n.start();nodes.append(n);return n
+    def wait_for(condition):
+        deadline=time.monotonic()+5
+        while not condition():
+            assert time.monotonic()<deadline;time.sleep(.02)
+    try:
+        seed=node('seed',True);receiver=node('receiver')
+        assert receiver.connect_peer('127.0.0.1',seed.port)
+        wait_for(lambda:receiver.identity.node_id_hex in seed.connected_node_ids)
+        seed_connection=next(peer['connected_at'] for peer in receiver.peers() if peer['node_id']==seed.identity.node_id_hex)
+        for index in range(120):seed.address_book.add('127.0.0.1',20000+index,node_id=f'{index+10:064x}')
+        provider=node('late-provider')
+        assert not receiver.address_book.addresses_for_node(provider.identity.node_id_hex)
+        assert provider.connect_peer('127.0.0.1',seed.port)
+        wait_for(lambda:bool(receiver.address_book.addresses_for_node(provider.identity.node_id_hex)))
+        original=receiver._connect_address
+        async def nat_connect(host,port,**kwargs):
+            return False if port==provider.port else await original(host,port,**kwargs)
+        receiver._connect_address=nat_connect
+        assert receiver.connect_node(provider.identity.node_id_hex)
+        route=next(peer for peer in receiver.peers() if peer['node_id']==provider.identity.node_id_hex)
+        assert route['transport']=='relay' and route['encrypted']
+        assert next(peer['connected_at'] for peer in receiver.peers() if peer['node_id']==seed.identity.node_id_hex)==seed_connection
+    finally:
+        for n in reversed(nodes):n.stop()
