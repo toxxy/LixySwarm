@@ -93,3 +93,16 @@ def test_paused_or_changed_training_state_blocks_incomplete_admission(tmp_path,m
     client.paused=False;client.save(tmp_path)
     selected.step+=1;selected.save(tmp_path)
     with pytest.raises(ValueError,match='conflicts'):original(tmp_path)
+
+
+def test_retained_public_evidence_counts_toward_work_quota(tmp_path,monkeypatch):
+    from pathlib import Path
+    from src.network.own_storage import usage
+    monkeypatch.setattr(Path,'home',classmethod(lambda cls:tmp_path))
+    root=tmp_path/'.local/state';node=root/'lixyswarm';public=node/'public';public.mkdir(parents=True)
+    (public/'selected').write_bytes(b'own')
+    saved=root/'lixyswarm-public-proof';saved.mkdir();(saved/'previous').write_bytes(b'prior public state')
+    atomic_json(node/'own-storage-reservations.json',{'version':1,'directories':[str(saved)]})
+    assert usage(node)==len(b'ownprior public state')
+    atomic_json(node/'own-storage-reservations.json',{'version':1,'directories':[str(tmp_path/'private')]})
+    with pytest.raises(ValueError,match='separate local public state'):usage(node)

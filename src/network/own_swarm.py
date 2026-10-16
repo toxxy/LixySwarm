@@ -14,7 +14,7 @@ from src.learning.public_math import ARTIFACTS
 from .artifact_store import ArtifactStore,ArtifactService,digest_file
 from .compute_process import ComputeSupervisor,ComputeProcessError
 from .telemetry import atomic_json
-from .public_knowledge import managed_public_bytes
+from .own_storage import usage as managed_public_bytes
 
 
 def public_data_path(directory, identifier):

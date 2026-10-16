@@ -16,7 +16,8 @@ from .artifact_store import digest_file
 from .client_state import ClientSettings, NodeStateLock
 from .engine_download import download_pinned, HTTPSRedirect
 from .own_network_settings import OwnNetworkSettings
-from .public_knowledge import managed_public_bytes,KnowledgeSettings
+from .public_knowledge import KnowledgeSettings
+from .own_storage import usage as managed_public_bytes
 from .report_privacy import public_route
 from .telemetry import atomic_json
 

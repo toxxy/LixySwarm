@@ -11,7 +11,7 @@ from src.learning.swarm_state_audit import replay_request
 from .artifact_store import digest_file
 from .own_learning_settings import OwnLearningSettings
 from .own_state import verify_transition,activate
-from .public_knowledge import managed_public_bytes
+from .own_storage import usage as managed_public_bytes
 from .work_protocol import ResultReceipt,WorkResult
 from .report_privacy import public_route
 from .telemetry import atomic_json

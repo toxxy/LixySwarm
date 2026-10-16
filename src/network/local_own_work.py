@@ -12,7 +12,7 @@ from src.learning.swarm_policy import (WORKERS,GRADIENT_OPERATION,CANDIDATE_OPER
 from .artifact_store import digest_file
 from .work_protocol import ResultReceipt
 from .report_privacy import public_route
-from .public_knowledge import managed_public_bytes
+from .own_storage import usage as managed_public_bytes
 
 
 class LocalOwnWork:
