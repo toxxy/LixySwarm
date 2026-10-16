@@ -13,7 +13,7 @@ from src.network.own_swarm import OwnSwarmSettings
 
 
 def fixture_records():
-    requester=LSPIdentity.generate();workers=[LSPIdentity.generate(),LSPIdentity.generate()]
+    workers=[LSPIdentity.generate(),LSPIdentity.generate()];requester=workers[0]
     model='a'*64;state=state_id(model,'b'*64,1024);records=[]
     for index,worker in enumerate(workers):
         output={'training_policy_id':policy_id(),'state_id':state,'model_id':model,
