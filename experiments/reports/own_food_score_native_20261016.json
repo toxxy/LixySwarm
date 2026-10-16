@@ -1,0 +1,1960 @@
+{
+  "version": 1,
+  "scope": "Prospective proper-log-score own food programs, native autonomous work and independent physical replication",
+  "native_source_revision": "b091ecd9e329ae56406ba1aa4e0b27d6938ed487",
+  "engine_source_revision": "bf15cb01344ce9c09b6bf095f861fca94af4a924",
+  "protocol": "own_food_score_protocol_20261016.json",
+  "summary": {
+    "controls_and_legacy_chat_preserved": true,
+    "finished_at": 1792172680.5593565,
+    "laptop": {
+      "diagnostics": {
+        "node_id": "ea914d97caafef310e50385034abae9a50ba86496b0e9cbf4679e6070e4c25b0",
+        "own_network": {
+          "accepted": 0,
+          "cursor": 0,
+          "enabled": false,
+          "follow_enabled": true,
+          "known_workers": 0,
+          "pending": false,
+          "program_error": null,
+          "program_id": "d3f00ca99db132f0f6a09d4853f028988f520801a9c761d118f4fe999bf796e2",
+          "rejections": 0,
+          "round": 0,
+          "status": "idle",
+          "training_policy_id": "b6d2596af24ffd646aec9e2b0a3775284a7c0a95309d1c6f38646bb8bfa72ba1",
+          "window_limit": 8
+        },
+        "own_swarm": {
+          "active": 0,
+          "completed": 19,
+          "cpu_threads": 8,
+          "device": "cpu",
+          "family": "lixyswarm-own-causal-byte-v1",
+          "membership_version": 3,
+          "model_id": "8e19d32d7c8918403a8eff8461fe44fe19cbe9f8dc390aee0cfea761b750275a",
+          "optimizer_step": 1037,
+          "program_id": "d3f00ca99db132f0f6a09d4853f028988f520801a9c761d118f4fe999bf796e2",
+          "ready": true,
+          "requesters": [
+            "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+            "ea914d97caafef310e50385034abae9a50ba86496b0e9cbf4679e6070e4c25b0"
+          ],
+          "state_id": "f551c150b4ea74f6b492d4c9df44a5c79f24e10f7c13b0da06b64ff6ab4bc7cc",
+          "training_policy_id": "b6d2596af24ffd646aec9e2b0a3775284a7c0a95309d1c6f38646bb8bfa72ba1"
+        },
+        "pid": 1037012,
+        "runtime_version": "0.4.0a26"
+      },
+      "fingerprints": {
+        "controls.json": "308ff5342dd5bcdef857079f6b7b8abf34b5c0ea57b791154f5e4aee465220ba",
+        "language-engine.json": "131aff526d03b04a6d0750d6def3db11b3d597177407a34bdfe804bd474b4af7",
+        "language-follow-controls.json": "d31e3b3e68f1e3b41e895d104f2f85d311a7d0125fd9cf57c6bd7e138119d491",
+        "language-training.json": "fc381db3ca9b25b3451ba5344d8047464bf1880f7ded8f61f7cdee0b7dab38c6",
+        "own-learning-controls.json": "340494330360e481813c3984b19dcf25f32a287cb2d03eeaa22365c44e3f318c",
+        "public-knowledge.json": "9e089c92541383d0ce493250f8a1d6df74ed44b4290e7aeb5fa7bc9871be2673"
+      }
+    },
+    "native_pids_unchanged": true,
+    "physical_training_pcs": 2,
+    "prior_v1_and_v2_progress_preserved": true,
+    "queue": {
+      "programs": [
+        {
+          "accepted": 2,
+          "cursor": 593,
+          "index": 2,
+          "initial_state_id": "4e61bb665ec9ecaeb2266ac976c95278e225d350dffd5e67d96d1024c9c78d0f",
+          "ledger_sha256": "c721d612aadbb9aaf99b240cf169e5fc280ef08d40ab18cbd5b525bc40f90dc4",
+          "parent_contract_id": "d98935a1c6bb1c0ca15e80e23e456280da2f184039ef8bf01d050c8bd67b7392",
+          "program_id": "19d8a979163ee5905aa95bebc444a3280c4383d5aca20ab965e98aa83fb49344",
+          "rounds": 2,
+          "state_id": "844cdd0acc3d0d92fb48521d5532c4ce0867c4180a0511eaa5bb2e9d7f879aff",
+          "status": "terminated",
+          "termination": "awaiting_new_curriculum",
+          "unconsumed_units": 0
+        },
+        {
+          "accepted": 2,
+          "cursor": 572,
+          "index": 3,
+          "initial_state_id": "844cdd0acc3d0d92fb48521d5532c4ce0867c4180a0511eaa5bb2e9d7f879aff",
+          "ledger_sha256": "ba74e519d7740cfb713bdbb1ecb691802aeba3aa9feb194cf4f0f74c62aee21d",
+          "parent_contract_id": "95ed9ab423c5655e9921c69b861255fda833200a0697fe6d335ce0f834f2192f",
+          "program_id": "d3f00ca99db132f0f6a09d4853f028988f520801a9c761d118f4fe999bf796e2",
+          "rounds": 2,
+          "state_id": "f551c150b4ea74f6b492d4c9df44a5c79f24e10f7c13b0da06b64ff6ab4bc7cc",
+          "status": "terminated",
+          "termination": "awaiting_new_curriculum",
+          "unconsumed_units": 0
+        }
+      ],
+      "recipe_id": "1bd7c247bf916ffb42ddccc7862c9232d247da5c7f0dab8f8fed3dd3c875e7fd",
+      "status": "program_limit",
+      "version": 1
+    },
+    "root": {
+      "node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+      "own_network": {
+        "accepted": 1,
+        "cursor": 320,
+        "enabled": true,
+        "error": null,
+        "follow_enabled": true,
+        "known_workers": 3,
+        "pending": true,
+        "program_error": null,
+        "program_id": "d3f00ca99db132f0f6a09d4853f028988f520801a9c761d118f4fe999bf796e2",
+        "ready_workers": 2,
+        "rejections": 0,
+        "replicas": 2,
+        "retry_at": 0,
+        "round": 1,
+        "state_id": "1e36a46521fb2f833d1ffe606608810779ba169d038fddc0ef661de0d6c6037c",
+        "status": "replicating",
+        "training_policy_id": "b6d2596af24ffd646aec9e2b0a3775284a7c0a95309d1c6f38646bb8bfa72ba1",
+        "window_limit": 8
+      },
+      "own_swarm": {
+        "active": 0,
+        "completed": 49,
+        "cpu_threads": 8,
+        "device": "cpu",
+        "family": "lixyswarm-own-causal-byte-v1",
+        "membership_version": 3,
+        "model_id": "8e19d32d7c8918403a8eff8461fe44fe19cbe9f8dc390aee0cfea761b750275a",
+        "optimizer_step": 1037,
+        "program_id": "d3f00ca99db132f0f6a09d4853f028988f520801a9c761d118f4fe999bf796e2",
+        "ready": true,
+        "requesters": [
+          "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+          "ea914d97caafef310e50385034abae9a50ba86496b0e9cbf4679e6070e4c25b0"
+        ],
+        "state_id": "f551c150b4ea74f6b492d4c9df44a5c79f24e10f7c13b0da06b64ff6ab4bc7cc",
+        "training_policy_id": "b6d2596af24ffd646aec9e2b0a3775284a7c0a95309d1c6f38646bb8bfa72ba1"
+      },
+      "pid": 3675798,
+      "runtime_version": "0.4.0a26"
+    },
+    "root_public_storage_bytes": 8303959130,
+    "seconds": 459.8962073326111,
+    "started_at": 1792172220.663149,
+    "success": true
+  },
+  "pause": {
+    "counter_or_cursor_reset": false,
+    "cursor": 0,
+    "program_id": "19d8a979163ee5905aa95bebc444a3280c4383d5aca20ab965e98aa83fb49344",
+    "round": 0,
+    "same_native_pid": true,
+    "same_pending_ranges": true,
+    "same_selected_state": true,
+    "saved_contributions_preserved": 0,
+    "success": true
+  },
+  "audit": {
+    "success": true,
+    "programs": [
+      {
+        "program_id": "19d8a979163ee5905aa95bebc444a3280c4383d5aca20ab965e98aa83fb49344",
+        "training_policy_id": "ce3d869b7103aa1ab33ec02c130036ecd8b5ff137c7d8b50252b04b25fb94164",
+        "contract_id": "95ed9ab423c5655e9921c69b861255fda833200a0697fe6d335ce0f834f2192f",
+        "descriptor": {
+          "evaluation_bytes": 76252,
+          "evaluation_dataset_id": "a56a7c956deec3199e01a32825fa8d7a4bf3db4acd8934f51593cce69d4786c7",
+          "evaluation_documents": 128,
+          "evaluation_prediction_bytes": 52983,
+          "index": 2,
+          "program_id": "19d8a979163ee5905aa95bebc444a3280c4383d5aca20ab965e98aa83fb49344",
+          "recipe_id": "1bd7c247bf916ffb42ddccc7862c9232d247da5c7f0dab8f8fed3dd3c875e7fd",
+          "source_case_ids_sha256": "4b2987615cf8808e4f798c658c75d911364ebd88bfea1730adabeb2de6607f01",
+          "source_documents": 128,
+          "training_bytes": 158067,
+          "training_dataset_id": "1f49c5900a5c0b9ac5caa9df17ab307d09bf2ac177adfc7df4a1f6860fa83b23",
+          "training_units": 593,
+          "version": 1
+        },
+        "ledger": {
+          "accepted": 2,
+          "contract_id": "95ed9ab423c5655e9921c69b861255fda833200a0697fe6d335ce0f834f2192f",
+          "cursor": 593,
+          "error": null,
+          "initial_state_id": "4e61bb665ec9ecaeb2266ac976c95278e225d350dffd5e67d96d1024c9c78d0f",
+          "parent_program_id": "d98935a1c6bb1c0ca15e80e23e456280da2f184039ef8bf01d050c8bd67b7392",
+          "pending": null,
+          "ready_workers": 2,
+          "rejections": 0,
+          "replicas": 2,
+          "retry_at": 0,
+          "round": 2,
+          "scheduling_round_base": 9,
+          "state_id": "844cdd0acc3d0d92fb48521d5532c4ce0867c4180a0511eaa5bb2e9d7f879aff",
+          "status": "awaiting_new_curriculum",
+          "training_policy_id": "ce3d869b7103aa1ab33ec02c130036ecd8b5ff137c7d8b50252b04b25fb94164",
+          "version": 3,
+          "workers": {
+            "6339aadbb5f4b2c6508b93b188e207f054d4b46ca82ee8827fa0415bc0536195": {
+              "last_probe": 1792168446.689897,
+              "last_replication": 1792168446.9986
+            },
+            "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255": {
+              "documents_per_second": 77.78145060569886,
+              "last_round": 10,
+              "samples": 12
+            },
+            "ea914d97caafef310e50385034abae9a50ba86496b0e9cbf4679e6070e4c25b0": {
+              "documents_per_second": 2.3561009617556348,
+              "last_probe": 1792172356.8005173,
+              "last_replication": 1792172462.00728,
+              "last_round": 10,
+              "samples": 7
+            }
+          }
+        },
+        "records": [
+          {
+            "accepted": true,
+            "adoptions": {
+              "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255": {
+                "error": "",
+                "finished_at": 1792172276.5303712,
+                "job_id": "511a5a4a82318a36f734f91b489b6ae48cfd95b222202d225d48ec33b949b130",
+                "output": {
+                  "already_selected": false,
+                  "audit": {
+                    "after": {
+                      "byte_accuracy": 0.46807466545873205,
+                      "documents": 128,
+                      "nll": 1.8232394833325634,
+                      "predicted_bytes": 52983,
+                      "retention": {
+                        "byte_accuracy": 0.4635960996446265,
+                        "documents": 128,
+                        "nll": 1.8431811591226293,
+                        "predicted_bytes": 57123
+                      }
+                    },
+                    "cuda_initialized": false,
+                    "gradient_replay_verified": true,
+                    "maximum_model_tensor_error": 0.0,
+                    "model_id": "dd754bc8b36ddaa5623751dd503c0f908f2f9b1f2f6d2ca33687442152216566",
+                    "model_promoted": false,
+                    "model_tensors_bitwise_equal": true,
+                    "new_gradient_computed": false,
+                    "optimizer_id": "106f9348b206031ca1a6a824dac723f4193430e2fe460e6ab563e96cce19a50c",
+                    "optimizer_states": 175,
+                    "optimizer_step": 1034,
+                    "saved_state_unchanged": true,
+                    "scope": "Independent replay of existing signed contributions on CPU",
+                    "state_id": "22cb50bb0854fb483d87453ad9dc0007a92c91cf6a57a837a13b80e72767ef22",
+                    "success": true,
+                    "training_policy_id": "ce3d869b7103aa1ab33ec02c130036ecd8b5ff137c7d8b50252b04b25fb94164"
+                  },
+                  "model_id": "dd754bc8b36ddaa5623751dd503c0f908f2f9b1f2f6d2ca33687442152216566",
+                  "optimizer_id": "106f9348b206031ca1a6a824dac723f4193430e2fe460e6ab563e96cce19a50c",
+                  "optimizer_step": 1034,
+                  "parent_state_id": "4e61bb665ec9ecaeb2266ac976c95278e225d350dffd5e67d96d1024c9c78d0f",
+                  "scope": "Locally admitted own-state adoption; not open consensus",
+                  "state_id": "22cb50bb0854fb483d87453ad9dc0007a92c91cf6a57a837a13b80e72767ef22",
+                  "success": true,
+                  "training_policy_id": "ce3d869b7103aa1ab33ec02c130036ecd8b5ff137c7d8b50252b04b25fb94164",
+                  "transfers": [],
+                  "transition_artifact_id": "1126ee818e82cafadcfc7a1017a823b7c352a4806c7e479695b9cf745ec90f2b"
+                },
+                "receipt": {
+                  "finished_at": 1792172276.5303712,
+                  "job_id": "511a5a4a82318a36f734f91b489b6ae48cfd95b222202d225d48ec33b949b130",
+                  "requester_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+                  "result_digest": "5a16130699da42c8e6494fb55515ae9a798229bc3b69d60871aa4bb2ab3be3f9",
+                  "signature": "dbXMV1osD4t6z3+LvG6at52Am01+y+0sAzmYXg5XytqasP79vsRnoJO4SjP+58WHdqjH8fiRDmhD8okb0wpiCQ==",
+                  "version": 1,
+                  "worker_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255"
+                },
+                "status": "ok"
+              },
+              "ea914d97caafef310e50385034abae9a50ba86496b0e9cbf4679e6070e4c25b0": {
+                "head": {
+                  "active": 0,
+                  "completed": 17,
+                  "cpu_threads": 8,
+                  "device": "cpu",
+                  "family": "lixyswarm-own-causal-byte-v1",
+                  "membership_version": 3,
+                  "model_id": "dd754bc8b36ddaa5623751dd503c0f908f2f9b1f2f6d2ca33687442152216566",
+                  "optimizer_step": 1034,
+                  "program_id": "19d8a979163ee5905aa95bebc444a3280c4383d5aca20ab965e98aa83fb49344",
+                  "ready": true,
+                  "requesters": [
+                    "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+                    "ea914d97caafef310e50385034abae9a50ba86496b0e9cbf4679e6070e4c25b0"
+                  ],
+                  "state_id": "22cb50bb0854fb483d87453ad9dc0007a92c91cf6a57a837a13b80e72767ef22",
+                  "training_policy_id": "ce3d869b7103aa1ab33ec02c130036ecd8b5ff137c7d8b50252b04b25fb94164"
+                },
+                "state_id": "22cb50bb0854fb483d87453ad9dc0007a92c91cf6a57a837a13b80e72767ef22"
+              }
+            },
+            "assignments": [
+              {
+                "count": 64,
+                "shard_id": "0",
+                "start": 0,
+                "worker_id": "ea914d97caafef310e50385034abae9a50ba86496b0e9cbf4679e6070e4c25b0"
+              },
+              {
+                "count": 256,
+                "shard_id": "64",
+                "start": 64,
+                "worker_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255"
+              }
+            ],
+            "attempts": 2,
+            "autonomous": true,
+            "candidate": {
+              "artifact_initially_local": false,
+              "encoded_data_bytes": 0,
+              "finished_at": 1792172268.0698752,
+              "operation": "swarm.candidate.v3",
+              "result": {
+                "error": "",
+                "finished_at": 1792172268.069136,
+                "job_id": "eb90c98c983d94a34bee353408a8e2be2b7dace98bd33befba98023309d52f19",
+                "output": {
+                  "accepted": true,
+                  "after": {
+                    "byte_accuracy": 0.46807466545873205,
+                    "documents": 128,
+                    "nll": 1.8232394833325634,
+                    "predicted_bytes": 52983,
+                    "retention": {
+                      "byte_accuracy": 0.4635960996446265,
+                      "documents": 128,
+                      "nll": 1.8431811591226293,
+                      "predicted_bytes": 57123
+                    }
+                  },
+                  "before": {
+                    "byte_accuracy": 0.4681501613725157,
+                    "documents": 128,
+                    "nll": 1.8233413520882682,
+                    "predicted_bytes": 52983,
+                    "retention": {
+                      "byte_accuracy": 0.46371864222817427,
+                      "documents": 128,
+                      "nll": 1.8433024185456734,
+                      "predicted_bytes": 57123
+                    }
+                  },
+                  "candidate_model_bytes": 7337088,
+                  "candidate_model_id": "dd754bc8b36ddaa5623751dd503c0f908f2f9b1f2f6d2ca33687442152216566",
+                  "candidate_optimizer_bytes": 12595275,
+                  "candidate_optimizer_id": "106f9348b206031ca1a6a824dac723f4193430e2fe460e6ab563e96cce19a50c",
+                  "candidate_optimizer_step": 1034,
+                  "evaluation_bytes": 3811,
+                  "evaluation_id": "4051b2fa9a011a4fde2154a10ee3f5f2311b1fe0789137782f4290d9f195252c",
+                  "model_id": "cf59e348eeb1e2d2ac95d48266bbe53b45089a88b5845e98b47b18c6673528ce",
+                  "optimizer_id": "d91781743f9345344f18b63863ca57a694438eb2a50cad4de2de580fbddd4ba5",
+                  "prediction_bytes": 36379,
+                  "previous_optimizer_step": 1033,
+                  "state_id": "4e61bb665ec9ecaeb2266ac976c95278e225d350dffd5e67d96d1024c9c78d0f",
+                  "training_policy_id": "ce3d869b7103aa1ab33ec02c130036ecd8b5ff137c7d8b50252b04b25fb94164"
+                },
+                "receipt": {
+                  "finished_at": 1792172268.069136,
+                  "job_id": "eb90c98c983d94a34bee353408a8e2be2b7dace98bd33befba98023309d52f19",
+                  "requester_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+                  "result_digest": "e19e80c47da95889aa4053d7d1678be188ded4f7755ddc8526c21d108f41f755",
+                  "signature": "IbqhU9KmXUc9EJkbLJBaA8mqpSAY/TpWIfILEJRkmWazypvpQsrUDdz5iKE8vw05x44wtaIILRQtLBAgss91BQ==",
+                  "version": 1,
+                  "worker_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255"
+                },
+                "status": "ok"
+              },
+              "route": {
+                "encrypted": false,
+                "public_internet": false,
+                "transport": "local"
+              },
+              "seconds": 8.291081715957262,
+              "selected_state_id": "4e61bb665ec9ecaeb2266ac976c95278e225d350dffd5e67d96d1024c9c78d0f",
+              "started_at": 1792172259.7785778,
+              "state": "complete"
+            },
+            "contributions": {
+              "0": {
+                "result": {
+                  "error": "",
+                  "finished_at": 1792172246.8191512,
+                  "job_id": "0b6f11d117154473eed7ffdc21528f521a237104fa09ae0532f53586bbdcd426",
+                  "output": {
+                    "count": 64,
+                    "dataset_id": "1f49c5900a5c0b9ac5caa9df17ab307d09bf2ac177adfc7df4a1f6860fa83b23",
+                    "gradient_bytes": 6244100,
+                    "gradient_id": "b1af749ca6932fd943cd0e452b60d18ad9249c55b98d5ad1b21d26c6da247808",
+                    "loss": 2.3373911171074373,
+                    "model_id": "cf59e348eeb1e2d2ac95d48266bbe53b45089a88b5845e98b47b18c6673528ce",
+                    "start": 0,
+                    "state_id": "4e61bb665ec9ecaeb2266ac976c95278e225d350dffd5e67d96d1024c9c78d0f",
+                    "tokens": 7470,
+                    "training_policy_id": "ce3d869b7103aa1ab33ec02c130036ecd8b5ff137c7d8b50252b04b25fb94164"
+                  },
+                  "receipt": {
+                    "finished_at": 1792172246.8191512,
+                    "job_id": "0b6f11d117154473eed7ffdc21528f521a237104fa09ae0532f53586bbdcd426",
+                    "requester_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+                    "result_digest": "a0c3f71b686cfa0803986e0b11febed83c45dc93113123ef97d3f272a0451d0e",
+                    "signature": "XAz6gVmCsgGUlfFU/QZUSmOquVxuFQuTBkwC8IFG58pvhgh4VgldPOU5Gw1/xq4LyV0hJ2odTP6/FD1w2GjpBQ==",
+                    "version": 1,
+                    "worker_node_id": "ea914d97caafef310e50385034abae9a50ba86496b0e9cbf4679e6070e4c25b0"
+                  },
+                  "status": "ok"
+                },
+                "worker_id": "ea914d97caafef310e50385034abae9a50ba86496b0e9cbf4679e6070e4c25b0"
+              },
+              "64": {
+                "result": {
+                  "error": "",
+                  "finished_at": 1792172246.3803258,
+                  "job_id": "985eee849e7c28efe1aa74b7119db3bdbfcceb5ef205ba584ec9f7d3520c9e3c",
+                  "output": {
+                    "count": 256,
+                    "dataset_id": "1f49c5900a5c0b9ac5caa9df17ab307d09bf2ac177adfc7df4a1f6860fa83b23",
+                    "gradient_bytes": 6244100,
+                    "gradient_id": "a59bbb5a067cd2499714e7dec87e1df3935a84543b72c06723623e5fe05e8eb7",
+                    "loss": 2.394853899490376,
+                    "model_id": "cf59e348eeb1e2d2ac95d48266bbe53b45089a88b5845e98b47b18c6673528ce",
+                    "start": 64,
+                    "state_id": "4e61bb665ec9ecaeb2266ac976c95278e225d350dffd5e67d96d1024c9c78d0f",
+                    "tokens": 28909,
+                    "training_policy_id": "ce3d869b7103aa1ab33ec02c130036ecd8b5ff137c7d8b50252b04b25fb94164"
+                  },
+                  "receipt": {
+                    "finished_at": 1792172246.3803258,
+                    "job_id": "985eee849e7c28efe1aa74b7119db3bdbfcceb5ef205ba584ec9f7d3520c9e3c",
+                    "requester_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+                    "result_digest": "31fb967584cdece944f945adafe16380d39c8405d5445886623d26ef1b2f508f",
+                    "signature": "KIqy3Vqnwz8MMctvXGigiE2dWAfaF6HDWLf8hhVGfZo+EJmwGRTUADcAz21faBiOUXvLCmD5CGLium3YRcABBw==",
+                    "version": 1,
+                    "worker_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255"
+                  },
+                  "status": "ok"
+                },
+                "worker_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255"
+              }
+            },
+            "cursor": 0,
+            "finished_at": 1792172356.182975,
+            "model_id": "cf59e348eeb1e2d2ac95d48266bbe53b45089a88b5845e98b47b18c6673528ce",
+            "reassignments": [],
+            "replicas_observed": 2,
+            "resulting_state_id": "22cb50bb0854fb483d87453ad9dc0007a92c91cf6a57a837a13b80e72767ef22",
+            "round": 0,
+            "started_at": 1792172240.8817234,
+            "state_id": "4e61bb665ec9ecaeb2266ac976c95278e225d350dffd5e67d96d1024c9c78d0f",
+            "work": {
+              "0": {
+                "artifact_initially_local": false,
+                "encoded_data_bytes": 7165624,
+                "finished_at": 1792172259.580473,
+                "operation": "swarm.gradient.v3",
+                "result": {
+                  "error": "",
+                  "finished_at": 1792172246.8191512,
+                  "job_id": "0b6f11d117154473eed7ffdc21528f521a237104fa09ae0532f53586bbdcd426",
+                  "output": {
+                    "count": 64,
+                    "dataset_id": "1f49c5900a5c0b9ac5caa9df17ab307d09bf2ac177adfc7df4a1f6860fa83b23",
+                    "gradient_bytes": 6244100,
+                    "gradient_id": "b1af749ca6932fd943cd0e452b60d18ad9249c55b98d5ad1b21d26c6da247808",
+                    "loss": 2.3373911171074373,
+                    "model_id": "cf59e348eeb1e2d2ac95d48266bbe53b45089a88b5845e98b47b18c6673528ce",
+                    "start": 0,
+                    "state_id": "4e61bb665ec9ecaeb2266ac976c95278e225d350dffd5e67d96d1024c9c78d0f",
+                    "tokens": 7470,
+                    "training_policy_id": "ce3d869b7103aa1ab33ec02c130036ecd8b5ff137c7d8b50252b04b25fb94164"
+                  },
+                  "receipt": {
+                    "finished_at": 1792172246.8191512,
+                    "job_id": "0b6f11d117154473eed7ffdc21528f521a237104fa09ae0532f53586bbdcd426",
+                    "requester_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+                    "result_digest": "a0c3f71b686cfa0803986e0b11febed83c45dc93113123ef97d3f272a0451d0e",
+                    "signature": "XAz6gVmCsgGUlfFU/QZUSmOquVxuFQuTBkwC8IFG58pvhgh4VgldPOU5Gw1/xq4LyV0hJ2odTP6/FD1w2GjpBQ==",
+                    "version": 1,
+                    "worker_node_id": "ea914d97caafef310e50385034abae9a50ba86496b0e9cbf4679e6070e4c25b0"
+                  },
+                  "status": "ok"
+                },
+                "route": {
+                  "encrypted": true,
+                  "public_internet": true,
+                  "transport": "relay"
+                },
+                "seconds": 16.443042711005546,
+                "selected_state_id": "4e61bb665ec9ecaeb2266ac976c95278e225d350dffd5e67d96d1024c9c78d0f",
+                "started_at": 1792172243.1372,
+                "state": "complete"
+              },
+              "64": {
+                "artifact_initially_local": true,
+                "encoded_data_bytes": 0,
+                "finished_at": 1792172246.3889346,
+                "operation": "swarm.gradient.v3",
+                "result": {
+                  "error": "",
+                  "finished_at": 1792172246.3803258,
+                  "job_id": "985eee849e7c28efe1aa74b7119db3bdbfcceb5ef205ba584ec9f7d3520c9e3c",
+                  "output": {
+                    "count": 256,
+                    "dataset_id": "1f49c5900a5c0b9ac5caa9df17ab307d09bf2ac177adfc7df4a1f6860fa83b23",
+                    "gradient_bytes": 6244100,
+                    "gradient_id": "a59bbb5a067cd2499714e7dec87e1df3935a84543b72c06723623e5fe05e8eb7",
+                    "loss": 2.394853899490376,
+                    "model_id": "cf59e348eeb1e2d2ac95d48266bbe53b45089a88b5845e98b47b18c6673528ce",
+                    "start": 64,
+                    "state_id": "4e61bb665ec9ecaeb2266ac976c95278e225d350dffd5e67d96d1024c9c78d0f",
+                    "tokens": 28909,
+                    "training_policy_id": "ce3d869b7103aa1ab33ec02c130036ecd8b5ff137c7d8b50252b04b25fb94164"
+                  },
+                  "receipt": {
+                    "finished_at": 1792172246.3803258,
+                    "job_id": "985eee849e7c28efe1aa74b7119db3bdbfcceb5ef205ba584ec9f7d3520c9e3c",
+                    "requester_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+                    "result_digest": "31fb967584cdece944f945adafe16380d39c8405d5445886623d26ef1b2f508f",
+                    "signature": "KIqy3Vqnwz8MMctvXGigiE2dWAfaF6HDWLf8hhVGfZo+EJmwGRTUADcAz21faBiOUXvLCmD5CGLium3YRcABBw==",
+                    "version": 1,
+                    "worker_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255"
+                  },
+                  "status": "ok"
+                },
+                "route": {
+                  "encrypted": false,
+                  "public_internet": false,
+                  "transport": "local"
+                },
+                "seconds": 3.2499713980359957,
+                "selected_state_id": "4e61bb665ec9ecaeb2266ac976c95278e225d350dffd5e67d96d1024c9c78d0f",
+                "started_at": 1792172243.1383865,
+                "state": "complete"
+              }
+            }
+          },
+          {
+            "accepted": true,
+            "adoptions": {
+              "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255": {
+                "error": "",
+                "finished_at": 1792172389.141157,
+                "job_id": "5fd1d21fa763916bd2f7d624081320243e89b6a7e0b13eeddbde3f435311ca9b",
+                "output": {
+                  "already_selected": false,
+                  "audit": {
+                    "after": {
+                      "byte_accuracy": 0.46803691750184023,
+                      "documents": 128,
+                      "nll": 1.8230588447083982,
+                      "predicted_bytes": 52983,
+                      "retention": {
+                        "byte_accuracy": 0.4635260753111706,
+                        "documents": 128,
+                        "nll": 1.8429953779632582,
+                        "predicted_bytes": 57123
+                      }
+                    },
+                    "cuda_initialized": false,
+                    "gradient_replay_verified": true,
+                    "maximum_model_tensor_error": 0.0,
+                    "model_id": "4b2a6f29b793474093a0ebbc088f72223280c239bb31f56b46c950394942532f",
+                    "model_promoted": false,
+                    "model_tensors_bitwise_equal": true,
+                    "new_gradient_computed": false,
+                    "optimizer_id": "d8d53b410a9675d5bf610be578c55d8826471e5bf2b63789b351b310aa092e2c",
+                    "optimizer_states": 175,
+                    "optimizer_step": 1035,
+                    "saved_state_unchanged": true,
+                    "scope": "Independent replay of existing signed contributions on CPU",
+                    "state_id": "844cdd0acc3d0d92fb48521d5532c4ce0867c4180a0511eaa5bb2e9d7f879aff",
+                    "success": true,
+                    "training_policy_id": "ce3d869b7103aa1ab33ec02c130036ecd8b5ff137c7d8b50252b04b25fb94164"
+                  },
+                  "model_id": "4b2a6f29b793474093a0ebbc088f72223280c239bb31f56b46c950394942532f",
+                  "optimizer_id": "d8d53b410a9675d5bf610be578c55d8826471e5bf2b63789b351b310aa092e2c",
+                  "optimizer_step": 1035,
+                  "parent_state_id": "22cb50bb0854fb483d87453ad9dc0007a92c91cf6a57a837a13b80e72767ef22",
+                  "scope": "Locally admitted own-state adoption; not open consensus",
+                  "state_id": "844cdd0acc3d0d92fb48521d5532c4ce0867c4180a0511eaa5bb2e9d7f879aff",
+                  "success": true,
+                  "training_policy_id": "ce3d869b7103aa1ab33ec02c130036ecd8b5ff137c7d8b50252b04b25fb94164",
+                  "transfers": [],
+                  "transition_artifact_id": "e2ceeb8c6fb1294b036b8a90e7a068fedb5dd7e4877c063ca0475d18f3cf9190"
+                },
+                "receipt": {
+                  "finished_at": 1792172389.141157,
+                  "job_id": "5fd1d21fa763916bd2f7d624081320243e89b6a7e0b13eeddbde3f435311ca9b",
+                  "requester_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+                  "result_digest": "c8037e7952e85fd09c246a1a621bfc2e09e52ead6d523d78528724af85adae1c",
+                  "signature": "vosTfras0aUKroKgTUvhdXbA1v76mZJ/Za6H+5Gssx6hr0H3zaIJXFuswX8JwiuziAPwsfv0xuYRnc9MF3EQDw==",
+                  "version": 1,
+                  "worker_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255"
+                },
+                "status": "ok"
+              },
+              "ea914d97caafef310e50385034abae9a50ba86496b0e9cbf4679e6070e4c25b0": {
+                "head": {
+                  "active": 0,
+                  "completed": 18,
+                  "cpu_threads": 8,
+                  "device": "cpu",
+                  "family": "lixyswarm-own-causal-byte-v1",
+                  "membership_version": 3,
+                  "model_id": "4b2a6f29b793474093a0ebbc088f72223280c239bb31f56b46c950394942532f",
+                  "optimizer_step": 1035,
+                  "program_id": "19d8a979163ee5905aa95bebc444a3280c4383d5aca20ab965e98aa83fb49344",
+                  "ready": true,
+                  "requesters": [
+                    "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+                    "ea914d97caafef310e50385034abae9a50ba86496b0e9cbf4679e6070e4c25b0"
+                  ],
+                  "state_id": "844cdd0acc3d0d92fb48521d5532c4ce0867c4180a0511eaa5bb2e9d7f879aff",
+                  "training_policy_id": "ce3d869b7103aa1ab33ec02c130036ecd8b5ff137c7d8b50252b04b25fb94164"
+                },
+                "state_id": "844cdd0acc3d0d92fb48521d5532c4ce0867c4180a0511eaa5bb2e9d7f879aff"
+              }
+            },
+            "assignments": [
+              {
+                "count": 256,
+                "shard_id": "320",
+                "start": 320,
+                "worker_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255"
+              },
+              {
+                "count": 17,
+                "shard_id": "576",
+                "start": 576,
+                "worker_id": "ea914d97caafef310e50385034abae9a50ba86496b0e9cbf4679e6070e4c25b0"
+              }
+            ],
+            "attempts": 1,
+            "autonomous": true,
+            "candidate": {
+              "artifact_initially_local": false,
+              "encoded_data_bytes": 0,
+              "finished_at": 1792172380.6944456,
+              "operation": "swarm.candidate.v3",
+              "result": {
+                "error": "",
+                "finished_at": 1792172380.6938233,
+                "job_id": "44b6555e2de67bc3bd5951ad0e61e0b1930b94e3270f2cc09db639dae6c633e1",
+                "output": {
+                  "accepted": true,
+                  "after": {
+                    "byte_accuracy": 0.46803691750184023,
+                    "documents": 128,
+                    "nll": 1.8230588447083982,
+                    "predicted_bytes": 52983,
+                    "retention": {
+                      "byte_accuracy": 0.4635260753111706,
+                      "documents": 128,
+                      "nll": 1.8429953779632582,
+                      "predicted_bytes": 57123
+                    }
+                  },
+                  "before": {
+                    "byte_accuracy": 0.46807466545873205,
+                    "documents": 128,
+                    "nll": 1.8232394833325634,
+                    "predicted_bytes": 52983,
+                    "retention": {
+                      "byte_accuracy": 0.4635960996446265,
+                      "documents": 128,
+                      "nll": 1.8431811591226293,
+                      "predicted_bytes": 57123
+                    }
+                  },
+                  "candidate_model_bytes": 7337088,
+                  "candidate_model_id": "4b2a6f29b793474093a0ebbc088f72223280c239bb31f56b46c950394942532f",
+                  "candidate_optimizer_bytes": 12595275,
+                  "candidate_optimizer_id": "d8d53b410a9675d5bf610be578c55d8826471e5bf2b63789b351b310aa092e2c",
+                  "candidate_optimizer_step": 1035,
+                  "evaluation_bytes": 3810,
+                  "evaluation_id": "239cc9eb58e1a9e9fe646960fbbfd73e12a9bce057174adf0465ca964dec239c",
+                  "model_id": "dd754bc8b36ddaa5623751dd503c0f908f2f9b1f2f6d2ca33687442152216566",
+                  "optimizer_id": "106f9348b206031ca1a6a824dac723f4193430e2fe460e6ab563e96cce19a50c",
+                  "prediction_bytes": 31223,
+                  "previous_optimizer_step": 1034,
+                  "state_id": "22cb50bb0854fb483d87453ad9dc0007a92c91cf6a57a837a13b80e72767ef22",
+                  "training_policy_id": "ce3d869b7103aa1ab33ec02c130036ecd8b5ff137c7d8b50252b04b25fb94164"
+                },
+                "receipt": {
+                  "finished_at": 1792172380.6938233,
+                  "job_id": "44b6555e2de67bc3bd5951ad0e61e0b1930b94e3270f2cc09db639dae6c633e1",
+                  "requester_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+                  "result_digest": "9cc6561ae2ec0c96ff26d7e30d65e34a977f5a27c2995f894e8fed6601eacd92",
+                  "signature": "NUBSUgeTWEW6Hek/rb7UF6iXaK/KAybr9yWhv7Wkxx77Mj0ggSYqUz/uWfWjuZl3xp7RGcRTMQ4dba761emkAw==",
+                  "version": 1,
+                  "worker_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255"
+                },
+                "status": "ok"
+              },
+              "route": {
+                "encrypted": false,
+                "public_internet": false,
+                "transport": "local"
+              },
+              "seconds": 8.107874743058346,
+              "selected_state_id": "22cb50bb0854fb483d87453ad9dc0007a92c91cf6a57a837a13b80e72767ef22",
+              "started_at": 1792172372.5863411,
+              "state": "complete"
+            },
+            "contributions": {
+              "320": {
+                "result": {
+                  "error": "",
+                  "finished_at": 1792172360.0855463,
+                  "job_id": "75d871a74bc479ec3161605d0ef1060966ccf9d1390f8f559bf930ecd2b81f12",
+                  "output": {
+                    "count": 256,
+                    "dataset_id": "1f49c5900a5c0b9ac5caa9df17ab307d09bf2ac177adfc7df4a1f6860fa83b23",
+                    "gradient_bytes": 6244100,
+                    "gradient_id": "4033dd7476e11c9d26633d81350d0d54ac499b8f26baf538192138a6d66d45f8",
+                    "loss": 2.364216710097257,
+                    "model_id": "dd754bc8b36ddaa5623751dd503c0f908f2f9b1f2f6d2ca33687442152216566",
+                    "start": 320,
+                    "state_id": "22cb50bb0854fb483d87453ad9dc0007a92c91cf6a57a837a13b80e72767ef22",
+                    "tokens": 29247,
+                    "training_policy_id": "ce3d869b7103aa1ab33ec02c130036ecd8b5ff137c7d8b50252b04b25fb94164"
+                  },
+                  "receipt": {
+                    "finished_at": 1792172360.0855463,
+                    "job_id": "75d871a74bc479ec3161605d0ef1060966ccf9d1390f8f559bf930ecd2b81f12",
+                    "requester_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+                    "result_digest": "7d02d4e8d3b17450ce2d4d59d5955e1d6eef8674865c166fb68af05b8486ad01",
+                    "signature": "HF4VedM2N69RjPhHYrJzIgRvEbN+15uxG9PlSL6N6HI2ljbQj4dH88lvSVhz3MHG85jev8JT34Cj7NQ8DlVRCA==",
+                    "version": 1,
+                    "worker_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255"
+                  },
+                  "status": "ok"
+                },
+                "worker_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255"
+              },
+              "576": {
+                "result": {
+                  "error": "",
+                  "finished_at": 1792172359.6057248,
+                  "job_id": "f737eaac88ab32a0ac6c265f87e33264660cc5b8acf90552a64c2761c4cf590b",
+                  "output": {
+                    "count": 17,
+                    "dataset_id": "1f49c5900a5c0b9ac5caa9df17ab307d09bf2ac177adfc7df4a1f6860fa83b23",
+                    "gradient_bytes": 6244100,
+                    "gradient_id": "d6e1546f87c59d4a9dc644cbe85d1beaacb6a51b3eba397315f193c6905ecda8",
+                    "loss": 2.345284730799285,
+                    "model_id": "dd754bc8b36ddaa5623751dd503c0f908f2f9b1f2f6d2ca33687442152216566",
+                    "start": 576,
+                    "state_id": "22cb50bb0854fb483d87453ad9dc0007a92c91cf6a57a837a13b80e72767ef22",
+                    "tokens": 1976,
+                    "training_policy_id": "ce3d869b7103aa1ab33ec02c130036ecd8b5ff137c7d8b50252b04b25fb94164"
+                  },
+                  "receipt": {
+                    "finished_at": 1792172359.6057248,
+                    "job_id": "f737eaac88ab32a0ac6c265f87e33264660cc5b8acf90552a64c2761c4cf590b",
+                    "requester_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+                    "result_digest": "ec9e71e1b52422d05c5c1e486a4fba67e80943a46a28d4ae862977ab2205b85e",
+                    "signature": "4SnvoBOmwXxi4cIGqO3AcYoHOgGFw+X8e8kO7b7Yt62mK/RGADOhWdQ8ByE6Nihzx3zyj5xtNGN09HwL9icEDw==",
+                    "version": 1,
+                    "worker_node_id": "ea914d97caafef310e50385034abae9a50ba86496b0e9cbf4679e6070e4c25b0"
+                  },
+                  "status": "ok"
+                },
+                "worker_id": "ea914d97caafef310e50385034abae9a50ba86496b0e9cbf4679e6070e4c25b0"
+              }
+            },
+            "cursor": 320,
+            "finished_at": 1792172462.0073042,
+            "model_id": "dd754bc8b36ddaa5623751dd503c0f908f2f9b1f2f6d2ca33687442152216566",
+            "reassignments": [],
+            "replicas_observed": 2,
+            "resulting_state_id": "844cdd0acc3d0d92fb48521d5532c4ce0867c4180a0511eaa5bb2e9d7f879aff",
+            "round": 1,
+            "started_at": 1792172356.8011477,
+            "state_id": "22cb50bb0854fb483d87453ad9dc0007a92c91cf6a57a837a13b80e72767ef22",
+            "work": {
+              "320": {
+                "artifact_initially_local": true,
+                "encoded_data_bytes": 0,
+                "finished_at": 1792172360.0940824,
+                "operation": "swarm.gradient.v3",
+                "result": {
+                  "error": "",
+                  "finished_at": 1792172360.0855463,
+                  "job_id": "75d871a74bc479ec3161605d0ef1060966ccf9d1390f8f559bf930ecd2b81f12",
+                  "output": {
+                    "count": 256,
+                    "dataset_id": "1f49c5900a5c0b9ac5caa9df17ab307d09bf2ac177adfc7df4a1f6860fa83b23",
+                    "gradient_bytes": 6244100,
+                    "gradient_id": "4033dd7476e11c9d26633d81350d0d54ac499b8f26baf538192138a6d66d45f8",
+                    "loss": 2.364216710097257,
+                    "model_id": "dd754bc8b36ddaa5623751dd503c0f908f2f9b1f2f6d2ca33687442152216566",
+                    "start": 320,
+                    "state_id": "22cb50bb0854fb483d87453ad9dc0007a92c91cf6a57a837a13b80e72767ef22",
+                    "tokens": 29247,
+                    "training_policy_id": "ce3d869b7103aa1ab33ec02c130036ecd8b5ff137c7d8b50252b04b25fb94164"
+                  },
+                  "receipt": {
+                    "finished_at": 1792172360.0855463,
+                    "job_id": "75d871a74bc479ec3161605d0ef1060966ccf9d1390f8f559bf930ecd2b81f12",
+                    "requester_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+                    "result_digest": "7d02d4e8d3b17450ce2d4d59d5955e1d6eef8674865c166fb68af05b8486ad01",
+                    "signature": "HF4VedM2N69RjPhHYrJzIgRvEbN+15uxG9PlSL6N6HI2ljbQj4dH88lvSVhz3MHG85jev8JT34Cj7NQ8DlVRCA==",
+                    "version": 1,
+                    "worker_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255"
+                  },
+                  "status": "ok"
+                },
+                "route": {
+                  "encrypted": false,
+                  "public_internet": false,
+                  "transport": "local"
+                },
+                "seconds": 3.2817680930020288,
+                "selected_state_id": "22cb50bb0854fb483d87453ad9dc0007a92c91cf6a57a837a13b80e72767ef22",
+                "started_at": 1792172356.8121645,
+                "state": "complete"
+              },
+              "576": {
+                "artifact_initially_local": false,
+                "encoded_data_bytes": 7164136,
+                "finished_at": 1792172372.414617,
+                "operation": "swarm.gradient.v3",
+                "result": {
+                  "error": "",
+                  "finished_at": 1792172359.6057248,
+                  "job_id": "f737eaac88ab32a0ac6c265f87e33264660cc5b8acf90552a64c2761c4cf590b",
+                  "output": {
+                    "count": 17,
+                    "dataset_id": "1f49c5900a5c0b9ac5caa9df17ab307d09bf2ac177adfc7df4a1f6860fa83b23",
+                    "gradient_bytes": 6244100,
+                    "gradient_id": "d6e1546f87c59d4a9dc644cbe85d1beaacb6a51b3eba397315f193c6905ecda8",
+                    "loss": 2.345284730799285,
+                    "model_id": "dd754bc8b36ddaa5623751dd503c0f908f2f9b1f2f6d2ca33687442152216566",
+                    "start": 576,
+                    "state_id": "22cb50bb0854fb483d87453ad9dc0007a92c91cf6a57a837a13b80e72767ef22",
+                    "tokens": 1976,
+                    "training_policy_id": "ce3d869b7103aa1ab33ec02c130036ecd8b5ff137c7d8b50252b04b25fb94164"
+                  },
+                  "receipt": {
+                    "finished_at": 1792172359.6057248,
+                    "job_id": "f737eaac88ab32a0ac6c265f87e33264660cc5b8acf90552a64c2761c4cf590b",
+                    "requester_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+                    "result_digest": "ec9e71e1b52422d05c5c1e486a4fba67e80943a46a28d4ae862977ab2205b85e",
+                    "signature": "4SnvoBOmwXxi4cIGqO3AcYoHOgGFw+X8e8kO7b7Yt62mK/RGADOhWdQ8ByE6Nihzx3zyj5xtNGN09HwL9icEDw==",
+                    "version": 1,
+                    "worker_node_id": "ea914d97caafef310e50385034abae9a50ba86496b0e9cbf4679e6070e4c25b0"
+                  },
+                  "status": "ok"
+                },
+                "route": {
+                  "encrypted": true,
+                  "public_internet": true,
+                  "transport": "relay"
+                },
+                "seconds": 15.462849039933644,
+                "selected_state_id": "22cb50bb0854fb483d87453ad9dc0007a92c91cf6a57a837a13b80e72767ef22",
+                "started_at": 1792172356.9514499,
+                "state": "complete"
+              }
+            }
+          }
+        ],
+        "evaluation_reports_raw": {
+          "4051b2fa9a011a4fde2154a10ee3f5f2311b1fe0789137782f4290d9f195252c": "{\"accepted\": true, \"after\": {\"byte_accuracy\": 0.46807466545873205, \"documents\": 128, \"nll\": 1.8232394833325634, \"predicted_bytes\": 52983, \"retention\": {\"byte_accuracy\": 0.4635960996446265, \"documents\": 128, \"nll\": 1.8431811591226293, \"predicted_bytes\": 57123}}, \"before\": {\"byte_accuracy\": 0.4681501613725157, \"documents\": 128, \"nll\": 1.8233413520882682, \"predicted_bytes\": 52983, \"retention\": {\"byte_accuracy\": 0.46371864222817427, \"documents\": 128, \"nll\": 1.8433024185456734, \"predicted_bytes\": 57123}}, \"candidate_optimizer_step\": 1034, \"candidate_state_id\": \"22cb50bb0854fb483d87453ad9dc0007a92c91cf6a57a837a13b80e72767ef22\", \"contributions\": [{\"result\": {\"error\": \"\", \"finished_at\": 1792172246.8191512, \"job_id\": \"0b6f11d117154473eed7ffdc21528f521a237104fa09ae0532f53586bbdcd426\", \"output\": {\"count\": 64, \"dataset_id\": \"1f49c5900a5c0b9ac5caa9df17ab307d09bf2ac177adfc7df4a1f6860fa83b23\", \"gradient_bytes\": 6244100, \"gradient_id\": \"b1af749ca6932fd943cd0e452b60d18ad9249c55b98d5ad1b21d26c6da247808\", \"loss\": 2.3373911171074373, \"model_id\": \"cf59e348eeb1e2d2ac95d48266bbe53b45089a88b5845e98b47b18c6673528ce\", \"start\": 0, \"state_id\": \"4e61bb665ec9ecaeb2266ac976c95278e225d350dffd5e67d96d1024c9c78d0f\", \"tokens\": 7470, \"training_policy_id\": \"ce3d869b7103aa1ab33ec02c130036ecd8b5ff137c7d8b50252b04b25fb94164\"}, \"receipt\": {\"finished_at\": 1792172246.8191512, \"job_id\": \"0b6f11d117154473eed7ffdc21528f521a237104fa09ae0532f53586bbdcd426\", \"requester_node_id\": \"c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255\", \"result_digest\": \"a0c3f71b686cfa0803986e0b11febed83c45dc93113123ef97d3f272a0451d0e\", \"signature\": \"XAz6gVmCsgGUlfFU/QZUSmOquVxuFQuTBkwC8IFG58pvhgh4VgldPOU5Gw1/xq4LyV0hJ2odTP6/FD1w2GjpBQ==\", \"version\": 1, \"worker_node_id\": \"ea914d97caafef310e50385034abae9a50ba86496b0e9cbf4679e6070e4c25b0\"}, \"status\": \"ok\"}, \"worker_id\": \"ea914d97caafef310e50385034abae9a50ba86496b0e9cbf4679e6070e4c25b0\"}, {\"result\": {\"error\": \"\", \"finished_at\": 1792172246.3803258, \"job_id\": \"985eee849e7c28efe1aa74b7119db3bdbfcceb5ef205ba584ec9f7d3520c9e3c\", \"output\": {\"count\": 256, \"dataset_id\": \"1f49c5900a5c0b9ac5caa9df17ab307d09bf2ac177adfc7df4a1f6860fa83b23\", \"gradient_bytes\": 6244100, \"gradient_id\": \"a59bbb5a067cd2499714e7dec87e1df3935a84543b72c06723623e5fe05e8eb7\", \"loss\": 2.394853899490376, \"model_id\": \"cf59e348eeb1e2d2ac95d48266bbe53b45089a88b5845e98b47b18c6673528ce\", \"start\": 64, \"state_id\": \"4e61bb665ec9ecaeb2266ac976c95278e225d350dffd5e67d96d1024c9c78d0f\", \"tokens\": 28909, \"training_policy_id\": \"ce3d869b7103aa1ab33ec02c130036ecd8b5ff137c7d8b50252b04b25fb94164\"}, \"receipt\": {\"finished_at\": 1792172246.3803258, \"job_id\": \"985eee849e7c28efe1aa74b7119db3bdbfcceb5ef205ba584ec9f7d3520c9e3c\", \"requester_node_id\": \"c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255\", \"result_digest\": \"31fb967584cdece944f945adafe16380d39c8405d5445886623d26ef1b2f508f\", \"signature\": \"KIqy3Vqnwz8MMctvXGigiE2dWAfaF6HDWLf8hhVGfZo+EJmwGRTUADcAz21faBiOUXvLCmD5CGLium3YRcABBw==\", \"version\": 1, \"worker_node_id\": \"c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255\"}, \"status\": \"ok\"}, \"worker_id\": \"c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255\"}], \"gradient_norm_before_clipping\": 0.5347550511360168, \"model_id\": \"cf59e348eeb1e2d2ac95d48266bbe53b45089a88b5845e98b47b18c6673528ce\", \"model_promoted\": false, \"native_cycles_added\": 0, \"optimizer_id\": \"d91781743f9345344f18b63863ca57a694438eb2a50cad4de2de580fbddd4ba5\", \"prediction_bytes\": 36379, \"previous_optimizer_step\": 1033, \"scope\": \"Own byte-language learning on novel public food, with historical development retention; not general answer certification\", \"state_id\": \"4e61bb665ec9ecaeb2266ac976c95278e225d350dffd5e67d96d1024c9c78d0f\", \"training_policy_id\": \"ce3d869b7103aa1ab33ec02c130036ecd8b5ff137c7d8b50252b04b25fb94164\"}",
+          "239cc9eb58e1a9e9fe646960fbbfd73e12a9bce057174adf0465ca964dec239c": "{\"accepted\": true, \"after\": {\"byte_accuracy\": 0.46803691750184023, \"documents\": 128, \"nll\": 1.8230588447083982, \"predicted_bytes\": 52983, \"retention\": {\"byte_accuracy\": 0.4635260753111706, \"documents\": 128, \"nll\": 1.8429953779632582, \"predicted_bytes\": 57123}}, \"before\": {\"byte_accuracy\": 0.46807466545873205, \"documents\": 128, \"nll\": 1.8232394833325634, \"predicted_bytes\": 52983, \"retention\": {\"byte_accuracy\": 0.4635960996446265, \"documents\": 128, \"nll\": 1.8431811591226293, \"predicted_bytes\": 57123}}, \"candidate_optimizer_step\": 1035, \"candidate_state_id\": \"844cdd0acc3d0d92fb48521d5532c4ce0867c4180a0511eaa5bb2e9d7f879aff\", \"contributions\": [{\"result\": {\"error\": \"\", \"finished_at\": 1792172360.0855463, \"job_id\": \"75d871a74bc479ec3161605d0ef1060966ccf9d1390f8f559bf930ecd2b81f12\", \"output\": {\"count\": 256, \"dataset_id\": \"1f49c5900a5c0b9ac5caa9df17ab307d09bf2ac177adfc7df4a1f6860fa83b23\", \"gradient_bytes\": 6244100, \"gradient_id\": \"4033dd7476e11c9d26633d81350d0d54ac499b8f26baf538192138a6d66d45f8\", \"loss\": 2.364216710097257, \"model_id\": \"dd754bc8b36ddaa5623751dd503c0f908f2f9b1f2f6d2ca33687442152216566\", \"start\": 320, \"state_id\": \"22cb50bb0854fb483d87453ad9dc0007a92c91cf6a57a837a13b80e72767ef22\", \"tokens\": 29247, \"training_policy_id\": \"ce3d869b7103aa1ab33ec02c130036ecd8b5ff137c7d8b50252b04b25fb94164\"}, \"receipt\": {\"finished_at\": 1792172360.0855463, \"job_id\": \"75d871a74bc479ec3161605d0ef1060966ccf9d1390f8f559bf930ecd2b81f12\", \"requester_node_id\": \"c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255\", \"result_digest\": \"7d02d4e8d3b17450ce2d4d59d5955e1d6eef8674865c166fb68af05b8486ad01\", \"signature\": \"HF4VedM2N69RjPhHYrJzIgRvEbN+15uxG9PlSL6N6HI2ljbQj4dH88lvSVhz3MHG85jev8JT34Cj7NQ8DlVRCA==\", \"version\": 1, \"worker_node_id\": \"c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255\"}, \"status\": \"ok\"}, \"worker_id\": \"c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255\"}, {\"result\": {\"error\": \"\", \"finished_at\": 1792172359.6057248, \"job_id\": \"f737eaac88ab32a0ac6c265f87e33264660cc5b8acf90552a64c2761c4cf590b\", \"output\": {\"count\": 17, \"dataset_id\": \"1f49c5900a5c0b9ac5caa9df17ab307d09bf2ac177adfc7df4a1f6860fa83b23\", \"gradient_bytes\": 6244100, \"gradient_id\": \"d6e1546f87c59d4a9dc644cbe85d1beaacb6a51b3eba397315f193c6905ecda8\", \"loss\": 2.345284730799285, \"model_id\": \"dd754bc8b36ddaa5623751dd503c0f908f2f9b1f2f6d2ca33687442152216566\", \"start\": 576, \"state_id\": \"22cb50bb0854fb483d87453ad9dc0007a92c91cf6a57a837a13b80e72767ef22\", \"tokens\": 1976, \"training_policy_id\": \"ce3d869b7103aa1ab33ec02c130036ecd8b5ff137c7d8b50252b04b25fb94164\"}, \"receipt\": {\"finished_at\": 1792172359.6057248, \"job_id\": \"f737eaac88ab32a0ac6c265f87e33264660cc5b8acf90552a64c2761c4cf590b\", \"requester_node_id\": \"c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255\", \"result_digest\": \"ec9e71e1b52422d05c5c1e486a4fba67e80943a46a28d4ae862977ab2205b85e\", \"signature\": \"4SnvoBOmwXxi4cIGqO3AcYoHOgGFw+X8e8kO7b7Yt62mK/RGADOhWdQ8ByE6Nihzx3zyj5xtNGN09HwL9icEDw==\", \"version\": 1, \"worker_node_id\": \"ea914d97caafef310e50385034abae9a50ba86496b0e9cbf4679e6070e4c25b0\"}, \"status\": \"ok\"}, \"worker_id\": \"ea914d97caafef310e50385034abae9a50ba86496b0e9cbf4679e6070e4c25b0\"}], \"gradient_norm_before_clipping\": 0.5723916888237, \"model_id\": \"dd754bc8b36ddaa5623751dd503c0f908f2f9b1f2f6d2ca33687442152216566\", \"model_promoted\": false, \"native_cycles_added\": 0, \"optimizer_id\": \"106f9348b206031ca1a6a824dac723f4193430e2fe460e6ab563e96cce19a50c\", \"prediction_bytes\": 31223, \"previous_optimizer_step\": 1034, \"scope\": \"Own byte-language learning on novel public food, with historical development retention; not general answer certification\", \"state_id\": \"22cb50bb0854fb483d87453ad9dc0007a92c91cf6a57a837a13b80e72767ef22\", \"training_policy_id\": \"ce3d869b7103aa1ab33ec02c130036ecd8b5ff137c7d8b50252b04b25fb94164\"}"
+        },
+        "independent_cpu_audits": {
+          "22cb50bb0854fb483d87453ad9dc0007a92c91cf6a57a837a13b80e72767ef22": {
+            "coordinator": {
+              "after": {
+                "byte_accuracy": 0.46807466545873205,
+                "documents": 128,
+                "nll": 1.8232394833325634,
+                "predicted_bytes": 52983,
+                "retention": {
+                  "byte_accuracy": 0.4635960996446265,
+                  "documents": 128,
+                  "nll": 1.8431811591226293,
+                  "predicted_bytes": 57123
+                }
+              },
+              "cuda_initialized": false,
+              "gradient_replay_verified": true,
+              "maximum_model_tensor_error": 0.0,
+              "model_id": "dd754bc8b36ddaa5623751dd503c0f908f2f9b1f2f6d2ca33687442152216566",
+              "model_promoted": false,
+              "model_tensors_bitwise_equal": true,
+              "new_gradient_computed": false,
+              "optimizer_id": "106f9348b206031ca1a6a824dac723f4193430e2fe460e6ab563e96cce19a50c",
+              "optimizer_states": 175,
+              "optimizer_step": 1034,
+              "saved_state_unchanged": true,
+              "scope": "Independent replay of existing signed contributions on CPU",
+              "state_id": "22cb50bb0854fb483d87453ad9dc0007a92c91cf6a57a837a13b80e72767ef22",
+              "success": true,
+              "training_policy_id": "ce3d869b7103aa1ab33ec02c130036ecd8b5ff137c7d8b50252b04b25fb94164"
+            },
+            "other_physical_pc": {
+              "after": {
+                "byte_accuracy": 0.46807466545873205,
+                "documents": 128,
+                "nll": 1.8232394833325634,
+                "predicted_bytes": 52983,
+                "retention": {
+                  "byte_accuracy": 0.4635960996446265,
+                  "documents": 128,
+                  "nll": 1.8431811591226293,
+                  "predicted_bytes": 57123
+                }
+              },
+              "cuda_initialized": false,
+              "gradient_replay_verified": true,
+              "maximum_model_tensor_error": 0.0,
+              "model_id": "dd754bc8b36ddaa5623751dd503c0f908f2f9b1f2f6d2ca33687442152216566",
+              "model_promoted": false,
+              "model_tensors_bitwise_equal": true,
+              "new_gradient_computed": false,
+              "optimizer_id": "106f9348b206031ca1a6a824dac723f4193430e2fe460e6ab563e96cce19a50c",
+              "optimizer_states": 175,
+              "optimizer_step": 1034,
+              "saved_state_unchanged": true,
+              "scope": "Independent replay of existing signed contributions on CPU",
+              "state_id": "22cb50bb0854fb483d87453ad9dc0007a92c91cf6a57a837a13b80e72767ef22",
+              "success": true,
+              "training_policy_id": "ce3d869b7103aa1ab33ec02c130036ecd8b5ff137c7d8b50252b04b25fb94164"
+            }
+          },
+          "844cdd0acc3d0d92fb48521d5532c4ce0867c4180a0511eaa5bb2e9d7f879aff": {
+            "coordinator": {
+              "after": {
+                "byte_accuracy": 0.46803691750184023,
+                "documents": 128,
+                "nll": 1.8230588447083982,
+                "predicted_bytes": 52983,
+                "retention": {
+                  "byte_accuracy": 0.4635260753111706,
+                  "documents": 128,
+                  "nll": 1.8429953779632582,
+                  "predicted_bytes": 57123
+                }
+              },
+              "cuda_initialized": false,
+              "gradient_replay_verified": true,
+              "maximum_model_tensor_error": 0.0,
+              "model_id": "4b2a6f29b793474093a0ebbc088f72223280c239bb31f56b46c950394942532f",
+              "model_promoted": false,
+              "model_tensors_bitwise_equal": true,
+              "new_gradient_computed": false,
+              "optimizer_id": "d8d53b410a9675d5bf610be578c55d8826471e5bf2b63789b351b310aa092e2c",
+              "optimizer_states": 175,
+              "optimizer_step": 1035,
+              "saved_state_unchanged": true,
+              "scope": "Independent replay of existing signed contributions on CPU",
+              "state_id": "844cdd0acc3d0d92fb48521d5532c4ce0867c4180a0511eaa5bb2e9d7f879aff",
+              "success": true,
+              "training_policy_id": "ce3d869b7103aa1ab33ec02c130036ecd8b5ff137c7d8b50252b04b25fb94164"
+            },
+            "other_physical_pc": {
+              "after": {
+                "byte_accuracy": 0.46803691750184023,
+                "documents": 128,
+                "nll": 1.8230588447083982,
+                "predicted_bytes": 52983,
+                "retention": {
+                  "byte_accuracy": 0.4635260753111706,
+                  "documents": 128,
+                  "nll": 1.8429953779632582,
+                  "predicted_bytes": 57123
+                }
+              },
+              "cuda_initialized": false,
+              "gradient_replay_verified": true,
+              "maximum_model_tensor_error": 0.0,
+              "model_id": "4b2a6f29b793474093a0ebbc088f72223280c239bb31f56b46c950394942532f",
+              "model_promoted": false,
+              "model_tensors_bitwise_equal": true,
+              "new_gradient_computed": false,
+              "optimizer_id": "d8d53b410a9675d5bf610be578c55d8826471e5bf2b63789b351b310aa092e2c",
+              "optimizer_states": 175,
+              "optimizer_step": 1035,
+              "saved_state_unchanged": true,
+              "scope": "Independent replay of existing signed contributions on CPU",
+              "state_id": "844cdd0acc3d0d92fb48521d5532c4ce0867c4180a0511eaa5bb2e9d7f879aff",
+              "success": true,
+              "training_policy_id": "ce3d869b7103aa1ab33ec02c130036ecd8b5ff137c7d8b50252b04b25fb94164"
+            }
+          }
+        },
+        "public_replica_transfers": [
+          {
+            "artifact_id": "4051b2fa9a011a4fde2154a10ee3f5f2311b1fe0789137782f4290d9f195252c",
+            "bytes": 3811,
+            "encoded_data_bytes": 2408,
+            "route": {
+              "encrypted": true,
+              "public_internet": true,
+              "transport": "relay"
+            },
+            "seconds": 0.2928230960096698
+          },
+          {
+            "artifact_id": "dd754bc8b36ddaa5623751dd503c0f908f2f9b1f2f6d2ca33687442152216566",
+            "bytes": 7337088,
+            "encoded_data_bytes": 8546600,
+            "route": {
+              "encrypted": true,
+              "public_internet": true,
+              "transport": "relay"
+            },
+            "seconds": 14.581134271982592
+          },
+          {
+            "artifact_id": "106f9348b206031ca1a6a824dac723f4193430e2fe460e6ab563e96cce19a50c",
+            "bytes": 12595275,
+            "encoded_data_bytes": 14060904,
+            "route": {
+              "encrypted": true,
+              "public_internet": true,
+              "transport": "relay"
+            },
+            "seconds": 24.012699537008302
+          },
+          {
+            "artifact_id": "a59bbb5a067cd2499714e7dec87e1df3935a84543b72c06723623e5fe05e8eb7",
+            "bytes": 6244100,
+            "encoded_data_bytes": 7183120,
+            "route": {
+              "encrypted": true,
+              "public_internet": true,
+              "transport": "relay"
+            },
+            "seconds": 12.655517962994054
+          },
+          {
+            "artifact_id": "239cc9eb58e1a9e9fe646960fbbfd73e12a9bce057174adf0465ca964dec239c",
+            "bytes": 3810,
+            "encoded_data_bytes": 2396,
+            "route": {
+              "encrypted": true,
+              "public_internet": true,
+              "transport": "relay"
+            },
+            "seconds": 0.30007955798646435
+          },
+          {
+            "artifact_id": "4b2a6f29b793474093a0ebbc088f72223280c239bb31f56b46c950394942532f",
+            "bytes": 7337088,
+            "encoded_data_bytes": 8546604,
+            "route": {
+              "encrypted": true,
+              "public_internet": true,
+              "transport": "relay"
+            },
+            "seconds": 14.517023182997946
+          },
+          {
+            "artifact_id": "d8d53b410a9675d5bf610be578c55d8826471e5bf2b63789b351b310aa092e2c",
+            "bytes": 12595275,
+            "encoded_data_bytes": 14060660,
+            "route": {
+              "encrypted": true,
+              "public_internet": true,
+              "transport": "relay"
+            },
+            "seconds": 23.88697863498237
+          },
+          {
+            "artifact_id": "4033dd7476e11c9d26633d81350d0d54ac499b8f26baf538192138a6d66d45f8",
+            "bytes": 6244100,
+            "encoded_data_bytes": 7180836,
+            "route": {
+              "encrypted": true,
+              "public_internet": true,
+              "transport": "relay"
+            },
+            "seconds": 12.222934619989246
+          }
+        ]
+      },
+      {
+        "program_id": "d3f00ca99db132f0f6a09d4853f028988f520801a9c761d118f4fe999bf796e2",
+        "training_policy_id": "b6d2596af24ffd646aec9e2b0a3775284a7c0a95309d1c6f38646bb8bfa72ba1",
+        "contract_id": "fa404fab08d3f9307cd6411ea06333a2b5c509eb41cd59a7d33032abfe1ed1ef",
+        "descriptor": {
+          "evaluation_bytes": 76252,
+          "evaluation_dataset_id": "a56a7c956deec3199e01a32825fa8d7a4bf3db4acd8934f51593cce69d4786c7",
+          "evaluation_documents": 128,
+          "evaluation_prediction_bytes": 52983,
+          "index": 3,
+          "program_id": "d3f00ca99db132f0f6a09d4853f028988f520801a9c761d118f4fe999bf796e2",
+          "recipe_id": "1bd7c247bf916ffb42ddccc7862c9232d247da5c7f0dab8f8fed3dd3c875e7fd",
+          "source_case_ids_sha256": "6ca8c3e2524600be98e9b56732d8bde76e4b955b929f2bae957045f5f3ea8ac4",
+          "source_documents": 128,
+          "training_bytes": 152133,
+          "training_dataset_id": "1dca719e01df42f470faaab419b1282ca2b3c867978fd6f4d2cc555f3e37dcd1",
+          "training_units": 572,
+          "version": 1
+        },
+        "ledger": {
+          "accepted": 2,
+          "contract_id": "fa404fab08d3f9307cd6411ea06333a2b5c509eb41cd59a7d33032abfe1ed1ef",
+          "cursor": 572,
+          "error": null,
+          "initial_state_id": "844cdd0acc3d0d92fb48521d5532c4ce0867c4180a0511eaa5bb2e9d7f879aff",
+          "parent_program_id": "95ed9ab423c5655e9921c69b861255fda833200a0697fe6d335ce0f834f2192f",
+          "pending": null,
+          "ready_workers": 2,
+          "rejections": 0,
+          "replicas": 2,
+          "retry_at": 0,
+          "round": 2,
+          "scheduling_round_base": 11,
+          "state_id": "f551c150b4ea74f6b492d4c9df44a5c79f24e10f7c13b0da06b64ff6ab4bc7cc",
+          "status": "awaiting_new_curriculum",
+          "training_policy_id": "b6d2596af24ffd646aec9e2b0a3775284a7c0a95309d1c6f38646bb8bfa72ba1",
+          "version": 3,
+          "workers": {
+            "6339aadbb5f4b2c6508b93b188e207f054d4b46ca82ee8827fa0415bc0536195": {
+              "last_probe": 1792168446.689897,
+              "last_replication": 1792168446.9986
+            },
+            "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255": {
+              "documents_per_second": 75.8513663209925,
+              "last_round": 12,
+              "samples": 14
+            },
+            "ea914d97caafef310e50385034abae9a50ba86496b0e9cbf4679e6070e4c25b0": {
+              "documents_per_second": 3.1753647728548797,
+              "last_probe": 1792172802.6043975,
+              "last_replication": 1792172802.8877742,
+              "last_round": 11,
+              "samples": 8
+            }
+          }
+        },
+        "records": [
+          {
+            "accepted": true,
+            "adoptions": {
+              "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255": {
+                "error": "",
+                "finished_at": 1792172498.0671818,
+                "job_id": "946ac4337d8c9cd2f8feb28f4d27b7266a7e23d2c62ab1a275f4ceb314bf129e",
+                "output": {
+                  "already_selected": false,
+                  "audit": {
+                    "after": {
+                      "byte_accuracy": 0.4682067833078535,
+                      "documents": 128,
+                      "nll": 1.8228022805710664,
+                      "predicted_bytes": 52983,
+                      "retention": {
+                        "byte_accuracy": 0.4636136057279905,
+                        "documents": 128,
+                        "nll": 1.8427472229007913,
+                        "predicted_bytes": 57123
+                      }
+                    },
+                    "cuda_initialized": false,
+                    "gradient_replay_verified": true,
+                    "maximum_model_tensor_error": 0.0,
+                    "model_id": "a5684d97b3bbfb689a0feecb9c38349fae5b43ff7438451b75778d05a85f1ffc",
+                    "model_promoted": false,
+                    "model_tensors_bitwise_equal": true,
+                    "new_gradient_computed": false,
+                    "optimizer_id": "e67a087e20977963b4fb8fd90f181e5bbf4457e5aef634d87a558220164043c1",
+                    "optimizer_states": 175,
+                    "optimizer_step": 1036,
+                    "saved_state_unchanged": true,
+                    "scope": "Independent replay of existing signed contributions on CPU",
+                    "state_id": "1e36a46521fb2f833d1ffe606608810779ba169d038fddc0ef661de0d6c6037c",
+                    "success": true,
+                    "training_policy_id": "b6d2596af24ffd646aec9e2b0a3775284a7c0a95309d1c6f38646bb8bfa72ba1"
+                  },
+                  "model_id": "a5684d97b3bbfb689a0feecb9c38349fae5b43ff7438451b75778d05a85f1ffc",
+                  "optimizer_id": "e67a087e20977963b4fb8fd90f181e5bbf4457e5aef634d87a558220164043c1",
+                  "optimizer_step": 1036,
+                  "parent_state_id": "844cdd0acc3d0d92fb48521d5532c4ce0867c4180a0511eaa5bb2e9d7f879aff",
+                  "scope": "Locally admitted own-state adoption; not open consensus",
+                  "state_id": "1e36a46521fb2f833d1ffe606608810779ba169d038fddc0ef661de0d6c6037c",
+                  "success": true,
+                  "training_policy_id": "b6d2596af24ffd646aec9e2b0a3775284a7c0a95309d1c6f38646bb8bfa72ba1",
+                  "transfers": [],
+                  "transition_artifact_id": "4f2f6e5b74512afb88cebec8d2c19fe5f1b0142e2989eddf3e0bdfd0b7b429d2"
+                },
+                "receipt": {
+                  "finished_at": 1792172498.0671818,
+                  "job_id": "946ac4337d8c9cd2f8feb28f4d27b7266a7e23d2c62ab1a275f4ceb314bf129e",
+                  "requester_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+                  "result_digest": "928e67d520b025b223d9293b4fe405e14807537c59adadfcaa10fe7a4b58b51a",
+                  "signature": "TZv0K5UFalMwag6p0TNBzywLWuIobxMysTHJ74UTw76o/AFKdAhTYDggPT6e4is15y4sdzd6kxKdoVnFOggrCw==",
+                  "version": 1,
+                  "worker_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255"
+                },
+                "status": "ok"
+              },
+              "ea914d97caafef310e50385034abae9a50ba86496b0e9cbf4679e6070e4c25b0": {
+                "head": {
+                  "active": 0,
+                  "completed": 19,
+                  "cpu_threads": 8,
+                  "device": "cpu",
+                  "family": "lixyswarm-own-causal-byte-v1",
+                  "membership_version": 3,
+                  "model_id": "a5684d97b3bbfb689a0feecb9c38349fae5b43ff7438451b75778d05a85f1ffc",
+                  "optimizer_step": 1036,
+                  "program_id": "d3f00ca99db132f0f6a09d4853f028988f520801a9c761d118f4fe999bf796e2",
+                  "ready": true,
+                  "requesters": [
+                    "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+                    "ea914d97caafef310e50385034abae9a50ba86496b0e9cbf4679e6070e4c25b0"
+                  ],
+                  "state_id": "1e36a46521fb2f833d1ffe606608810779ba169d038fddc0ef661de0d6c6037c",
+                  "training_policy_id": "b6d2596af24ffd646aec9e2b0a3775284a7c0a95309d1c6f38646bb8bfa72ba1"
+                },
+                "state_id": "1e36a46521fb2f833d1ffe606608810779ba169d038fddc0ef661de0d6c6037c"
+              }
+            },
+            "assignments": [
+              {
+                "count": 256,
+                "shard_id": "0",
+                "start": 0,
+                "worker_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255"
+              },
+              {
+                "count": 64,
+                "shard_id": "256",
+                "start": 256,
+                "worker_id": "ea914d97caafef310e50385034abae9a50ba86496b0e9cbf4679e6070e4c25b0"
+              }
+            ],
+            "attempts": 1,
+            "autonomous": true,
+            "candidate": {
+              "artifact_initially_local": false,
+              "encoded_data_bytes": 0,
+              "finished_at": 1792172489.298761,
+              "operation": "swarm.candidate.v3",
+              "result": {
+                "error": "",
+                "finished_at": 1792172489.2981226,
+                "job_id": "363c961efa011e8c41ed902a79505ab3f30fc87036e15b00a044eaafbe8f9c34",
+                "output": {
+                  "accepted": true,
+                  "after": {
+                    "byte_accuracy": 0.4682067833078535,
+                    "documents": 128,
+                    "nll": 1.8228022805710664,
+                    "predicted_bytes": 52983,
+                    "retention": {
+                      "byte_accuracy": 0.4636136057279905,
+                      "documents": 128,
+                      "nll": 1.8427472229007913,
+                      "predicted_bytes": 57123
+                    }
+                  },
+                  "before": {
+                    "byte_accuracy": 0.46803691750184023,
+                    "documents": 128,
+                    "nll": 1.8230588447083982,
+                    "predicted_bytes": 52983,
+                    "retention": {
+                      "byte_accuracy": 0.4635260753111706,
+                      "documents": 128,
+                      "nll": 1.8429953779632582,
+                      "predicted_bytes": 57123
+                    }
+                  },
+                  "candidate_model_bytes": 7337088,
+                  "candidate_model_id": "a5684d97b3bbfb689a0feecb9c38349fae5b43ff7438451b75778d05a85f1ffc",
+                  "candidate_optimizer_bytes": 12595275,
+                  "candidate_optimizer_id": "e67a087e20977963b4fb8fd90f181e5bbf4457e5aef634d87a558220164043c1",
+                  "candidate_optimizer_step": 1036,
+                  "evaluation_bytes": 3810,
+                  "evaluation_id": "05298a01a3c04df71cb45fedd47b37dc9b699913d529dddbd6626aa71b04dfa7",
+                  "model_id": "4b2a6f29b793474093a0ebbc088f72223280c239bb31f56b46c950394942532f",
+                  "optimizer_id": "d8d53b410a9675d5bf610be578c55d8826471e5bf2b63789b351b310aa092e2c",
+                  "prediction_bytes": 36385,
+                  "previous_optimizer_step": 1035,
+                  "state_id": "844cdd0acc3d0d92fb48521d5532c4ce0867c4180a0511eaa5bb2e9d7f879aff",
+                  "training_policy_id": "b6d2596af24ffd646aec9e2b0a3775284a7c0a95309d1c6f38646bb8bfa72ba1"
+                },
+                "receipt": {
+                  "finished_at": 1792172489.2981226,
+                  "job_id": "363c961efa011e8c41ed902a79505ab3f30fc87036e15b00a044eaafbe8f9c34",
+                  "requester_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+                  "result_digest": "c37aaa672d01d15cc3876329c071c1f396ddf725086af4bc429299a946d5ab5b",
+                  "signature": "RScPYyQIRUgYQOohcNw/cC9xdHHbGuZsag4O6/BeCBLhwOQRlqCVu9ecyHC7hOWSaAKfVRzp1Xx1Q6A+vcVfBg==",
+                  "version": 1,
+                  "worker_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255"
+                },
+                "status": "ok"
+              },
+              "route": {
+                "encrypted": false,
+                "public_internet": false,
+                "transport": "local"
+              },
+              "seconds": 8.268803645041771,
+              "selected_state_id": "844cdd0acc3d0d92fb48521d5532c4ce0867c4180a0511eaa5bb2e9d7f879aff",
+              "started_at": 1792172481.0297577,
+              "state": "complete"
+            },
+            "contributions": {
+              "0": {
+                "result": {
+                  "error": "",
+                  "finished_at": 1792172468.328744,
+                  "job_id": "2f9c8b01503125be352fd2d5e9abbb29cddc5b4bac883be5d131e4cbca066de3",
+                  "output": {
+                    "count": 256,
+                    "dataset_id": "1dca719e01df42f470faaab419b1282ca2b3c867978fd6f4d2cc555f3e37dcd1",
+                    "gradient_bytes": 6244100,
+                    "gradient_id": "cefff7c97feba58d9dec5afd36bbbc6af7fbeb1286ffee9becfe81b77ea96338",
+                    "loss": 2.2759856412811517,
+                    "model_id": "4b2a6f29b793474093a0ebbc088f72223280c239bb31f56b46c950394942532f",
+                    "start": 0,
+                    "state_id": "844cdd0acc3d0d92fb48521d5532c4ce0867c4180a0511eaa5bb2e9d7f879aff",
+                    "tokens": 29090,
+                    "training_policy_id": "b6d2596af24ffd646aec9e2b0a3775284a7c0a95309d1c6f38646bb8bfa72ba1"
+                  },
+                  "receipt": {
+                    "finished_at": 1792172468.328744,
+                    "job_id": "2f9c8b01503125be352fd2d5e9abbb29cddc5b4bac883be5d131e4cbca066de3",
+                    "requester_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+                    "result_digest": "313903adf1c6618478875bac02d8d57b65758fc9009add209bff367b6df12c47",
+                    "signature": "br795L7JnqOUL2FqG9SCs7X1dGM00lARy0+doGR+M5IYr5hIiuU8iAZT90ZfUpSGQBwdYBz09+t7o8synAclAA==",
+                    "version": 1,
+                    "worker_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255"
+                  },
+                  "status": "ok"
+                },
+                "worker_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255"
+              },
+              "256": {
+                "result": {
+                  "error": "",
+                  "finished_at": 1792172468.0254176,
+                  "job_id": "ae0450f19d7c5d306f72d8cc39d619d210734d25f3d48ad24b1c5863d642a405",
+                  "output": {
+                    "count": 64,
+                    "dataset_id": "1dca719e01df42f470faaab419b1282ca2b3c867978fd6f4d2cc555f3e37dcd1",
+                    "gradient_bytes": 6244100,
+                    "gradient_id": "d741306c92824b9c34c43203d399bb6a095f57cd43c4c2ad2d37ab4e82537374",
+                    "loss": 2.3539036072632316,
+                    "model_id": "4b2a6f29b793474093a0ebbc088f72223280c239bb31f56b46c950394942532f",
+                    "start": 256,
+                    "state_id": "844cdd0acc3d0d92fb48521d5532c4ce0867c4180a0511eaa5bb2e9d7f879aff",
+                    "tokens": 7295,
+                    "training_policy_id": "b6d2596af24ffd646aec9e2b0a3775284a7c0a95309d1c6f38646bb8bfa72ba1"
+                  },
+                  "receipt": {
+                    "finished_at": 1792172468.0254176,
+                    "job_id": "ae0450f19d7c5d306f72d8cc39d619d210734d25f3d48ad24b1c5863d642a405",
+                    "requester_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+                    "result_digest": "215697e284effa8c513cdd867b0db88221b1321d8222e939fee64264086c70c2",
+                    "signature": "6DEcqe/TS/7JDAN+tRPNQejo+vY0na5SpmvnTLy9mHvt8gk7GBGpHiWO1LUEUCMJ9d51NqrxLgm/1LyaLLOADw==",
+                    "version": 1,
+                    "worker_node_id": "ea914d97caafef310e50385034abae9a50ba86496b0e9cbf4679e6070e4c25b0"
+                  },
+                  "status": "ok"
+                },
+                "worker_id": "ea914d97caafef310e50385034abae9a50ba86496b0e9cbf4679e6070e4c25b0"
+              }
+            },
+            "cursor": 0,
+            "finished_at": 1792172582.0386193,
+            "model_id": "4b2a6f29b793474093a0ebbc088f72223280c239bb31f56b46c950394942532f",
+            "reassignments": [],
+            "replicas_observed": 2,
+            "resulting_state_id": "1e36a46521fb2f833d1ffe606608810779ba169d038fddc0ef661de0d6c6037c",
+            "round": 0,
+            "started_at": 1792172464.8489895,
+            "state_id": "844cdd0acc3d0d92fb48521d5532c4ce0867c4180a0511eaa5bb2e9d7f879aff",
+            "work": {
+              "0": {
+                "artifact_initially_local": true,
+                "encoded_data_bytes": 0,
+                "finished_at": 1792172468.3373668,
+                "operation": "swarm.gradient.v3",
+                "result": {
+                  "error": "",
+                  "finished_at": 1792172468.328744,
+                  "job_id": "2f9c8b01503125be352fd2d5e9abbb29cddc5b4bac883be5d131e4cbca066de3",
+                  "output": {
+                    "count": 256,
+                    "dataset_id": "1dca719e01df42f470faaab419b1282ca2b3c867978fd6f4d2cc555f3e37dcd1",
+                    "gradient_bytes": 6244100,
+                    "gradient_id": "cefff7c97feba58d9dec5afd36bbbc6af7fbeb1286ffee9becfe81b77ea96338",
+                    "loss": 2.2759856412811517,
+                    "model_id": "4b2a6f29b793474093a0ebbc088f72223280c239bb31f56b46c950394942532f",
+                    "start": 0,
+                    "state_id": "844cdd0acc3d0d92fb48521d5532c4ce0867c4180a0511eaa5bb2e9d7f879aff",
+                    "tokens": 29090,
+                    "training_policy_id": "b6d2596af24ffd646aec9e2b0a3775284a7c0a95309d1c6f38646bb8bfa72ba1"
+                  },
+                  "receipt": {
+                    "finished_at": 1792172468.328744,
+                    "job_id": "2f9c8b01503125be352fd2d5e9abbb29cddc5b4bac883be5d131e4cbca066de3",
+                    "requester_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+                    "result_digest": "313903adf1c6618478875bac02d8d57b65758fc9009add209bff367b6df12c47",
+                    "signature": "br795L7JnqOUL2FqG9SCs7X1dGM00lARy0+doGR+M5IYr5hIiuU8iAZT90ZfUpSGQBwdYBz09+t7o8synAclAA==",
+                    "version": 1,
+                    "worker_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255"
+                  },
+                  "status": "ok"
+                },
+                "route": {
+                  "encrypted": false,
+                  "public_internet": false,
+                  "transport": "local"
+                },
+                "seconds": 3.4781419270439073,
+                "selected_state_id": "844cdd0acc3d0d92fb48521d5532c4ce0867c4180a0511eaa5bb2e9d7f879aff",
+                "started_at": 1792172464.8590999,
+                "state": "complete"
+              },
+              "256": {
+                "artifact_initially_local": false,
+                "encoded_data_bytes": 7160048,
+                "finished_at": 1792172481.0195358,
+                "operation": "swarm.gradient.v3",
+                "result": {
+                  "error": "",
+                  "finished_at": 1792172468.0254176,
+                  "job_id": "ae0450f19d7c5d306f72d8cc39d619d210734d25f3d48ad24b1c5863d642a405",
+                  "output": {
+                    "count": 64,
+                    "dataset_id": "1dca719e01df42f470faaab419b1282ca2b3c867978fd6f4d2cc555f3e37dcd1",
+                    "gradient_bytes": 6244100,
+                    "gradient_id": "d741306c92824b9c34c43203d399bb6a095f57cd43c4c2ad2d37ab4e82537374",
+                    "loss": 2.3539036072632316,
+                    "model_id": "4b2a6f29b793474093a0ebbc088f72223280c239bb31f56b46c950394942532f",
+                    "start": 256,
+                    "state_id": "844cdd0acc3d0d92fb48521d5532c4ce0867c4180a0511eaa5bb2e9d7f879aff",
+                    "tokens": 7295,
+                    "training_policy_id": "b6d2596af24ffd646aec9e2b0a3775284a7c0a95309d1c6f38646bb8bfa72ba1"
+                  },
+                  "receipt": {
+                    "finished_at": 1792172468.0254176,
+                    "job_id": "ae0450f19d7c5d306f72d8cc39d619d210734d25f3d48ad24b1c5863d642a405",
+                    "requester_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+                    "result_digest": "215697e284effa8c513cdd867b0db88221b1321d8222e939fee64264086c70c2",
+                    "signature": "6DEcqe/TS/7JDAN+tRPNQejo+vY0na5SpmvnTLy9mHvt8gk7GBGpHiWO1LUEUCMJ9d51NqrxLgm/1LyaLLOADw==",
+                    "version": 1,
+                    "worker_node_id": "ea914d97caafef310e50385034abae9a50ba86496b0e9cbf4679e6070e4c25b0"
+                  },
+                  "status": "ok"
+                },
+                "route": {
+                  "encrypted": true,
+                  "public_internet": true,
+                  "transport": "relay"
+                },
+                "seconds": 16.021514555090107,
+                "selected_state_id": "844cdd0acc3d0d92fb48521d5532c4ce0867c4180a0511eaa5bb2e9d7f879aff",
+                "started_at": 1792172464.9977398,
+                "state": "complete"
+              }
+            }
+          },
+          {
+            "accepted": true,
+            "adoptions": {
+              "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255": {
+                "error": "",
+                "finished_at": 1792172603.0411725,
+                "job_id": "fe3a929d2b3aa21faa9f4d3a08c58bc205d632701e078c23fcc212dc4e29f8ea",
+                "output": {
+                  "already_selected": false,
+                  "audit": {
+                    "after": {
+                      "byte_accuracy": 0.46839552309231264,
+                      "documents": 128,
+                      "nll": 1.8224887942128445,
+                      "predicted_bytes": 52983,
+                      "retention": {
+                        "byte_accuracy": 0.46375365439490224,
+                        "documents": 128,
+                        "nll": 1.8424482354095557,
+                        "predicted_bytes": 57123
+                      }
+                    },
+                    "cuda_initialized": false,
+                    "gradient_replay_verified": true,
+                    "maximum_model_tensor_error": 0.0,
+                    "model_id": "8e19d32d7c8918403a8eff8461fe44fe19cbe9f8dc390aee0cfea761b750275a",
+                    "model_promoted": false,
+                    "model_tensors_bitwise_equal": true,
+                    "new_gradient_computed": false,
+                    "optimizer_id": "2ba3f99b1a83dcca52b38b99cb3abb066c87f24564331399681b85ff3bc64a80",
+                    "optimizer_states": 175,
+                    "optimizer_step": 1037,
+                    "saved_state_unchanged": true,
+                    "scope": "Independent replay of existing signed contributions on CPU",
+                    "state_id": "f551c150b4ea74f6b492d4c9df44a5c79f24e10f7c13b0da06b64ff6ab4bc7cc",
+                    "success": true,
+                    "training_policy_id": "b6d2596af24ffd646aec9e2b0a3775284a7c0a95309d1c6f38646bb8bfa72ba1"
+                  },
+                  "model_id": "8e19d32d7c8918403a8eff8461fe44fe19cbe9f8dc390aee0cfea761b750275a",
+                  "optimizer_id": "2ba3f99b1a83dcca52b38b99cb3abb066c87f24564331399681b85ff3bc64a80",
+                  "optimizer_step": 1037,
+                  "parent_state_id": "1e36a46521fb2f833d1ffe606608810779ba169d038fddc0ef661de0d6c6037c",
+                  "scope": "Locally admitted own-state adoption; not open consensus",
+                  "state_id": "f551c150b4ea74f6b492d4c9df44a5c79f24e10f7c13b0da06b64ff6ab4bc7cc",
+                  "success": true,
+                  "training_policy_id": "b6d2596af24ffd646aec9e2b0a3775284a7c0a95309d1c6f38646bb8bfa72ba1",
+                  "transfers": [],
+                  "transition_artifact_id": "d61a09bdb4e11f5bceeeca1285b649e70f0a022113e0cd1430df17bf09e67844"
+                },
+                "receipt": {
+                  "finished_at": 1792172603.0411725,
+                  "job_id": "fe3a929d2b3aa21faa9f4d3a08c58bc205d632701e078c23fcc212dc4e29f8ea",
+                  "requester_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+                  "result_digest": "aebce2e3a4184b18691ba405fe8d765622ced0caf80565f3bcc33fed6dcf0046",
+                  "signature": "l1/avK11mxUeF+bSbG9Bnx+wZumcmfjh9WQrWpON85R3CTBG8Vm6x0Xk0va8lisl2wWMllDrSaAaLqFpbRMDCg==",
+                  "version": 1,
+                  "worker_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255"
+                },
+                "status": "ok"
+              },
+              "ea914d97caafef310e50385034abae9a50ba86496b0e9cbf4679e6070e4c25b0": {
+                "head": {
+                  "active": 0,
+                  "completed": 19,
+                  "cpu_threads": 8,
+                  "device": "cpu",
+                  "family": "lixyswarm-own-causal-byte-v1",
+                  "membership_version": 3,
+                  "model_id": "8e19d32d7c8918403a8eff8461fe44fe19cbe9f8dc390aee0cfea761b750275a",
+                  "optimizer_step": 1037,
+                  "program_id": "d3f00ca99db132f0f6a09d4853f028988f520801a9c761d118f4fe999bf796e2",
+                  "ready": true,
+                  "requesters": [
+                    "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+                    "ea914d97caafef310e50385034abae9a50ba86496b0e9cbf4679e6070e4c25b0"
+                  ],
+                  "state_id": "f551c150b4ea74f6b492d4c9df44a5c79f24e10f7c13b0da06b64ff6ab4bc7cc",
+                  "training_policy_id": "b6d2596af24ffd646aec9e2b0a3775284a7c0a95309d1c6f38646bb8bfa72ba1"
+                },
+                "state_id": "f551c150b4ea74f6b492d4c9df44a5c79f24e10f7c13b0da06b64ff6ab4bc7cc"
+              }
+            },
+            "assignments": [
+              {
+                "count": 252,
+                "shard_id": "320",
+                "start": 320,
+                "worker_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255"
+              }
+            ],
+            "attempts": 1,
+            "autonomous": true,
+            "candidate": {
+              "artifact_initially_local": false,
+              "encoded_data_bytes": 0,
+              "finished_at": 1792172594.3304002,
+              "operation": "swarm.candidate.v3",
+              "result": {
+                "error": "",
+                "finished_at": 1792172594.3296936,
+                "job_id": "12b05c918dc3f73d236b7d694b7f0d98cc600f08d21670e71f82ef30751cbd61",
+                "output": {
+                  "accepted": true,
+                  "after": {
+                    "byte_accuracy": 0.46839552309231264,
+                    "documents": 128,
+                    "nll": 1.8224887942128445,
+                    "predicted_bytes": 52983,
+                    "retention": {
+                      "byte_accuracy": 0.46375365439490224,
+                      "documents": 128,
+                      "nll": 1.8424482354095557,
+                      "predicted_bytes": 57123
+                    }
+                  },
+                  "before": {
+                    "byte_accuracy": 0.4682067833078535,
+                    "documents": 128,
+                    "nll": 1.8228022805710664,
+                    "predicted_bytes": 52983,
+                    "retention": {
+                      "byte_accuracy": 0.4636136057279905,
+                      "documents": 128,
+                      "nll": 1.8427472229007913,
+                      "predicted_bytes": 57123
+                    }
+                  },
+                  "candidate_model_bytes": 7337088,
+                  "candidate_model_id": "8e19d32d7c8918403a8eff8461fe44fe19cbe9f8dc390aee0cfea761b750275a",
+                  "candidate_optimizer_bytes": 12595275,
+                  "candidate_optimizer_id": "2ba3f99b1a83dcca52b38b99cb3abb066c87f24564331399681b85ff3bc64a80",
+                  "candidate_optimizer_step": 1037,
+                  "evaluation_bytes": 2548,
+                  "evaluation_id": "374ecf8943a5fd3e6cb2fafd064176ebdb4ac84a6847dc26e926ff709a329406",
+                  "model_id": "a5684d97b3bbfb689a0feecb9c38349fae5b43ff7438451b75778d05a85f1ffc",
+                  "optimizer_id": "e67a087e20977963b4fb8fd90f181e5bbf4457e5aef634d87a558220164043c1",
+                  "prediction_bytes": 28558,
+                  "previous_optimizer_step": 1036,
+                  "state_id": "1e36a46521fb2f833d1ffe606608810779ba169d038fddc0ef661de0d6c6037c",
+                  "training_policy_id": "b6d2596af24ffd646aec9e2b0a3775284a7c0a95309d1c6f38646bb8bfa72ba1"
+                },
+                "receipt": {
+                  "finished_at": 1792172594.3296936,
+                  "job_id": "12b05c918dc3f73d236b7d694b7f0d98cc600f08d21670e71f82ef30751cbd61",
+                  "requester_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+                  "result_digest": "7ecb66b79c35c03000c3b1baf7cfe642547b5b50be86f286d4ed4277c8659451",
+                  "signature": "qZS3plJVmS4tLOQ35wwgf4S4G2874YJZ4JoyJXXCy4o2EBUzhF2ivZkNDV/ZtHXajPTSLSk7/s8OLKhJxWaTAA==",
+                  "version": 1,
+                  "worker_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255"
+                },
+                "status": "ok"
+              },
+              "route": {
+                "encrypted": false,
+                "public_internet": false,
+                "transport": "local"
+              },
+              "seconds": 8.301429718965665,
+              "selected_state_id": "1e36a46521fb2f833d1ffe606608810779ba169d038fddc0ef661de0d6c6037c",
+              "started_at": 1792172586.0287192,
+              "state": "complete"
+            },
+            "contributions": {
+              "320": {
+                "result": {
+                  "error": "",
+                  "finished_at": 1792172585.9260085,
+                  "job_id": "860c80f0858034a5783e281b3ff4ae32236df77e135269cc8756abbf37474fc4",
+                  "output": {
+                    "count": 252,
+                    "dataset_id": "1dca719e01df42f470faaab419b1282ca2b3c867978fd6f4d2cc555f3e37dcd1",
+                    "gradient_bytes": 6244100,
+                    "gradient_id": "ad64a2592a70f1708ffb742bd898fb2edbdddf62432b0b78d27394c9d629b86d",
+                    "loss": 2.3434756013373463,
+                    "model_id": "a5684d97b3bbfb689a0feecb9c38349fae5b43ff7438451b75778d05a85f1ffc",
+                    "start": 320,
+                    "state_id": "1e36a46521fb2f833d1ffe606608810779ba169d038fddc0ef661de0d6c6037c",
+                    "tokens": 28558,
+                    "training_policy_id": "b6d2596af24ffd646aec9e2b0a3775284a7c0a95309d1c6f38646bb8bfa72ba1"
+                  },
+                  "receipt": {
+                    "finished_at": 1792172585.9260085,
+                    "job_id": "860c80f0858034a5783e281b3ff4ae32236df77e135269cc8756abbf37474fc4",
+                    "requester_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+                    "result_digest": "84fe324decdf61009c25649f63953eae9c01c0b07013d04048557d123bd15df9",
+                    "signature": "oMF+pOyDeDhNE7iBqEui/LwHE2lYjE4CeLDeM3XBrBdmsOyoeoSz/BppTQ7F+nKPkH2b2R+VbpDs6BlfnqNzCg==",
+                    "version": 1,
+                    "worker_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255"
+                  },
+                  "status": "ok"
+                },
+                "worker_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255"
+              }
+            },
+            "cursor": 320,
+            "finished_at": 1792172679.376336,
+            "model_id": "a5684d97b3bbfb689a0feecb9c38349fae5b43ff7438451b75778d05a85f1ffc",
+            "reassignments": [],
+            "replicas_observed": 2,
+            "resulting_state_id": "f551c150b4ea74f6b492d4c9df44a5c79f24e10f7c13b0da06b64ff6ab4bc7cc",
+            "round": 1,
+            "started_at": 1792172582.6081645,
+            "state_id": "1e36a46521fb2f833d1ffe606608810779ba169d038fddc0ef661de0d6c6037c",
+            "work": {
+              "320": {
+                "artifact_initially_local": true,
+                "encoded_data_bytes": 0,
+                "finished_at": 1792172585.9346857,
+                "operation": "swarm.gradient.v3",
+                "result": {
+                  "error": "",
+                  "finished_at": 1792172585.9260085,
+                  "job_id": "860c80f0858034a5783e281b3ff4ae32236df77e135269cc8756abbf37474fc4",
+                  "output": {
+                    "count": 252,
+                    "dataset_id": "1dca719e01df42f470faaab419b1282ca2b3c867978fd6f4d2cc555f3e37dcd1",
+                    "gradient_bytes": 6244100,
+                    "gradient_id": "ad64a2592a70f1708ffb742bd898fb2edbdddf62432b0b78d27394c9d629b86d",
+                    "loss": 2.3434756013373463,
+                    "model_id": "a5684d97b3bbfb689a0feecb9c38349fae5b43ff7438451b75778d05a85f1ffc",
+                    "start": 320,
+                    "state_id": "1e36a46521fb2f833d1ffe606608810779ba169d038fddc0ef661de0d6c6037c",
+                    "tokens": 28558,
+                    "training_policy_id": "b6d2596af24ffd646aec9e2b0a3775284a7c0a95309d1c6f38646bb8bfa72ba1"
+                  },
+                  "receipt": {
+                    "finished_at": 1792172585.9260085,
+                    "job_id": "860c80f0858034a5783e281b3ff4ae32236df77e135269cc8756abbf37474fc4",
+                    "requester_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+                    "result_digest": "84fe324decdf61009c25649f63953eae9c01c0b07013d04048557d123bd15df9",
+                    "signature": "oMF+pOyDeDhNE7iBqEui/LwHE2lYjE4CeLDeM3XBrBdmsOyoeoSz/BppTQ7F+nKPkH2b2R+VbpDs6BlfnqNzCg==",
+                    "version": 1,
+                    "worker_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255"
+                  },
+                  "status": "ok"
+                },
+                "route": {
+                  "encrypted": false,
+                  "public_internet": false,
+                  "transport": "local"
+                },
+                "seconds": 3.3153205789858475,
+                "selected_state_id": "1e36a46521fb2f833d1ffe606608810779ba169d038fddc0ef661de0d6c6037c",
+                "started_at": 1792172582.6191604,
+                "state": "complete"
+              }
+            }
+          }
+        ],
+        "evaluation_reports_raw": {
+          "05298a01a3c04df71cb45fedd47b37dc9b699913d529dddbd6626aa71b04dfa7": "{\"accepted\": true, \"after\": {\"byte_accuracy\": 0.4682067833078535, \"documents\": 128, \"nll\": 1.8228022805710664, \"predicted_bytes\": 52983, \"retention\": {\"byte_accuracy\": 0.4636136057279905, \"documents\": 128, \"nll\": 1.8427472229007913, \"predicted_bytes\": 57123}}, \"before\": {\"byte_accuracy\": 0.46803691750184023, \"documents\": 128, \"nll\": 1.8230588447083982, \"predicted_bytes\": 52983, \"retention\": {\"byte_accuracy\": 0.4635260753111706, \"documents\": 128, \"nll\": 1.8429953779632582, \"predicted_bytes\": 57123}}, \"candidate_optimizer_step\": 1036, \"candidate_state_id\": \"1e36a46521fb2f833d1ffe606608810779ba169d038fddc0ef661de0d6c6037c\", \"contributions\": [{\"result\": {\"error\": \"\", \"finished_at\": 1792172468.328744, \"job_id\": \"2f9c8b01503125be352fd2d5e9abbb29cddc5b4bac883be5d131e4cbca066de3\", \"output\": {\"count\": 256, \"dataset_id\": \"1dca719e01df42f470faaab419b1282ca2b3c867978fd6f4d2cc555f3e37dcd1\", \"gradient_bytes\": 6244100, \"gradient_id\": \"cefff7c97feba58d9dec5afd36bbbc6af7fbeb1286ffee9becfe81b77ea96338\", \"loss\": 2.2759856412811517, \"model_id\": \"4b2a6f29b793474093a0ebbc088f72223280c239bb31f56b46c950394942532f\", \"start\": 0, \"state_id\": \"844cdd0acc3d0d92fb48521d5532c4ce0867c4180a0511eaa5bb2e9d7f879aff\", \"tokens\": 29090, \"training_policy_id\": \"b6d2596af24ffd646aec9e2b0a3775284a7c0a95309d1c6f38646bb8bfa72ba1\"}, \"receipt\": {\"finished_at\": 1792172468.328744, \"job_id\": \"2f9c8b01503125be352fd2d5e9abbb29cddc5b4bac883be5d131e4cbca066de3\", \"requester_node_id\": \"c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255\", \"result_digest\": \"313903adf1c6618478875bac02d8d57b65758fc9009add209bff367b6df12c47\", \"signature\": \"br795L7JnqOUL2FqG9SCs7X1dGM00lARy0+doGR+M5IYr5hIiuU8iAZT90ZfUpSGQBwdYBz09+t7o8synAclAA==\", \"version\": 1, \"worker_node_id\": \"c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255\"}, \"status\": \"ok\"}, \"worker_id\": \"c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255\"}, {\"result\": {\"error\": \"\", \"finished_at\": 1792172468.0254176, \"job_id\": \"ae0450f19d7c5d306f72d8cc39d619d210734d25f3d48ad24b1c5863d642a405\", \"output\": {\"count\": 64, \"dataset_id\": \"1dca719e01df42f470faaab419b1282ca2b3c867978fd6f4d2cc555f3e37dcd1\", \"gradient_bytes\": 6244100, \"gradient_id\": \"d741306c92824b9c34c43203d399bb6a095f57cd43c4c2ad2d37ab4e82537374\", \"loss\": 2.3539036072632316, \"model_id\": \"4b2a6f29b793474093a0ebbc088f72223280c239bb31f56b46c950394942532f\", \"start\": 256, \"state_id\": \"844cdd0acc3d0d92fb48521d5532c4ce0867c4180a0511eaa5bb2e9d7f879aff\", \"tokens\": 7295, \"training_policy_id\": \"b6d2596af24ffd646aec9e2b0a3775284a7c0a95309d1c6f38646bb8bfa72ba1\"}, \"receipt\": {\"finished_at\": 1792172468.0254176, \"job_id\": \"ae0450f19d7c5d306f72d8cc39d619d210734d25f3d48ad24b1c5863d642a405\", \"requester_node_id\": \"c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255\", \"result_digest\": \"215697e284effa8c513cdd867b0db88221b1321d8222e939fee64264086c70c2\", \"signature\": \"6DEcqe/TS/7JDAN+tRPNQejo+vY0na5SpmvnTLy9mHvt8gk7GBGpHiWO1LUEUCMJ9d51NqrxLgm/1LyaLLOADw==\", \"version\": 1, \"worker_node_id\": \"ea914d97caafef310e50385034abae9a50ba86496b0e9cbf4679e6070e4c25b0\"}, \"status\": \"ok\"}, \"worker_id\": \"ea914d97caafef310e50385034abae9a50ba86496b0e9cbf4679e6070e4c25b0\"}], \"gradient_norm_before_clipping\": 0.4790966808795929, \"model_id\": \"4b2a6f29b793474093a0ebbc088f72223280c239bb31f56b46c950394942532f\", \"model_promoted\": false, \"native_cycles_added\": 0, \"optimizer_id\": \"d8d53b410a9675d5bf610be578c55d8826471e5bf2b63789b351b310aa092e2c\", \"prediction_bytes\": 36385, \"previous_optimizer_step\": 1035, \"scope\": \"Own byte-language learning on novel public food, with historical development retention; not general answer certification\", \"state_id\": \"844cdd0acc3d0d92fb48521d5532c4ce0867c4180a0511eaa5bb2e9d7f879aff\", \"training_policy_id\": \"b6d2596af24ffd646aec9e2b0a3775284a7c0a95309d1c6f38646bb8bfa72ba1\"}",
+          "374ecf8943a5fd3e6cb2fafd064176ebdb4ac84a6847dc26e926ff709a329406": "{\"accepted\": true, \"after\": {\"byte_accuracy\": 0.46839552309231264, \"documents\": 128, \"nll\": 1.8224887942128445, \"predicted_bytes\": 52983, \"retention\": {\"byte_accuracy\": 0.46375365439490224, \"documents\": 128, \"nll\": 1.8424482354095557, \"predicted_bytes\": 57123}}, \"before\": {\"byte_accuracy\": 0.4682067833078535, \"documents\": 128, \"nll\": 1.8228022805710664, \"predicted_bytes\": 52983, \"retention\": {\"byte_accuracy\": 0.4636136057279905, \"documents\": 128, \"nll\": 1.8427472229007913, \"predicted_bytes\": 57123}}, \"candidate_optimizer_step\": 1037, \"candidate_state_id\": \"f551c150b4ea74f6b492d4c9df44a5c79f24e10f7c13b0da06b64ff6ab4bc7cc\", \"contributions\": [{\"result\": {\"error\": \"\", \"finished_at\": 1792172585.9260085, \"job_id\": \"860c80f0858034a5783e281b3ff4ae32236df77e135269cc8756abbf37474fc4\", \"output\": {\"count\": 252, \"dataset_id\": \"1dca719e01df42f470faaab419b1282ca2b3c867978fd6f4d2cc555f3e37dcd1\", \"gradient_bytes\": 6244100, \"gradient_id\": \"ad64a2592a70f1708ffb742bd898fb2edbdddf62432b0b78d27394c9d629b86d\", \"loss\": 2.3434756013373463, \"model_id\": \"a5684d97b3bbfb689a0feecb9c38349fae5b43ff7438451b75778d05a85f1ffc\", \"start\": 320, \"state_id\": \"1e36a46521fb2f833d1ffe606608810779ba169d038fddc0ef661de0d6c6037c\", \"tokens\": 28558, \"training_policy_id\": \"b6d2596af24ffd646aec9e2b0a3775284a7c0a95309d1c6f38646bb8bfa72ba1\"}, \"receipt\": {\"finished_at\": 1792172585.9260085, \"job_id\": \"860c80f0858034a5783e281b3ff4ae32236df77e135269cc8756abbf37474fc4\", \"requester_node_id\": \"c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255\", \"result_digest\": \"84fe324decdf61009c25649f63953eae9c01c0b07013d04048557d123bd15df9\", \"signature\": \"oMF+pOyDeDhNE7iBqEui/LwHE2lYjE4CeLDeM3XBrBdmsOyoeoSz/BppTQ7F+nKPkH2b2R+VbpDs6BlfnqNzCg==\", \"version\": 1, \"worker_node_id\": \"c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255\"}, \"status\": \"ok\"}, \"worker_id\": \"c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255\"}], \"gradient_norm_before_clipping\": 0.4817178249359131, \"model_id\": \"a5684d97b3bbfb689a0feecb9c38349fae5b43ff7438451b75778d05a85f1ffc\", \"model_promoted\": false, \"native_cycles_added\": 0, \"optimizer_id\": \"e67a087e20977963b4fb8fd90f181e5bbf4457e5aef634d87a558220164043c1\", \"prediction_bytes\": 28558, \"previous_optimizer_step\": 1036, \"scope\": \"Own byte-language learning on novel public food, with historical development retention; not general answer certification\", \"state_id\": \"1e36a46521fb2f833d1ffe606608810779ba169d038fddc0ef661de0d6c6037c\", \"training_policy_id\": \"b6d2596af24ffd646aec9e2b0a3775284a7c0a95309d1c6f38646bb8bfa72ba1\"}"
+        },
+        "independent_cpu_audits": {
+          "1e36a46521fb2f833d1ffe606608810779ba169d038fddc0ef661de0d6c6037c": {
+            "coordinator": {
+              "after": {
+                "byte_accuracy": 0.4682067833078535,
+                "documents": 128,
+                "nll": 1.8228022805710664,
+                "predicted_bytes": 52983,
+                "retention": {
+                  "byte_accuracy": 0.4636136057279905,
+                  "documents": 128,
+                  "nll": 1.8427472229007913,
+                  "predicted_bytes": 57123
+                }
+              },
+              "cuda_initialized": false,
+              "gradient_replay_verified": true,
+              "maximum_model_tensor_error": 0.0,
+              "model_id": "a5684d97b3bbfb689a0feecb9c38349fae5b43ff7438451b75778d05a85f1ffc",
+              "model_promoted": false,
+              "model_tensors_bitwise_equal": true,
+              "new_gradient_computed": false,
+              "optimizer_id": "e67a087e20977963b4fb8fd90f181e5bbf4457e5aef634d87a558220164043c1",
+              "optimizer_states": 175,
+              "optimizer_step": 1036,
+              "saved_state_unchanged": true,
+              "scope": "Independent replay of existing signed contributions on CPU",
+              "state_id": "1e36a46521fb2f833d1ffe606608810779ba169d038fddc0ef661de0d6c6037c",
+              "success": true,
+              "training_policy_id": "b6d2596af24ffd646aec9e2b0a3775284a7c0a95309d1c6f38646bb8bfa72ba1"
+            },
+            "other_physical_pc": {
+              "after": {
+                "byte_accuracy": 0.4682067833078535,
+                "documents": 128,
+                "nll": 1.8228022805710664,
+                "predicted_bytes": 52983,
+                "retention": {
+                  "byte_accuracy": 0.4636136057279905,
+                  "documents": 128,
+                  "nll": 1.8427472229007913,
+                  "predicted_bytes": 57123
+                }
+              },
+              "cuda_initialized": false,
+              "gradient_replay_verified": true,
+              "maximum_model_tensor_error": 0.0,
+              "model_id": "a5684d97b3bbfb689a0feecb9c38349fae5b43ff7438451b75778d05a85f1ffc",
+              "model_promoted": false,
+              "model_tensors_bitwise_equal": true,
+              "new_gradient_computed": false,
+              "optimizer_id": "e67a087e20977963b4fb8fd90f181e5bbf4457e5aef634d87a558220164043c1",
+              "optimizer_states": 175,
+              "optimizer_step": 1036,
+              "saved_state_unchanged": true,
+              "scope": "Independent replay of existing signed contributions on CPU",
+              "state_id": "1e36a46521fb2f833d1ffe606608810779ba169d038fddc0ef661de0d6c6037c",
+              "success": true,
+              "training_policy_id": "b6d2596af24ffd646aec9e2b0a3775284a7c0a95309d1c6f38646bb8bfa72ba1"
+            }
+          },
+          "f551c150b4ea74f6b492d4c9df44a5c79f24e10f7c13b0da06b64ff6ab4bc7cc": {
+            "coordinator": {
+              "after": {
+                "byte_accuracy": 0.46839552309231264,
+                "documents": 128,
+                "nll": 1.8224887942128445,
+                "predicted_bytes": 52983,
+                "retention": {
+                  "byte_accuracy": 0.46375365439490224,
+                  "documents": 128,
+                  "nll": 1.8424482354095557,
+                  "predicted_bytes": 57123
+                }
+              },
+              "cuda_initialized": false,
+              "gradient_replay_verified": true,
+              "maximum_model_tensor_error": 0.0,
+              "model_id": "8e19d32d7c8918403a8eff8461fe44fe19cbe9f8dc390aee0cfea761b750275a",
+              "model_promoted": false,
+              "model_tensors_bitwise_equal": true,
+              "new_gradient_computed": false,
+              "optimizer_id": "2ba3f99b1a83dcca52b38b99cb3abb066c87f24564331399681b85ff3bc64a80",
+              "optimizer_states": 175,
+              "optimizer_step": 1037,
+              "saved_state_unchanged": true,
+              "scope": "Independent replay of existing signed contributions on CPU",
+              "state_id": "f551c150b4ea74f6b492d4c9df44a5c79f24e10f7c13b0da06b64ff6ab4bc7cc",
+              "success": true,
+              "training_policy_id": "b6d2596af24ffd646aec9e2b0a3775284a7c0a95309d1c6f38646bb8bfa72ba1"
+            },
+            "other_physical_pc": {
+              "after": {
+                "byte_accuracy": 0.46839552309231264,
+                "documents": 128,
+                "nll": 1.8224887942128445,
+                "predicted_bytes": 52983,
+                "retention": {
+                  "byte_accuracy": 0.46375365439490224,
+                  "documents": 128,
+                  "nll": 1.8424482354095557,
+                  "predicted_bytes": 57123
+                }
+              },
+              "cuda_initialized": false,
+              "gradient_replay_verified": true,
+              "maximum_model_tensor_error": 0.0,
+              "model_id": "8e19d32d7c8918403a8eff8461fe44fe19cbe9f8dc390aee0cfea761b750275a",
+              "model_promoted": false,
+              "model_tensors_bitwise_equal": true,
+              "new_gradient_computed": false,
+              "optimizer_id": "2ba3f99b1a83dcca52b38b99cb3abb066c87f24564331399681b85ff3bc64a80",
+              "optimizer_states": 175,
+              "optimizer_step": 1037,
+              "saved_state_unchanged": true,
+              "scope": "Independent replay of existing signed contributions on CPU",
+              "state_id": "f551c150b4ea74f6b492d4c9df44a5c79f24e10f7c13b0da06b64ff6ab4bc7cc",
+              "success": true,
+              "training_policy_id": "b6d2596af24ffd646aec9e2b0a3775284a7c0a95309d1c6f38646bb8bfa72ba1"
+            }
+          }
+        },
+        "public_replica_transfers": [
+          {
+            "artifact_id": "05298a01a3c04df71cb45fedd47b37dc9b699913d529dddbd6626aa71b04dfa7",
+            "bytes": 3810,
+            "encoded_data_bytes": 2412,
+            "route": {
+              "encrypted": true,
+              "public_internet": true,
+              "transport": "relay"
+            },
+            "seconds": 0.29892518901033327
+          },
+          {
+            "artifact_id": "a5684d97b3bbfb689a0feecb9c38349fae5b43ff7438451b75778d05a85f1ffc",
+            "bytes": 7337088,
+            "encoded_data_bytes": 8546532,
+            "route": {
+              "encrypted": true,
+              "public_internet": true,
+              "transport": "relay"
+            },
+            "seconds": 14.528687493992038
+          },
+          {
+            "artifact_id": "e67a087e20977963b4fb8fd90f181e5bbf4457e5aef634d87a558220164043c1",
+            "bytes": 12595275,
+            "encoded_data_bytes": 14060208,
+            "route": {
+              "encrypted": true,
+              "public_internet": true,
+              "transport": "relay"
+            },
+            "seconds": 23.695395142014604
+          },
+          {
+            "artifact_id": "cefff7c97feba58d9dec5afd36bbbc6af7fbeb1286ffee9becfe81b77ea96338",
+            "bytes": 6244100,
+            "encoded_data_bytes": 7181756,
+            "route": {
+              "encrypted": true,
+              "public_internet": true,
+              "transport": "relay"
+            },
+            "seconds": 12.391942191985436
+          },
+          {
+            "artifact_id": "374ecf8943a5fd3e6cb2fafd064176ebdb4ac84a6847dc26e926ff709a329406",
+            "bytes": 2548,
+            "encoded_data_bytes": 1820,
+            "route": {
+              "encrypted": true,
+              "public_internet": true,
+              "transport": "relay"
+            },
+            "seconds": 0.28540633601369336
+          },
+          {
+            "artifact_id": "8e19d32d7c8918403a8eff8461fe44fe19cbe9f8dc390aee0cfea761b750275a",
+            "bytes": 7337088,
+            "encoded_data_bytes": 8546524,
+            "route": {
+              "encrypted": true,
+              "public_internet": true,
+              "transport": "relay"
+            },
+            "seconds": 14.490679141978035
+          },
+          {
+            "artifact_id": "2ba3f99b1a83dcca52b38b99cb3abb066c87f24564331399681b85ff3bc64a80",
+            "bytes": 12595275,
+            "encoded_data_bytes": 14058508,
+            "route": {
+              "encrypted": true,
+              "public_internet": true,
+              "transport": "relay"
+            },
+            "seconds": 24.0304525620013
+          },
+          {
+            "artifact_id": "ad64a2592a70f1708ffb742bd898fb2edbdddf62432b0b78d27394c9d629b86d",
+            "bytes": 6244100,
+            "encoded_data_bytes": 7177708,
+            "route": {
+              "encrypted": true,
+              "public_internet": true,
+              "transport": "relay"
+            },
+            "seconds": 12.221073500986677
+          }
+        ]
+      }
+    ],
+    "physical_training_pcs": 2,
+    "rounds": 4,
+    "accepted": 4,
+    "rejected": 0,
+    "final_state_id": "f551c150b4ea74f6b492d4c9df44a5c79f24e10f7c13b0da06b64ff6ab4bc7cc",
+    "final_optimizer_step": 1037,
+    "new_gradient_jobs": 7,
+    "remote_replay_evidence": "Signed local adoption plus public replay/transfer reports read over administrative SSH; remote adoption receipts checked live but not retained by this coordinator version",
+    "larger_physical_network_or_generalization_claimed": false
+  },
+  "prior_v2_ledger_sha256": "49495411ca160ab1c65447cd4bf979a5781c24251cd26cfddb643a81b2deeecc",
+  "prior_food_files_preserved": {
+    "own-network/curriculum.json": "ae196a8aba9bc6ab90e3d6cff4aba141fac48ad0c03cf2f8000f2021a1cdc21d",
+    "own-network/programs/2481f2b47df16279124d4d188314e82bb6040ec94024111ba4cfeedeada6f5b1/ledger.json": "1ade5c41261cbc45cae3b8043e230c615be0075e66041dc63551fc90b592aeec",
+    "own-network/programs/2481f2b47df16279124d4d188314e82bb6040ec94024111ba4cfeedeada6f5b1/rounds/00000000.json": "b39df60be363a0e410659e2eb3e28ebdb2362701da75fab0a8d54cc4fde5e062",
+    "own-network/programs/2481f2b47df16279124d4d188314e82bb6040ec94024111ba4cfeedeada6f5b1/rounds/00000001.json": "aa53fd10bdffb04d4a5dedfba6547a9bc89371bc425632a3627fb05d5c3ece76",
+    "own-network/programs/d98935a1c6bb1c0ca15e80e23e456280da2f184039ef8bf01d050c8bd67b7392/ledger.json": "4b8cae2fd8e2e37c2167cce2251475dca00f1e515ba5e6277d92f8e20909f3fd",
+    "own-network/programs/d98935a1c6bb1c0ca15e80e23e456280da2f184039ef8bf01d050c8bd67b7392/rounds/00000000.json": "6a93fe9cc0186c90afc698b562efe1a711219058ee6f7f0b80d9a5ba0149a2f5",
+    "own-network/programs/d98935a1c6bb1c0ca15e80e23e456280da2f184039ef8bf01d050c8bd67b7392/rounds/00000001.json": "30bb262e765d241ebba56c7b7cc73f9325672bba73e0f1cb4082b55fc2d3cc46"
+  },
+  "limits": [
+    "Development NLL improvement and aggregate historical NLL retention; not blinded generalization or fact-by-fact retention.",
+    "Accuracy changes remain in every signed evaluation and are diagnostic under this new policy.",
+    "One selected coordinator remains; only two physical PCs; no claimed linear speedup or learned metabolism."
+  ]
+}
