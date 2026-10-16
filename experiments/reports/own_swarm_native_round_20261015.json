@@ -1,0 +1,718 @@
+{
+  "date": "2026-10-15",
+  "external_teacher_used_in_this_trial": false,
+  "external_teachers_allowed": true,
+  "family": "lixyswarm-own-causal-byte-v1",
+  "initialization": "Own architecture and reproducible random weights; no imported pretrained base",
+  "interpretation": {
+    "aggregate_additional_correct_next_bytes": 30,
+    "continuity_24h_or_7d_proved": false,
+    "evaluation_documents": 128,
+    "evaluation_is_repeated_development_set": true,
+    "evaluation_predicted_bytes": 57123,
+    "fresh_blind_evaluation": false,
+    "full_goal_complete": false,
+    "individual_prediction_nonregression_proved": false,
+    "math_answer_or_general_chat_quality_proved": false,
+    "matriarca_or_specialization_utility_proved": false,
+    "native_autonomous_cycles_added": 0,
+    "nll_relative_gain": 0.0006791662683695021,
+    "one_pc_vs_two_speedup_measured": false,
+    "open_operator_consensus": false,
+    "own_model_global_catalog_release": false,
+    "physical_poweroff_proof": false,
+    "public_chat_migrated_to_own_model": false,
+    "third_physical_replica": false
+  },
+  "knowledge_transport": {
+    "all_four_replica_transfers_hash_verified": true,
+    "learned_weights_optimizer_evaluation_and_gradients": "Public encrypted LSP relay; namespace swarm.artifact",
+    "receiver_helpers_are_extra_physical_nodes": false,
+    "slow_transfer_observation": "The 6,244,100-byte Root gradient took 393.050741 seconds to replicate; transfer succeeded, variation remains unexplained. No scaling benefit claimed.",
+    "vpn_use": "Administrative code/binaries and compact signed receipts/reports only",
+    "vps_role": "Relay and web; no tensor training or learned-weight storage"
+  },
+  "laptop": {
+    "activation": {
+      "already_selected": false,
+      "model_id": "bc89086a97b5b4dbd61e418d088fef7cf40edd9f8fed0167da4a393659a7673d",
+      "optimizer_id": "709e7b069d34d61351eb25377f0fc9a1682bdfb9fc5333b93613f63b44d2e259",
+      "optimizer_step": 1025,
+      "parent_state_id": "39261860795641b5dd05b9210952702a50b30f9c72a3f1aafdb30f3a33224709",
+      "scope": "Known-operator own-state adoption; not open consensus or autonomous scheduling",
+      "state_id": "33f22bbc4c09be31f2a731f824c32d677ac69d82750abd216b1c985e1da93b8b",
+      "success": true,
+      "transition_artifact_id": "23e00f1c3ea7148b66f96a80446c8f5ef4fc91d893c01ab9dd34a79b45a33938"
+    },
+    "audit": {
+      "after": {
+        "byte_accuracy": 0.45472051537909425,
+        "documents": 128,
+        "nll": 1.8691429229472412,
+        "predicted_bytes": 57123
+      },
+      "cuda_initialized": false,
+      "gradient_replay_verified": true,
+      "maximum_model_tensor_error": 0.0,
+      "model_id": "bc89086a97b5b4dbd61e418d088fef7cf40edd9f8fed0167da4a393659a7673d",
+      "model_promoted": false,
+      "model_tensors_bitwise_equal": true,
+      "new_gradient_computed": false,
+      "optimizer_id": "709e7b069d34d61351eb25377f0fc9a1682bdfb9fc5333b93613f63b44d2e259",
+      "optimizer_states": 175,
+      "optimizer_step": 1025,
+      "saved_state_unchanged": true,
+      "scope": "Independent replay of existing signed contributions on CPU",
+      "state_id": "33f22bbc4c09be31f2a731f824c32d677ac69d82750abd216b1c985e1da93b8b",
+      "success": true,
+      "training_policy_id": "57052db9cad9b02f9b5bad64ce37f6e71c7ad7f597ee341320af266af091cb8c"
+    },
+    "audit_sha256": "0c90fa262cd958c0a33d0f04b0ae7e8cad513a5eb46230b26b4de85a565f5e34",
+    "deployment": {
+      "controls_identity_and_progress_preserved": true,
+      "engine_manifest_sha256": "2ca94ba96dd948e8d5f35c95741295828ff6f78c8798c1c6fbea2ffa1980d87a",
+      "existing_chat_model_preserved": true,
+      "native_app_source_revision": "8151fca270513e989da1cda84b6881953cb1d6ae",
+      "new_pid": 821876,
+      "node_restarted": true,
+      "old_pid": 777859,
+      "old_unit_backed_up": true,
+      "own_swarm": {
+        "active": 0,
+        "completed": 0,
+        "device": "cpu",
+        "family": "lixyswarm-own-causal-byte-v1",
+        "model_id": "8806d7bcbea33ec599655eeef19857230e61d658e663b9d15947ba2c0da06853",
+        "optimizer_step": 1024,
+        "ready": true,
+        "state_id": "39261860795641b5dd05b9210952702a50b30f9c72a3f1aafdb30f3a33224709",
+        "training_policy_id": "57052db9cad9b02f9b5bad64ce37f6e71c7ad7f597ee341320af266af091cb8c"
+      },
+      "physical_node_id": "ea914d97caafef310e50385034abae9a50ba86496b0e9cbf4679e6070e4c25b0",
+      "runtime_version": "0.4.0a21",
+      "success": true
+    },
+    "lixyswarm-node.service": {
+      "ActiveState": "active",
+      "MainPID": "829690",
+      "Result": "success",
+      "SubState": "running"
+    },
+    "lixyswarm-own-a21-rollback-20261015.timer": {
+      "ActiveState": "inactive",
+      "Result": "success",
+      "SubState": "dead"
+    },
+    "lixyswarm-own-state-replay-20261015.service": {
+      "ActiveState": "inactive",
+      "MainPID": "0",
+      "Result": "success",
+      "SubState": "dead"
+    },
+    "native_pid": 829690,
+    "own_swarm": {
+      "active": 0,
+      "completed": 1,
+      "device": "cpu",
+      "family": "lixyswarm-own-causal-byte-v1",
+      "model_id": "bc89086a97b5b4dbd61e418d088fef7cf40edd9f8fed0167da4a393659a7673d",
+      "optimizer_step": 1025,
+      "ready": true,
+      "state_id": "33f22bbc4c09be31f2a731f824c32d677ac69d82750abd216b1c985e1da93b8b",
+      "training_policy_id": "57052db9cad9b02f9b5bad64ce37f6e71c7ad7f597ee341320af266af091cb8c"
+    },
+    "restart": {
+      "identity_controls_optimizer_and_counter_preserved": true,
+      "new_pid": 829690,
+      "node_restarted": true,
+      "old_pid": 821876,
+      "own_swarm": {
+        "active": 0,
+        "completed": 1,
+        "device": "cpu",
+        "family": "lixyswarm-own-causal-byte-v1",
+        "model_id": "bc89086a97b5b4dbd61e418d088fef7cf40edd9f8fed0167da4a393659a7673d",
+        "optimizer_step": 1025,
+        "ready": true,
+        "state_id": "33f22bbc4c09be31f2a731f824c32d677ac69d82750abd216b1c985e1da93b8b",
+        "training_policy_id": "57052db9cad9b02f9b5bad64ce37f6e71c7ad7f597ee341320af266af091cb8c"
+      },
+      "physical_machine_powered_off": false,
+      "physical_node_id": "ea914d97caafef310e50385034abae9a50ba86496b0e9cbf4679e6070e4c25b0",
+      "same_learned_state_after_restart": true,
+      "success": true
+    },
+    "transfers": {
+      "evaluation": {
+        "action": "receive",
+        "artifact_bytes": 3529,
+        "artifact_id": "e8ae7869e4d853c498dc0e43f93a5dc0cd5216e95f25046df4e18c9d90bf0258",
+        "bytes_received": 3529,
+        "chunks": 1,
+        "extra_physical_worker": false,
+        "finished_at": 1792118321.445934,
+        "helper_id": "3c95ab60bebd214e220863b4eb1350c4ff391a793daf9f73c50d9d08f4b04e30",
+        "model_release_published": false,
+        "namespace": "swarm.artifact",
+        "native_controls_unchanged": true,
+        "native_learning_cycles_added": 0,
+        "peer_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+        "physical_node_id": "ea914d97caafef310e50385034abae9a50ba86496b0e9cbf4679e6070e4c25b0",
+        "physical_pid": 821876,
+        "route": {
+          "encrypted": true,
+          "public_internet": true,
+          "transport": "relay"
+        },
+        "scope": "Research preservation only; no release registration, public inference or model promotion",
+        "seconds": 0.43547094499808736,
+        "sha256_verified": true,
+        "started_at": 1792118315.1514826,
+        "success": true
+      },
+      "model": {
+        "action": "receive",
+        "artifact_bytes": 7337088,
+        "artifact_id": "bc89086a97b5b4dbd61e418d088fef7cf40edd9f8fed0167da4a393659a7673d",
+        "bytes_received": 7337088,
+        "chunks": 75,
+        "extra_physical_worker": false,
+        "finished_at": 1792118314.9348304,
+        "helper_id": "2fc4ba7354293a5a365b4618cb17dd30e06d620117ad0335ceee77414472b527",
+        "model_release_published": false,
+        "namespace": "swarm.artifact",
+        "native_controls_unchanged": true,
+        "native_learning_cycles_added": 0,
+        "peer_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+        "physical_node_id": "ea914d97caafef310e50385034abae9a50ba86496b0e9cbf4679e6070e4c25b0",
+        "physical_pid": 821876,
+        "route": {
+          "encrypted": true,
+          "public_internet": true,
+          "transport": "relay"
+        },
+        "scope": "Research preservation only; no release registration, public inference or model promotion",
+        "seconds": 32.304267011990305,
+        "sha256_verified": true,
+        "started_at": 1792118276.7162087,
+        "success": true
+      },
+      "optimizer": {
+        "action": "receive",
+        "artifact_bytes": 12595275,
+        "artifact_id": "709e7b069d34d61351eb25377f0fc9a1682bdfb9fc5333b93613f63b44d2e259",
+        "bytes_received": 12595275,
+        "chunks": 129,
+        "extra_physical_worker": false,
+        "finished_at": 1792118337.2098975,
+        "helper_id": "730dd87bb330bb11efafc8be18642d562e1039bc0940021e1d03a9bd731fba95",
+        "model_release_published": false,
+        "namespace": "swarm.artifact",
+        "native_controls_unchanged": true,
+        "native_learning_cycles_added": 0,
+        "peer_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+        "physical_node_id": "ea914d97caafef310e50385034abae9a50ba86496b0e9cbf4679e6070e4c25b0",
+        "physical_pid": 821876,
+        "route": {
+          "encrypted": true,
+          "public_internet": true,
+          "transport": "relay"
+        },
+        "scope": "Research preservation only; no release registration, public inference or model promotion",
+        "seconds": 54.65124489998561,
+        "sha256_verified": true,
+        "started_at": 1792118276.716176,
+        "success": true
+      },
+      "root-gradient": {
+        "action": "receive",
+        "artifact_bytes": 6244100,
+        "artifact_id": "417291cd028dbfe08aa91a695aac1ff4dc36b3778601f8a40b9a03ee3fd669c2",
+        "bytes_received": 6244100,
+        "chunks": 64,
+        "extra_physical_worker": false,
+        "finished_at": 1792118720.896683,
+        "helper_id": "d54b33313b4cdf7ca32e479a13160442d753d1f84decc73277d1a98ea1685eed",
+        "model_release_published": false,
+        "namespace": "swarm.artifact",
+        "native_controls_unchanged": true,
+        "native_learning_cycles_added": 0,
+        "peer_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+        "physical_node_id": "ea914d97caafef310e50385034abae9a50ba86496b0e9cbf4679e6070e4c25b0",
+        "physical_pid": 821876,
+        "route": {
+          "encrypted": true,
+          "public_internet": true,
+          "transport": "relay"
+        },
+        "scope": "Research preservation only; no release registration, public inference or model promotion",
+        "seconds": 393.0507406560064,
+        "sha256_verified": true,
+        "started_at": 1792118321.681938,
+        "success": true
+      }
+    }
+  },
+  "logical_agents_per_model": 3,
+  "native_round": {
+    "accepted": true,
+    "candidate": {
+      "artifact_initially_local": false,
+      "encoded_data_bytes": 0,
+      "finished_at": 1792117568.6276891,
+      "operation": "swarm.candidate.v1",
+      "result": {
+        "error": "",
+        "finished_at": 1792117568.6271603,
+        "job_id": "8dd8adcc16859e503f0b9dd9786c774dc95c77c7db461c9ed0763f97a3babdea",
+        "output": {
+          "accepted": true,
+          "after": {
+            "byte_accuracy": 0.45472051537909425,
+            "documents": 128,
+            "nll": 1.8691429266535537,
+            "predicted_bytes": 57123
+          },
+          "before": {
+            "byte_accuracy": 0.45419533287817515,
+            "documents": 128,
+            "nll": 1.8704132482396696,
+            "predicted_bytes": 57123
+          },
+          "candidate_model_bytes": 7337088,
+          "candidate_model_id": "bc89086a97b5b4dbd61e418d088fef7cf40edd9f8fed0167da4a393659a7673d",
+          "candidate_optimizer_bytes": 12595275,
+          "candidate_optimizer_id": "709e7b069d34d61351eb25377f0fc9a1682bdfb9fc5333b93613f63b44d2e259",
+          "candidate_optimizer_step": 1025,
+          "evaluation_bytes": 3529,
+          "evaluation_id": "e8ae7869e4d853c498dc0e43f93a5dc0cd5216e95f25046df4e18c9d90bf0258",
+          "model_id": "8806d7bcbea33ec599655eeef19857230e61d658e663b9d15947ba2c0da06853",
+          "optimizer_id": "b05a3efc36baf787d9a314bfe726bc642eb1bd907f0944970ec75f135575200a",
+          "prediction_bytes": 32764,
+          "previous_optimizer_step": 1024,
+          "state_id": "39261860795641b5dd05b9210952702a50b30f9c72a3f1aafdb30f3a33224709",
+          "training_policy_id": "57052db9cad9b02f9b5bad64ce37f6e71c7ad7f597ee341320af266af091cb8c"
+        },
+        "receipt": {
+          "finished_at": 1792117568.6271603,
+          "job_id": "8dd8adcc16859e503f0b9dd9786c774dc95c77c7db461c9ed0763f97a3babdea",
+          "requester_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+          "result_digest": "c86e749e0953e1dbdee2fb7583e2f095192b8802c5635860e82ec7e1824d3b93",
+          "signature": "lf7vKeiZFoRrW99kwqWiQssiO8IGRAe8s0zjktCAuiVjGJ4VqYwYie5x6swEHywCMlAegekgm2LMHsIXW/LOAw==",
+          "version": 1,
+          "worker_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255"
+        },
+        "status": "ok"
+      },
+      "route": {
+        "encrypted": false,
+        "public_internet": false,
+        "transport": "local"
+      },
+      "seconds": 4.891123570967466,
+      "selected_state_id": "39261860795641b5dd05b9210952702a50b30f9c72a3f1aafdb30f3a33224709",
+      "started_at": 1792117563.7362373,
+      "state": "complete"
+    },
+    "contributions": [
+      {
+        "result": {
+          "error": "",
+          "finished_at": 1792117548.4960275,
+          "job_id": "49443ae6d1c011a5c699a8fb5e41f3cdfc373e94cb332f8a52fffa375092dd86",
+          "output": {
+            "count": 128,
+            "dataset_id": "a1a36bc0cea6f5a8dbf81a5828a01da3ca0674c534431ef51583f3f46a915be6",
+            "gradient_bytes": 6244100,
+            "gradient_id": "417291cd028dbfe08aa91a695aac1ff4dc36b3778601f8a40b9a03ee3fd669c2",
+            "loss": 2.3957543075084686,
+            "model_id": "8806d7bcbea33ec599655eeef19857230e61d658e663b9d15947ba2c0da06853",
+            "start": 0,
+            "state_id": "39261860795641b5dd05b9210952702a50b30f9c72a3f1aafdb30f3a33224709",
+            "tokens": 16384,
+            "training_policy_id": "57052db9cad9b02f9b5bad64ce37f6e71c7ad7f597ee341320af266af091cb8c"
+          },
+          "receipt": {
+            "finished_at": 1792117548.4960275,
+            "job_id": "49443ae6d1c011a5c699a8fb5e41f3cdfc373e94cb332f8a52fffa375092dd86",
+            "requester_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+            "result_digest": "9f4800d1c7161168e2fc2f274eaca6ab91d67f169895d473ea8c79ee12146822",
+            "signature": "kDxtlmHF3Nzi9KPnJTm2ifSGqIzBzikumv68FZENDXQ+cjfE1VmxrFTo8ZbMPtBVJcxK1NptRgu2gginQr6KCQ==",
+            "version": 1,
+            "worker_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255"
+          },
+          "status": "ok"
+        },
+        "worker_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255"
+      },
+      {
+        "result": {
+          "error": "",
+          "finished_at": 1792117550.3553855,
+          "job_id": "2ecb644ba997a192235b05ac249421b20f69aaef9dc99ebc717733df5cc116ba",
+          "output": {
+            "count": 128,
+            "dataset_id": "a1a36bc0cea6f5a8dbf81a5828a01da3ca0674c534431ef51583f3f46a915be6",
+            "gradient_bytes": 6244100,
+            "gradient_id": "b190a4a9ed374d70bd0a2ee8c75954eb4b1feea7f35a7363c49a22ad1a264334",
+            "loss": 2.3977843807439374,
+            "model_id": "8806d7bcbea33ec599655eeef19857230e61d658e663b9d15947ba2c0da06853",
+            "start": 128,
+            "state_id": "39261860795641b5dd05b9210952702a50b30f9c72a3f1aafdb30f3a33224709",
+            "tokens": 16380,
+            "training_policy_id": "57052db9cad9b02f9b5bad64ce37f6e71c7ad7f597ee341320af266af091cb8c"
+          },
+          "receipt": {
+            "finished_at": 1792117550.3553855,
+            "job_id": "2ecb644ba997a192235b05ac249421b20f69aaef9dc99ebc717733df5cc116ba",
+            "requester_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+            "result_digest": "a9948b49af6fcaa05b222edb811e6adcd44e42896967b527d6ea491a5a72d36b",
+            "signature": "0IP8snWFAgdjYII9qKy7vNy/qlX4XA4/qS8sdiHCo+7dgFK+3xcKADgF8YCYRcOF7E9D2uOfBwiBOsbOXePYAA==",
+            "version": 1,
+            "worker_node_id": "ea914d97caafef310e50385034abae9a50ba86496b0e9cbf4679e6070e4c25b0"
+          },
+          "status": "ok"
+        },
+        "worker_id": "ea914d97caafef310e50385034abae9a50ba86496b0e9cbf4679e6070e4c25b0"
+      }
+    ],
+    "finished_at": 1792117569.0935895,
+    "model_id": "8806d7bcbea33ec599655eeef19857230e61d658e663b9d15947ba2c0da06853",
+    "native_autonomous_cycles_added": 0,
+    "native_controls_unchanged": true,
+    "native_pid": 3313746,
+    "new_release_published": false,
+    "new_shadow_requester": false,
+    "optimizer_step_after": 1025,
+    "optimizer_step_before": 1024,
+    "requester_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+    "scope": "Own causal byte-language learning; not general chat or math answer certification",
+    "shards": [
+      {
+        "count": 128,
+        "start": 0,
+        "worker_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255"
+      },
+      {
+        "count": 128,
+        "start": 128,
+        "worker_id": "ea914d97caafef310e50385034abae9a50ba86496b0e9cbf4679e6070e4c25b0"
+      }
+    ],
+    "source_revision": "853690adc3c3c3262f4be8ddebd423765198b0ed",
+    "started_at": 1792117546.3579476,
+    "state_id": "39261860795641b5dd05b9210952702a50b30f9c72a3f1aafdb30f3a33224709",
+    "success": true,
+    "training_policy_id": "57052db9cad9b02f9b5bad64ce37f6e71c7ad7f597ee341320af266af091cb8c",
+    "work": [
+      {
+        "artifact_initially_local": true,
+        "encoded_data_bytes": 0,
+        "finished_at": 1792117548.504342,
+        "operation": "swarm.gradient.v1",
+        "result": {
+          "error": "",
+          "finished_at": 1792117548.4960275,
+          "job_id": "49443ae6d1c011a5c699a8fb5e41f3cdfc373e94cb332f8a52fffa375092dd86",
+          "output": {
+            "count": 128,
+            "dataset_id": "a1a36bc0cea6f5a8dbf81a5828a01da3ca0674c534431ef51583f3f46a915be6",
+            "gradient_bytes": 6244100,
+            "gradient_id": "417291cd028dbfe08aa91a695aac1ff4dc36b3778601f8a40b9a03ee3fd669c2",
+            "loss": 2.3957543075084686,
+            "model_id": "8806d7bcbea33ec599655eeef19857230e61d658e663b9d15947ba2c0da06853",
+            "start": 0,
+            "state_id": "39261860795641b5dd05b9210952702a50b30f9c72a3f1aafdb30f3a33224709",
+            "tokens": 16384,
+            "training_policy_id": "57052db9cad9b02f9b5bad64ce37f6e71c7ad7f597ee341320af266af091cb8c"
+          },
+          "receipt": {
+            "finished_at": 1792117548.4960275,
+            "job_id": "49443ae6d1c011a5c699a8fb5e41f3cdfc373e94cb332f8a52fffa375092dd86",
+            "requester_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+            "result_digest": "9f4800d1c7161168e2fc2f274eaca6ab91d67f169895d473ea8c79ee12146822",
+            "signature": "kDxtlmHF3Nzi9KPnJTm2ifSGqIzBzikumv68FZENDXQ+cjfE1VmxrFTo8ZbMPtBVJcxK1NptRgu2gginQr6KCQ==",
+            "version": 1,
+            "worker_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255"
+          },
+          "status": "ok"
+        },
+        "route": {
+          "encrypted": false,
+          "public_internet": false,
+          "transport": "local"
+        },
+        "seconds": 2.0996641169767827,
+        "selected_state_id": "39261860795641b5dd05b9210952702a50b30f9c72a3f1aafdb30f3a33224709",
+        "started_at": 1792117546.4044755,
+        "state": "complete"
+      },
+      {
+        "artifact_initially_local": false,
+        "encoded_data_bytes": 7180592,
+        "finished_at": 1792117562.946059,
+        "operation": "swarm.gradient.v1",
+        "result": {
+          "error": "",
+          "finished_at": 1792117550.3553855,
+          "job_id": "2ecb644ba997a192235b05ac249421b20f69aaef9dc99ebc717733df5cc116ba",
+          "output": {
+            "count": 128,
+            "dataset_id": "a1a36bc0cea6f5a8dbf81a5828a01da3ca0674c534431ef51583f3f46a915be6",
+            "gradient_bytes": 6244100,
+            "gradient_id": "b190a4a9ed374d70bd0a2ee8c75954eb4b1feea7f35a7363c49a22ad1a264334",
+            "loss": 2.3977843807439374,
+            "model_id": "8806d7bcbea33ec599655eeef19857230e61d658e663b9d15947ba2c0da06853",
+            "start": 128,
+            "state_id": "39261860795641b5dd05b9210952702a50b30f9c72a3f1aafdb30f3a33224709",
+            "tokens": 16380,
+            "training_policy_id": "57052db9cad9b02f9b5bad64ce37f6e71c7ad7f597ee341320af266af091cb8c"
+          },
+          "receipt": {
+            "finished_at": 1792117550.3553855,
+            "job_id": "2ecb644ba997a192235b05ac249421b20f69aaef9dc99ebc717733df5cc116ba",
+            "requester_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+            "result_digest": "a9948b49af6fcaa05b222edb811e6adcd44e42896967b527d6ea491a5a72d36b",
+            "signature": "0IP8snWFAgdjYII9qKy7vNy/qlX4XA4/qS8sdiHCo+7dgFK+3xcKADgF8YCYRcOF7E9D2uOfBwiBOsbOXePYAA==",
+            "version": 1,
+            "worker_node_id": "ea914d97caafef310e50385034abae9a50ba86496b0e9cbf4679e6070e4c25b0"
+          },
+          "status": "ok"
+        },
+        "route": {
+          "encrypted": true,
+          "public_internet": true,
+          "transport": "relay"
+        },
+        "seconds": 16.488057069014758,
+        "selected_state_id": "39261860795641b5dd05b9210952702a50b30f9c72a3f1aafdb30f3a33224709",
+        "started_at": 1792117546.4577768,
+        "state": "complete"
+      }
+    ]
+  },
+  "new_state": {
+    "already_selected": false,
+    "model_id": "bc89086a97b5b4dbd61e418d088fef7cf40edd9f8fed0167da4a393659a7673d",
+    "optimizer_id": "709e7b069d34d61351eb25377f0fc9a1682bdfb9fc5333b93613f63b44d2e259",
+    "optimizer_step": 1025,
+    "parent_state_id": "39261860795641b5dd05b9210952702a50b30f9c72a3f1aafdb30f3a33224709",
+    "scope": "Known-operator own-state adoption; not open consensus or autonomous scheduling",
+    "state_id": "33f22bbc4c09be31f2a731f824c32d677ac69d82750abd216b1c985e1da93b8b",
+    "success": true,
+    "transition_artifact_id": "23e00f1c3ea7148b66f96a80446c8f5ef4fc91d893c01ab9dd34a79b45a33938"
+  },
+  "own_parameters": 1730380,
+  "physical_computers": 2,
+  "provenance": {
+    "adoption_audit_revision": "d311055850b7eea5c516c2d9259e6610d59adf21",
+    "app_archive_bytes": 82200521,
+    "app_archive_sha256": "4c7ee26367a19032e98caccb2c292a9c0d6d0fe9ec15d7f17073ff2aa65ba1c4",
+    "app_native_self_test": {
+      "calculation_engines_loaded": false,
+      "connection_s": 0.72,
+      "controls_confirmed": true,
+      "internet": false,
+      "language_preparation_permission_gate": true,
+      "pause_keeps_connection": true,
+      "reconnect_keeps_identity": true,
+      "success": true
+    },
+    "ci": [
+      {
+        "conclusion": "success",
+        "run": 38838450526,
+        "workflow": "Desktop packages"
+      },
+      {
+        "conclusion": "success",
+        "run": 38838450484,
+        "workflow": "CPU engine"
+      },
+      {
+        "conclusion": "success",
+        "run": 38838450535,
+        "workflow": "Language CPU engine"
+      },
+      {
+        "conclusion": "success",
+        "revision": "d311055850b7eea5c516c2d9259e6610d59adf21",
+        "run": 38842796643,
+        "workflow": "Desktop packages"
+      }
+    ],
+    "cpu_code_archive_bytes": 296856440,
+    "cpu_code_archive_sha256": "733019425ea2250931cbdf69bf173cd8c7e0659b997b81bc0ff86bb9bfa36c02",
+    "cpu_installed_regular_bytes": 839702259,
+    "cpu_manifest_sha256": "2ca94ba96dd948e8d5f35c95741295828ff6f78c8798c1c6fbea2ffa1980d87a",
+    "cpu_native_self_test": {
+      "candidate_evaluated": true,
+      "candidate_loss_after": 5.537755013824001,
+      "candidate_loss_before": 5.560859923513588,
+      "candidate_signed_or_promoted": false,
+      "cuda_runtime": false,
+      "frozen": true,
+      "gradient_tokens": 64,
+      "inference_logits": 256,
+      "job_process_signing_keys_loaded": false,
+      "own_swarm_backward_verified": true,
+      "own_swarm_parameters": 1730380,
+      "personal_state_loaded": false,
+      "success": true,
+      "test_fixture_signers": 3,
+      "torch_version": "2.12.0+cpu"
+    },
+    "cpu_profile": "own-cpu",
+    "native_source_revision": "8151fca270513e989da1cda84b6881953cb1d6ae",
+    "public_release_created": false,
+    "round_driver_revision": "853690adc3c3c3262f4be8ddebd423765198b0ed",
+    "runtime_version": "0.4.0a21"
+  },
+  "resources": {
+    "changed": false,
+    "laptop": {
+      "bandwidth_mbps": 10,
+      "gpu_jobs": 1,
+      "gpu_percent": 100,
+      "ram_gib": 30,
+      "shared_disk_gib": 10
+    },
+    "root": {
+      "bandwidth_mbps": 5,
+      "gpu_jobs": 2,
+      "gpu_percent": 100,
+      "ram_gib": 31,
+      "shared_disk_gib": 8
+    }
+  },
+  "root": {
+    "activation": {
+      "already_selected": false,
+      "model_id": "bc89086a97b5b4dbd61e418d088fef7cf40edd9f8fed0167da4a393659a7673d",
+      "optimizer_id": "709e7b069d34d61351eb25377f0fc9a1682bdfb9fc5333b93613f63b44d2e259",
+      "optimizer_step": 1025,
+      "parent_state_id": "39261860795641b5dd05b9210952702a50b30f9c72a3f1aafdb30f3a33224709",
+      "scope": "Known-operator own-state adoption; not open consensus or autonomous scheduling",
+      "state_id": "33f22bbc4c09be31f2a731f824c32d677ac69d82750abd216b1c985e1da93b8b",
+      "success": true,
+      "transition_artifact_id": "23e00f1c3ea7148b66f96a80446c8f5ef4fc91d893c01ab9dd34a79b45a33938"
+    },
+    "deployment": {
+      "controls_identity_and_progress_preserved": true,
+      "engine_manifest_sha256": "2ca94ba96dd948e8d5f35c95741295828ff6f78c8798c1c6fbea2ffa1980d87a",
+      "existing_chat_model_preserved": true,
+      "native_app_source_revision": "8151fca270513e989da1cda84b6881953cb1d6ae",
+      "new_pid": 3313746,
+      "node_restarted": true,
+      "old_pid": 3134618,
+      "old_unit_backed_up": true,
+      "own_swarm": {
+        "active": 0,
+        "completed": 0,
+        "device": "cpu",
+        "family": "lixyswarm-own-causal-byte-v1",
+        "model_id": "8806d7bcbea33ec599655eeef19857230e61d658e663b9d15947ba2c0da06853",
+        "optimizer_step": 1024,
+        "ready": true,
+        "state_id": "39261860795641b5dd05b9210952702a50b30f9c72a3f1aafdb30f3a33224709",
+        "training_policy_id": "57052db9cad9b02f9b5bad64ce37f6e71c7ad7f597ee341320af266af091cb8c"
+      },
+      "physical_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+      "runtime_version": "0.4.0a21",
+      "success": true
+    },
+    "fresh": true,
+    "independent_replay": {
+      "after": {
+        "byte_accuracy": 0.45472051537909425,
+        "documents": 128,
+        "nll": 1.8691429229472412,
+        "predicted_bytes": 57123
+      },
+      "cuda_initialized": false,
+      "gradient_replay_verified": true,
+      "maximum_model_tensor_error": 0.0,
+      "model_id": "bc89086a97b5b4dbd61e418d088fef7cf40edd9f8fed0167da4a393659a7673d",
+      "model_promoted": false,
+      "model_tensors_bitwise_equal": true,
+      "new_gradient_computed": false,
+      "optimizer_id": "709e7b069d34d61351eb25377f0fc9a1682bdfb9fc5333b93613f63b44d2e259",
+      "optimizer_states": 175,
+      "optimizer_step": 1025,
+      "saved_state_unchanged": true,
+      "scope": "Independent replay of existing signed contributions on CPU",
+      "state_id": "33f22bbc4c09be31f2a731f824c32d677ac69d82750abd216b1c985e1da93b8b",
+      "success": true,
+      "training_policy_id": "57052db9cad9b02f9b5bad64ce37f6e71c7ad7f597ee341320af266af091cb8c"
+    },
+    "independent_replay_sha256": "0c90fa262cd958c0a33d0f04b0ae7e8cad513a5eb46230b26b4de85a565f5e34",
+    "native_pid": 3313746,
+    "own_swarm": {
+      "active": 0,
+      "completed": 2,
+      "device": "cpu",
+      "family": "lixyswarm-own-causal-byte-v1",
+      "model_id": "bc89086a97b5b4dbd61e418d088fef7cf40edd9f8fed0167da4a393659a7673d",
+      "optimizer_step": 1025,
+      "ready": true,
+      "state_id": "33f22bbc4c09be31f2a731f824c32d677ac69d82750abd216b1c985e1da93b8b",
+      "training_policy_id": "57052db9cad9b02f9b5bad64ce37f6e71c7ad7f597ee341320af266af091cb8c"
+    }
+  },
+  "round_seconds": 22.735641956329346,
+  "schema": "lixyswarm-own-native-round-evidence-v1",
+  "scope": "One operator-initiated evaluated native own-model update using two physical PCs, replicated, independently replayed and locally adopted on both",
+  "storage_preservation": {
+    "all_original_bytes_verified": true,
+    "archive_bytes": 26822180,
+    "archive_is_not_another_physical_replica": true,
+    "archive_only_bytes_saved": 1142024644,
+    "archive_sha256": "cafb3c0fc804de6efe0f5e41702beb0fd5036d3cae5e6f1944dde7b951442e60",
+    "format": "lossless-xz-tar-v1",
+    "model_or_optimizer_modified": false,
+    "no_new_training": true,
+    "original_bytes": 1168846824,
+    "original_file_count": 40,
+    "restore_test": {
+      "archive_retained": true,
+      "bytes": 24335988,
+      "member": "engine/0/dolphin.safetensors",
+      "restored_copy_retained": true,
+      "sha256": "c667154170a58f31087f3a940adf0714ec9f1074c56ae834142ff2c87d18d4ed",
+      "success": true
+    },
+    "success": true
+  },
+  "success": true,
+  "training_policy": {
+    "definition": {
+      "aggregation": "prediction-byte-weighted-mean-before-clipping",
+      "batch_size": 16,
+      "candidate_disk_gb": 0.06,
+      "candidate_operation": "swarm.candidate.v1",
+      "clip_norm": 1.0,
+      "evaluation_dataset_id": "188812577d2a7834eff5fc0ac0fad5f09f121b3587b34b7ba5d88ba37537be50",
+      "evaluation_role": "Repeated development validation; not a fresh blinded test",
+      "family": "lixyswarm-own-causal-byte-v1",
+      "gradient_disk_gb": 0.02,
+      "gradient_dtype": "float32",
+      "gradient_operation": "swarm.gradient.v1",
+      "initialization_protocol_id": "7125f270fdcbc6be68141f556579805bbf8fda92bc228315207038ac2a9adf9a",
+      "learning_rate": 0.0002,
+      "maximum_aggregate_byte_accuracy_drop": 0.0,
+      "maximum_artifact_bytes": 16777216,
+      "maximum_document_bytes": 129,
+      "maximum_documents_per_shard": 256,
+      "maximum_seconds": 180,
+      "minimum_absolute_nll_gain": 1e-06,
+      "minimum_physical_workers": 2,
+      "minimum_relative_nll_gain": 0.0001,
+      "ram_gb": 4.0,
+      "scope": "Own causal byte-language learning; not general chat or math answer certification",
+      "training_dataset_id": "a1a36bc0cea6f5a8dbf81a5828a01da3ca0674c534431ef51583f3f46a915be6",
+      "version": 1,
+      "weight_decay": 0.01
+    },
+    "training_policy_id": "57052db9cad9b02f9b5bad64ce37f6e71c7ad7f597ee341320af266af091cb8c"
+  }
+}

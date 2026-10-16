@@ -4,6 +4,10 @@ La línea propia comienza en `swarm_foundation.py`: tres agentes de la arquitect
 
 Los profesores externos están permitidos como fuentes de destilación con procedencia y evaluación. Este primer ensayo usa solamente textos humanos públicos. No se presenta como aprendizaje distribuido, autonomía continua o chat general: esas integraciones siguen pendientes. La memoria persistente y los cambios de topología requieren un protocolo causal antes de habilitarse en este linaje; su recorrido actual los rechaza explícitamente.
 
+La continuación distribuida usa `swarm_distributed.py` para fijar estado, fragmentos disjuntos, firmas, agregación y criterio de aceptación; `swarm_distributed_job.py` calcula gradientes y una candidata en hijos CPU. `OwnSwarmService` y `LocalOwnWork` integran estas operaciones en la identidad, IPC autenticado y presupuesto del nodo nativo. `experiments/own_swarm_round.py` inicia una ronda acotada mediante ese servicio. Es un controlador de operador, no un coordinador autónomo.
+
+`swarm_state_audit.py` reconstruye una actualización desde sus gradientes firmados y el optimizador padre. `src/network/own_state.py` verifica transición, evaluación y auditoría antes de seleccionar pesos y optimizador juntos, conservando historia fuera de Dropbox. El [primer ensayo nativo conjunto](../../experiments/reports/own_swarm_native_round_20261015.json) calculó dos fragmentos distintos en las dos PCs, pasó el [criterio prefijado](../../experiments/reports/swarm_distributed_protocol_20261015.json), replicó por LSP los nuevos artefactos y verificó el mismo paso AdamW 1.025 en ambas. La laptop conservó la selección tras reiniciar su servicio. Esto acredita una actualización conjunta pequeña de predicción de bytes; siguen pendientes el ciclo continuo, el seguimiento automático de versiones, la entrada propia desde una instalación vacía y el chat del organismo.
+
 ## Expertos conversacionales con bases externas
 
 El chat desplegado y los módulos siguientes pertenecen a los experimentos históricos con bases externas. Su funcionamiento no acredita por sí solo la visión del organismo con pesos propios.
