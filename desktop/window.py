@@ -548,7 +548,7 @@ class SwarmWindow(QMainWindow):
             if chat.get('catalog_pending'):
                 self.chat_status.setText(chat.get('catalog_error') or 'Verificando la versión de lenguaje disponible…')
         state = status.get("state") if snapshot["fresh"] else "stopped"
-        labels = {"stopped":"Listo para conectar", "connecting":"Conectando", "connected":"Conectado a la red", "preparing":"Preparando conocimiento público", "paused":"Aporte pausado", "disconnected":"Desconectado"}
+        labels = {"stopped":"Listo para conectar", "connecting":"Conectando", "connected":"Conectado a la red", "working":"Colaborando", "preparing":"Preparando conocimiento público", "paused":"Aporte pausado", "disconnected":"Desconectado"}
         self.status.setText(labels.get(state, state))
         peers = diagnostic.get("peers", []) if snapshot["fresh"] else []
         self.detail.setText(f"{len(peers)} conexiones cifradas.")
@@ -585,7 +585,7 @@ class SwarmWindow(QMainWindow):
             'awaiting_new_curriculum':'Esperando nuevos datos autorizados', 'complete':'Programa terminado'}
         message=own_states.get(network.get('status'),'Disponible para aportar') if network.get('enabled') else 'Disponible para aportar' if own.get('ready') else 'Esperando recursos autorizados'
         self.own_label.setText('Organismo propio: '+message
-            +f" · paso {own.get('optimizer_step',0)} · {own.get('active',0)} tareas activas"
+            +f" · paso {own.get('optimizer_step',0)} · {own.get('active',0)} tareas activas · {own.get('completed',0)} completadas"
             +(f" · {network.get('round',0)} rondas · {network.get('ready_workers',0)} participantes disponibles · {network.get('accepted',0)} mejoras" if network.get('enabled') else ''))
         for widget in [self.learning_label,self.learning_button,self.learning_stop]:widget.setVisible(not own_network)
         following=diagnostic.get('language_follow',{}) if snapshot['fresh'] else {}

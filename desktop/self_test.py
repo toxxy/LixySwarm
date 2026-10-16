@@ -19,6 +19,7 @@ def main():
     parser.add_argument("--internet", action="store_true")
     parser.add_argument("--knowledge", action="store_true")
     parser.add_argument("--prepare-engine", action="store_true")
+    parser.add_argument('--own-bootstrap',action='store_true')
     parser.add_argument("--chat",action="store_true")
     parser.add_argument('--memory',action='store_true')
     parser.add_argument('--expected-chat-model')
@@ -29,6 +30,11 @@ def main():
     parser.add_argument("--work-directory", type=Path)
     parser.add_argument('--upgrade-from', type=Path)
     args = parser.parse_args()
+    if args.own_bootstrap:
+        if not args.internet or not args.work_directory or args.prepare_engine or args.chat or args.knowledge:
+            parser.error('Own cold validation needs --internet --work-directory and its separate preparation path')
+        from desktop.own_self_test import run
+        return run(args)
     if args.upgrade_from and (not getattr(sys, 'frozen', False) or sys.platform != 'linux' or not args.upgrade_from.is_file()):
         parser.error('Runtime upgrade verification requires a Linux native app and an existing native executable')
     if args.knowledge and not args.internet:

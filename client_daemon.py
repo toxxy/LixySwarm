@@ -181,7 +181,8 @@ def run(directory: Path, *, host="0.0.0.0", port=7338, interval=15, allow_privat
             training=language_training.snapshot()
             own=own_swarm.snapshot()
             preparing=preparation.snapshot()
-            status["jobs"]={"active":computation["active"]+conversation["active"]+training["active"]+own['active']+int(preparing['state']=='testing'),"completed":computation["completed"]+conversation["completed"]+training["completed"]+own['completed']}
+            own_preparing=own_preparation.snapshot()
+            status["jobs"]={"active":computation["active"]+conversation["active"]+training["active"]+own['active']+int(preparing['state']=='testing')+int(own_preparing['state']=='validating'),"completed":computation["completed"]+conversation["completed"]+training["completed"]+own['completed']}
             envelope = sign_status(identity, status)
             # Persist sequence before sending, so restart cannot reuse it.
             atomic_json(status_path, envelope)
@@ -306,6 +307,9 @@ def run(directory: Path, *, host="0.0.0.0", port=7338, interval=15, allow_privat
                 preparing=preparation.snapshot()['state']
                 if running and not settings.paused and preparing not in {'idle','waiting','stopped','complete'}:
                     current_state='working' if preparing=='testing' else 'preparing'
+                own_preparing=own_preparation.snapshot()['state']
+                if running and not settings.paused and own_preparing not in {'idle','waiting','stopped','complete'}:
+                    current_state='working' if own_preparing=='validating' else 'preparing'
                 if running and not settings.paused and cache_repair.snapshot()['state'] in {'starting','receiving'}:
                     current_state='preparing'
                 if running and not settings.paused and language_follow.settings.enabled and language_follow.snapshot()['state']=='acquiring':

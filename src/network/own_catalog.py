@@ -30,7 +30,12 @@ def dependencies():
 
 
 def own_engine():
-    # Filled with an independently verified public code-only package before
-    # enabling automatic preparation in a published app.
     if sys.platform != 'linux' or platform.machine() != 'x86_64': return None
-    return None
+    try:
+        if tuple(int(v) for v in platform.libc_ver()[1].split('.')[:2]) < (2,35): return None
+    except ValueError:return None
+    from .engine_catalog import EngineDownload
+    return EngineDownload('https://github.com/toxxy/LixySwarm/releases/download/own-engine-0.4.0a24/LixySwarmOwnCPU-linux-x86_64.zip',
+        'fff46fa9da8ada50f66099f1c540583b00766a0a3d3ed40ced33f396485c6aee',267157653,
+        '33f4dff6fac884184fc49280d2d3cf46f35a67289c0f6a73b6fe0ee7437d693c',840243351,
+        profile='own-cpu-bootstrap',regular_file_bytes=840243351)
