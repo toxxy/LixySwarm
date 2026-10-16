@@ -35,7 +35,7 @@ def own_engine():
         if tuple(int(v) for v in platform.libc_ver()[1].split('.')[:2]) < (2,35): return None
     except ValueError:return None
     from .engine_catalog import EngineDownload
-    return EngineDownload('https://github.com/toxxy/LixySwarm/releases/download/own-engine-0.4.0a25/LixySwarmOwnCPU-linux-x86_64.zip',
-        '28f99f554c2cb8bda5e84dd6de4d62a6569d0f7a23185383d0bd084e82602c1e',267351148,
-        'dbe8e433555b2f69fb33e828fa50bddd3e5d97a44b8597eaafde2213ce573524',840544965,
-        profile='own-cpu-programs',regular_file_bytes=840544965)
+    return EngineDownload('https://github.com/toxxy/LixySwarm/releases/download/own-engine-0.4.0a26/LixySwarmOwnCPU-linux-x86_64.zip',
+        '511dc2947755e551e484ed0fc43c3aafd8c28be9eb68ff6c6771ec8e88456022',267357394,
+        'a23ebdceb73c18980a352fea05d63c066fe209178d44d8ebc73afa52be431ec8',840550573,
+        profile='own-cpu-programs',regular_file_bytes=840550573)
