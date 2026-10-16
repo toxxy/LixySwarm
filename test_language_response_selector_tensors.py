@@ -66,7 +66,9 @@ def test_learned_memory_reloads_and_rejects_another_feature_projection_or_role(t
     for name,net in nets.items():
         metadata=binding(net,name,'a'*64);path=tmp_path/(name+'.safetensors');save(net,path,metadata)
         fresh=ResponseSelector(len(net.public_memory));load(fresh,path,metadata);fresh.eval()
-        with torch.no_grad():assert torch.equal(net(features,use_memory=name!='dolphin'),fresh(features,use_memory=name!='dolphin'))
+        assert all(torch.equal(value,fresh.state_dict()[key]) for key,value in net.state_dict().items())
+        with torch.no_grad():assert torch.allclose(net(features,use_memory=name!='dolphin'),
+            fresh(features,use_memory=name!='dolphin'),atol=1e-6,rtol=1e-5)
         for field,value in [('projection_id','b'*64),('variant','zero' if name!='zero' else 'public'),('feature_space_id','0'*64)]:
             wrong=deepcopy(metadata);wrong[field]=value
             with pytest.raises(ValueError):load(fresh,path,wrong)
