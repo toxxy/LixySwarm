@@ -138,6 +138,9 @@ def main():
     request = json.loads(raw)
     if request.get("device") != "cpu":
         raise ValueError("This locally installed package supports CPU work only")
+    if request.get('action') == 'own-audit':
+        from src.learning.swarm_state_audit import run_request as audit_own
+        return audit_own(request)
     if request.get('action') in {'own-gradient','own-candidate'}:
         from src.learning.swarm_distributed_job import run_request as run_own
         return run_own(request)

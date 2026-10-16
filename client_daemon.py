@@ -37,6 +37,8 @@ from src.network.language_learning import LanguageLearningCoordinator
 from src.network.local_language_work import LocalLanguageWork
 from src.network.own_swarm import OwnSwarmService
 from src.network.local_own_work import LocalOwnWork
+from src.network.own_replication import OwnStateReplication
+from src.network.own_learning import OwnLearningCoordinator
 from src.network.language_follow import LanguageVersionFollower
 from src.version import VERSION
 
@@ -143,6 +145,8 @@ def run(directory: Path, *, host="0.0.0.0", port=7338, interval=15, allow_privat
         language_training=LanguageTraining(knowledge,families,directory,resources)
         own_swarm=OwnSwarmService(knowledge,directory,resources)
         own_work=LocalOwnWork(own_swarm)
+        own_replication=OwnStateReplication(own_swarm)
+        own_learning=OwnLearningCoordinator(own_swarm,own_work)
         preparation=LanguagePreparation(node,knowledge,families,directory,resources)
         cache_repair=LanguageCacheRepair(node,knowledge,families,directory)
         public_memory=PublicMemoryService(knowledge,directory)
@@ -190,6 +194,7 @@ def run(directory: Path, *, host="0.0.0.0", port=7338, interval=15, allow_privat
                 "language_families":families.snapshot(),
                 "language_training":training,
                 "own_swarm":own,
+                "own_learning":own_learning.snapshot(),
                 "language_preparation":preparing,
                 "language_cache_repair":cache_repair.snapshot(),
                 "chat":chat.snapshot(),
@@ -247,6 +252,7 @@ def run(directory: Path, *, host="0.0.0.0", port=7338, interval=15, allow_privat
                 language.update(settings)
                 language_training.update(settings)
                 own_swarm.update(settings)
+                own_learning.update()
                 cache_repair.update()
                 preparation.update()
                 chat.update(settings)
@@ -307,6 +313,8 @@ def run(directory: Path, *, host="0.0.0.0", port=7338, interval=15, allow_privat
                     language_training.changed.clear();refresh.set()
                 if own_swarm.changed.is_set():
                     own_swarm.changed.clear();refresh.set()
+                if own_learning.changed.is_set():
+                    own_learning.changed.clear();refresh.set()
                 if learning.changed.is_set():
                     learning.changed.clear(); refresh.set()
                 if language_learning.changed.is_set():
@@ -321,6 +329,7 @@ def run(directory: Path, *, host="0.0.0.0", port=7338, interval=15, allow_privat
                 stop.wait(0.5)
             publish("disconnected", settings)
         finally:
+            own_learning.close()
             cache_repair.close()
             preparation.close()
             chat_api.close()

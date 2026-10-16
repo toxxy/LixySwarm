@@ -66,7 +66,7 @@ def main():
     manifest = {"version": 1, "name": "LixySwarmEngineCPU", "platform": sys.platform,
                 "machine": platform.machine(), "torch": torch.__version__,
                 "operations": (["reference.inference.v1", "training.gradient.v1", "reference.candidate.v1"]
-                    +(["swarm.gradient.v1","swarm.candidate.v1"] if options.own else [])),
+                    +(["swarm.gradient.v1","swarm.candidate.v1","swarm.audit.v1"] if options.own else [])),
                 "entrypoint": "LixySwarmEngineCPU.exe" if sys.platform == "win32" else "LixySwarmEngineCPU",
                 "files": files}
     (package / "engine-package.json").write_text(json.dumps(manifest, indent=2) + "\n")

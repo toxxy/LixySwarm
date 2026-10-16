@@ -62,7 +62,7 @@ def activate(directory,candidate_result,audit):
             or directory.is_relative_to(Path(__file__).resolve().parents[2])):
         raise ValueError('Own learned state must remain outside the code checkout and Dropbox')
     store=ArtifactStore(directory/'public/own/artifacts',
-        max_artifact_bytes=16*1024**2,max_total_bytes=256*1024**2)
+        max_artifact_bytes=16*1024**2,max_total_bytes=1024**3)
     output=candidate_result['output']
     evaluation=store.object_path(output['evaluation_id']).read_bytes()
     transition=verify_transition(candidate_result,evaluation)

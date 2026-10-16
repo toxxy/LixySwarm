@@ -54,7 +54,7 @@ class OwnSwarmService:
     def __init__(self,knowledge,directory,resources):
         self.knowledge,self.directory,self.resources=knowledge,Path(directory),resources
         self.root=self.directory/'public/own'
-        self.store=ArtifactStore(self.root/'artifacts',max_artifact_bytes=16*1024**2,max_total_bytes=256*1024**2)
+        self.store=ArtifactStore(self.root/'artifacts',max_artifact_bytes=16*1024**2,max_total_bytes=1024**3)
         self.transfer=ArtifactService(knowledge.work,self.store,namespace='swarm.artifact',
             register_handlers=False,receive_budget=knowledge.budget)
         self.engine=OwnSwarmSettings();self.settings=None;self.ready=False
