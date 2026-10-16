@@ -110,6 +110,10 @@ class OwnPreparation:
             if self.intent.stat().st_size > 1024: return
             requested = json.loads(self.intent.read_text()) == {'version': 1, 'requested': True}
         except (OSError, ValueError, TypeError): return
+        try:
+            current = ClientSettings.load(self.directory)
+            if not current.connected or current.paused or not self.knowledge.allowed: return
+        except (OSError, ValueError, TypeError): return
         if requested and time.monotonic() >= self.next_attempt:
             self.next_attempt = time.monotonic() + 30
             try: self.start()

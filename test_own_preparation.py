@@ -100,6 +100,8 @@ def test_pause_revokes_inflight_transfer_and_keeps_unselected_progress(tmp_path,
         settings = ClientSettings.load(tmp_path); settings.paused = True; settings.save(tmp_path); p.update()
         assert finish(p)['state'] == 'stopped' and p.cancel.is_set()
         assert not (tmp_path/'own-swarm.json').exists() and p.plan.is_file()
+        p.update()
+        assert p.snapshot()['state'] == 'stopped' and not p.thread.is_alive()
     finally: p.close()
 
 
