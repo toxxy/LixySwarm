@@ -2,6 +2,10 @@
 
 **Fecha:** 2026-10-13
 
+**Prioridad funcional aclarada por el usuario, 2026-10-16:** primero debe funcionar el organismo: aprender por Internet de forma persistente, incorporar equipos, adaptarse a su capacidad y disponibilidad, conservar conocimiento y hacer crecer sus agentes y especializaciones. La calidad avanzada del lenguaje puede madurar después; no es una condición previa para construir ese funcionamiento. Los criterios de aprendizaje deben comprobar cambios reales y evitar perder mejoras aceptadas, sin convertir la perfección del chat en el objetivo de cada iteración. Esta prioridad mantiene las ocho etapas y deja Windows/macOS para el final.
+
+El piloto A22 ya entrenó entre dos PCs, pero terminó su programa de diez ciclos. Su lista de dos identidades, el reparto fijo, el único programa de datos y la ausencia de crecimiento de agentes todavía limitan la visión. El próximo trabajo debe resolver incorporación y preparación propias de nuevos nodos, asignación según capacidad observada, continuidad ante nuevos datos y desconexiones, y crecimiento con conservación del estado. Aumentar el límite de rondas o repetir indefinidamente el mismo corpus no demuestra esa adaptación. La siguiente política conservará los protocolos, resultados y rechazos del piloto anterior.
+
 **Rectificación y aclaración del usuario, 2026-10-15:** el organismo debe tener sus propios pesos y desarrollar su arquitectura de enjambre desde una inicialización propia. Puede aprender de otros modelos mediante destilación: «comer de ellos conocimiento». Los profesores externos son fuentes de enseñanza con procedencia y evaluación; el organismo conserva parámetros y estado de aprendizaje propios. Adaptar Qwen y servirlo como chat no cumple por sí solo esta visión. Esta rectificación conserva las ocho etapas, la mejora constante y las exigencias de funcionamiento descentralizado por Internet, evaluación, persistencia y escalado. El chat desplegado todavía usa Qwen: la sustitución por el organismo propio está pendiente y no se acredita cambiando su presentación.
 
 **Prioridad actualizada el 2026-10-14:** por indicación del usuario, el desarrollo y las pruebas de Windows y macOS quedan para el tramo final. Primero se completa el recorrido funcional en Linux: conexión por Internet, aprendizaje evaluado, distribución y conservación de las mejoras. Las compilaciones automáticas habituales se concentran en Linux; la matriz completa se conserva como ejecución manual para la validación final. Esta prioridad cambia el orden de trabajo, no las condiciones de aceptación de las demás etapas.
@@ -148,13 +152,14 @@ La automodificación del código es una fase posterior: candidatos dentro de un 
 
 ## Próximo tramo de implementación
 
-1. Servicio continuo en las PCs y telemetría firmada por nodo; Explorer con frescura, recursos y trabajos reales.
-2. Cliente ligero y prototipo de app para conexión, recursos, pausa y preparación de modelos.
-3. Modelo compatible, corpus público y evaluación reproducible para el piloto con las dos PCs.
-4. Trabajos sobre fragmentos distintos y versión candidata con actualización real y evaluación.
-5. Publicación, adquisición por LSP y prueba de persistencia después de apagar el nodo productor.
+1. Incorporación dinámica: una app Linux adquiere por Internet el estado propio y su motor compatible, anuncia capacidad y comienza a recibir trabajo sin editar identidades en el código. Los resultados del piloto de dos operadores conservan su política inmutable; la incorporación nueva tendrá verificación y procedencia explícitas.
+2. Reparto adaptable: usar capacidad medida, permiso y disponibilidad para repartir fragmentos diferentes. El equipo potente debe asumir más trabajo; equipos pequeños pueden aportar cálculo compatible, evaluación, almacenamiento o conectividad. La entrada o salida de un participante debe redistribuir trabajo pendiente.
+3. Continuidad del aprendizaje: conservar programas de datos, posiciones, experiencias y optimizador; buscar alimentación pública nueva, incluidos profesores externos autorizados, y programar ciclos evaluados dentro de los recursos disponibles. Esperar datos o recursos debe permitir reanudar, conservando intentos y rechazos previos.
+4. Crecimiento y especialización: alojar agentes mayores cuando exista capacidad y crear o reorganizar especializaciones con evaluación y legado. Conservar conocimiento y estado al cambiar agentes; separar modelos incompatibles y transferir enseñanza entre ellos por las rutas previstas.
+5. Continuidad descentralizada: replicar también el progreso necesario para coordinar, además de los pesos y optimizadores ya replicados. Otro participante debe poder recuperar trabajo ante la salida del coordinador; el VPS mantiene su papel de transporte.
+6. App y Explorer: mostrar conexión, preparación, trabajo, aprendizaje aceptado, espera y recursos reales. Completar la entrada sencilla y las pruebas de disponibilidad del plan; el chat avanzado sigue siendo una capacidad posterior y Windows/macOS permanecen al final.
 
-La app empieza durante este tramo. Su promesa de aprendizaje compartido se habilita al superar los criterios del ciclo completo. No se fija una fecha de finalización hasta medir instalación, memoria, transferencia y rendimiento del primer piloto.
+La siguiente aceptación funcional es incorporar o retirar un equipo, observar la redistribución automática de trabajo real y comprobar que el aprendizaje aceptado y el progreso sobreviven. Más equipos deben aportar capacidad útil comprobada; no se presume aceleración lineal. Las comparaciones de rendimiento, la recuperación física, la red abierta y las restantes condiciones de las ocho etapas conservan sus pruebas completas.
 
 ## Seguimiento de decisiones y avance
 
