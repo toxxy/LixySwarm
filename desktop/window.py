@@ -576,7 +576,7 @@ class SwarmWindow(QMainWindow):
         self.learning_stop.setEnabled(prepared.enabled)
         own=diagnostic.get('own_swarm',{}) if snapshot['fresh'] else {}
         network=diagnostic.get('own_network',{}) if snapshot['fresh'] else {}
-        own_network=own.get('membership_version')==2
+        own_network=own.get('membership_version') in {2,3}
         self.own_label.setVisible(own_network)
         own_states={'gradients':'Calculando aportes', 'evaluating':'Evaluando el aprendizaje',
             'replicating':'Distribuyendo el aprendizaje', 'ready':'Preparando el siguiente trabajo',

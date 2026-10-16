@@ -267,3 +267,27 @@ def test_user_installation_keeps_state_separate_and_creates_launcher(tmp_path):
     updated, _ = install_user_app(bundle, data_root=tmp_path / "apps", launcher_root=tmp_path / "menu")
     assert updated != installed
     assert installed.exists()
+
+
+@pytest.mark.parametrize('membership',[2,3])
+def test_own_activity_remains_visible_after_public_food_admission(tmp_path,monkeypatch,membership):
+    pytest.importorskip('PySide6')
+    os.environ.setdefault('QT_QPA_PLATFORM','offscreen')
+    from PySide6.QtWidgets import QApplication
+    from PySide6.QtCore import QCoreApplication,QEvent
+    from desktop.window import SwarmWindow
+    from desktop.backend import NodeController
+    controller=NodeController(tmp_path)
+    diagnostic={'own_swarm':{'membership_version':membership,'ready':True,'optimizer_step':1033,'active':1,'completed':4},
+        'own_network':{'enabled':True,'status':'gradients','round':1,'ready_workers':2,'accepted':0}}
+    monkeypatch.setattr(controller,'snapshot',lambda:{'fresh':True,'running':True,
+        'status':{'node_id':'0'*64,'state':'working','resources':{}},'diagnostics':diagnostic})
+    app=QApplication.instance() or QApplication([])
+    window=SwarmWindow(controller,initialize_personal=False,auto_prepare=False)
+    try:
+        window.refresh()
+        assert not window.own_label.isHidden() and 'Calculando aportes' in window.own_label.text()
+        assert 'paso 1033' in window.own_label.text() and '2 participantes' in window.own_label.text()
+        assert window.learning_button.isHidden() and window.learning_label.isHidden() and window.learning_stop.isHidden()
+    finally:
+        window.close();window.deleteLater();QCoreApplication.sendPostedEvents(None,QEvent.DeferredDelete);app.processEvents()
