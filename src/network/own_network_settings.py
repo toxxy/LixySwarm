@@ -4,7 +4,7 @@ import json
 from pathlib import Path
 
 from src.learning.public_math import digest
-from src.learning.swarm_policy import IDENTIFIER, network_policy_id
+from src.learning.swarm_policy import IDENTIFIER, network_policy_id, definition
 from .telemetry import atomic_json
 
 
@@ -21,9 +21,16 @@ class OwnNetworkSettings:
     maximum_rounds: int = 0  # Zero means no round limit; data and quality gates still apply.
     stop_after_rejections: int = 3
     parent_program_id: str = ''
+    program_id: str = ''
+
+    def policy_id(self):
+        if self.version==3:
+            from src.learning.own_food_catalog import policy_identifier
+            return policy_identifier(self.program_id)
+        return network_policy_id()
 
     def validate(self):
-        if (type(self.version) is not int or self.version != 2
+        if (type(self.version) is not int or self.version not in {2,3}
                 or type(self.enabled) is not bool or type(self.follow_enabled) is not bool
                 or any(not isinstance(v, str) or v and not IDENTIFIER.fullmatch(v)
                        for v in [self.owner_id, self.initial_state_id, self.parent_program_id])
@@ -33,14 +40,19 @@ class OwnNetworkSettings:
                 or type(self.maximum_rounds) is not int or not 0 <= self.maximum_rounds <= 1000000
                 or type(self.stop_after_rejections) is not int or not 1 <= self.stop_after_rejections <= 32):
             raise ValueError('Invalid own-network program controls')
+        if self.version==2 and self.program_id:raise ValueError('Historical program cannot name new food')
+        self.policy_id()
+        if self.initial_cursor>=definition(self.policy_id()).get('training_units',4096):
+            raise ValueError('Own program starts beyond its pinned food')
         if self.follow_enabled and not self.owner_id:
             raise ValueError('Own following needs a locally admitted coordinator')
         if self.enabled and (not self.follow_enabled or not self.initial_state_id):
             raise ValueError('Own coordination needs local admission and a pinned initial state')
 
     def contract(self):
-        return digest({k: v for k, v in asdict(self).items() if k not in {'enabled', 'follow_enabled'}} |
-                      {'training_policy_id': network_policy_id()})
+        return digest({k: v for k, v in asdict(self).items() if k not in {'enabled', 'follow_enabled'}
+                      and (self.version==3 or k!='program_id')} |
+                      {'training_policy_id': self.policy_id()})
 
     def save(self, directory):
         self.validate(); atomic_json(Path(directory) / 'own-network-controls.json', asdict(self))
@@ -51,6 +63,6 @@ class OwnNetworkSettings:
         if not path.exists(): return cls()
         if path.stat().st_size > 4096: raise ValueError('Own-network controls exceed their bound')
         value = json.loads(path.read_text())
-        if not isinstance(value, dict) or set(value) != set(asdict(cls())):
+        if not isinstance(value, dict) or set(value) not in [set(asdict(cls())),set(asdict(cls()))-{'program_id'}]:
             raise ValueError('Own-network controls have unknown fields')
         result = cls(**value); result.validate(); return result

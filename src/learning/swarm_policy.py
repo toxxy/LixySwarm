@@ -11,6 +11,8 @@ GRADIENT_OPERATION = legacy.GRADIENT_OPERATION
 CANDIDATE_OPERATION = legacy.CANDIDATE_OPERATION
 NETWORK_GRADIENT_OPERATION = 'swarm.gradient.v2'
 NETWORK_CANDIDATE_OPERATION = 'swarm.candidate.v2'
+FOOD_GRADIENT_OPERATION = 'swarm.gradient.v3'
+FOOD_CANDIDATE_OPERATION = 'swarm.candidate.v3'
 
 
 def network_definition():
@@ -27,12 +29,14 @@ def network_policy_id():
     return digest(network_definition())
 
 
-def definition(identifier=None):
-    if identifier is None or identifier == legacy.policy_id():
+def definition(identifier=legacy.policy_id()):
+    if not isinstance(identifier,str):raise ValueError('Unknown own training policy')
+    if identifier == legacy.policy_id():
         return legacy.definition()
     if identifier == network_policy_id():
         return network_definition()
-    raise ValueError('Unknown own training policy')
+    from .own_food_catalog import program_for_policy, policy_definition
+    return policy_definition(program_for_policy(identifier))
 
 
 def policy_id():
@@ -57,13 +61,14 @@ def validate_payload(payload, *, candidate=False):
             raise ValueError('Own update exceeds its bounded contribution window')
     elif (type(payload['start']) is not int or type(payload['count']) is not int
             or not 1 <= payload['count'] <= p['maximum_documents_per_shard']
-            or not 0 <= payload['start'] < 4096 or payload['start'] + payload['count'] > 4096):
+            or not 0 <= payload['start'] < p.get('training_units',4096)
+            or payload['start'] + payload['count'] > p.get('training_units',4096)):
         raise ValueError('Own training document range is invalid')
 
 
 def verify_contributions(records, *, model_id, training_state_id, requester_id,
-                         workers=None, training_policy_id=None):
-    identifier = training_policy_id or legacy.policy_id()
+                         workers=None, training_policy_id=legacy.policy_id()):
+    identifier = training_policy_id
     if identifier == legacy.policy_id():
         return legacy.verify_contributions(records, model_id=model_id,
             training_state_id=training_state_id, requester_id=requester_id,
@@ -102,6 +107,22 @@ def verify_contributions(records, *, model_id, training_state_id, requester_id,
     return outputs
 
 
-def verdict(before, after):
+def verdict(before, after, identifier=legacy.policy_id()):
     # v2 changes participation, not the previously fixed mathematical gate.
-    return legacy.verdict(before, after)
+    p=definition(identifier)
+    if p['version'] < 3:return legacy.verdict(before, after)
+    for value in [before,after]:
+        if not isinstance(value,dict) or set(value)!={'nll','byte_accuracy','predicted_bytes','documents','retention'}:
+            raise ValueError('Own food evaluation is incomplete')
+        primary={k:v for k,v in value.items() if k!='retention'}
+        # Reuse the historical metric type checks without changing its receipt
+        # schema or gate, substituting only this program's pinned byte count.
+        if (primary['predicted_bytes']!=p['evaluation_prediction_bytes']
+                or primary['documents']!=p['evaluation_documents']):
+            raise ValueError('Own food evaluation changed its held-out coverage')
+        legacy.verdict({**primary,'predicted_bytes':57123}, {**primary,'predicted_bytes':57123})
+        legacy.verdict(value['retention'],value['retention'])
+    return (before['nll']-after['nll']>=max(p['minimum_absolute_nll_gain'],before['nll']*p['minimum_relative_nll_gain'])
+        and after['byte_accuracy']>=before['byte_accuracy']
+        and after['retention']['nll']<=before['retention']['nll']
+        and after['retention']['byte_accuracy']>=before['retention']['byte_accuracy'])

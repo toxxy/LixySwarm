@@ -34,7 +34,7 @@ class OwnStateReplication:
 
     def allowed(self,origin):
         try:
-            if self.service.engine.version==2:
+            if self.service.engine.version>=2:
                 from .own_network_settings import OwnNetworkSettings
                 settings=OwnNetworkSettings.load(self.service.directory)
             else:settings=OwnLearningSettings.load(self.service.directory)
@@ -46,7 +46,7 @@ class OwnStateReplication:
         try:
             return (self.allowed(execution.origin_node_id) and result['success'] is True
                 and result['state_id']==self.service.snapshot()['state_id']
-                and result['training_policy_id'] in {policy_id(),self.service.engine.policy_id()})
+                and definition(result['training_policy_id'])['version']<=self.service.engine.version)
         except (ValueError,TypeError,KeyError):return False
 
     def adopt(self,payload,execution):
@@ -66,7 +66,7 @@ class OwnStateReplication:
         following=state_id(output['candidate_model_id'],output['candidate_optimizer_id'],output['candidate_optimizer_step'])
         current=service.snapshot()['state_id']
         identifier=output['training_policy_id'];definition(identifier)
-        if identifier not in {policy_id(),service.engine.policy_id()} or output['accepted'] is not True:
+        if definition(identifier)['version']>service.engine.version or output['accepted'] is not True:
             raise ValueError('Own state did not pass the fixed training policy')
         if current not in {output['state_id'],following}:raise ValueError('Own state does not extend the local lineage')
         if current==following:
@@ -108,6 +108,10 @@ class OwnStateReplication:
             check()
         fetch(output['evaluation_id'],output['evaluation_bytes'])
         transition=verify_transition(candidate,service.store.object_path(output['evaluation_id']).read_bytes())
+        p=definition(identifier)
+        if p['version']==3:
+            for key in ['training','evaluation','retention']:
+                fetch(p[key+'_dataset_id'],p[key+'_bytes'])
         for name in ['candidate_model','candidate_optimizer']:fetch(output[name+'_id'],output[name+'_bytes'])
         evaluation=json.loads(service.store.object_path(output['evaluation_id']).read_text())
         for row in evaluation['contributions']:

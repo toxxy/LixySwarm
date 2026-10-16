@@ -25,12 +25,19 @@ class OwnNetworkCoordinator(OwnLearningCoordinator):
         self.root = service.directory / 'own-network'; self.path = self.root / 'ledger.json'
         self.lock = threading.RLock(); self.changed = threading.Event(); self.cancel = threading.Event()
         self.thread = None; self.closed = False; self.ledger = None; self.maintenance_at = 0
+        self.settings=OwnNetworkSettings.load(service.directory)
+        self._load_program()
+
+    def _load_program(self):
+        self.root=self.service.directory/'own-network'
+        if self.settings.version==3:self.root=self.root/'programs'/self.settings.contract()
+        self.path=self.root/'ledger.json';self.ledger=None
         if self.path.exists():
             if self.path.stat().st_size > 4 * 1024**2: raise ValueError('Own-network ledger exceeds its bound')
             value = json.loads(self.path.read_text())
-            if (value.get('version') != 2 or value.get('training_policy_id') != network_policy_id()
+            if (value.get('version') != self.settings.version or value.get('training_policy_id') != self.settings.policy_id()
                     or type(value.get('round')) is not int or not 0 <= value['round'] <= 1000000
-                    or type(value.get('cursor')) is not int or not 0 <= value['cursor'] <= 4096
+                    or type(value.get('cursor')) is not int or not 0 <= value['cursor'] <= definition(value['training_policy_id']).get('training_units',4096)
                     or not isinstance(value.get('workers'), dict) or len(value['workers']) > 4096):
                 raise ValueError('Invalid own-network ledger; preserve it for inspection')
             self.ledger = value
@@ -40,26 +47,32 @@ class OwnNetworkCoordinator(OwnLearningCoordinator):
             value = {k: self.ledger.get(k) for k in ['status', 'round', 'cursor', 'accepted', 'rejections', 'state_id', 'error', 'retry_at', 'replicas', 'ready_workers']} if self.ledger else {
                 'status': 'idle', 'round': 0, 'cursor': self.settings.initial_cursor, 'accepted': 0, 'rejections': 0}
             return {**value, 'enabled': self.settings.enabled, 'follow_enabled': self.settings.follow_enabled,
-                'training_policy_id': network_policy_id(), 'program_error': self.error,
+                'training_policy_id': self.settings.policy_id(), 'program_error': self.error,
+                'program_id':self.settings.program_id,
                 'known_workers': len(self.ledger['workers']) if self.ledger else 0,
                 'window_limit': self.settings.workers_per_window,
                 'pending': self.ledger.get('pending') is not None if self.ledger else False}
 
     def _allowed(self, contract):
         return (not self.closed and self.settings.enabled and self.settings.contract() == contract
-            and self.service.ready and self.knowledge.allowed and self.service.engine.version == 2
+            and self.service.ready and self.knowledge.allowed and self.service.engine.version >= 2
             and self.knowledge.node.identity.node_id_hex == self.settings.owner_id)
 
     def update(self):
         try:
-            self.settings = OwnNetworkSettings.load(self.service.directory)
+            selected=OwnNetworkSettings.load(self.service.directory)
+            if selected.contract()!=self.settings.contract():
+                if self.thread is not None and self.thread.is_alive():
+                    self.cancel.set();return
+                self.settings=selected;self._load_program()
+            else:self.settings=selected
             if self.ledger and self.ledger['contract_id'] != self.settings.contract():
                 raise ValueError('Own-network program changed; durable progress was preserved')
             self.error = None
         except (OSError, ValueError, TypeError) as error:
             self.error = str(error); self.cancel.set(); return
         contract = self.settings.contract()
-        if (self.settings.follow_enabled and self.service.engine.version == 2 and self.service.ready
+        if (self.settings.follow_enabled and self.service.engine.version >= 2 and self.service.ready
                 and self.knowledge.allowed and self.settings.owner_id != self.knowledge.node.identity.node_id_hex):
             # Every admitted worker maintains a route to its selected lineage,
             # even when the ordinary four outbound peer slots are already full.
@@ -76,7 +89,7 @@ class OwnNetworkCoordinator(OwnLearningCoordinator):
         if self.ledger is None:
             if self.service.snapshot()['state_id'] != self.settings.initial_state_id:
                 self.error = 'Own-network initial state is not the selected verified state'; return
-            self.ledger = {'version': 2, 'contract_id': contract, 'training_policy_id': network_policy_id(),
+            self.ledger = {'version': self.settings.version, 'contract_id': contract, 'training_policy_id': self.settings.policy_id(),
                 'parent_program_id': self.settings.parent_program_id,
                 'initial_state_id': self.settings.initial_state_id, 'state_id': self.settings.initial_state_id,
                 'round': 0, 'cursor': self.settings.initial_cursor, 'accepted': 0, 'rejections': 0,
@@ -85,10 +98,15 @@ class OwnNetworkCoordinator(OwnLearningCoordinator):
             self._save()
         if self.ledger['pending'] is None:
             status = ('complete' if self.settings.maximum_rounds and self.ledger['round'] >= self.settings.maximum_rounds
-                else 'awaiting_new_curriculum' if self.ledger['cursor'] >= 4096
+                else 'awaiting_new_curriculum' if self.ledger['cursor'] >= definition(self.settings.policy_id()).get('training_units',4096)
                 else 'no_improvement' if self.ledger['rejections'] >= self.settings.stop_after_rejections else None)
             if status:
                 if self.ledger['status'] != status: self._save(status=status)
+                from .own_programs import queue_enabled, advance
+                if queue_enabled(self.service.directory) and time.time()>=self.maintenance_at:
+                    self.cancel=threading.Event()
+                    self.thread=threading.Thread(target=advance,args=(self,contract),name='lixy-own-food',daemon=True)
+                    self.thread.start();return
                 # New or returning replicas still catch up when training has
                 # exhausted its current food or reached a quality stop.
                 if time.time() >= self.maintenance_at:
@@ -122,7 +140,11 @@ class OwnNetworkCoordinator(OwnLearningCoordinator):
             self._check(contract)
             try:
                 head = self._rpc(worker, HEAD_OPERATION, {}, contract)['output']
-                if (head.get('ready') and head.get('training_policy_id') == network_policy_id()
+                if self.settings.version==3 and head.get('ready') and head.get('training_policy_id')!=self.settings.policy_id() and own in head.get('requesters',[]):
+                    from .own_programs import ADMIT_OPERATION
+                    self._rpc(worker,ADMIT_OPERATION,{'program_id':self.settings.program_id},contract)
+                    head=self._rpc(worker,HEAD_OPERATION,{},contract)['output']
+                if (head.get('ready') and head.get('training_policy_id') == self.settings.policy_id()
                         and own in head.get('requesters', [])):
                     heads[worker] = head
             except InterruptedError: raise
@@ -134,7 +156,7 @@ class OwnNetworkCoordinator(OwnLearningCoordinator):
 
     def _sync_peer(self, worker, contract):
         head = self._rpc(worker, HEAD_OPERATION, {}, contract)['output']
-        if not head.get('ready') or head.get('training_policy_id') != network_policy_id():
+        if not head.get('ready') or head.get('training_policy_id') != self.settings.policy_id():
             raise RuntimeError('Own worker is not ready for this policy')
         following = self.service.snapshot()['state_id']; chain = []
         while following != head['state_id']:
@@ -175,12 +197,12 @@ class OwnNetworkCoordinator(OwnLearningCoordinator):
             if row['start'] != cursor or row['shard_id'] != str(cursor) or not 1 <= row['count'] <= 256:
                 raise ValueError('Own pending ranges are not disjoint and contiguous')
             cursor += row['count']; keys.add(row['shard_id'])
-        if cursor > 4096 or not set(pending['contributions']) <= keys:
+        if cursor > definition(self.settings.policy_id()).get('training_units',4096) or not set(pending['contributions']) <= keys:
             raise ValueError('Own pending contribution coverage is invalid')
         for key, record in pending['contributions'].items():
             row = next(r for r in pending['assignments'] if r['shard_id'] == key)
             output = verify_contributions([record], model_id=pending['model_id'], training_state_id=pending['state_id'],
-                requester_id=self.settings.owner_id, training_policy_id=network_policy_id())[0]
+                requester_id=self.settings.owner_id, training_policy_id=self.settings.policy_id())[0]
             if any(output[k] != row[k] for k in ['start', 'count']) or record['worker_id'] != row['worker_id']:
                 raise ValueError('Own contribution differs from its durable assignment')
 
@@ -202,10 +224,10 @@ class OwnNetworkCoordinator(OwnLearningCoordinator):
                         if worker not in synced: self._sync_peer(worker, contract); synced.add(worker)
                         request = uuid.uuid4().hex
                         payload = {k: pending[k] for k in ['state_id', 'model_id']}
-                        payload.update(dataset_id=definition(network_policy_id())['training_dataset_id'],
-                            training_policy_id=network_policy_id(), start=row['start'], count=row['count'])
+                        payload.update(dataset_id=definition(self.settings.policy_id())['training_dataset_id'],
+                            training_policy_id=self.settings.policy_id(), start=row['start'], count=row['count'])
                         self.local_work.start({'request_id': request, 'worker_id': worker,
-                            'operation': definition(network_policy_id())['gradient_operation'], 'payload': payload})
+                            'operation': definition(self.settings.policy_id())['gradient_operation'], 'payload': payload})
                         active[key] = request
                     except InterruptedError: raise
                     except Exception: failed.add(worker)
@@ -231,10 +253,10 @@ class OwnNetworkCoordinator(OwnLearningCoordinator):
     def _candidate(self, pending, contract):
         self._check(contract); request = uuid.uuid4().hex
         payload = {k: pending[k] for k in ['state_id', 'model_id']}
-        payload.update(dataset_id=definition(network_policy_id())['training_dataset_id'], training_policy_id=network_policy_id(),
+        payload.update(dataset_id=definition(self.settings.policy_id())['training_dataset_id'], training_policy_id=self.settings.policy_id(),
             contributions=[pending['contributions'][r['shard_id']] for r in pending['assignments']])
         self.local_work.start({'request_id': request, 'worker_id': self.settings.owner_id,
-            'operation': definition(network_policy_id())['candidate_operation'], 'payload': payload})
+            'operation': definition(self.settings.policy_id())['candidate_operation'], 'payload': payload})
         try:
             while True:
                 self._check(contract); row = self.local_work.status(request)
@@ -255,7 +277,7 @@ class OwnNetworkCoordinator(OwnLearningCoordinator):
                 window = choose_window(list(heads), self.ledger['workers'], limit=self.settings.workers_per_window)
                 pending = {'round': self.ledger['round'], 'cursor': self.ledger['cursor'],
                     'state_id': selected['state_id'], 'model_id': selected['model_id'],
-                    'assignments': allocate(window, heads, self.ledger['workers'], start=self.ledger['cursor'], base_count=self.settings.documents_per_worker),
+                    'assignments': allocate(window, heads, self.ledger['workers'], start=self.ledger['cursor'], base_count=self.settings.documents_per_worker,training_units=definition(self.settings.policy_id()).get('training_units',4096)),
                     'contributions': {}, 'work': {}, 'reassignments': [], 'candidate': None,
                     'adoptions': {}, 'attempts': 0, 'started_at': time.time()}
                 self._save(pending=deepcopy(pending))
@@ -270,8 +292,8 @@ class OwnNetworkCoordinator(OwnLearningCoordinator):
                 pending['candidate'] = self._candidate(pending, contract); self._save(pending=deepcopy(pending))
             result = pending['candidate']['result']; output = result['output']
             if (output['state_id'] != pending['state_id'] or output['model_id'] != pending['model_id']
-                    or output['training_policy_id'] != network_policy_id()
-                    or output['accepted'] != verdict(output['before'], output['after'])):
+                    or output['training_policy_id'] != self.settings.policy_id()
+                    or output['accepted'] != verdict(output['before'], output['after'],self.settings.policy_id())):
                 raise ValueError('Own candidate contradicts its pending state or quality policy')
             selected = pending['state_id']; replicas = self.ledger.get('replicas', 1)
             if output['accepted']:

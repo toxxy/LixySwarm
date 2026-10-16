@@ -293,7 +293,8 @@ def run(directory: Path, *, host="0.0.0.0", port=7338, interval=15, allow_privat
                 node.resource_profile["language_families_v1"]=families.snapshot()["available"]
                 node.capabilities["training"]=compute.ready and bool(compute.engine.training_requesters) or language_training.ready or own_swarm.ready
                 node.capabilities['own_swarm_v1']=own_swarm.ready and own_swarm.engine.version==1
-                node.capabilities['own_swarm_v2']=own_swarm.ready and own_swarm.engine.version==2
+                node.capabilities['own_swarm_v2']=own_swarm.ready and own_swarm.engine.version>=2
+                node.capabilities['own_swarm_v3']=own_swarm.ready and own_swarm.engine.version==3
                 node.capabilities['own_swarm_state_id']=own_swarm.snapshot()['state_id'] if own_swarm.ready else ''
                 node.capabilities["language_training_v1"]=language_training.ready and language_training.engine.base_name=='qwen3-0.6b'
                 node.capabilities["language_training_v2"]=language_training.ready

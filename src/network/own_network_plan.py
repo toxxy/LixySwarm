@@ -15,9 +15,10 @@ def choose_window(ready, history, *, limit=8):
     return sorted(ready, key=lambda w: (history.get(w, {}).get('last_round', -1), w))[:limit]
 
 
-def allocate(window, heads, history, *, start, base_count=64):
+def allocate(window, heads, history, *, start, base_count=64, training_units=4096):
     if (not window or len(window) > 8 or len(set(window)) != len(window)
-            or type(start) is not int or not 0 <= start < 4096
+            or type(training_units) is not int or not 1<=training_units<=4096
+            or type(start) is not int or not 0 <= start < training_units
             or type(base_count) is not int or not 16 <= base_count <= 256):
         raise ValueError('Invalid own dynamic shard plan')
     rates = {}
@@ -33,9 +34,9 @@ def allocate(window, heads, history, *, start, base_count=64):
     reference = min(observed) if observed else 1.
     result = []; cursor = start
     for worker in window:
-        if cursor >= 4096: break
+        if cursor >= training_units: break
         count = min(256, max(16, round(base_count * (min(4., rates[worker] / reference) if rates[worker] else 1.))))
-        count = min(count, 4096 - cursor)
+        count = min(count, training_units - cursor)
         result.append({'shard_id': str(cursor), 'worker_id': worker, 'start': cursor, 'count': count})
         cursor += count
     return result

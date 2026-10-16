@@ -57,6 +57,7 @@ def run(request):
             'model_file','training_file','output_directory','device','cpu_threads','deadline'}
     fields=common|({'optimizer_file','evaluation_file','requester_id','contributions','gradient_files'}
                     if candidate else {'start','count'})
+    if candidate and p['version']==3:fields.add('retention_file')
     if (set(request)!=fields or request['action'] not in {'own-gradient','own-candidate'}
             or state_id(request['model_id'],request['optimizer_id'],request['step'])!=request['state_id']
             or request['device']!='cpu' or type(request['cpu_threads']) is not int or not 1<=request['cpu_threads']<=16
@@ -70,6 +71,7 @@ def run(request):
         if not isinstance(request['gradient_files'],dict) or len(request['gradient_files'])!=len(request['contributions']):
             raise ValueError('Own candidate needs every locally acquired gradient file')
         paths += [request['optimizer_file'],request['evaluation_file'],*request['gradient_files'].values()]
+        if p['version']==3:paths.append(request['retention_file'])
     output=Path(request['output_directory'])
     if (any(not isinstance(v,str) or not Path(v).is_absolute() or Path(v).is_symlink() for v in paths)
             or output.exists() or output.resolve().is_relative_to(Path.home()/'Dropbox')
@@ -80,7 +82,10 @@ def run(request):
         import torch
         torch.set_num_threads(request['cpu_threads']);torch.set_float32_matmul_precision('highest')
         model=load_model(request)
-        snapshot=load_snapshot(request['training_file'],'train')
+        if p['version']==3:
+            from .own_food import load
+            snapshot={'documents':load(request['training_file'],p,'train')}
+        else:snapshot=load_snapshot(request['training_file'],'train')
         def check():
             if time.time()>=request['deadline']:raise TimeoutError('Own work deadline exceeded')
         return (_candidate(request,output,model,snapshot,check) if candidate
@@ -93,13 +98,18 @@ def run(request):
         raise
 
 
+def training_documents(snapshot,start,count):
+    return (snapshot['documents'][start:start+count] if 'documents' in snapshot
+        else documents({'rows':snapshot['rows'][start:start+count]}))
+
+
 def _gradient(request,output,model,snapshot,check):
     import torch
     from safetensors.torch import save_file
     from src.network.artifact_store import digest_file
     from .swarm_foundation import predict
-    rows=snapshot['rows'][request['start']:request['start']+request['count']]
-    docs=documents({'rows':rows});total=sum(min(len(row),129)-1 for row in docs)
+    docs=training_documents(snapshot,request['start'],request['count'])
+    total=sum(min(len(row),129)-1 for row in docs)
     model.train();model.zero_grad(set_to_none=True);loss_sum=0.
     for inputs,labels,tokens in batches(docs,'cpu'):
         check();_,loss,_=predict(model,inputs,labels)
@@ -146,8 +156,8 @@ def _candidate(request,output,model,snapshot,check):
         check();path=Path(request['gradient_files'][record['gradient_id']])
         if digest_file(path)!=(record['gradient_id'],record['gradient_bytes']):
             raise ValueError('Own gradient content does not match its physical receipt')
-        selected=snapshot['rows'][record['start']:record['start']+record['count']]
-        tokens=sum(min(len(row),129)-1 for row in documents({'rows':selected}))
+        selected=training_documents(snapshot,record['start'],record['count'])
+        tokens=sum(min(len(row),129)-1 for row in selected)
         expected={k:record[k] for k in ['training_policy_id','state_id','model_id','dataset_id','start','count','tokens']}
         with safe_open(str(path),framework='pt',device='cpu') as f:
             if f.metadata()!={'format':'lixyswarm-own-gradient-v1','binding':canonical(expected).decode()}:
@@ -161,10 +171,19 @@ def _candidate(request,output,model,snapshot,check):
             term=value*(record['tokens']/total)
             if parameters[name].grad is None:parameters[name].grad=term
             else:parameters[name].grad.add_(term)
-    heldout=documents(load_snapshot(request['evaluation_file'],'evaluation'))
-    check();before=evaluate(model,heldout,'cpu')
+    if p['version']==3:
+        from .own_food import load
+        heldout=load(request['evaluation_file'],p,'evaluation')
+        retention=documents(load_snapshot(request['retention_file'],'evaluation'))
+    else:heldout=documents(load_snapshot(request['evaluation_file'],'evaluation'))
+    def evaluate_all():
+        check();metrics=evaluate(model,heldout,'cpu')
+        if p['version']==3:
+            check();metrics['retention']=evaluate(model,retention,'cpu')
+        return metrics
+    before=evaluate_all()
     norm=float(torch.nn.utils.clip_grad_norm_(model.parameters(),p['clip_norm'],error_if_nonfinite=True))
-    optimizer.step();check();after=evaluate(model,heldout,'cpu');accepted=verdict(before,after)
+    optimizer.step();after=evaluate_all();accepted=verdict(before,after,request['training_policy_id'])
     step=request['step']+1
     if {int(v['step']) for v in optimizer.state_dict()['state'].values()}!={step}:
         raise ValueError('Own optimizer did not continue its previous step')

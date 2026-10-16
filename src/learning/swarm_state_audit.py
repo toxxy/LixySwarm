@@ -24,7 +24,7 @@ def replay_request(directory,candidate,output_directory,*,deadline,cpu_threads=2
     transition=verify_transition(candidate,evaluation_path.read_bytes())
     evaluation=json.loads(evaluation_path.read_text())
     from src.network.own_swarm import public_data_path
-    return {'action':'own-audit','candidate_result':candidate,
+    request={'action':'own-audit','candidate_result':candidate,
         'candidate_model_file':str(store.object_path(transition['model_id'])),
         'candidate_optimizer_file':str(store.object_path(transition['optimizer_id'])),
         'evaluation_report_file':str(evaluation_path),
@@ -40,6 +40,8 @@ def replay_request(directory,candidate,output_directory,*,deadline,cpu_threads=2
         'contributions':evaluation['contributions'],
         'gradient_files':{v['result']['output']['gradient_id']:str(store.object_path(v['result']['output']['gradient_id']))
             for v in evaluation['contributions']}}
+    if p['version']==3:request['retention_file']=str(public_data_path(directory,p['retention_dataset_id']))
+    return request
 
 
 def run_audit(request):
@@ -82,6 +84,11 @@ def run_audit(request):
         for name in ['exp_avg','exp_avg_sq']:
             if not torch.isfinite(item[name]).all() or not torch.allclose(item[name],other[key][name],atol=1e-6,rtol=1e-5):
                 raise ValueError('Own optimizer moments do not reproduce both contributions')
+    if definition(request['training_policy_id'])['version']==3:
+        for phase in ['before','after']:
+            for metric in ['nll','byte_accuracy']:
+                if abs(replay[phase]['retention'][metric]-result[phase]['retention'][metric])>1e-5:
+                    raise ValueError('Own replay does not reproduce historical retention')
     for metric in ['nll','byte_accuracy']:
         if abs(replay['after'][metric]-result['after'][metric])>1e-5:
             raise ValueError('Own replay does not reproduce validation quality')

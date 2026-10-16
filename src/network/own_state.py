@@ -34,7 +34,7 @@ def verify_transition(value,evaluation_raw,*,workers=None):
     for key in ['accepted','after','before','candidate_optimizer_step','previous_optimizer_step',
                 'prediction_bytes','state_id','model_id','optimizer_id','training_policy_id']:
         if evaluation[key]!=output[key]:raise ValueError('Own transition report has inconsistent state or quality')
-    if not verdict(output['before'],output['after']):raise ValueError('Own transition quality gate failed')
+    if not verdict(output['before'],output['after'],identifier):raise ValueError('Own transition quality gate failed')
     parent=state_id(output['model_id'],output['optimizer_id'],output['previous_optimizer_step'])
     following=state_id(output['candidate_model_id'],output['candidate_optimizer_id'],output['candidate_optimizer_step'])
     if (parent!=output['state_id'] or evaluation['candidate_state_id']!=following
@@ -78,9 +78,9 @@ def activate(directory,candidate_result,audit):
             raise ValueError('Own activation requires the complete verified learned state')
     with NodeStateLock(directory/'own-state-selection'):
         settings=OwnSwarmSettings.load(directory);controls=ClientSettings.load(directory)
-        if transition['training_policy_id'] not in {policy_id(),settings.policy_id()}:
+        if definition(transition['training_policy_id'])['version']>settings.version:
             raise ValueError('Own transition policy has no local admission')
-        if definition(transition['training_policy_id'])['version']==2 and transition['evaluator_id'] not in settings.requesters:
+        if definition(transition['training_policy_id'])['version']>=2 and transition['evaluator_id'] not in settings.requesters:
             raise ValueError('Own evaluator has no local admission')
         previous=(directory/'own-swarm.json').read_bytes()
         if not settings.enabled or not controls.connected or controls.paused:
@@ -102,5 +102,5 @@ def activate(directory,candidate_result,audit):
         return {'success':True,'already_selected':False,'parent_state_id':current,
             'state_id':transition['state_id'],'model_id':settings.model_id,'optimizer_id':settings.optimizer_id,
             'optimizer_step':settings.step,'transition_artifact_id':proof.artifact_id,
-            'scope':('Locally admitted own-state adoption; not open consensus' if settings.version==2
+            'scope':('Locally admitted own-state adoption; not open consensus' if settings.version>=2
                 else 'Known-operator own-state adoption; not open consensus or autonomous scheduling')}

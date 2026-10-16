@@ -7,7 +7,7 @@ import time
 
 from src.contribution import ResourceRequirements
 from src.learning.swarm_policy import (WORKERS,GRADIENT_OPERATION,CANDIDATE_OPERATION,
-    NETWORK_GRADIENT_OPERATION,NETWORK_CANDIDATE_OPERATION,IDENTIFIER,policy_id,
+    NETWORK_GRADIENT_OPERATION,NETWORK_CANDIDATE_OPERATION,FOOD_GRADIENT_OPERATION,FOOD_CANDIDATE_OPERATION,IDENTIFIER,policy_id,
     validate_payload,verify_contributions,definition)
 from .artifact_store import digest_file
 from .work_protocol import ResultReceipt
@@ -26,10 +26,10 @@ class LocalOwnWork:
             raise ValueError('Invalid local own-swarm request')
         request,worker,operation,payload=(value[k] for k in ['request_id','worker_id','operation','payload'])
         own=self.knowledge.node.identity.node_id_hex
-        candidate=operation in {CANDIDATE_OPERATION,NETWORK_CANDIDATE_OPERATION}
+        candidate=operation in {CANDIDATE_OPERATION,NETWORK_CANDIDATE_OPERATION,FOOD_CANDIDATE_OPERATION}
         if (not isinstance(request,str) or not re.fullmatch('[0-9a-f]{32}',request)
                 or not isinstance(worker,str) or not IDENTIFIER.fullmatch(worker)
-                or operation not in {GRADIENT_OPERATION,CANDIDATE_OPERATION,NETWORK_GRADIENT_OPERATION,NETWORK_CANDIDATE_OPERATION}
+                or operation not in {GRADIENT_OPERATION,CANDIDATE_OPERATION,NETWORK_GRADIENT_OPERATION,NETWORK_CANDIDATE_OPERATION,FOOD_GRADIENT_OPERATION,FOOD_CANDIDATE_OPERATION}
                 or candidate and worker!=own):raise ValueError('Only typed own-swarm operations are allowed')
         validate_payload(payload,candidate=candidate)
         p=definition(payload['training_policy_id'])
@@ -44,7 +44,7 @@ class LocalOwnWork:
             training_state_id=current['state_id'],requester_id=own,training_policy_id=payload['training_policy_id'])
         with self.lock:
             if request in self.jobs:raise ValueError('Own request already exists')
-            if sum(v['state']=='running' for v in self.jobs.values())>=(8 if p['version']==2 else 2):raise RuntimeError('Own request slots are occupied')
+            if sum(v['state']=='running' for v in self.jobs.values())>=(8 if p['version']>=2 else 2):raise RuntimeError('Own request slots are occupied')
             for key in list(self.jobs):
                 if len(self.jobs)<32:break
                 if self.jobs[key]['state']!='running':self.jobs.pop(key)
@@ -77,7 +77,7 @@ class LocalOwnWork:
         began=time.monotonic();node=self.knowledge.node;p=definition(payload['training_policy_id']);cancel=job['cancel']
         try:
             requirements=ResourceRequirements(kind='training',gpu_required=False,ram_gb=p['ram_gb'],
-                disk_gb=p['candidate_disk_gb'] if operation in {CANDIDATE_OPERATION,NETWORK_CANDIDATE_OPERATION} else p['gradient_disk_gb'])
+                disk_gb=p['candidate_disk_gb'] if operation in {CANDIDATE_OPERATION,NETWORK_CANDIDATE_OPERATION,FOOD_CANDIDATE_OPERATION} else p['gradient_disk_gb'])
             if worker==node.identity.node_id_hex:
                 result=self.knowledge.work.execute_local(operation,payload,requirements,
                     timeout_s=p['maximum_seconds'],cancel_event=cancel)
@@ -93,7 +93,7 @@ class LocalOwnWork:
                     expected_worker_id=worker,expected_requester_id=node.identity.node_id_hex):
                 raise ValueError('Own physical work result is unavailable or unsigned')
             initially_local=False;chunks=[]
-            if operation in {GRADIENT_OPERATION,NETWORK_GRADIENT_OPERATION}:
+            if operation in {GRADIENT_OPERATION,NETWORK_GRADIENT_OPERATION,FOOD_GRADIENT_OPERATION}:
                 output=result.output
                 if any(output.get(k)!=payload[k] for k in payload):raise ValueError('Own physical work result differs from its assignment')
                 initially_local=self.service.store.has(output['gradient_id'])

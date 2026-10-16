@@ -9,7 +9,7 @@ from src.learning.public_math import ARTIFACTS
 from src.network.work_protocol import WorkResult,ResultReceipt
 
 
-@pytest.mark.parametrize('n',[None,1,3,8])
+@pytest.mark.parametrize('n',[None,1,3,8,'food'])
 def test_tensor_own_shards_aggregate_with_resumed_adamw_and_verify_file_bindings(tmp_path,monkeypatch,n):
     import time
     import torch
@@ -21,11 +21,17 @@ def test_tensor_own_shards_aggregate_with_resumed_adamw_and_verify_file_bindings
     from src.network.artifact_store import digest_file
     records,workers,requester,_,_=fixture_records()
     selected_policy=policy_id()
+    food=n=='food'
+    if food:n=3
     if n is not None:
         from src.network.lsp import LSPIdentity
         from src.learning.swarm_policy import network_policy_id
         workers=[LSPIdentity.generate() for _ in range(n)];requester=workers[0]
         selected_policy=network_policy_id()
+    if food:
+        from src.learning.own_food_catalog import PROGRAMS,policy_identifier
+        from src.learning.swarm_policy import definition
+        selected_policy=policy_identifier(PROGRAMS[0]['program_id'])
     # Same own architecture and genuine optimizer state; only data and the
     # quality scorer are scoped fixtures. This does not assert physical quality.
     model=make_foundation_model().train();optimizer=torch.optim.AdamW(model.parameters(),lr=.0006,weight_decay=.01)
@@ -41,9 +47,14 @@ def test_tensor_own_shards_aggregate_with_resumed_adamw_and_verify_file_bindings
     evaluation=tmp_path/'evaluation.json';evaluation.write_text('fixture')
     snapshot={'rows':[{'question':f'Public example {i}?','answer':'A bounded public answer.'} for i in range(2*len(workers))]}
     monkeypatch.setattr(job,'load_snapshot',lambda *args:snapshot)
+    if food:
+        from src.learning import own_food
+        from src.learning.swarm_foundation_job import documents
+        monkeypatch.setattr(own_food,'load',lambda path,p,split:documents(snapshot))
     base={'training_policy_id':selected_policy,'state_id':sid,'model_id':model_id,'optimizer_id':optimizer_id,
         'step':1,'dataset_id':ARTIFACTS['train'][0],'model_file':str(weights),'training_file':str(train),
         'device':'cpu','cpu_threads':2,'deadline':time.time()+120}
+    if food:base['dataset_id']=definition(selected_policy)['training_dataset_id']
     contributions=[];files={}
     for index,worker in enumerate(workers):
         out=job.run({**base,'action':'own-gradient','start':index*2,'count':2,
@@ -57,10 +68,16 @@ def test_tensor_own_shards_aggregate_with_resumed_adamw_and_verify_file_bindings
         **kw,workers=[v.node_id_hex for v in workers]))
     metrics=iter([{'nll':2.,'byte_accuracy':.4,'predicted_bytes':57123,'documents':128},
                   {'nll':1.99,'byte_accuracy':.41,'predicted_bytes':57123,'documents':128}])
+    if food:
+        p=definition(selected_policy)
+        old={'nll':2.,'byte_accuracy':.4,'predicted_bytes':57123,'documents':128}
+        new={**old,'predicted_bytes':p['evaluation_prediction_bytes']}
+        metrics=iter([new,old,{**new,'nll':1.99},{**old,'nll':1.999}])
     monkeypatch.setattr(job,'evaluate',lambda *args:next(metrics))
     candidate={**base,'action':'own-candidate','optimizer_file':str(opt),'evaluation_file':str(evaluation),
         'requester_id':requester.node_id_hex,'contributions':contributions,'gradient_files':files,
         'output_directory':str(tmp_path/'candidate')}
+    if food:candidate['retention_file']=str(evaluation)
     result=job.run(candidate)
     saved=torch.load(result['candidate_optimizer_file'],weights_only=True)
     assert result['accepted'] and result['candidate_optimizer_step']==2 and saved['step']==2

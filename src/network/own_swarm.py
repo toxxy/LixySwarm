@@ -8,6 +8,7 @@ import uuid
 
 from src.learning.swarm_policy import (GRADIENT_OPERATION,CANDIDATE_OPERATION,WORKERS,
     NETWORK_GRADIENT_OPERATION,NETWORK_CANDIDATE_OPERATION,network_policy_id,
+    FOOD_GRADIENT_OPERATION,FOOD_CANDIDATE_OPERATION,
     IDENTIFIER,definition,policy_id,state_id,validate_payload,verify_contributions,verdict)
 from src.learning.public_math import ARTIFACTS
 from .artifact_store import ArtifactStore,ArtifactService,digest_file
@@ -31,9 +32,10 @@ class OwnSwarmSettings:
     optimizer_id:str=''
     step:int=0
     requesters:list=field(default_factory=list)
+    program_id:str=''
 
     def validate(self):
-        if (type(self.version) is not int or self.version not in {1,2} or type(self.enabled) is not bool
+        if (type(self.version) is not int or self.version not in {1,2,3} or type(self.enabled) is not bool
                 or not isinstance(self.command,list) or len(self.command)>4
                 or any(not isinstance(v,str) or not v or len(v)>4096 for v in self.command)
                 or not isinstance(self.requesters,list) or len(self.requesters)>8
@@ -41,12 +43,17 @@ class OwnSwarmSettings:
                 or len(set(self.requesters))!=len(self.requesters)
                 or self.version==1 and (len(self.requesters)>2 or any(v not in WORKERS for v in self.requesters))):
             raise ValueError('Own-swarm settings require locally admitted coordinators and a local engine')
+        if self.version<3 and self.program_id:raise ValueError('Historical own state cannot name new food')
+        self.policy_id()
         if self.enabled:
             state_id(self.model_id,self.optimizer_id,self.step)
             if not self.command or not all(Path(v).is_absolute() for v in self.command) or not self.requesters:
                 raise ValueError('Own-swarm computation requires a locally installed engine and selected state')
 
     def policy_id(self):
+        if self.version==3:
+            from src.learning.own_food_catalog import policy_identifier
+            return policy_identifier(self.program_id)
         return network_policy_id() if self.version==2 else policy_id()
 
     def save(self,directory):
@@ -58,7 +65,7 @@ class OwnSwarmSettings:
         if not path.exists():return cls()
         if path.stat().st_size>8192:raise ValueError('Own-swarm settings exceed their bound')
         raw=json.loads(path.read_text())
-        if not isinstance(raw,dict) or set(raw)!=set(asdict(cls())):raise ValueError('Own-swarm controls have unknown fields')
+        if not isinstance(raw,dict) or set(raw) not in [set(asdict(cls())),set(asdict(cls()))-{'program_id'}]:raise ValueError('Own-swarm controls have unknown fields')
         result=cls(**raw);result.validate();return result
 
 
@@ -88,6 +95,12 @@ class OwnSwarmService:
         knowledge.work.register_handler(NETWORK_GRADIENT_OPERATION,'training',self.gradient,permit_cached=self.permit_cached)
         knowledge.work.register_handler(NETWORK_CANDIDATE_OPERATION,'training',self.candidate,
             permit_cached=lambda execution,result:self.permit_cached(execution,result,candidate=True))
+        knowledge.work.register_handler(FOOD_GRADIENT_OPERATION,'training',self.gradient,permit_cached=self.permit_cached)
+        knowledge.work.register_handler(FOOD_CANDIDATE_OPERATION,'training',self.candidate,
+            permit_cached=lambda execution,result:self.permit_cached(execution,result,candidate=True))
+        from .own_programs import ADMIT_OPERATION,admit
+        knowledge.work.register_handler(ADMIT_OPERATION,'artifact',lambda payload,execution:admit(self,payload,execution),
+            permit_cached=lambda *_:False)
 
     def _artifact_cached(self,execution,result):
         if not self.knowledge.allowed:return False
@@ -109,7 +122,10 @@ class OwnSwarmService:
 
     def update(self,settings):
         self.settings=settings
-        try:self.engine=OwnSwarmSettings.load(self.directory)
+        try:
+            from .own_programs import recover_selection
+            recover_selection(self.directory)
+            self.engine=OwnSwarmSettings.load(self.directory)
         except (OSError,ValueError,TypeError):self.engine=OwnSwarmSettings()
         if self.engine.enabled and self.knowledge.allowed and settings.connected and not settings.paused:
             # Older installations hold the pinned public data in the language
@@ -128,13 +144,17 @@ class OwnSwarmService:
             and all(Path(v).is_file() for v in self.engine.command)
             and self.store.has(self.engine.model_id) and self.store.has(self.engine.optimizer_id)
             and self.training_path().is_file() and self.evaluation_path().is_file())
+        if self.engine.version==3:
+            from .own_programs import supports_programs
+            self.ready=self.ready and supports_programs(self) and public_data_path(
+                self.directory,definition(self.engine.policy_id())['retention_dataset_id']).is_file()
 
     def training_path(self):
-        identifier=ARTIFACTS['train'][0]
+        identifier=definition(self.engine.policy_id())['training_dataset_id']
         return public_data_path(self.directory,identifier)
 
     def evaluation_path(self):
-        identifier=ARTIFACTS['evaluation'][0]
+        identifier=definition(self.engine.policy_id())['evaluation_dataset_id']
         return public_data_path(self.directory,identifier)
 
     def snapshot(self):
@@ -143,6 +163,7 @@ class OwnSwarmService:
             'state_id':state_id(self.engine.model_id,self.engine.optimizer_id,self.engine.step) if self.engine.enabled else '',
             'optimizer_step':self.engine.step if self.engine.enabled else 0,'training_policy_id':self.engine.policy_id(),
             'family':definition()['family'],'device':'cpu','membership_version':self.engine.version,
+            'program_id':self.engine.program_id,
             'cpu_threads':max(1,min(8,int(self.resources['cpu_cores']*self.settings.policy.cpu_percent/100))) if self.settings else 1,
             'requesters':list(self.engine.requesters)}
 
@@ -187,6 +208,7 @@ class OwnSwarmService:
             request.update(optimizer_file=str(self.store.object_path(self.engine.optimizer_id)),
                 evaluation_file=str(self.evaluation_path()),requester_id=own,
                 gradient_files={v['gradient_id']:str(self.store.object_path(v['gradient_id'])) for v in outputs})
+            if p['version']==3:request['retention_file']=str(public_data_path(self.directory,p['retention_dataset_id']))
         def allowed():
             return (self.ready and self.knowledge.allowed and asdict(self.engine)==selected
                     and asdict(self.settings.policy)==permission)
@@ -199,7 +221,7 @@ class OwnSwarmService:
                 raise ValueError('Own engine returned work for another selected state')
             items=[('gradient','gradient')] if not candidate else [('evaluation','evaluation')]
             if candidate:
-                if result['accepted']!=verdict(result['before'],result['after']):
+                if result['accepted']!=verdict(result['before'],result['after'],payload['training_policy_id']):
                     raise ValueError('Own candidate verdict does not match its declared gate')
                 if result['previous_optimizer_step']!=self.engine.step or result['candidate_optimizer_step']!=self.engine.step+1:
                     raise ValueError('Own candidate lost optimizer continuity')
