@@ -126,7 +126,7 @@ class OwnSwarmService:
             from .own_programs import recover_selection
             recover_selection(self.directory)
             self.engine=OwnSwarmSettings.load(self.directory)
-        except (OSError,ValueError,TypeError):self.engine=OwnSwarmSettings()
+        except (OSError,ValueError,TypeError,RuntimeError):self.engine=OwnSwarmSettings()
         if self.engine.enabled and self.knowledge.allowed and settings.connected and not settings.paused:
             # Older installations hold the pinned public data in the language
             # CAS. Publish verified copies through the own namespace as well,

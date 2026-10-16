@@ -107,3 +107,13 @@ def test_retained_public_evidence_counts_toward_work_quota(tmp_path,monkeypatch)
     assert usage(node)==len(b'ownprior public state')
     atomic_json(node/'own-storage-reservations.json',{'version':1,'directories':[str(tmp_path/'private')]})
     with pytest.raises(ValueError,match='separate local public state'):usage(node)
+
+
+def test_native_refresh_survives_selection_lock_held_by_queue(tmp_path,monkeypatch):
+    from src.network.own_swarm import OwnSwarmService
+    def busy(_):raise RuntimeError('A node already uses this state directory')
+    monkeypatch.setattr(programs,'recover_selection',busy)
+    service=object.__new__(OwnSwarmService);service.directory=tmp_path
+    service.knowledge=SimpleNamespace(allowed=True)
+    service.update(SimpleNamespace())
+    assert not service.ready and not service.engine.enabled
