@@ -17,6 +17,7 @@ from pathlib import Path
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--output", type=Path, required=True)
+    parser.add_argument('--own',action='store_true',help='Include the own-swarm typed operations in the local profile')
     options = parser.parse_args()
     import torch
     if torch.version.cuda is not None:
@@ -64,7 +65,8 @@ def main():
                           "sha256": digest.hexdigest()})
     manifest = {"version": 1, "name": "LixySwarmEngineCPU", "platform": sys.platform,
                 "machine": platform.machine(), "torch": torch.__version__,
-                "operations": ["reference.inference.v1", "training.gradient.v1", "reference.candidate.v1"],
+                "operations": (["reference.inference.v1", "training.gradient.v1", "reference.candidate.v1"]
+                    +(["swarm.gradient.v1","swarm.candidate.v1"] if options.own else [])),
                 "entrypoint": "LixySwarmEngineCPU.exe" if sys.platform == "win32" else "LixySwarmEngineCPU",
                 "files": files}
     (package / "engine-package.json").write_text(json.dumps(manifest, indent=2) + "\n")

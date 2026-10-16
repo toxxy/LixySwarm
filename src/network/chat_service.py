@@ -193,11 +193,12 @@ class ChatBroker:
 
 
 class LocalChatAPI:
-    def __init__(self,broker,directory,preparation=None,language_work=None,cache_repair=None):
+    def __init__(self,broker,directory,preparation=None,language_work=None,cache_repair=None,own_work=None):
         self.broker=broker;self.path=Path(directory)/"local-api.json";self.token=secrets.token_hex(32)
         self.preparation=preparation
         self.language_work=language_work
         self.cache_repair=cache_repair
+        self.own_work=own_work
         owner=self
         class Handler(BaseHTTPRequestHandler):
             protocol_version="HTTP/1.0"
@@ -220,6 +221,9 @@ class LocalChatAPI:
                 if self.path=='/cache-repair/status' and owner.cache_repair is not None:return self.reply(200,owner.cache_repair.snapshot())
                 if self.path.startswith('/language-work/') and owner.language_work is not None:
                     try:return self.reply(200,owner.language_work.status(self.path[len('/language-work/'):]))
+                    except ValueError:return self.reply(404,{'error':'Solicitud desconocida'})
+                if self.path.startswith('/own-work/') and owner.own_work is not None:
+                    try:return self.reply(200,owner.own_work.status(self.path[len('/own-work/'):]))
                     except ValueError:return self.reply(404,{'error':'Solicitud desconocida'})
                 if self.path!="/status":return self.reply(404,{"error":"Ruta desconocida"})
                 self.reply(200,owner.broker.snapshot())
@@ -246,6 +250,12 @@ class LocalChatAPI:
                     if self.path=='/language-work/cancel' and owner.language_work is not None:
                         if not isinstance(value,dict) or set(value)!={'request_id'}:raise ValueError('Invalid cancellation')
                         return self.reply(200,{'cancelled':owner.language_work.cancel(value['request_id'])})
+                    if self.path=='/own-work/start' and owner.own_work is not None:
+                        try:return self.reply(200,owner.own_work.start(value))
+                        except RuntimeError as error:return self.reply(409,{'error':str(error)})
+                    if self.path=='/own-work/cancel' and owner.own_work is not None:
+                        if not isinstance(value,dict) or set(value)!={'request_id'}:raise ValueError('Invalid own cancellation')
+                        return self.reply(200,{'cancelled':owner.own_work.cancel(value['request_id'])})
                     if self.path in {'/preparation/start','/preparation/stop'} and owner.preparation is not None:
                         if value!={}:raise ValueError('Preparation does not accept peer-selected paths or programs')
                         try:return self.reply(200,owner.preparation.start() if self.path.endswith('/start') else owner.preparation.stop())
@@ -276,6 +286,7 @@ class LocalChatAPI:
         self.thread.start()
 
     def close(self):
+        if self.own_work is not None:self.own_work.close()
         if self.language_work is not None:self.language_work.close()
         self.broker.close();self.server.shutdown();self.server.server_close();self.thread.join(timeout=2)
         try:

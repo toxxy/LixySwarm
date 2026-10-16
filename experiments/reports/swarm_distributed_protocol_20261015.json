@@ -1,0 +1,31 @@
+{
+  "definition": {
+    "aggregation": "prediction-byte-weighted-mean-before-clipping",
+    "batch_size": 16,
+    "candidate_disk_gb": 0.06,
+    "candidate_operation": "swarm.candidate.v1",
+    "clip_norm": 1.0,
+    "evaluation_dataset_id": "188812577d2a7834eff5fc0ac0fad5f09f121b3587b34b7ba5d88ba37537be50",
+    "evaluation_role": "Repeated development validation; not a fresh blinded test",
+    "family": "lixyswarm-own-causal-byte-v1",
+    "gradient_disk_gb": 0.02,
+    "gradient_dtype": "float32",
+    "gradient_operation": "swarm.gradient.v1",
+    "initialization_protocol_id": "7125f270fdcbc6be68141f556579805bbf8fda92bc228315207038ac2a9adf9a",
+    "learning_rate": 0.0002,
+    "maximum_aggregate_byte_accuracy_drop": 0.0,
+    "maximum_artifact_bytes": 16777216,
+    "maximum_document_bytes": 129,
+    "maximum_documents_per_shard": 256,
+    "maximum_seconds": 180,
+    "minimum_absolute_nll_gain": 1e-06,
+    "minimum_physical_workers": 2,
+    "minimum_relative_nll_gain": 0.0001,
+    "ram_gb": 4.0,
+    "scope": "Own causal byte-language learning; not general chat or math answer certification",
+    "training_dataset_id": "a1a36bc0cea6f5a8dbf81a5828a01da3ca0674c534431ef51583f3f46a915be6",
+    "version": 1,
+    "weight_decay": 0.01
+  },
+  "training_policy_id": "57052db9cad9b02f9b5bad64ce37f6e71c7ad7f597ee341320af266af091cb8c"
+}

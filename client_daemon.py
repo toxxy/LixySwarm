@@ -35,6 +35,8 @@ from src.network.language_preparation import LanguagePreparation
 from src.network.language_cache_repair import LanguageCacheRepair
 from src.network.language_learning import LanguageLearningCoordinator
 from src.network.local_language_work import LocalLanguageWork
+from src.network.own_swarm import OwnSwarmService
+from src.network.local_own_work import LocalOwnWork
 from src.network.language_follow import LanguageVersionFollower
 from src.version import VERSION
 
@@ -139,6 +141,8 @@ def run(directory: Path, *, host="0.0.0.0", port=7338, interval=15, allow_privat
         language = LanguageComputeService(knowledge,directory,resources)
         families=LanguageFamilies(knowledge,directory)
         language_training=LanguageTraining(knowledge,families,directory,resources)
+        own_swarm=OwnSwarmService(knowledge,directory,resources)
+        own_work=LocalOwnWork(own_swarm)
         preparation=LanguagePreparation(node,knowledge,families,directory,resources)
         cache_repair=LanguageCacheRepair(node,knowledge,families,directory)
         public_memory=PublicMemoryService(knowledge,directory)
@@ -146,7 +150,7 @@ def run(directory: Path, *, host="0.0.0.0", port=7338, interval=15, allow_privat
         learning = LearningCoordinator(knowledge,compute,directory)
         language_learning=LanguageLearningCoordinator(knowledge,language_training,directory)
         owner_work=LocalLanguageWork(knowledge,language_training,language_learning)
-        chat_api=LocalChatAPI(chat,directory,preparation,owner_work,cache_repair);chat_api.start()
+        chat_api=LocalChatAPI(chat,directory,preparation,owner_work,cache_repair,own_work);chat_api.start()
         language_follow=LanguageVersionFollower(knowledge,families,directory)
         stop = threading.Event()
         for signum in (signal.SIGINT, signal.SIGTERM):
@@ -167,8 +171,9 @@ def run(directory: Path, *, host="0.0.0.0", port=7338, interval=15, allow_privat
             computation=compute.snapshot()
             conversation=language.snapshot()
             training=language_training.snapshot()
+            own=own_swarm.snapshot()
             preparing=preparation.snapshot()
-            status["jobs"]={"active":computation["active"]+conversation["active"]+training["active"]+int(preparing['state']=='testing'),"completed":computation["completed"]+conversation["completed"]+training["completed"]}
+            status["jobs"]={"active":computation["active"]+conversation["active"]+training["active"]+own['active']+int(preparing['state']=='testing'),"completed":computation["completed"]+conversation["completed"]+training["completed"]+own['completed']}
             envelope = sign_status(identity, status)
             # Persist sequence before sending, so restart cannot reuse it.
             atomic_json(status_path, envelope)
@@ -178,12 +183,13 @@ def run(directory: Path, *, host="0.0.0.0", port=7338, interval=15, allow_privat
                 "node_id": identity.node_id_hex, "timestamp_ms": status["timestamp_ms"],
                 "port": node.port, "peers": peers,
                 "pid": os.getpid(), "runtime_version": VERSION, "controls_version": 1,
-                "settings": asdict(settings), "worker_ready": computation["ready"] or conversation["ready"] or training["ready"], "control_error": error,
+                "settings": asdict(settings), "worker_ready": computation["ready"] or conversation["ready"] or training["ready"] or own['ready'], "control_error": error,
                 "knowledge": public_knowledge,
                 "compute":computation,
                 "language":conversation,
                 "language_families":families.snapshot(),
                 "language_training":training,
+                "own_swarm":own,
                 "language_preparation":preparing,
                 "language_cache_repair":cache_repair.snapshot(),
                 "chat":chat.snapshot(),
@@ -240,6 +246,7 @@ def run(directory: Path, *, host="0.0.0.0", port=7338, interval=15, allow_privat
                 compute.update(settings)
                 language.update(settings)
                 language_training.update(settings)
+                own_swarm.update(settings)
                 cache_repair.update()
                 preparation.update()
                 chat.update(settings)
@@ -250,16 +257,16 @@ def run(directory: Path, *, host="0.0.0.0", port=7338, interval=15, allow_privat
                 public_state = knowledge.snapshot()
                 available={"artifact"} if public_state["sharing"] else set()
                 if compute.ready or language.ready: available.add("inference")
-                if compute.ready and compute.engine.training_requesters or language_training.ready: available.add("training")
+                if compute.ready and compute.engine.training_requesters or language_training.ready or own_swarm.ready: available.add("training")
                 node.resource_profile.update(knowledge.governor.advertised_profile(available_work=available))
                 if "cuda" not in compute.engine.devices and not language.ready and not language_training.ready:
                     node.resource_profile.update(has_gpu=False,gpu_percent=0,gpu_vram_gb=0)
                 node.resource_profile["work"] = {"connectivity":running, "artifact":public_state["sharing"],
-                    "inference":compute.ready or language.ready, "training":compute.ready and bool(compute.engine.training_requesters) or language_training.ready, "memory":False}
-                node.resource_profile["worker_ready"]=compute.ready or language.ready or language_training.ready
+                    "inference":compute.ready or language.ready, "training":compute.ready and bool(compute.engine.training_requesters) or language_training.ready or own_swarm.ready, "memory":False}
+                node.resource_profile["worker_ready"]=compute.ready or language.ready or language_training.ready or own_swarm.ready
                 node.resource_profile["model_artifact_id"]=public_state["model_id"] if compute.ready else language.engine.adapter_id if language.ready else ""
                 language_models=language.approved_models()
-                node.resource_profile["models"]=list(dict.fromkeys(([public_state["model_id"]] if compute.ready else [])+language_models+([language_training.snapshot()['model_id']] if language_training.ready else [])))
+                node.resource_profile["models"]=list(dict.fromkeys(([public_state["model_id"]] if compute.ready else [])+language_models+([language_training.snapshot()['model_id']] if language_training.ready else [])+([own_swarm.engine.model_id] if own_swarm.ready else [])))
                 node.capabilities["inference"]=compute.ready or language.ready
                 node.capabilities["language_inference_v1"]=language.ready
                 node.capabilities["language_inference_models"]=language.approved_models(maximum_descriptor=3)
@@ -269,11 +276,13 @@ def run(directory: Path, *, host="0.0.0.0", port=7338, interval=15, allow_privat
                 node.capabilities['public_memory_v1']=memory_state['sharing']
                 node.capabilities['public_memory_head']=memory_state['release_id'] if memory_state['sharing'] else ''
                 node.resource_profile["language_families_v1"]=families.snapshot()["available"]
-                node.capabilities["training"]=compute.ready and bool(compute.engine.training_requesters) or language_training.ready
+                node.capabilities["training"]=compute.ready and bool(compute.engine.training_requesters) or language_training.ready or own_swarm.ready
+                node.capabilities['own_swarm_v1']=own_swarm.ready
+                node.capabilities['own_swarm_state_id']=own_swarm.snapshot()['state_id'] if own_swarm.ready else ''
                 node.capabilities["language_training_v1"]=language_training.ready and language_training.engine.base_name=='qwen3-0.6b'
                 node.capabilities["language_training_v2"]=language_training.ready
                 node.capabilities["language_candidate_v1"]=language_training.ready and language_training.engine.candidates_enabled
-                node.capabilities["worker_ready"]=compute.ready or language.ready or language_training.ready
+                node.capabilities["worker_ready"]=compute.ready or language.ready or language_training.ready or own_swarm.ready
                 node.resource_profile["public_releases"] = [public_state["release_id"]] if public_state["sharing"] and public_state["release_id"] else []
                 knowledge_change = (public_state["state"], public_state["release_id"],
                                     public_state["versions_done"], public_state["sharing"])
@@ -286,7 +295,7 @@ def run(directory: Path, *, host="0.0.0.0", port=7338, interval=15, allow_privat
                     current_state='preparing'
                 if running and not settings.paused and language_follow.settings.enabled and language_follow.snapshot()['state']=='acquiring':
                     current_state='preparing'
-                if running and not settings.paused and (compute.snapshot()["active"] or language.snapshot()["active"] or language_training.snapshot()['active']):
+                if running and not settings.paused and (compute.snapshot()["active"] or language.snapshot()["active"] or language_training.snapshot()['active'] or own_swarm.snapshot()['active']):
                     current_state="working"
                 if knowledge_change != last_knowledge:
                     refresh.set(); last_knowledge = knowledge_change
@@ -296,6 +305,8 @@ def run(directory: Path, *, host="0.0.0.0", port=7338, interval=15, allow_privat
                     language.changed.clear();refresh.set()
                 if language_training.changed.is_set():
                     language_training.changed.clear();refresh.set()
+                if own_swarm.changed.is_set():
+                    own_swarm.changed.clear();refresh.set()
                 if learning.changed.is_set():
                     learning.changed.clear(); refresh.set()
                 if language_learning.changed.is_set():
@@ -320,6 +331,7 @@ def run(directory: Path, *, host="0.0.0.0", port=7338, interval=15, allow_privat
             compute.ready=False
             language.ready=False
             language_training.ready=False
+            own_swarm.ready=False
             knowledge.close()
             node.stop()
             log.info("Node stopped cleanly")

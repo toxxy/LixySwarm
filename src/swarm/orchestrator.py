@@ -937,8 +937,9 @@ class LixySwarm(nn.Module):
         if targets is not None:
             collective = F.cross_entropy(aggregated.flatten(0, 1), targets.flatten(), ignore_index=-1)
             individual = torch.stack(individual_losses).mean()
+            valid = targets.flatten() != -1
             diversity = self.pheromone_diversity_loss(
-                [signal.flatten(0, 1) for signal in signals], self.config.diversity_similarity_margin)
+                [signal.flatten(0, 1)[valid] for signal in signals], self.config.diversity_similarity_margin)
             total_loss = collective
             if self.training:
                 total_loss = (collective + self.config.auxiliary_loss_weight * individual

@@ -40,6 +40,19 @@ def test_install_verifies_package_and_preserves_training_authority(tmp_path):
         install_package(root, digest, state)
 
 
+def test_own_cpu_profile_requires_its_explicit_trust_without_enabling_reference_or_own_work(tmp_path):
+    root,value,_=package(tmp_path)
+    value['operations']+=['swarm.gradient.v1','swarm.candidate.v1']
+    path=root/'engine-package.json';path.write_text(json.dumps(value))
+    digest=hashlib.sha256(path.read_bytes()).hexdigest()
+    with pytest.raises(ValueError,match='operations'):verify_package(root,digest)
+    assert verify_package(root,digest,profile='own-cpu')['operations']==value['operations']
+    state=tmp_path/'state'
+    installed=install_package(root,digest,state,profile='own-cpu')
+    assert Path(installed).is_file() and not EngineSettings.load(state).enabled
+    assert (state/'own-cpu-prepared.json').is_file() and not (state/'own-swarm.json').exists()
+
+
 def test_digest_cannot_be_supplied_by_package_or_unknown_files(tmp_path):
     root, _, digest = package(tmp_path)
     with pytest.raises(ValueError, match="not trusted"):

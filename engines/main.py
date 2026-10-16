@@ -102,13 +102,22 @@ def self_test():
         candidate = json.loads(candidate_process.stdout)
         if not candidate["accepted"] or candidate["release"]["signatures"] or registry.active().release_id != genesis.release_id:
             raise ValueError("Frozen evaluator did not return an unsigned improvement without promotion")
+    from src.learning.swarm_foundation import make_foundation_model,predict
+    from src.learning.swarm_distributed_job import batches
+    with contextlib.redirect_stdout(sys.stderr):
+        own=make_foundation_model().train()
+    inputs,labels,tokens=next(batches([b'Own public fixture.'],'cpu'))
+    _,own_loss,_=predict(own,inputs,labels);own_loss.backward()
+    if not torch.isfinite(own_loss) or tokens!=18 or not any(p.grad is not None for p in own.parameters()):
+        raise ValueError('Frozen own-swarm backward did not produce a valid gradient')
     return {"success": True, "frozen": bool(getattr(sys, "frozen", False)), "torch_version": torch.__version__,
             "cuda_runtime": False, "inference_logits": 256, "gradient_tokens": 64,
             "candidate_evaluated": True, "candidate_signed_or_promoted": False,
             "candidate_loss_before": candidate["report"]["before_loss"],
             "candidate_loss_after": candidate["report"]["after_loss"],
             "test_fixture_signers": 3, "personal_state_loaded": False,
-            "job_process_signing_keys_loaded": False}
+            "job_process_signing_keys_loaded": False,'own_swarm_backward_verified':True,
+            'own_swarm_parameters':sum(p.numel() for p in own.parameters())}
 
 
 def main():
@@ -129,6 +138,9 @@ def main():
     request = json.loads(raw)
     if request.get("device") != "cpu":
         raise ValueError("This locally installed package supports CPU work only")
+    if request.get('action') in {'own-gradient','own-candidate'}:
+        from src.learning.swarm_distributed_job import run_request as run_own
+        return run_own(request)
     # The parent node chooses verified artifacts, deadlines and permissions.
     # Tensor imports and computation stay exclusively in this child process.
     from src.network.reference_job import run_request
