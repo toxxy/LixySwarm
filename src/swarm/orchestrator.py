@@ -416,7 +416,7 @@ class LixySwarm(nn.Module):
     """
 
     def __init__(self, config: SwarmConfig, load_matriarca: bool = True, agent_checkpoint: str = None,
-                 load_runtime_state: bool = True):
+                 load_runtime_state: bool = True, runtime_device: Optional[str] = None):
         super().__init__()
         self.config = config
 
@@ -428,7 +428,7 @@ class LixySwarm(nn.Module):
         infrasound_dim = config.matriarca_config.infrasound_dim
 
         # 🐬 DolphinPool — escala con la red (delfines dinámicos)
-        device_str = "cuda" if torch.cuda.is_available() else "cpu"
+        device_str = runtime_device or ("cuda" if torch.cuda.is_available() else "cpu")
         self.dolphin = DolphinPool(config.dolphin_config, device=device_str)
         print(f"  🐬 DolphinPool: {self.dolphin.n_dolphins} delfín(es) activos | {sum(p.numel() for p in self.dolphin.parameters())/1e6:.1f}M params")
 

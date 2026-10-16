@@ -106,3 +106,48 @@ def test_own_foundation_initialization_is_reproducible_and_preserves_callers_rng
     b = make_foundation_model(seed=37)
     assert a.matriarca is None and a.config.causal_signals
     assert all(torch.equal(v, b.state_dict()[k]) for k, v in a.state_dict().items())
+
+
+def test_cpu_foundation_does_not_initialize_cuda(monkeypatch):
+    from src.learning.swarm_foundation import make_foundation_model
+    def forbidden():
+        raise AssertionError('CPU foundation initialized CUDA')
+    monkeypatch.setattr(torch.cuda, '_lazy_init', forbidden)
+    assert all(p.device.type == 'cpu' for p in make_foundation_model().parameters())
+
+
+def test_own_training_receipt_and_cpu_optimizer_recovery_end_to_end(tmp_path, monkeypatch):
+    from types import SimpleNamespace
+    import time
+    from src.learning import swarm_foundation_job as job, swarm_foundation_audit as reader
+    from src.learning.swarm_foundation_protocol import definition, protocol_id
+    # A bounded fixture exercises genuine backward steps and serialization,
+    # not the physical experiment's quality or 1024-step acceptance claim.
+    protocol = definition()
+    protocol.update(steps=2, batch_size=2, block_size=8,
+                    evaluation_maximum_bytes_per_document=16)
+    monkeypatch.setattr(job, 'definition', lambda: protocol)
+    monkeypatch.setattr(reader, 'definition', lambda: protocol)
+    def snapshot(_path, split):
+        return {'rows': [{'question': 'train question' if split == 'train' else 'unseen question',
+                          'answer': 'a public answer'}]}
+    monkeypatch.setattr(job, 'load_snapshot', snapshot)
+    monkeypatch.setattr(reader, 'load_snapshot', snapshot)
+    train = tmp_path/'train.json'; train.write_text('fixture')
+    evaluation = tmp_path/'evaluation.json'; evaluation.write_text('fixture')
+    output = tmp_path/'engine'
+    receipt = job.run({'action': protocol['action'], 'protocol_id': protocol_id(),
+        'training_file': str(train), 'evaluation_file': str(evaluation),
+        'output_directory': str(output), 'device': 'cpu', 'cpu_threads': 2,
+        'gpu_fraction': 1., 'deadline': time.time()+60})
+    args = SimpleNamespace(weights=output/'model.safetensors', optimizer=output/'optimizer.pt',
+        report=output/'diagnostic.json', report_id=receipt['report_id'],
+        training_file=train, evaluation_file=evaluation)
+    recovered = reader.audit(args)
+    assert recovered['saved_optimizer_step'] == 2
+    assert recovered['resumed_optimizer_step'] == 3
+    assert recovered['identical_resumed_branches']
+    assert recovered['saved_weights_unchanged'] and not recovered['model_promoted']
+    args.report_id = '0'*64
+    with pytest.raises(ValueError, match='source report changed'):
+        reader.audit(args)

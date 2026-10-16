@@ -24,7 +24,7 @@ def make_foundation_model(*, seed=20261015, device='cpu'):
     if type(seed) is not int or not 0 <= seed < 2**32:
         raise ValueError('Foundation initialization needs a reproducible integer seed')
     c = FOUNDATION_CONFIG
-    with torch.random.fork_rng():
+    with torch.random.fork_rng(devices=[] if str(device)=='cpu' else None):
         torch.manual_seed(seed)
         config = SwarmConfig(n_agents=c['n_agents'], feromon_dim=c['feromon_dim'],
             echolocation_dim=c['echo_dim'], swarm_rounds=c['swarm_rounds'],
@@ -37,7 +37,8 @@ def make_foundation_model(*, seed=20261015, device='cpu'):
             dolphin_config=DolphinConfig(vocab_size=256, n_embd=c['n_embd'],
                 feromon_dim=c['feromon_dim'], identity_dim=c['identity_dim'],
                 echo_dim=c['echo_dim'], sleep_dim=c['sleep_dim'], dropout=0))
-        return LixySwarm(config, load_matriarca=False, load_runtime_state=False).to(device)
+        return LixySwarm(config, load_matriarca=False, load_runtime_state=False,
+                        runtime_device=str(device)).to(device)
 
 
 def predict(model, inputs, targets=None):
