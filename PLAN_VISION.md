@@ -6,7 +6,7 @@
 
 **Prioridad actualizada el 2026-10-14:** por indicación del usuario, el desarrollo y las pruebas de Windows y macOS quedan para el tramo final. Primero se completa el recorrido funcional en Linux: conexión por Internet, aprendizaje evaluado, distribución y conservación de las mejoras. Las compilaciones automáticas habituales se concentran en Linux; la matriz completa se conserva como ejecución manual para la validación final. Esta prioridad cambia el orden de trabajo, no las condiciones de aceptación de las demás etapas.
 
-**Avance verificado, 2026-10-15:** el modelo propio ya recibió una actualización conjunta de las dos PCs mediante sus servicios nativos y LSP público cifrado; ambas reconstruyeron, seleccionaron y conservaron el nuevo estado AdamW, y la laptop lo mantuvo tras reiniciar su servicio. La [evidencia](experiments/reports/own_swarm_native_round_20261015.json) mide una pequeña mejora de predicción de bytes en desarrollo. La ronda fue iniciada por el operador y el chat continúa usando Qwen. La coordinación autónoma, el escalado útil y las restantes pruebas de aceptación siguen pendientes; el estado detallado está en [VISION_PROGRESS.md](VISION_PROGRESS.md).
+**Avance verificado, 2026-10-15:** después de la primera ronda conjunta manual, los servicios nativos A22 completaron [diez ciclos propios](experiments/reports/own_continuous_native_20261015.json): siete mejoras aceptadas y replicadas en ambas PCs, y tres candidatas rechazadas por el criterio prefijado. Conservaron AdamW del paso 1.025 al 1.032 y recuperaron una candidata pendiente tras reiniciar el coordinador; también pasaron pausa y reanudación sin reiniciar el cursor. La mejora mide predicción de bytes en desarrollo repetido. El chat continúa usando Qwen y siguen pendientes la preparación propia desde una app vacía, el metabolismo aprendido, la utilidad general, el escalado y las demás condiciones de las ocho etapas. El estado detallado está en [VISION_PROGRESS.md](VISION_PROGRESS.md).
 
 LixySwarm debe ser una red que aprende, conserva lo aprendido y permite utilizarlo desde cualquier PC compatible. Cada máquina aporta dentro de los recursos que su usuario autoriza. La capacidad de entrenamiento debe aumentar al incorporar contribuciones útiles; las máquinas potentes pueden realizar más trabajo y alojar agentes mayores.
 
@@ -24,7 +24,7 @@ El primer hito de producto será completar este recorrido por Internet: una PC r
 - Dolphin, Matriarca y sectas deben aportar beneficios medibles a la exploración, la continuidad y la especialización.
 - La autonomía significa decidir cuándo aprender, evaluar el resultado, distribuir mejoras y detenerse dentro de límites. Sus etapas se habilitan mediante evidencia de funcionamiento.
 
-## Punto de partida verificado
+## Punto de partida verificado al elaborar el plan
 
 | Área | Estado | Trabajo pendiente para cumplir la visión |
 |---|---|---|
