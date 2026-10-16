@@ -1,6 +1,6 @@
 # Plan para completar la visión de LixySwarm
 
-**Dirección explícita, 2026-10-16:** la implementación se diseña para N participantes; las dos PCs disponibles sirven para las pruebas físicas. La política v2 sustituye la pareja fija por descubrimiento firmado, ventanas rotatorias de hasta ocho aportes por actualización, reparto por capacidad observada y reasignación de fragmentos. Los protocolos e historiales v1 se conservan. Los escenarios de 3, 8 y 64 identidades son pruebas de software; el despliegue y la prueba física v2 se registrarán por separado. La preparación propia desde una app vacía y la recuperación del coordinador siguen pendientes. Véase el [protocolo v2](experiments/reports/own_network_protocol_20261016.json).
+**Arquitectura para N participantes, verificada el 2026-10-16:** A23 y la política v2 sustituyen la pareja fija por descubrimiento firmado, ventanas rotatorias de hasta ocho aportes por actualización, reparto por capacidad observada y reasignación. La [prueba física por Internet](experiments/reports/own_network_native_20261016.json) completó cinco rondas con dos PCs: retiró y reincorporó la laptop, reasignó su fragmento al escritorio y conservó una mejora aceptada en ambos equipos, con AdamW 1.032 → 1.033. Hubo ventanas con 2, 1, 1, 2 y 2 contribuyentes; el reparto pasó de 64/64 a 256/64 documentos según tiempos observados que incluyen red y cálculo. Se preservaron cuatro rechazos v2 y todo el historial v1. La serie v2 está detenida tras tres rechazos consecutivos; el seguimiento de réplicas continúa. Las pruebas con 3 y 8 aportes y rotación de 64 identidades son de software, sin acreditarlas como PCs adicionales ni aceleración lineal. La preparación propia desde una app vacía, nuevos programas de datos y relevo del coordinador siguen pendientes. El [protocolo v2](experiments/reports/own_network_protocol_20261016.json) se publicó antes del ensayo.
 
 
 **Fecha:** 2026-10-13
@@ -156,13 +156,13 @@ La automodificación del código es una fase posterior: candidatos dentro de un 
 ## Próximo tramo de implementación
 
 1. Incorporación dinámica: una app Linux adquiere por Internet el estado propio y su motor compatible, anuncia capacidad y comienza a recibir trabajo sin editar identidades en el código. Los resultados del piloto de dos operadores conservan su política inmutable; la incorporación nueva tendrá verificación y procedencia explícitas.
-2. Reparto adaptable: usar capacidad medida, permiso y disponibilidad para repartir fragmentos diferentes. El equipo potente debe asumir más trabajo; equipos pequeños pueden aportar cálculo compatible, evaluación, almacenamiento o conectividad. La entrada o salida de un participante debe redistribuir trabajo pendiente.
+2. Reparto adaptable: el núcleo CPU A23 ya descubre participantes, mide tiempos, redistribuye fragmentos y recupera trabajadores, con la prueba física descrita arriba. Ampliar la capacidad útil a agentes, tamaños y roles diferentes, usando capacidad medida, permiso y disponibilidad para repartir fragmentos diferentes. El equipo potente debe asumir más trabajo; equipos pequeños pueden aportar cálculo compatible, evaluación, almacenamiento o conectividad. La entrada o salida de un participante debe redistribuir trabajo pendiente.
 3. Continuidad del aprendizaje: conservar programas de datos, posiciones, experiencias y optimizador; buscar alimentación pública nueva, incluidos profesores externos autorizados, y programar ciclos evaluados dentro de los recursos disponibles. Esperar datos o recursos debe permitir reanudar, conservando intentos y rechazos previos.
 4. Crecimiento y especialización: alojar agentes mayores cuando exista capacidad y crear o reorganizar especializaciones con evaluación y legado. Conservar conocimiento y estado al cambiar agentes; separar modelos incompatibles y transferir enseñanza entre ellos por las rutas previstas.
 5. Continuidad descentralizada: replicar también el progreso necesario para coordinar, además de los pesos y optimizadores ya replicados. Otro participante debe poder recuperar trabajo ante la salida del coordinador; el VPS mantiene su papel de transporte.
 6. App y Explorer: mostrar conexión, preparación, trabajo, aprendizaje aceptado, espera y recursos reales. Completar la entrada sencilla y las pruebas de disponibilidad del plan; el chat avanzado sigue siendo una capacidad posterior y Windows/macOS permanecen al final.
 
-La siguiente aceptación funcional es incorporar o retirar un equipo, observar la redistribución automática de trabajo real y comprobar que el aprendizaje aceptado y el progreso sobreviven. Más equipos deben aportar capacidad útil comprobada; no se presume aceleración lineal. Las comparaciones de rendimiento, la recuperación física, la red abierta y las restantes condiciones de las ocho etapas conservan sus pruebas completas.
+La retirada y reincorporación de un trabajador, la redistribución de un fragmento y la recuperación del estado propio ya se verificaron en A23. La siguiente aceptación es preparar desde la app una PC nueva para el organismo e integrar programas nuevos de datos, conservando posiciones, rechazos y mejoras. El relevo del coordinador sigue pendiente. Más equipos deben aportar capacidad útil comprobada; no se presume aceleración lineal. Las comparaciones de rendimiento, la recuperación física, la red abierta y las restantes condiciones de las ocho etapas conservan sus pruebas completas.
 
 ## Seguimiento de decisiones y avance
 
@@ -174,7 +174,7 @@ El flujo de desarrollo usa el repositorio público: las PCs publican cambios por
 
 ## Páginas actuales del VPS
 
-Actualizadas tras la verificación pública del 2026-10-15:
+Chat y Explorer verificados de nuevo el 2026-10-16:
 
 - [Explorer](https://31.97.9.54:8443/swarm-explorer.html) y [entrada principal](https://31.97.9.54:8443/).
 - [Chat con expertos de la red](https://31.97.9.54:8443/chat.html).

@@ -1,0 +1,2268 @@
+{
+  "version": 1,
+  "scope": "Native dynamic-membership own training and recovery on two existing physical PCs; software tests cover larger memberships",
+  "native_source_revision": "401daea7999f3f7f35b394e6b0391fb9c921ae41",
+  "publication_revision": "3ba22bd4c2dac2fe916a80219e1fc2c2369f2334",
+  "protocol": "own_network_protocol_20261016.json",
+  "summary": {
+    "accepted": 1,
+    "both_ready_same_state": true,
+    "durable_status": "no_improvement",
+    "extra_network_identities_created": 0,
+    "final_cursor": 3584,
+    "final_optimizer_step": 1033,
+    "final_state_id": "4e61bb665ec9ecaeb2266ac976c95278e225d350dffd5e67d96d1024c9c78d0f",
+    "finished_at": 1792158976.7725263,
+    "initial_cursor": 2816,
+    "laptop_managed_and_research_bytes": 8280500328,
+    "laptop_pid_after": 944843,
+    "laptop_pid_before": 943984,
+    "physical_training_pcs": 2,
+    "prior_controls_and_v1_progress_preserved": true,
+    "reassignments": 1,
+    "rejected": 4,
+    "root_managed_and_research_bytes": 7939050759,
+    "root_pid_unchanged_during_program": true,
+    "rounds": 5,
+    "seconds": 174.74860835075378,
+    "started_at": 1792158802.023918,
+    "success": true
+  },
+  "audited_native_progress": {
+    "verified_cycles": 5,
+    "accepted": 1,
+    "rejected": 4,
+    "consecutive_rejections": 3,
+    "cursor": 3584,
+    "state_id": "4e61bb665ec9ecaeb2266ac976c95278e225d350dffd5e67d96d1024c9c78d0f",
+    "optimizer_step": 1033,
+    "status": "no_improvement",
+    "training_policy_id": "b6992d4c29d6bdaa0a1dde550ef0dafd6d9e863c0f986d064a4c66d6e0da75e0",
+    "coordinator_contract_id": "a9603ead4f844dd32ca0cfbec48853471535d5a02df7397e957c5ad1e99cc271",
+    "reassignments": 1,
+    "records": [
+      {
+        "accepted": false,
+        "adoptions": {},
+        "assignments": [
+          {
+            "count": 64,
+            "shard_id": "2816",
+            "start": 2816,
+            "worker_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255"
+          },
+          {
+            "count": 64,
+            "shard_id": "2880",
+            "start": 2880,
+            "worker_id": "ea914d97caafef310e50385034abae9a50ba86496b0e9cbf4679e6070e4c25b0"
+          }
+        ],
+        "attempts": 1,
+        "autonomous": true,
+        "candidate": {
+          "artifact_initially_local": false,
+          "encoded_data_bytes": 0,
+          "finished_at": 1792158825.4202273,
+          "operation": "swarm.candidate.v2",
+          "result": {
+            "error": "",
+            "finished_at": 1792158825.4194818,
+            "job_id": "04a8f6229281263ce54008cfcfff393e525def7398e5c8c84e04f33814d54ce6",
+            "output": {
+              "accepted": false,
+              "after": {
+                "byte_accuracy": 0.46347355706107873,
+                "documents": 128,
+                "nll": 1.8433912017045209,
+                "predicted_bytes": 57123
+              },
+              "before": {
+                "byte_accuracy": 0.4636136057279905,
+                "documents": 128,
+                "nll": 1.8452374377158096,
+                "predicted_bytes": 57123
+              },
+              "candidate_optimizer_step": 1033,
+              "evaluation_bytes": 3448,
+              "evaluation_id": "81692c557eaff0469d0046ed3c7e008d1848ad11bd2f9b6b004f552ffbad0204",
+              "model_id": "93530f29ae27286e592a4fb171cd31dba7e08951aeb4196c4e43135d114a5a23",
+              "optimizer_id": "5c0cb9a47c6b9ced60c3be48c9ac6bfd76f5ceb87b70c65d3f12e082cae38210",
+              "prediction_bytes": 16384,
+              "previous_optimizer_step": 1032,
+              "state_id": "a9118d28b2b00f7bbdf045d40ef44f251c97c5c9826766601706c44a70e40dd4",
+              "training_policy_id": "b6992d4c29d6bdaa0a1dde550ef0dafd6d9e863c0f986d064a4c66d6e0da75e0"
+            },
+            "receipt": {
+              "finished_at": 1792158825.4194818,
+              "job_id": "04a8f6229281263ce54008cfcfff393e525def7398e5c8c84e04f33814d54ce6",
+              "requester_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+              "result_digest": "b4b28c9a47e002923a453f52e5a2e7e5f1a4d8f214500a43e6a3b68289a7f890",
+              "signature": "9dabslIW1fIjxv4n2Q1eKl2NCpr5m+52s/HWPemor74+iKAH3gpcZSph32xjE0+C2M5ktPBgavmt4IJHm/7eAg==",
+              "version": 1,
+              "worker_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255"
+            },
+            "status": "ok"
+          },
+          "route": {
+            "encrypted": false,
+            "public_internet": false,
+            "transport": "local"
+          },
+          "seconds": 5.0409407269908115,
+          "selected_state_id": "a9118d28b2b00f7bbdf045d40ef44f251c97c5c9826766601706c44a70e40dd4",
+          "started_at": 1792158820.3790739,
+          "state": "complete"
+        },
+        "contributions": {
+          "2816": {
+            "result": {
+              "error": "",
+              "finished_at": 1792158805.571108,
+              "job_id": "7c42b6571c1451639b58eb705e2be6aebf076c910a1d1fdb2f3915b447c157e9",
+              "output": {
+                "count": 64,
+                "dataset_id": "a1a36bc0cea6f5a8dbf81a5828a01da3ca0674c534431ef51583f3f46a915be6",
+                "gradient_bytes": 6244100,
+                "gradient_id": "3bc5ae34e1ac1ad73e2df26369bf9b38b0593528bcc46c06126775707c810123",
+                "loss": 2.290676474571228,
+                "model_id": "93530f29ae27286e592a4fb171cd31dba7e08951aeb4196c4e43135d114a5a23",
+                "start": 2816,
+                "state_id": "a9118d28b2b00f7bbdf045d40ef44f251c97c5c9826766601706c44a70e40dd4",
+                "tokens": 8192,
+                "training_policy_id": "b6992d4c29d6bdaa0a1dde550ef0dafd6d9e863c0f986d064a4c66d6e0da75e0"
+              },
+              "receipt": {
+                "finished_at": 1792158805.571108,
+                "job_id": "7c42b6571c1451639b58eb705e2be6aebf076c910a1d1fdb2f3915b447c157e9",
+                "requester_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+                "result_digest": "fb03c785f3ac4a640807f6c62fc398d4444b0e386c19d86d370805ae16627be8",
+                "signature": "Oxr58KuGsMiURji7v6sLxAmaxcUa4Sv+QVnrzpcZr8Y6Atx4AnZv+k6FzMEdQTa6glxY3UiCcoitbSSqClztBQ==",
+                "version": 1,
+                "worker_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255"
+              },
+              "status": "ok"
+            },
+            "worker_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255"
+          },
+          "2880": {
+            "result": {
+              "error": "",
+              "finished_at": 1792158806.9411263,
+              "job_id": "4e38fdc669ffe8868fd74b34073db5c1255308c019ae9c1ed4f6df4a814d4665",
+              "output": {
+                "count": 64,
+                "dataset_id": "a1a36bc0cea6f5a8dbf81a5828a01da3ca0674c534431ef51583f3f46a915be6",
+                "gradient_bytes": 6244100,
+                "gradient_id": "6a6c251508156d25a673ecdcc418a48fab0a424783ca9d88f8302ca14ee86705",
+                "loss": 2.331191658973694,
+                "model_id": "93530f29ae27286e592a4fb171cd31dba7e08951aeb4196c4e43135d114a5a23",
+                "start": 2880,
+                "state_id": "a9118d28b2b00f7bbdf045d40ef44f251c97c5c9826766601706c44a70e40dd4",
+                "tokens": 8192,
+                "training_policy_id": "b6992d4c29d6bdaa0a1dde550ef0dafd6d9e863c0f986d064a4c66d6e0da75e0"
+              },
+              "receipt": {
+                "finished_at": 1792158806.9411263,
+                "job_id": "4e38fdc669ffe8868fd74b34073db5c1255308c019ae9c1ed4f6df4a814d4665",
+                "requester_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+                "result_digest": "d89ca271cf9f80f6d09dfa0418dfb5ef149eb9b7de62ee6bb70917a5a61e4f66",
+                "signature": "f+THv2ztZCgsm0mHJDFYCWvgMyBPSZMUBG7VcZKJh6WITQj5GY7EWq5XZw7Ww2RSr0C4vwDyNJz5HeGWMYARCQ==",
+                "version": 1,
+                "worker_node_id": "ea914d97caafef310e50385034abae9a50ba86496b0e9cbf4679e6070e4c25b0"
+              },
+              "status": "ok"
+            },
+            "worker_id": "ea914d97caafef310e50385034abae9a50ba86496b0e9cbf4679e6070e4c25b0"
+          }
+        },
+        "cursor": 2816,
+        "finished_at": 1792158825.5956697,
+        "model_id": "93530f29ae27286e592a4fb171cd31dba7e08951aeb4196c4e43135d114a5a23",
+        "reassignments": [],
+        "replicas_observed": 1,
+        "resulting_state_id": "a9118d28b2b00f7bbdf045d40ef44f251c97c5c9826766601706c44a70e40dd4",
+        "round": 0,
+        "started_at": 1792158803.9853191,
+        "state_id": "a9118d28b2b00f7bbdf045d40ef44f251c97c5c9826766601706c44a70e40dd4",
+        "work": {
+          "2816": {
+            "artifact_initially_local": true,
+            "encoded_data_bytes": 0,
+            "finished_at": 1792158805.5797567,
+            "operation": "swarm.gradient.v2",
+            "result": {
+              "error": "",
+              "finished_at": 1792158805.571108,
+              "job_id": "7c42b6571c1451639b58eb705e2be6aebf076c910a1d1fdb2f3915b447c157e9",
+              "output": {
+                "count": 64,
+                "dataset_id": "a1a36bc0cea6f5a8dbf81a5828a01da3ca0674c534431ef51583f3f46a915be6",
+                "gradient_bytes": 6244100,
+                "gradient_id": "3bc5ae34e1ac1ad73e2df26369bf9b38b0593528bcc46c06126775707c810123",
+                "loss": 2.290676474571228,
+                "model_id": "93530f29ae27286e592a4fb171cd31dba7e08951aeb4196c4e43135d114a5a23",
+                "start": 2816,
+                "state_id": "a9118d28b2b00f7bbdf045d40ef44f251c97c5c9826766601706c44a70e40dd4",
+                "tokens": 8192,
+                "training_policy_id": "b6992d4c29d6bdaa0a1dde550ef0dafd6d9e863c0f986d064a4c66d6e0da75e0"
+              },
+              "receipt": {
+                "finished_at": 1792158805.571108,
+                "job_id": "7c42b6571c1451639b58eb705e2be6aebf076c910a1d1fdb2f3915b447c157e9",
+                "requester_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+                "result_digest": "fb03c785f3ac4a640807f6c62fc398d4444b0e386c19d86d370805ae16627be8",
+                "signature": "Oxr58KuGsMiURji7v6sLxAmaxcUa4Sv+QVnrzpcZr8Y6Atx4AnZv+k6FzMEdQTa6glxY3UiCcoitbSSqClztBQ==",
+                "version": 1,
+                "worker_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255"
+              },
+              "status": "ok"
+            },
+            "route": {
+              "encrypted": false,
+              "public_internet": false,
+              "transport": "local"
+            },
+            "seconds": 1.5836359409149736,
+            "selected_state_id": "a9118d28b2b00f7bbdf045d40ef44f251c97c5c9826766601706c44a70e40dd4",
+            "started_at": 1792158803.9959028,
+            "state": "complete"
+          },
+          "2880": {
+            "artifact_initially_local": false,
+            "encoded_data_bytes": 7171824,
+            "finished_at": 1792158820.2137814,
+            "operation": "swarm.gradient.v2",
+            "result": {
+              "error": "",
+              "finished_at": 1792158806.9411263,
+              "job_id": "4e38fdc669ffe8868fd74b34073db5c1255308c019ae9c1ed4f6df4a814d4665",
+              "output": {
+                "count": 64,
+                "dataset_id": "a1a36bc0cea6f5a8dbf81a5828a01da3ca0674c534431ef51583f3f46a915be6",
+                "gradient_bytes": 6244100,
+                "gradient_id": "6a6c251508156d25a673ecdcc418a48fab0a424783ca9d88f8302ca14ee86705",
+                "loss": 2.331191658973694,
+                "model_id": "93530f29ae27286e592a4fb171cd31dba7e08951aeb4196c4e43135d114a5a23",
+                "start": 2880,
+                "state_id": "a9118d28b2b00f7bbdf045d40ef44f251c97c5c9826766601706c44a70e40dd4",
+                "tokens": 8192,
+                "training_policy_id": "b6992d4c29d6bdaa0a1dde550ef0dafd6d9e863c0f986d064a4c66d6e0da75e0"
+              },
+              "receipt": {
+                "finished_at": 1792158806.9411263,
+                "job_id": "4e38fdc669ffe8868fd74b34073db5c1255308c019ae9c1ed4f6df4a814d4665",
+                "requester_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+                "result_digest": "d89ca271cf9f80f6d09dfa0418dfb5ef149eb9b7de62ee6bb70917a5a61e4f66",
+                "signature": "f+THv2ztZCgsm0mHJDFYCWvgMyBPSZMUBG7VcZKJh6WITQj5GY7EWq5XZw7Ww2RSr0C4vwDyNJz5HeGWMYARCQ==",
+                "version": 1,
+                "worker_node_id": "ea914d97caafef310e50385034abae9a50ba86496b0e9cbf4679e6070e4c25b0"
+              },
+              "status": "ok"
+            },
+            "route": {
+              "encrypted": true,
+              "public_internet": true,
+              "transport": "relay"
+            },
+            "seconds": 16.071690687909722,
+            "selected_state_id": "a9118d28b2b00f7bbdf045d40ef44f251c97c5c9826766601706c44a70e40dd4",
+            "started_at": 1792158804.1418476,
+            "state": "complete"
+          }
+        }
+      },
+      {
+        "accepted": true,
+        "adoptions": {
+          "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255": {
+            "error": "",
+            "finished_at": 1792158841.1593947,
+            "job_id": "ce7be36130d62a4321753d4439b03ae98bf8e910b09bef9361a42fc4f2f93c67",
+            "output": {
+              "already_selected": false,
+              "audit": {
+                "after": {
+                  "byte_accuracy": 0.46371864222817427,
+                  "documents": 128,
+                  "nll": 1.8433024185456734,
+                  "predicted_bytes": 57123
+                },
+                "cuda_initialized": false,
+                "gradient_replay_verified": true,
+                "maximum_model_tensor_error": 0.0,
+                "model_id": "cf59e348eeb1e2d2ac95d48266bbe53b45089a88b5845e98b47b18c6673528ce",
+                "model_promoted": false,
+                "model_tensors_bitwise_equal": true,
+                "new_gradient_computed": false,
+                "optimizer_id": "d91781743f9345344f18b63863ca57a694438eb2a50cad4de2de580fbddd4ba5",
+                "optimizer_states": 175,
+                "optimizer_step": 1033,
+                "saved_state_unchanged": true,
+                "scope": "Independent replay of existing signed contributions on CPU",
+                "state_id": "4e61bb665ec9ecaeb2266ac976c95278e225d350dffd5e67d96d1024c9c78d0f",
+                "success": true,
+                "training_policy_id": "b6992d4c29d6bdaa0a1dde550ef0dafd6d9e863c0f986d064a4c66d6e0da75e0"
+              },
+              "model_id": "cf59e348eeb1e2d2ac95d48266bbe53b45089a88b5845e98b47b18c6673528ce",
+              "optimizer_id": "d91781743f9345344f18b63863ca57a694438eb2a50cad4de2de580fbddd4ba5",
+              "optimizer_step": 1033,
+              "parent_state_id": "a9118d28b2b00f7bbdf045d40ef44f251c97c5c9826766601706c44a70e40dd4",
+              "scope": "Locally admitted own-state adoption; not open consensus",
+              "state_id": "4e61bb665ec9ecaeb2266ac976c95278e225d350dffd5e67d96d1024c9c78d0f",
+              "success": true,
+              "training_policy_id": "b6992d4c29d6bdaa0a1dde550ef0dafd6d9e863c0f986d064a4c66d6e0da75e0",
+              "transfers": [],
+              "transition_artifact_id": "54f2b10b5b1eb82255f674ab6af5a3bdd05093f700758e666b379cbbcb3023b2"
+            },
+            "receipt": {
+              "finished_at": 1792158841.1593947,
+              "job_id": "ce7be36130d62a4321753d4439b03ae98bf8e910b09bef9361a42fc4f2f93c67",
+              "requester_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+              "result_digest": "96bf4ec0e11282c6020b0fbadb0b446b6597dd40b8c100a443029b1a6ed22544",
+              "signature": "gFMUt8n8HVgBA9PRFUcLx7HZvFuRfQim4Ra9WQFtPFqptZPcHYtWEH01csCN6T8oL7k05SyD9cW/SDdVLTEgDA==",
+              "version": 1,
+              "worker_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255"
+            },
+            "status": "ok"
+          }
+        },
+        "assignments": [
+          {
+            "count": 64,
+            "shard_id": "2944",
+            "start": 2944,
+            "worker_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255"
+          },
+          {
+            "count": 64,
+            "shard_id": "3008",
+            "start": 3008,
+            "worker_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255"
+          }
+        ],
+        "attempts": 1,
+        "autonomous": true,
+        "candidate": {
+          "artifact_initially_local": false,
+          "encoded_data_bytes": 0,
+          "finished_at": 1792158835.7613308,
+          "operation": "swarm.candidate.v2",
+          "result": {
+            "error": "",
+            "finished_at": 1792158835.7607124,
+            "job_id": "c8ce3c69537056d8c366299dbeddb07eee65d6d2a746570ccefae8dc83ee087e",
+            "output": {
+              "accepted": true,
+              "after": {
+                "byte_accuracy": 0.46371864222817427,
+                "documents": 128,
+                "nll": 1.8433024185456734,
+                "predicted_bytes": 57123
+              },
+              "before": {
+                "byte_accuracy": 0.4636136057279905,
+                "documents": 128,
+                "nll": 1.8452374377158096,
+                "predicted_bytes": 57123
+              },
+              "candidate_model_bytes": 7337088,
+              "candidate_model_id": "cf59e348eeb1e2d2ac95d48266bbe53b45089a88b5845e98b47b18c6673528ce",
+              "candidate_optimizer_bytes": 12595275,
+              "candidate_optimizer_id": "d91781743f9345344f18b63863ca57a694438eb2a50cad4de2de580fbddd4ba5",
+              "candidate_optimizer_step": 1033,
+              "evaluation_bytes": 3538,
+              "evaluation_id": "2110f6f0070f96b25e86b48b824222dce4953dd4588ff98b06a3705e1a07173d",
+              "model_id": "93530f29ae27286e592a4fb171cd31dba7e08951aeb4196c4e43135d114a5a23",
+              "optimizer_id": "5c0cb9a47c6b9ced60c3be48c9ac6bfd76f5ceb87b70c65d3f12e082cae38210",
+              "prediction_bytes": 16384,
+              "previous_optimizer_step": 1032,
+              "state_id": "a9118d28b2b00f7bbdf045d40ef44f251c97c5c9826766601706c44a70e40dd4",
+              "training_policy_id": "b6992d4c29d6bdaa0a1dde550ef0dafd6d9e863c0f986d064a4c66d6e0da75e0"
+            },
+            "receipt": {
+              "finished_at": 1792158835.7607124,
+              "job_id": "c8ce3c69537056d8c366299dbeddb07eee65d6d2a746570ccefae8dc83ee087e",
+              "requester_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+              "result_digest": "446e15ff51f40a5c7b6ab81dd57e8913bde7ea22bf62675adff9670c166259d8",
+              "signature": "FGkgNou159O6bQKTFaeZ1bvl2DSvnjXwU1OUKd1g2epCGPDaCxLdmK9IaEsmXZcjZ453O8DATBLCC28g9L/yCg==",
+              "version": 1,
+              "worker_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255"
+            },
+            "status": "ok"
+          },
+          "route": {
+            "encrypted": false,
+            "public_internet": false,
+            "transport": "local"
+          },
+          "seconds": 5.225401958101429,
+          "selected_state_id": "a9118d28b2b00f7bbdf045d40ef44f251c97c5c9826766601706c44a70e40dd4",
+          "started_at": 1792158830.5357144,
+          "state": "complete"
+        },
+        "contributions": {
+          "2944": {
+            "result": {
+              "error": "",
+              "finished_at": 1792158827.9317856,
+              "job_id": "ccb68f67cf3e9afb3366e6229557ce8c4775cc44aafdddd48e27ef50de9ca907",
+              "output": {
+                "count": 64,
+                "dataset_id": "a1a36bc0cea6f5a8dbf81a5828a01da3ca0674c534431ef51583f3f46a915be6",
+                "gradient_bytes": 6244100,
+                "gradient_id": "66df07b34f580292126bb9e686b83371191620d871e0fd5b70af05cd34e161ab",
+                "loss": 2.3394495248794556,
+                "model_id": "93530f29ae27286e592a4fb171cd31dba7e08951aeb4196c4e43135d114a5a23",
+                "start": 2944,
+                "state_id": "a9118d28b2b00f7bbdf045d40ef44f251c97c5c9826766601706c44a70e40dd4",
+                "tokens": 8192,
+                "training_policy_id": "b6992d4c29d6bdaa0a1dde550ef0dafd6d9e863c0f986d064a4c66d6e0da75e0"
+              },
+              "receipt": {
+                "finished_at": 1792158827.9317856,
+                "job_id": "ccb68f67cf3e9afb3366e6229557ce8c4775cc44aafdddd48e27ef50de9ca907",
+                "requester_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+                "result_digest": "1f892e7468831a303abae3b83cca9f8b62b09d19142b0f4a150e79bd83db48e3",
+                "signature": "9G3ppa12lBXUOQ5ySTmUM/aiDprdu0ouAt0QnwXn6MQffzKCdh7QLat/LWaN5bCe0hCeYTQX+953xfJEFDZ0Cg==",
+                "version": 1,
+                "worker_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255"
+              },
+              "status": "ok"
+            },
+            "worker_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255"
+          },
+          "3008": {
+            "result": {
+              "error": "",
+              "finished_at": 1792158830.490023,
+              "job_id": "d0ec1f11e707880f6f1eabd21e03e175c0c2224def8d4101a80d2f75e4fdf6d5",
+              "output": {
+                "count": 64,
+                "dataset_id": "a1a36bc0cea6f5a8dbf81a5828a01da3ca0674c534431ef51583f3f46a915be6",
+                "gradient_bytes": 6244100,
+                "gradient_id": "99f859068895d76124538c3f58da95dbdc235ed25c29abad31f8f5c062952d4a",
+                "loss": 2.343264639377594,
+                "model_id": "93530f29ae27286e592a4fb171cd31dba7e08951aeb4196c4e43135d114a5a23",
+                "start": 3008,
+                "state_id": "a9118d28b2b00f7bbdf045d40ef44f251c97c5c9826766601706c44a70e40dd4",
+                "tokens": 8192,
+                "training_policy_id": "b6992d4c29d6bdaa0a1dde550ef0dafd6d9e863c0f986d064a4c66d6e0da75e0"
+              },
+              "receipt": {
+                "finished_at": 1792158830.490023,
+                "job_id": "d0ec1f11e707880f6f1eabd21e03e175c0c2224def8d4101a80d2f75e4fdf6d5",
+                "requester_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+                "result_digest": "bb08a2e8feabeb7eec03cda9e6bb0ae331bb471c72dc9ec84cac0cca5e1103d8",
+                "signature": "mOoJbsdg/ZoyCoOcC14H2SVHdPR9+PehMIuRq4DI+T5hcznYkI98yhX6Hk1bOdq4OVNOotYNZ22vxhRFiECzBg==",
+                "version": 1,
+                "worker_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255"
+              },
+              "status": "ok"
+            },
+            "worker_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255"
+          }
+        },
+        "cursor": 2944,
+        "finished_at": 1792158846.2155607,
+        "model_id": "93530f29ae27286e592a4fb171cd31dba7e08951aeb4196c4e43135d114a5a23",
+        "reassignments": [
+          {
+            "at": 1792158828.9283953,
+            "from": "ea914d97caafef310e50385034abae9a50ba86496b0e9cbf4679e6070e4c25b0",
+            "shard_id": "3008",
+            "to": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255"
+          }
+        ],
+        "replicas_observed": 1,
+        "resulting_state_id": "4e61bb665ec9ecaeb2266ac976c95278e225d350dffd5e67d96d1024c9c78d0f",
+        "round": 1,
+        "started_at": 1792158826.3790202,
+        "state_id": "a9118d28b2b00f7bbdf045d40ef44f251c97c5c9826766601706c44a70e40dd4",
+        "work": {
+          "2944": {
+            "artifact_initially_local": true,
+            "encoded_data_bytes": 0,
+            "finished_at": 1792158827.9401777,
+            "operation": "swarm.gradient.v2",
+            "result": {
+              "error": "",
+              "finished_at": 1792158827.9317856,
+              "job_id": "ccb68f67cf3e9afb3366e6229557ce8c4775cc44aafdddd48e27ef50de9ca907",
+              "output": {
+                "count": 64,
+                "dataset_id": "a1a36bc0cea6f5a8dbf81a5828a01da3ca0674c534431ef51583f3f46a915be6",
+                "gradient_bytes": 6244100,
+                "gradient_id": "66df07b34f580292126bb9e686b83371191620d871e0fd5b70af05cd34e161ab",
+                "loss": 2.3394495248794556,
+                "model_id": "93530f29ae27286e592a4fb171cd31dba7e08951aeb4196c4e43135d114a5a23",
+                "start": 2944,
+                "state_id": "a9118d28b2b00f7bbdf045d40ef44f251c97c5c9826766601706c44a70e40dd4",
+                "tokens": 8192,
+                "training_policy_id": "b6992d4c29d6bdaa0a1dde550ef0dafd6d9e863c0f986d064a4c66d6e0da75e0"
+              },
+              "receipt": {
+                "finished_at": 1792158827.9317856,
+                "job_id": "ccb68f67cf3e9afb3366e6229557ce8c4775cc44aafdddd48e27ef50de9ca907",
+                "requester_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+                "result_digest": "1f892e7468831a303abae3b83cca9f8b62b09d19142b0f4a150e79bd83db48e3",
+                "signature": "9G3ppa12lBXUOQ5ySTmUM/aiDprdu0ouAt0QnwXn6MQffzKCdh7QLat/LWaN5bCe0hCeYTQX+953xfJEFDZ0Cg==",
+                "version": 1,
+                "worker_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255"
+              },
+              "status": "ok"
+            },
+            "route": {
+              "encrypted": false,
+              "public_internet": false,
+              "transport": "local"
+            },
+            "seconds": 1.5598859749734402,
+            "selected_state_id": "a9118d28b2b00f7bbdf045d40ef44f251c97c5c9826766601706c44a70e40dd4",
+            "started_at": 1792158826.3801417,
+            "state": "complete"
+          },
+          "3008": {
+            "artifact_initially_local": true,
+            "encoded_data_bytes": 0,
+            "finished_at": 1792158830.498839,
+            "operation": "swarm.gradient.v2",
+            "result": {
+              "error": "",
+              "finished_at": 1792158830.490023,
+              "job_id": "d0ec1f11e707880f6f1eabd21e03e175c0c2224def8d4101a80d2f75e4fdf6d5",
+              "output": {
+                "count": 64,
+                "dataset_id": "a1a36bc0cea6f5a8dbf81a5828a01da3ca0674c534431ef51583f3f46a915be6",
+                "gradient_bytes": 6244100,
+                "gradient_id": "99f859068895d76124538c3f58da95dbdc235ed25c29abad31f8f5c062952d4a",
+                "loss": 2.343264639377594,
+                "model_id": "93530f29ae27286e592a4fb171cd31dba7e08951aeb4196c4e43135d114a5a23",
+                "start": 3008,
+                "state_id": "a9118d28b2b00f7bbdf045d40ef44f251c97c5c9826766601706c44a70e40dd4",
+                "tokens": 8192,
+                "training_policy_id": "b6992d4c29d6bdaa0a1dde550ef0dafd6d9e863c0f986d064a4c66d6e0da75e0"
+              },
+              "receipt": {
+                "finished_at": 1792158830.490023,
+                "job_id": "d0ec1f11e707880f6f1eabd21e03e175c0c2224def8d4101a80d2f75e4fdf6d5",
+                "requester_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+                "result_digest": "bb08a2e8feabeb7eec03cda9e6bb0ae331bb471c72dc9ec84cac0cca5e1103d8",
+                "signature": "mOoJbsdg/ZoyCoOcC14H2SVHdPR9+PehMIuRq4DI+T5hcznYkI98yhX6Hk1bOdq4OVNOotYNZ22vxhRFiECzBg==",
+                "version": 1,
+                "worker_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255"
+              },
+              "status": "ok"
+            },
+            "route": {
+              "encrypted": false,
+              "public_internet": false,
+              "transport": "local"
+            },
+            "seconds": 1.5694566280581057,
+            "selected_state_id": "a9118d28b2b00f7bbdf045d40ef44f251c97c5c9826766601706c44a70e40dd4",
+            "started_at": 1792158828.9292388,
+            "state": "complete"
+          }
+        }
+      },
+      {
+        "accepted": false,
+        "adoptions": {},
+        "assignments": [
+          {
+            "count": 64,
+            "shard_id": "3072",
+            "start": 3072,
+            "worker_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255"
+          }
+        ],
+        "attempts": 1,
+        "autonomous": true,
+        "candidate": {
+          "artifact_initially_local": false,
+          "encoded_data_bytes": 0,
+          "finished_at": 1792158853.2906983,
+          "operation": "swarm.candidate.v2",
+          "result": {
+            "error": "",
+            "finished_at": 1792158853.2902114,
+            "job_id": "8ed4227e8b262a0fb9be356d5f8b1d88889cdc6f0ed6832e39229ee6321d86d5",
+            "output": {
+              "accepted": false,
+              "after": {
+                "byte_accuracy": 0.4628083258932479,
+                "documents": 128,
+                "nll": 1.8423634013268506,
+                "predicted_bytes": 57123
+              },
+              "before": {
+                "byte_accuracy": 0.46371864222817427,
+                "documents": 128,
+                "nll": 1.8433024185456734,
+                "predicted_bytes": 57123
+              },
+              "candidate_optimizer_step": 1034,
+              "evaluation_bytes": 2180,
+              "evaluation_id": "c459495cc093a3151c8b292d28b3b2634e56be605d96f224eb8da2e5c4399664",
+              "model_id": "cf59e348eeb1e2d2ac95d48266bbe53b45089a88b5845e98b47b18c6673528ce",
+              "optimizer_id": "d91781743f9345344f18b63863ca57a694438eb2a50cad4de2de580fbddd4ba5",
+              "prediction_bytes": 8192,
+              "previous_optimizer_step": 1033,
+              "state_id": "4e61bb665ec9ecaeb2266ac976c95278e225d350dffd5e67d96d1024c9c78d0f",
+              "training_policy_id": "b6992d4c29d6bdaa0a1dde550ef0dafd6d9e863c0f986d064a4c66d6e0da75e0"
+            },
+            "receipt": {
+              "finished_at": 1792158853.2902114,
+              "job_id": "8ed4227e8b262a0fb9be356d5f8b1d88889cdc6f0ed6832e39229ee6321d86d5",
+              "requester_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+              "result_digest": "cca5b2fe02615b7677c32e5c27a0849e72e848b370be0cf3577cf2f91643085a",
+              "signature": "+u6o8IgAZys18Bol75tbAdZzND8thhmPwGkwERTKyPDkEkT+A2mLqJMJ1Ld7bytXhkWXj4RjQEKBZk0w7gttDQ==",
+              "version": 1,
+              "worker_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255"
+            },
+            "status": "ok"
+          },
+          "route": {
+            "encrypted": false,
+            "public_internet": false,
+            "transport": "local"
+          },
+          "seconds": 5.2045222780434415,
+          "selected_state_id": "4e61bb665ec9ecaeb2266ac976c95278e225d350dffd5e67d96d1024c9c78d0f",
+          "started_at": 1792158848.0858357,
+          "state": "complete"
+        },
+        "contributions": {
+          "3072": {
+            "result": {
+              "error": "",
+              "finished_at": 1792158847.929866,
+              "job_id": "fc4e789b0ccfc5ae5ff0a4e5d939680fb217019604948c54b6f1fcae95b91949",
+              "output": {
+                "count": 64,
+                "dataset_id": "a1a36bc0cea6f5a8dbf81a5828a01da3ca0674c534431ef51583f3f46a915be6",
+                "gradient_bytes": 6244100,
+                "gradient_id": "1fb72229de5fecf33402cee3efbbacd0670d28fa318b30f0fb3ebf27b61323a9",
+                "loss": 2.360681116580963,
+                "model_id": "cf59e348eeb1e2d2ac95d48266bbe53b45089a88b5845e98b47b18c6673528ce",
+                "start": 3072,
+                "state_id": "4e61bb665ec9ecaeb2266ac976c95278e225d350dffd5e67d96d1024c9c78d0f",
+                "tokens": 8192,
+                "training_policy_id": "b6992d4c29d6bdaa0a1dde550ef0dafd6d9e863c0f986d064a4c66d6e0da75e0"
+              },
+              "receipt": {
+                "finished_at": 1792158847.929866,
+                "job_id": "fc4e789b0ccfc5ae5ff0a4e5d939680fb217019604948c54b6f1fcae95b91949",
+                "requester_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+                "result_digest": "191fa93c2f0d97d562695dff78b808b9b0c130c3c6658bdb9c4b67821fb5c5c8",
+                "signature": "sQoX2+duneooKgBu8jWdVM9Pafm4lxCZQFvUH2nEAOk/FohZd41o9LAISOf1b1qDUzGmQZ0ykY9XOU7L61cfAA==",
+                "version": 1,
+                "worker_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255"
+              },
+              "status": "ok"
+            },
+            "worker_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255"
+          }
+        },
+        "cursor": 3072,
+        "finished_at": 1792158853.3099048,
+        "model_id": "cf59e348eeb1e2d2ac95d48266bbe53b45089a88b5845e98b47b18c6673528ce",
+        "reassignments": [],
+        "replicas_observed": 1,
+        "resulting_state_id": "4e61bb665ec9ecaeb2266ac976c95278e225d350dffd5e67d96d1024c9c78d0f",
+        "round": 2,
+        "started_at": 1792158846.2684422,
+        "state_id": "4e61bb665ec9ecaeb2266ac976c95278e225d350dffd5e67d96d1024c9c78d0f",
+        "work": {
+          "3072": {
+            "artifact_initially_local": true,
+            "encoded_data_bytes": 0,
+            "finished_at": 1792158847.937824,
+            "operation": "swarm.gradient.v2",
+            "result": {
+              "error": "",
+              "finished_at": 1792158847.929866,
+              "job_id": "fc4e789b0ccfc5ae5ff0a4e5d939680fb217019604948c54b6f1fcae95b91949",
+              "output": {
+                "count": 64,
+                "dataset_id": "a1a36bc0cea6f5a8dbf81a5828a01da3ca0674c534431ef51583f3f46a915be6",
+                "gradient_bytes": 6244100,
+                "gradient_id": "1fb72229de5fecf33402cee3efbbacd0670d28fa318b30f0fb3ebf27b61323a9",
+                "loss": 2.360681116580963,
+                "model_id": "cf59e348eeb1e2d2ac95d48266bbe53b45089a88b5845e98b47b18c6673528ce",
+                "start": 3072,
+                "state_id": "4e61bb665ec9ecaeb2266ac976c95278e225d350dffd5e67d96d1024c9c78d0f",
+                "tokens": 8192,
+                "training_policy_id": "b6992d4c29d6bdaa0a1dde550ef0dafd6d9e863c0f986d064a4c66d6e0da75e0"
+              },
+              "receipt": {
+                "finished_at": 1792158847.929866,
+                "job_id": "fc4e789b0ccfc5ae5ff0a4e5d939680fb217019604948c54b6f1fcae95b91949",
+                "requester_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+                "result_digest": "191fa93c2f0d97d562695dff78b808b9b0c130c3c6658bdb9c4b67821fb5c5c8",
+                "signature": "sQoX2+duneooKgBu8jWdVM9Pafm4lxCZQFvUH2nEAOk/FohZd41o9LAISOf1b1qDUzGmQZ0ykY9XOU7L61cfAA==",
+                "version": 1,
+                "worker_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255"
+              },
+              "status": "ok"
+            },
+            "route": {
+              "encrypted": false,
+              "public_internet": false,
+              "transport": "local"
+            },
+            "seconds": 1.668022260069847,
+            "selected_state_id": "4e61bb665ec9ecaeb2266ac976c95278e225d350dffd5e67d96d1024c9c78d0f",
+            "started_at": 1792158846.2696586,
+            "state": "complete"
+          }
+        }
+      },
+      {
+        "accepted": false,
+        "adoptions": {},
+        "assignments": [
+          {
+            "count": 64,
+            "shard_id": "3136",
+            "start": 3136,
+            "worker_id": "ea914d97caafef310e50385034abae9a50ba86496b0e9cbf4679e6070e4c25b0"
+          },
+          {
+            "count": 64,
+            "shard_id": "3200",
+            "start": 3200,
+            "worker_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255"
+          }
+        ],
+        "attempts": 1,
+        "autonomous": true,
+        "candidate": {
+          "artifact_initially_local": false,
+          "encoded_data_bytes": 0,
+          "finished_at": 1792158951.9152825,
+          "operation": "swarm.candidate.v2",
+          "result": {
+            "error": "",
+            "finished_at": 1792158951.9145544,
+            "job_id": "983db8bcfbac0c34479c327cb7f49efddbcbdae5ef22ea19fc7beac7c4b70eca",
+            "output": {
+              "accepted": false,
+              "after": {
+                "byte_accuracy": 0.463316002310803,
+                "documents": 128,
+                "nll": 1.8422338840555472,
+                "predicted_bytes": 57123
+              },
+              "before": {
+                "byte_accuracy": 0.46371864222817427,
+                "documents": 128,
+                "nll": 1.8433024185456734,
+                "predicted_bytes": 57123
+              },
+              "candidate_optimizer_step": 1034,
+              "evaluation_bytes": 3449,
+              "evaluation_id": "aab3ce47654378b7200058ac836341429b3de4b5eb09764ef98e7d39d49bfa62",
+              "model_id": "cf59e348eeb1e2d2ac95d48266bbe53b45089a88b5845e98b47b18c6673528ce",
+              "optimizer_id": "d91781743f9345344f18b63863ca57a694438eb2a50cad4de2de580fbddd4ba5",
+              "prediction_bytes": 16384,
+              "previous_optimizer_step": 1033,
+              "state_id": "4e61bb665ec9ecaeb2266ac976c95278e225d350dffd5e67d96d1024c9c78d0f",
+              "training_policy_id": "b6992d4c29d6bdaa0a1dde550ef0dafd6d9e863c0f986d064a4c66d6e0da75e0"
+            },
+            "receipt": {
+              "finished_at": 1792158951.9145544,
+              "job_id": "983db8bcfbac0c34479c327cb7f49efddbcbdae5ef22ea19fc7beac7c4b70eca",
+              "requester_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+              "result_digest": "dc53adb4d1c610f19a790521b2a993c628284c83e534f217a3aa9f7116aba8d3",
+              "signature": "TLmgcmNB+ExPU+0zsP8y9H3bUHax2kJmX2IIFbha7dqE6oXKq0IiJ41lU6Uh2UuH368wbwiNODyhAbtl/SEPAA==",
+              "version": 1,
+              "worker_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255"
+            },
+            "status": "ok"
+          },
+          "route": {
+            "encrypted": false,
+            "public_internet": false,
+            "transport": "local"
+          },
+          "seconds": 5.188606188981794,
+          "selected_state_id": "4e61bb665ec9ecaeb2266ac976c95278e225d350dffd5e67d96d1024c9c78d0f",
+          "started_at": 1792158946.726432,
+          "state": "complete"
+        },
+        "contributions": {
+          "3136": {
+            "result": {
+              "error": "",
+              "finished_at": 1792158933.2154808,
+              "job_id": "07f88886d43304b86cd56b928a44ad44276577a760a15da09e86b9e09ea66173",
+              "output": {
+                "count": 64,
+                "dataset_id": "a1a36bc0cea6f5a8dbf81a5828a01da3ca0674c534431ef51583f3f46a915be6",
+                "gradient_bytes": 6244100,
+                "gradient_id": "43c14fe269288e0669ff0fbb0b13a2c79dfee304b6801bd290debca2a9befc30",
+                "loss": 2.3309448957443237,
+                "model_id": "cf59e348eeb1e2d2ac95d48266bbe53b45089a88b5845e98b47b18c6673528ce",
+                "start": 3136,
+                "state_id": "4e61bb665ec9ecaeb2266ac976c95278e225d350dffd5e67d96d1024c9c78d0f",
+                "tokens": 8192,
+                "training_policy_id": "b6992d4c29d6bdaa0a1dde550ef0dafd6d9e863c0f986d064a4c66d6e0da75e0"
+              },
+              "receipt": {
+                "finished_at": 1792158933.2154808,
+                "job_id": "07f88886d43304b86cd56b928a44ad44276577a760a15da09e86b9e09ea66173",
+                "requester_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+                "result_digest": "908d9653061e8ec688811b9c2d88777b3e7ada315ead54d6cc17fa8c93e49142",
+                "signature": "WV3DmmHtYt3Iq15MNy1+V9Wy1lVnRU+3+ZgjEugTFHrp855cc3Cyq33AUCvEJugpHkzYocBcbDPYT4xiicshCA==",
+                "version": 1,
+                "worker_node_id": "ea914d97caafef310e50385034abae9a50ba86496b0e9cbf4679e6070e4c25b0"
+              },
+              "status": "ok"
+            },
+            "worker_id": "ea914d97caafef310e50385034abae9a50ba86496b0e9cbf4679e6070e4c25b0"
+          },
+          "3200": {
+            "result": {
+              "error": "",
+              "finished_at": 1792158931.815704,
+              "job_id": "960bfc5bbc9f682dee9b2b0cc2fc9292dce5ae67f52029649bc3a7f912573dbf",
+              "output": {
+                "count": 64,
+                "dataset_id": "a1a36bc0cea6f5a8dbf81a5828a01da3ca0674c534431ef51583f3f46a915be6",
+                "gradient_bytes": 6244100,
+                "gradient_id": "29112c239a80c5b0d8021b63fde4de592d4c3a666170375329394055e1dd371a",
+                "loss": 2.3354175090789795,
+                "model_id": "cf59e348eeb1e2d2ac95d48266bbe53b45089a88b5845e98b47b18c6673528ce",
+                "start": 3200,
+                "state_id": "4e61bb665ec9ecaeb2266ac976c95278e225d350dffd5e67d96d1024c9c78d0f",
+                "tokens": 8192,
+                "training_policy_id": "b6992d4c29d6bdaa0a1dde550ef0dafd6d9e863c0f986d064a4c66d6e0da75e0"
+              },
+              "receipt": {
+                "finished_at": 1792158931.815704,
+                "job_id": "960bfc5bbc9f682dee9b2b0cc2fc9292dce5ae67f52029649bc3a7f912573dbf",
+                "requester_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+                "result_digest": "67cfd0f158d0fc8867227e9bf1be311c393b5e2991306f4f615e534ba549b419",
+                "signature": "XDl5gs1uGe+8PjGp3o3WJcnPlPXFlkQahbtnXsxK13R1JA9MDybKG4pX0N0QQogwrQYOcEXoLP4dwN46crNyBQ==",
+                "version": 1,
+                "worker_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255"
+              },
+              "status": "ok"
+            },
+            "worker_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255"
+          }
+        },
+        "cursor": 3136,
+        "finished_at": 1792158951.943996,
+        "model_id": "cf59e348eeb1e2d2ac95d48266bbe53b45089a88b5845e98b47b18c6673528ce",
+        "reassignments": [],
+        "replicas_observed": 1,
+        "resulting_state_id": "4e61bb665ec9ecaeb2266ac976c95278e225d350dffd5e67d96d1024c9c78d0f",
+        "round": 3,
+        "started_at": 1792158853.9096568,
+        "state_id": "4e61bb665ec9ecaeb2266ac976c95278e225d350dffd5e67d96d1024c9c78d0f",
+        "work": {
+          "3136": {
+            "artifact_initially_local": false,
+            "encoded_data_bytes": 7164176,
+            "finished_at": 1792158946.68758,
+            "operation": "swarm.gradient.v2",
+            "result": {
+              "error": "",
+              "finished_at": 1792158933.2154808,
+              "job_id": "07f88886d43304b86cd56b928a44ad44276577a760a15da09e86b9e09ea66173",
+              "output": {
+                "count": 64,
+                "dataset_id": "a1a36bc0cea6f5a8dbf81a5828a01da3ca0674c534431ef51583f3f46a915be6",
+                "gradient_bytes": 6244100,
+                "gradient_id": "43c14fe269288e0669ff0fbb0b13a2c79dfee304b6801bd290debca2a9befc30",
+                "loss": 2.3309448957443237,
+                "model_id": "cf59e348eeb1e2d2ac95d48266bbe53b45089a88b5845e98b47b18c6673528ce",
+                "start": 3136,
+                "state_id": "4e61bb665ec9ecaeb2266ac976c95278e225d350dffd5e67d96d1024c9c78d0f",
+                "tokens": 8192,
+                "training_policy_id": "b6992d4c29d6bdaa0a1dde550ef0dafd6d9e863c0f986d064a4c66d6e0da75e0"
+              },
+              "receipt": {
+                "finished_at": 1792158933.2154808,
+                "job_id": "07f88886d43304b86cd56b928a44ad44276577a760a15da09e86b9e09ea66173",
+                "requester_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+                "result_digest": "908d9653061e8ec688811b9c2d88777b3e7ada315ead54d6cc17fa8c93e49142",
+                "signature": "WV3DmmHtYt3Iq15MNy1+V9Wy1lVnRU+3+ZgjEugTFHrp855cc3Cyq33AUCvEJugpHkzYocBcbDPYT4xiicshCA==",
+                "version": 1,
+                "worker_node_id": "ea914d97caafef310e50385034abae9a50ba86496b0e9cbf4679e6070e4c25b0"
+              },
+              "status": "ok"
+            },
+            "route": {
+              "encrypted": true,
+              "public_internet": true,
+              "transport": "relay"
+            },
+            "seconds": 16.39556274493225,
+            "selected_state_id": "4e61bb665ec9ecaeb2266ac976c95278e225d350dffd5e67d96d1024c9c78d0f",
+            "started_at": 1792158930.2917795,
+            "state": "complete"
+          },
+          "3200": {
+            "artifact_initially_local": true,
+            "encoded_data_bytes": 0,
+            "finished_at": 1792158931.8241756,
+            "operation": "swarm.gradient.v2",
+            "result": {
+              "error": "",
+              "finished_at": 1792158931.815704,
+              "job_id": "960bfc5bbc9f682dee9b2b0cc2fc9292dce5ae67f52029649bc3a7f912573dbf",
+              "output": {
+                "count": 64,
+                "dataset_id": "a1a36bc0cea6f5a8dbf81a5828a01da3ca0674c534431ef51583f3f46a915be6",
+                "gradient_bytes": 6244100,
+                "gradient_id": "29112c239a80c5b0d8021b63fde4de592d4c3a666170375329394055e1dd371a",
+                "loss": 2.3354175090789795,
+                "model_id": "cf59e348eeb1e2d2ac95d48266bbe53b45089a88b5845e98b47b18c6673528ce",
+                "start": 3200,
+                "state_id": "4e61bb665ec9ecaeb2266ac976c95278e225d350dffd5e67d96d1024c9c78d0f",
+                "tokens": 8192,
+                "training_policy_id": "b6992d4c29d6bdaa0a1dde550ef0dafd6d9e863c0f986d064a4c66d6e0da75e0"
+              },
+              "receipt": {
+                "finished_at": 1792158931.815704,
+                "job_id": "960bfc5bbc9f682dee9b2b0cc2fc9292dce5ae67f52029649bc3a7f912573dbf",
+                "requester_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+                "result_digest": "67cfd0f158d0fc8867227e9bf1be311c393b5e2991306f4f615e534ba549b419",
+                "signature": "XDl5gs1uGe+8PjGp3o3WJcnPlPXFlkQahbtnXsxK13R1JA9MDybKG4pX0N0QQogwrQYOcEXoLP4dwN46crNyBQ==",
+                "version": 1,
+                "worker_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255"
+              },
+              "status": "ok"
+            },
+            "route": {
+              "encrypted": false,
+              "public_internet": false,
+              "transport": "local"
+            },
+            "seconds": 1.530432260944508,
+            "selected_state_id": "4e61bb665ec9ecaeb2266ac976c95278e225d350dffd5e67d96d1024c9c78d0f",
+            "started_at": 1792158930.293463,
+            "state": "complete"
+          }
+        }
+      },
+      {
+        "accepted": false,
+        "adoptions": {},
+        "assignments": [
+          {
+            "count": 256,
+            "shard_id": "3264",
+            "start": 3264,
+            "worker_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255"
+          },
+          {
+            "count": 64,
+            "shard_id": "3520",
+            "start": 3520,
+            "worker_id": "ea914d97caafef310e50385034abae9a50ba86496b0e9cbf4679e6070e4c25b0"
+          }
+        ],
+        "attempts": 1,
+        "autonomous": true,
+        "candidate": {
+          "artifact_initially_local": false,
+          "encoded_data_bytes": 0,
+          "finished_at": 1792158974.950387,
+          "operation": "swarm.candidate.v2",
+          "result": {
+            "error": "",
+            "finished_at": 1792158974.949669,
+            "job_id": "48e53677334c3da0fb5ef911250c1124a652d273a502922277e1016d6ba137f9",
+            "output": {
+              "accepted": false,
+              "after": {
+                "byte_accuracy": 0.46307091714370746,
+                "documents": 128,
+                "nll": 1.8422365238350038,
+                "predicted_bytes": 57123
+              },
+              "before": {
+                "byte_accuracy": 0.46371864222817427,
+                "documents": 128,
+                "nll": 1.8433024185456734,
+                "predicted_bytes": 57123
+              },
+              "candidate_optimizer_step": 1034,
+              "evaluation_bytes": 3453,
+              "evaluation_id": "d65d82dc0cc84cc0136d216ceb885369067b74e044729f23dca0f2f11b1a51ac",
+              "model_id": "cf59e348eeb1e2d2ac95d48266bbe53b45089a88b5845e98b47b18c6673528ce",
+              "optimizer_id": "d91781743f9345344f18b63863ca57a694438eb2a50cad4de2de580fbddd4ba5",
+              "prediction_bytes": 40960,
+              "previous_optimizer_step": 1033,
+              "state_id": "4e61bb665ec9ecaeb2266ac976c95278e225d350dffd5e67d96d1024c9c78d0f",
+              "training_policy_id": "b6992d4c29d6bdaa0a1dde550ef0dafd6d9e863c0f986d064a4c66d6e0da75e0"
+            },
+            "receipt": {
+              "finished_at": 1792158974.949669,
+              "job_id": "48e53677334c3da0fb5ef911250c1124a652d273a502922277e1016d6ba137f9",
+              "requester_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+              "result_digest": "061c39d5e2f5dccceb162c12fac24a42ba9be235ee519c68c0a58c9fdb66b5b8",
+              "signature": "mIR9Sla0lFM3W0Gk4quYc2ZWxHawT5Ceg44fnAuX69egJq6CQ68lDp62TccU1CrHWpNnlvj2gyQ8RVwVms27Bg==",
+              "version": 1,
+              "worker_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255"
+            },
+            "status": "ok"
+          },
+          "route": {
+            "encrypted": false,
+            "public_internet": false,
+            "transport": "local"
+          },
+          "seconds": 5.543450883007608,
+          "selected_state_id": "4e61bb665ec9ecaeb2266ac976c95278e225d350dffd5e67d96d1024c9c78d0f",
+          "started_at": 1792158969.4067116,
+          "state": "complete"
+        },
+        "contributions": {
+          "3264": {
+            "result": {
+              "error": "",
+              "finished_at": 1792158955.829229,
+              "job_id": "a2aaa7680de8db372964384832733229cad9bff88a41d216e6093d0c6a9f45fc",
+              "output": {
+                "count": 256,
+                "dataset_id": "a1a36bc0cea6f5a8dbf81a5828a01da3ca0674c534431ef51583f3f46a915be6",
+                "gradient_bytes": 6244108,
+                "gradient_id": "68084f924e70a3792f82eafafd91d735b5bb536d605e72b356fb0ef96b81e97b",
+                "loss": 2.3192856907844543,
+                "model_id": "cf59e348eeb1e2d2ac95d48266bbe53b45089a88b5845e98b47b18c6673528ce",
+                "start": 3264,
+                "state_id": "4e61bb665ec9ecaeb2266ac976c95278e225d350dffd5e67d96d1024c9c78d0f",
+                "tokens": 32768,
+                "training_policy_id": "b6992d4c29d6bdaa0a1dde550ef0dafd6d9e863c0f986d064a4c66d6e0da75e0"
+              },
+              "receipt": {
+                "finished_at": 1792158955.829229,
+                "job_id": "a2aaa7680de8db372964384832733229cad9bff88a41d216e6093d0c6a9f45fc",
+                "requester_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+                "result_digest": "a025884389eca231c76b15cdf370f633a2d003b9009e54848e7390a9f072f168",
+                "signature": "xGJ+Vm9p4dDQUlAs0/90/c/HZ6igxwcB4Gn/Dmj2JbWgIpIPSmc8ts/EWXxJ1meTK6b/BG46jpJ+1k76EQ1ADQ==",
+                "version": 1,
+                "worker_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255"
+              },
+              "status": "ok"
+            },
+            "worker_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255"
+          },
+          "3520": {
+            "result": {
+              "error": "",
+              "finished_at": 1792158955.3623738,
+              "job_id": "e277f1299f40cfc9835df140d1da1e17d4c030a7652e3d3362351560906b63e1",
+              "output": {
+                "count": 64,
+                "dataset_id": "a1a36bc0cea6f5a8dbf81a5828a01da3ca0674c534431ef51583f3f46a915be6",
+                "gradient_bytes": 6244100,
+                "gradient_id": "8787ddb0a8d5d4fdfd0ae338e2a8b59e55dbecae9e764288f4bed3b6f7d843e8",
+                "loss": 2.3517280220985413,
+                "model_id": "cf59e348eeb1e2d2ac95d48266bbe53b45089a88b5845e98b47b18c6673528ce",
+                "start": 3520,
+                "state_id": "4e61bb665ec9ecaeb2266ac976c95278e225d350dffd5e67d96d1024c9c78d0f",
+                "tokens": 8192,
+                "training_policy_id": "b6992d4c29d6bdaa0a1dde550ef0dafd6d9e863c0f986d064a4c66d6e0da75e0"
+              },
+              "receipt": {
+                "finished_at": 1792158955.3623738,
+                "job_id": "e277f1299f40cfc9835df140d1da1e17d4c030a7652e3d3362351560906b63e1",
+                "requester_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+                "result_digest": "2ed75127e6d14ce94daa76f964094ea18d00a4e870b693a1e3575a7105cb7ddb",
+                "signature": "nY/gadxqucctgfBMXp8F7dU5hHkS072h+c6AhURw98yXM5Kq1JZAqN0Mm7ivPy8+3VmbE2MlKwZt+Yo07u9mCw==",
+                "version": 1,
+                "worker_node_id": "ea914d97caafef310e50385034abae9a50ba86496b0e9cbf4679e6070e4c25b0"
+              },
+              "status": "ok"
+            },
+            "worker_id": "ea914d97caafef310e50385034abae9a50ba86496b0e9cbf4679e6070e4c25b0"
+          }
+        },
+        "cursor": 3264,
+        "finished_at": 1792158975.0210903,
+        "model_id": "cf59e348eeb1e2d2ac95d48266bbe53b45089a88b5845e98b47b18c6673528ce",
+        "reassignments": [],
+        "replicas_observed": 1,
+        "resulting_state_id": "4e61bb665ec9ecaeb2266ac976c95278e225d350dffd5e67d96d1024c9c78d0f",
+        "round": 4,
+        "started_at": 1792158952.6128304,
+        "state_id": "4e61bb665ec9ecaeb2266ac976c95278e225d350dffd5e67d96d1024c9c78d0f",
+        "work": {
+          "3264": {
+            "artifact_initially_local": true,
+            "encoded_data_bytes": 0,
+            "finished_at": 1792158955.8375506,
+            "operation": "swarm.gradient.v2",
+            "result": {
+              "error": "",
+              "finished_at": 1792158955.829229,
+              "job_id": "a2aaa7680de8db372964384832733229cad9bff88a41d216e6093d0c6a9f45fc",
+              "output": {
+                "count": 256,
+                "dataset_id": "a1a36bc0cea6f5a8dbf81a5828a01da3ca0674c534431ef51583f3f46a915be6",
+                "gradient_bytes": 6244108,
+                "gradient_id": "68084f924e70a3792f82eafafd91d735b5bb536d605e72b356fb0ef96b81e97b",
+                "loss": 2.3192856907844543,
+                "model_id": "cf59e348eeb1e2d2ac95d48266bbe53b45089a88b5845e98b47b18c6673528ce",
+                "start": 3264,
+                "state_id": "4e61bb665ec9ecaeb2266ac976c95278e225d350dffd5e67d96d1024c9c78d0f",
+                "tokens": 32768,
+                "training_policy_id": "b6992d4c29d6bdaa0a1dde550ef0dafd6d9e863c0f986d064a4c66d6e0da75e0"
+              },
+              "receipt": {
+                "finished_at": 1792158955.829229,
+                "job_id": "a2aaa7680de8db372964384832733229cad9bff88a41d216e6093d0c6a9f45fc",
+                "requester_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+                "result_digest": "a025884389eca231c76b15cdf370f633a2d003b9009e54848e7390a9f072f168",
+                "signature": "xGJ+Vm9p4dDQUlAs0/90/c/HZ6igxwcB4Gn/Dmj2JbWgIpIPSmc8ts/EWXxJ1meTK6b/BG46jpJ+1k76EQ1ADQ==",
+                "version": 1,
+                "worker_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255"
+              },
+              "status": "ok"
+            },
+            "route": {
+              "encrypted": false,
+              "public_internet": false,
+              "transport": "local"
+            },
+            "seconds": 3.2140813400037587,
+            "selected_state_id": "4e61bb665ec9ecaeb2266ac976c95278e225d350dffd5e67d96d1024c9c78d0f",
+            "started_at": 1792158952.6232646,
+            "state": "complete"
+          },
+          "3520": {
+            "artifact_initially_local": false,
+            "encoded_data_bytes": 7168080,
+            "finished_at": 1792158969.2148097,
+            "operation": "swarm.gradient.v2",
+            "result": {
+              "error": "",
+              "finished_at": 1792158955.3623738,
+              "job_id": "e277f1299f40cfc9835df140d1da1e17d4c030a7652e3d3362351560906b63e1",
+              "output": {
+                "count": 64,
+                "dataset_id": "a1a36bc0cea6f5a8dbf81a5828a01da3ca0674c534431ef51583f3f46a915be6",
+                "gradient_bytes": 6244100,
+                "gradient_id": "8787ddb0a8d5d4fdfd0ae338e2a8b59e55dbecae9e764288f4bed3b6f7d843e8",
+                "loss": 2.3517280220985413,
+                "model_id": "cf59e348eeb1e2d2ac95d48266bbe53b45089a88b5845e98b47b18c6673528ce",
+                "start": 3520,
+                "state_id": "4e61bb665ec9ecaeb2266ac976c95278e225d350dffd5e67d96d1024c9c78d0f",
+                "tokens": 8192,
+                "training_policy_id": "b6992d4c29d6bdaa0a1dde550ef0dafd6d9e863c0f986d064a4c66d6e0da75e0"
+              },
+              "receipt": {
+                "finished_at": 1792158955.3623738,
+                "job_id": "e277f1299f40cfc9835df140d1da1e17d4c030a7652e3d3362351560906b63e1",
+                "requester_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+                "result_digest": "2ed75127e6d14ce94daa76f964094ea18d00a4e870b693a1e3575a7105cb7ddb",
+                "signature": "nY/gadxqucctgfBMXp8F7dU5hHkS072h+c6AhURw98yXM5Kq1JZAqN0Mm7ivPy8+3VmbE2MlKwZt+Yo07u9mCw==",
+                "version": 1,
+                "worker_node_id": "ea914d97caafef310e50385034abae9a50ba86496b0e9cbf4679e6070e4c25b0"
+              },
+              "status": "ok"
+            },
+            "route": {
+              "encrypted": true,
+              "public_internet": true,
+              "transport": "relay"
+            },
+            "seconds": 16.44511008390691,
+            "selected_state_id": "4e61bb665ec9ecaeb2266ac976c95278e225d350dffd5e67d96d1024c9c78d0f",
+            "started_at": 1792158952.769364,
+            "state": "complete"
+          }
+        }
+      }
+    ],
+    "evaluation_reports_raw": {
+      "81692c557eaff0469d0046ed3c7e008d1848ad11bd2f9b6b004f552ffbad0204": "{\"accepted\": false, \"after\": {\"byte_accuracy\": 0.46347355706107873, \"documents\": 128, \"nll\": 1.8433912017045209, \"predicted_bytes\": 57123}, \"before\": {\"byte_accuracy\": 0.4636136057279905, \"documents\": 128, \"nll\": 1.8452374377158096, \"predicted_bytes\": 57123}, \"candidate_optimizer_step\": 1033, \"contributions\": [{\"result\": {\"error\": \"\", \"finished_at\": 1792158805.571108, \"job_id\": \"7c42b6571c1451639b58eb705e2be6aebf076c910a1d1fdb2f3915b447c157e9\", \"output\": {\"count\": 64, \"dataset_id\": \"a1a36bc0cea6f5a8dbf81a5828a01da3ca0674c534431ef51583f3f46a915be6\", \"gradient_bytes\": 6244100, \"gradient_id\": \"3bc5ae34e1ac1ad73e2df26369bf9b38b0593528bcc46c06126775707c810123\", \"loss\": 2.290676474571228, \"model_id\": \"93530f29ae27286e592a4fb171cd31dba7e08951aeb4196c4e43135d114a5a23\", \"start\": 2816, \"state_id\": \"a9118d28b2b00f7bbdf045d40ef44f251c97c5c9826766601706c44a70e40dd4\", \"tokens\": 8192, \"training_policy_id\": \"b6992d4c29d6bdaa0a1dde550ef0dafd6d9e863c0f986d064a4c66d6e0da75e0\"}, \"receipt\": {\"finished_at\": 1792158805.571108, \"job_id\": \"7c42b6571c1451639b58eb705e2be6aebf076c910a1d1fdb2f3915b447c157e9\", \"requester_node_id\": \"c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255\", \"result_digest\": \"fb03c785f3ac4a640807f6c62fc398d4444b0e386c19d86d370805ae16627be8\", \"signature\": \"Oxr58KuGsMiURji7v6sLxAmaxcUa4Sv+QVnrzpcZr8Y6Atx4AnZv+k6FzMEdQTa6glxY3UiCcoitbSSqClztBQ==\", \"version\": 1, \"worker_node_id\": \"c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255\"}, \"status\": \"ok\"}, \"worker_id\": \"c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255\"}, {\"result\": {\"error\": \"\", \"finished_at\": 1792158806.9411263, \"job_id\": \"4e38fdc669ffe8868fd74b34073db5c1255308c019ae9c1ed4f6df4a814d4665\", \"output\": {\"count\": 64, \"dataset_id\": \"a1a36bc0cea6f5a8dbf81a5828a01da3ca0674c534431ef51583f3f46a915be6\", \"gradient_bytes\": 6244100, \"gradient_id\": \"6a6c251508156d25a673ecdcc418a48fab0a424783ca9d88f8302ca14ee86705\", \"loss\": 2.331191658973694, \"model_id\": \"93530f29ae27286e592a4fb171cd31dba7e08951aeb4196c4e43135d114a5a23\", \"start\": 2880, \"state_id\": \"a9118d28b2b00f7bbdf045d40ef44f251c97c5c9826766601706c44a70e40dd4\", \"tokens\": 8192, \"training_policy_id\": \"b6992d4c29d6bdaa0a1dde550ef0dafd6d9e863c0f986d064a4c66d6e0da75e0\"}, \"receipt\": {\"finished_at\": 1792158806.9411263, \"job_id\": \"4e38fdc669ffe8868fd74b34073db5c1255308c019ae9c1ed4f6df4a814d4665\", \"requester_node_id\": \"c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255\", \"result_digest\": \"d89ca271cf9f80f6d09dfa0418dfb5ef149eb9b7de62ee6bb70917a5a61e4f66\", \"signature\": \"f+THv2ztZCgsm0mHJDFYCWvgMyBPSZMUBG7VcZKJh6WITQj5GY7EWq5XZw7Ww2RSr0C4vwDyNJz5HeGWMYARCQ==\", \"version\": 1, \"worker_node_id\": \"ea914d97caafef310e50385034abae9a50ba86496b0e9cbf4679e6070e4c25b0\"}, \"status\": \"ok\"}, \"worker_id\": \"ea914d97caafef310e50385034abae9a50ba86496b0e9cbf4679e6070e4c25b0\"}], \"gradient_norm_before_clipping\": 0.4842817187309265, \"model_id\": \"93530f29ae27286e592a4fb171cd31dba7e08951aeb4196c4e43135d114a5a23\", \"model_promoted\": false, \"native_cycles_added\": 0, \"optimizer_id\": \"5c0cb9a47c6b9ced60c3be48c9ac6bfd76f5ceb87b70c65d3f12e082cae38210\", \"prediction_bytes\": 16384, \"previous_optimizer_step\": 1032, \"scope\": \"Own causal byte-language learning with dynamic membership; not open consensus or general chat\", \"state_id\": \"a9118d28b2b00f7bbdf045d40ef44f251c97c5c9826766601706c44a70e40dd4\", \"training_policy_id\": \"b6992d4c29d6bdaa0a1dde550ef0dafd6d9e863c0f986d064a4c66d6e0da75e0\"}",
+      "2110f6f0070f96b25e86b48b824222dce4953dd4588ff98b06a3705e1a07173d": "{\"accepted\": true, \"after\": {\"byte_accuracy\": 0.46371864222817427, \"documents\": 128, \"nll\": 1.8433024185456734, \"predicted_bytes\": 57123}, \"before\": {\"byte_accuracy\": 0.4636136057279905, \"documents\": 128, \"nll\": 1.8452374377158096, \"predicted_bytes\": 57123}, \"candidate_optimizer_step\": 1033, \"candidate_state_id\": \"4e61bb665ec9ecaeb2266ac976c95278e225d350dffd5e67d96d1024c9c78d0f\", \"contributions\": [{\"result\": {\"error\": \"\", \"finished_at\": 1792158827.9317856, \"job_id\": \"ccb68f67cf3e9afb3366e6229557ce8c4775cc44aafdddd48e27ef50de9ca907\", \"output\": {\"count\": 64, \"dataset_id\": \"a1a36bc0cea6f5a8dbf81a5828a01da3ca0674c534431ef51583f3f46a915be6\", \"gradient_bytes\": 6244100, \"gradient_id\": \"66df07b34f580292126bb9e686b83371191620d871e0fd5b70af05cd34e161ab\", \"loss\": 2.3394495248794556, \"model_id\": \"93530f29ae27286e592a4fb171cd31dba7e08951aeb4196c4e43135d114a5a23\", \"start\": 2944, \"state_id\": \"a9118d28b2b00f7bbdf045d40ef44f251c97c5c9826766601706c44a70e40dd4\", \"tokens\": 8192, \"training_policy_id\": \"b6992d4c29d6bdaa0a1dde550ef0dafd6d9e863c0f986d064a4c66d6e0da75e0\"}, \"receipt\": {\"finished_at\": 1792158827.9317856, \"job_id\": \"ccb68f67cf3e9afb3366e6229557ce8c4775cc44aafdddd48e27ef50de9ca907\", \"requester_node_id\": \"c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255\", \"result_digest\": \"1f892e7468831a303abae3b83cca9f8b62b09d19142b0f4a150e79bd83db48e3\", \"signature\": \"9G3ppa12lBXUOQ5ySTmUM/aiDprdu0ouAt0QnwXn6MQffzKCdh7QLat/LWaN5bCe0hCeYTQX+953xfJEFDZ0Cg==\", \"version\": 1, \"worker_node_id\": \"c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255\"}, \"status\": \"ok\"}, \"worker_id\": \"c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255\"}, {\"result\": {\"error\": \"\", \"finished_at\": 1792158830.490023, \"job_id\": \"d0ec1f11e707880f6f1eabd21e03e175c0c2224def8d4101a80d2f75e4fdf6d5\", \"output\": {\"count\": 64, \"dataset_id\": \"a1a36bc0cea6f5a8dbf81a5828a01da3ca0674c534431ef51583f3f46a915be6\", \"gradient_bytes\": 6244100, \"gradient_id\": \"99f859068895d76124538c3f58da95dbdc235ed25c29abad31f8f5c062952d4a\", \"loss\": 2.343264639377594, \"model_id\": \"93530f29ae27286e592a4fb171cd31dba7e08951aeb4196c4e43135d114a5a23\", \"start\": 3008, \"state_id\": \"a9118d28b2b00f7bbdf045d40ef44f251c97c5c9826766601706c44a70e40dd4\", \"tokens\": 8192, \"training_policy_id\": \"b6992d4c29d6bdaa0a1dde550ef0dafd6d9e863c0f986d064a4c66d6e0da75e0\"}, \"receipt\": {\"finished_at\": 1792158830.490023, \"job_id\": \"d0ec1f11e707880f6f1eabd21e03e175c0c2224def8d4101a80d2f75e4fdf6d5\", \"requester_node_id\": \"c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255\", \"result_digest\": \"bb08a2e8feabeb7eec03cda9e6bb0ae331bb471c72dc9ec84cac0cca5e1103d8\", \"signature\": \"mOoJbsdg/ZoyCoOcC14H2SVHdPR9+PehMIuRq4DI+T5hcznYkI98yhX6Hk1bOdq4OVNOotYNZ22vxhRFiECzBg==\", \"version\": 1, \"worker_node_id\": \"c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255\"}, \"status\": \"ok\"}, \"worker_id\": \"c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255\"}], \"gradient_norm_before_clipping\": 0.5809314846992493, \"model_id\": \"93530f29ae27286e592a4fb171cd31dba7e08951aeb4196c4e43135d114a5a23\", \"model_promoted\": false, \"native_cycles_added\": 0, \"optimizer_id\": \"5c0cb9a47c6b9ced60c3be48c9ac6bfd76f5ceb87b70c65d3f12e082cae38210\", \"prediction_bytes\": 16384, \"previous_optimizer_step\": 1032, \"scope\": \"Own causal byte-language learning with dynamic membership; not open consensus or general chat\", \"state_id\": \"a9118d28b2b00f7bbdf045d40ef44f251c97c5c9826766601706c44a70e40dd4\", \"training_policy_id\": \"b6992d4c29d6bdaa0a1dde550ef0dafd6d9e863c0f986d064a4c66d6e0da75e0\"}",
+      "c459495cc093a3151c8b292d28b3b2634e56be605d96f224eb8da2e5c4399664": "{\"accepted\": false, \"after\": {\"byte_accuracy\": 0.4628083258932479, \"documents\": 128, \"nll\": 1.8423634013268506, \"predicted_bytes\": 57123}, \"before\": {\"byte_accuracy\": 0.46371864222817427, \"documents\": 128, \"nll\": 1.8433024185456734, \"predicted_bytes\": 57123}, \"candidate_optimizer_step\": 1034, \"contributions\": [{\"result\": {\"error\": \"\", \"finished_at\": 1792158847.929866, \"job_id\": \"fc4e789b0ccfc5ae5ff0a4e5d939680fb217019604948c54b6f1fcae95b91949\", \"output\": {\"count\": 64, \"dataset_id\": \"a1a36bc0cea6f5a8dbf81a5828a01da3ca0674c534431ef51583f3f46a915be6\", \"gradient_bytes\": 6244100, \"gradient_id\": \"1fb72229de5fecf33402cee3efbbacd0670d28fa318b30f0fb3ebf27b61323a9\", \"loss\": 2.360681116580963, \"model_id\": \"cf59e348eeb1e2d2ac95d48266bbe53b45089a88b5845e98b47b18c6673528ce\", \"start\": 3072, \"state_id\": \"4e61bb665ec9ecaeb2266ac976c95278e225d350dffd5e67d96d1024c9c78d0f\", \"tokens\": 8192, \"training_policy_id\": \"b6992d4c29d6bdaa0a1dde550ef0dafd6d9e863c0f986d064a4c66d6e0da75e0\"}, \"receipt\": {\"finished_at\": 1792158847.929866, \"job_id\": \"fc4e789b0ccfc5ae5ff0a4e5d939680fb217019604948c54b6f1fcae95b91949\", \"requester_node_id\": \"c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255\", \"result_digest\": \"191fa93c2f0d97d562695dff78b808b9b0c130c3c6658bdb9c4b67821fb5c5c8\", \"signature\": \"sQoX2+duneooKgBu8jWdVM9Pafm4lxCZQFvUH2nEAOk/FohZd41o9LAISOf1b1qDUzGmQZ0ykY9XOU7L61cfAA==\", \"version\": 1, \"worker_node_id\": \"c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255\"}, \"status\": \"ok\"}, \"worker_id\": \"c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255\"}], \"gradient_norm_before_clipping\": 0.7388347387313843, \"model_id\": \"cf59e348eeb1e2d2ac95d48266bbe53b45089a88b5845e98b47b18c6673528ce\", \"model_promoted\": false, \"native_cycles_added\": 0, \"optimizer_id\": \"d91781743f9345344f18b63863ca57a694438eb2a50cad4de2de580fbddd4ba5\", \"prediction_bytes\": 8192, \"previous_optimizer_step\": 1033, \"scope\": \"Own causal byte-language learning with dynamic membership; not open consensus or general chat\", \"state_id\": \"4e61bb665ec9ecaeb2266ac976c95278e225d350dffd5e67d96d1024c9c78d0f\", \"training_policy_id\": \"b6992d4c29d6bdaa0a1dde550ef0dafd6d9e863c0f986d064a4c66d6e0da75e0\"}",
+      "aab3ce47654378b7200058ac836341429b3de4b5eb09764ef98e7d39d49bfa62": "{\"accepted\": false, \"after\": {\"byte_accuracy\": 0.463316002310803, \"documents\": 128, \"nll\": 1.8422338840555472, \"predicted_bytes\": 57123}, \"before\": {\"byte_accuracy\": 0.46371864222817427, \"documents\": 128, \"nll\": 1.8433024185456734, \"predicted_bytes\": 57123}, \"candidate_optimizer_step\": 1034, \"contributions\": [{\"result\": {\"error\": \"\", \"finished_at\": 1792158933.2154808, \"job_id\": \"07f88886d43304b86cd56b928a44ad44276577a760a15da09e86b9e09ea66173\", \"output\": {\"count\": 64, \"dataset_id\": \"a1a36bc0cea6f5a8dbf81a5828a01da3ca0674c534431ef51583f3f46a915be6\", \"gradient_bytes\": 6244100, \"gradient_id\": \"43c14fe269288e0669ff0fbb0b13a2c79dfee304b6801bd290debca2a9befc30\", \"loss\": 2.3309448957443237, \"model_id\": \"cf59e348eeb1e2d2ac95d48266bbe53b45089a88b5845e98b47b18c6673528ce\", \"start\": 3136, \"state_id\": \"4e61bb665ec9ecaeb2266ac976c95278e225d350dffd5e67d96d1024c9c78d0f\", \"tokens\": 8192, \"training_policy_id\": \"b6992d4c29d6bdaa0a1dde550ef0dafd6d9e863c0f986d064a4c66d6e0da75e0\"}, \"receipt\": {\"finished_at\": 1792158933.2154808, \"job_id\": \"07f88886d43304b86cd56b928a44ad44276577a760a15da09e86b9e09ea66173\", \"requester_node_id\": \"c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255\", \"result_digest\": \"908d9653061e8ec688811b9c2d88777b3e7ada315ead54d6cc17fa8c93e49142\", \"signature\": \"WV3DmmHtYt3Iq15MNy1+V9Wy1lVnRU+3+ZgjEugTFHrp855cc3Cyq33AUCvEJugpHkzYocBcbDPYT4xiicshCA==\", \"version\": 1, \"worker_node_id\": \"ea914d97caafef310e50385034abae9a50ba86496b0e9cbf4679e6070e4c25b0\"}, \"status\": \"ok\"}, \"worker_id\": \"ea914d97caafef310e50385034abae9a50ba86496b0e9cbf4679e6070e4c25b0\"}, {\"result\": {\"error\": \"\", \"finished_at\": 1792158931.815704, \"job_id\": \"960bfc5bbc9f682dee9b2b0cc2fc9292dce5ae67f52029649bc3a7f912573dbf\", \"output\": {\"count\": 64, \"dataset_id\": \"a1a36bc0cea6f5a8dbf81a5828a01da3ca0674c534431ef51583f3f46a915be6\", \"gradient_bytes\": 6244100, \"gradient_id\": \"29112c239a80c5b0d8021b63fde4de592d4c3a666170375329394055e1dd371a\", \"loss\": 2.3354175090789795, \"model_id\": \"cf59e348eeb1e2d2ac95d48266bbe53b45089a88b5845e98b47b18c6673528ce\", \"start\": 3200, \"state_id\": \"4e61bb665ec9ecaeb2266ac976c95278e225d350dffd5e67d96d1024c9c78d0f\", \"tokens\": 8192, \"training_policy_id\": \"b6992d4c29d6bdaa0a1dde550ef0dafd6d9e863c0f986d064a4c66d6e0da75e0\"}, \"receipt\": {\"finished_at\": 1792158931.815704, \"job_id\": \"960bfc5bbc9f682dee9b2b0cc2fc9292dce5ae67f52029649bc3a7f912573dbf\", \"requester_node_id\": \"c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255\", \"result_digest\": \"67cfd0f158d0fc8867227e9bf1be311c393b5e2991306f4f615e534ba549b419\", \"signature\": \"XDl5gs1uGe+8PjGp3o3WJcnPlPXFlkQahbtnXsxK13R1JA9MDybKG4pX0N0QQogwrQYOcEXoLP4dwN46crNyBQ==\", \"version\": 1, \"worker_node_id\": \"c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255\"}, \"status\": \"ok\"}, \"worker_id\": \"c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255\"}], \"gradient_norm_before_clipping\": 0.4438185691833496, \"model_id\": \"cf59e348eeb1e2d2ac95d48266bbe53b45089a88b5845e98b47b18c6673528ce\", \"model_promoted\": false, \"native_cycles_added\": 0, \"optimizer_id\": \"d91781743f9345344f18b63863ca57a694438eb2a50cad4de2de580fbddd4ba5\", \"prediction_bytes\": 16384, \"previous_optimizer_step\": 1033, \"scope\": \"Own causal byte-language learning with dynamic membership; not open consensus or general chat\", \"state_id\": \"4e61bb665ec9ecaeb2266ac976c95278e225d350dffd5e67d96d1024c9c78d0f\", \"training_policy_id\": \"b6992d4c29d6bdaa0a1dde550ef0dafd6d9e863c0f986d064a4c66d6e0da75e0\"}",
+      "d65d82dc0cc84cc0136d216ceb885369067b74e044729f23dca0f2f11b1a51ac": "{\"accepted\": false, \"after\": {\"byte_accuracy\": 0.46307091714370746, \"documents\": 128, \"nll\": 1.8422365238350038, \"predicted_bytes\": 57123}, \"before\": {\"byte_accuracy\": 0.46371864222817427, \"documents\": 128, \"nll\": 1.8433024185456734, \"predicted_bytes\": 57123}, \"candidate_optimizer_step\": 1034, \"contributions\": [{\"result\": {\"error\": \"\", \"finished_at\": 1792158955.829229, \"job_id\": \"a2aaa7680de8db372964384832733229cad9bff88a41d216e6093d0c6a9f45fc\", \"output\": {\"count\": 256, \"dataset_id\": \"a1a36bc0cea6f5a8dbf81a5828a01da3ca0674c534431ef51583f3f46a915be6\", \"gradient_bytes\": 6244108, \"gradient_id\": \"68084f924e70a3792f82eafafd91d735b5bb536d605e72b356fb0ef96b81e97b\", \"loss\": 2.3192856907844543, \"model_id\": \"cf59e348eeb1e2d2ac95d48266bbe53b45089a88b5845e98b47b18c6673528ce\", \"start\": 3264, \"state_id\": \"4e61bb665ec9ecaeb2266ac976c95278e225d350dffd5e67d96d1024c9c78d0f\", \"tokens\": 32768, \"training_policy_id\": \"b6992d4c29d6bdaa0a1dde550ef0dafd6d9e863c0f986d064a4c66d6e0da75e0\"}, \"receipt\": {\"finished_at\": 1792158955.829229, \"job_id\": \"a2aaa7680de8db372964384832733229cad9bff88a41d216e6093d0c6a9f45fc\", \"requester_node_id\": \"c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255\", \"result_digest\": \"a025884389eca231c76b15cdf370f633a2d003b9009e54848e7390a9f072f168\", \"signature\": \"xGJ+Vm9p4dDQUlAs0/90/c/HZ6igxwcB4Gn/Dmj2JbWgIpIPSmc8ts/EWXxJ1meTK6b/BG46jpJ+1k76EQ1ADQ==\", \"version\": 1, \"worker_node_id\": \"c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255\"}, \"status\": \"ok\"}, \"worker_id\": \"c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255\"}, {\"result\": {\"error\": \"\", \"finished_at\": 1792158955.3623738, \"job_id\": \"e277f1299f40cfc9835df140d1da1e17d4c030a7652e3d3362351560906b63e1\", \"output\": {\"count\": 64, \"dataset_id\": \"a1a36bc0cea6f5a8dbf81a5828a01da3ca0674c534431ef51583f3f46a915be6\", \"gradient_bytes\": 6244100, \"gradient_id\": \"8787ddb0a8d5d4fdfd0ae338e2a8b59e55dbecae9e764288f4bed3b6f7d843e8\", \"loss\": 2.3517280220985413, \"model_id\": \"cf59e348eeb1e2d2ac95d48266bbe53b45089a88b5845e98b47b18c6673528ce\", \"start\": 3520, \"state_id\": \"4e61bb665ec9ecaeb2266ac976c95278e225d350dffd5e67d96d1024c9c78d0f\", \"tokens\": 8192, \"training_policy_id\": \"b6992d4c29d6bdaa0a1dde550ef0dafd6d9e863c0f986d064a4c66d6e0da75e0\"}, \"receipt\": {\"finished_at\": 1792158955.3623738, \"job_id\": \"e277f1299f40cfc9835df140d1da1e17d4c030a7652e3d3362351560906b63e1\", \"requester_node_id\": \"c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255\", \"result_digest\": \"2ed75127e6d14ce94daa76f964094ea18d00a4e870b693a1e3575a7105cb7ddb\", \"signature\": \"nY/gadxqucctgfBMXp8F7dU5hHkS072h+c6AhURw98yXM5Kq1JZAqN0Mm7ivPy8+3VmbE2MlKwZt+Yo07u9mCw==\", \"version\": 1, \"worker_node_id\": \"ea914d97caafef310e50385034abae9a50ba86496b0e9cbf4679e6070e4c25b0\"}, \"status\": \"ok\"}, \"worker_id\": \"ea914d97caafef310e50385034abae9a50ba86496b0e9cbf4679e6070e4c25b0\"}], \"gradient_norm_before_clipping\": 0.4639768898487091, \"model_id\": \"cf59e348eeb1e2d2ac95d48266bbe53b45089a88b5845e98b47b18c6673528ce\", \"model_promoted\": false, \"native_cycles_added\": 0, \"optimizer_id\": \"d91781743f9345344f18b63863ca57a694438eb2a50cad4de2de580fbddd4ba5\", \"prediction_bytes\": 40960, \"previous_optimizer_step\": 1033, \"scope\": \"Own causal byte-language learning with dynamic membership; not open consensus or general chat\", \"state_id\": \"4e61bb665ec9ecaeb2266ac976c95278e225d350dffd5e67d96d1024c9c78d0f\", \"training_policy_id\": \"b6992d4c29d6bdaa0a1dde550ef0dafd6d9e863c0f986d064a4c66d6e0da75e0\"}"
+    },
+    "independent_cpu_audits": {
+      "4e61bb665ec9ecaeb2266ac976c95278e225d350dffd5e67d96d1024c9c78d0f": {
+        "coordinator": {
+          "after": {
+            "byte_accuracy": 0.46371864222817427,
+            "documents": 128,
+            "nll": 1.8433024185456734,
+            "predicted_bytes": 57123
+          },
+          "cuda_initialized": false,
+          "gradient_replay_verified": true,
+          "maximum_model_tensor_error": 0.0,
+          "model_id": "cf59e348eeb1e2d2ac95d48266bbe53b45089a88b5845e98b47b18c6673528ce",
+          "model_promoted": false,
+          "model_tensors_bitwise_equal": true,
+          "new_gradient_computed": false,
+          "optimizer_id": "d91781743f9345344f18b63863ca57a694438eb2a50cad4de2de580fbddd4ba5",
+          "optimizer_states": 175,
+          "optimizer_step": 1033,
+          "saved_state_unchanged": true,
+          "scope": "Independent replay of existing signed contributions on CPU",
+          "state_id": "4e61bb665ec9ecaeb2266ac976c95278e225d350dffd5e67d96d1024c9c78d0f",
+          "success": true,
+          "training_policy_id": "b6992d4c29d6bdaa0a1dde550ef0dafd6d9e863c0f986d064a4c66d6e0da75e0"
+        },
+        "returned_worker": {
+          "after": {
+            "byte_accuracy": 0.46371864222817427,
+            "documents": 128,
+            "nll": 1.8433024185456734,
+            "predicted_bytes": 57123
+          },
+          "cuda_initialized": false,
+          "gradient_replay_verified": true,
+          "maximum_model_tensor_error": 0.0,
+          "model_id": "cf59e348eeb1e2d2ac95d48266bbe53b45089a88b5845e98b47b18c6673528ce",
+          "model_promoted": false,
+          "model_tensors_bitwise_equal": true,
+          "new_gradient_computed": false,
+          "optimizer_id": "d91781743f9345344f18b63863ca57a694438eb2a50cad4de2de580fbddd4ba5",
+          "optimizer_states": 175,
+          "optimizer_step": 1033,
+          "saved_state_unchanged": true,
+          "scope": "Independent replay of existing signed contributions on CPU",
+          "state_id": "4e61bb665ec9ecaeb2266ac976c95278e225d350dffd5e67d96d1024c9c78d0f",
+          "success": true,
+          "training_policy_id": "b6992d4c29d6bdaa0a1dde550ef0dafd6d9e863c0f986d064a4c66d6e0da75e0"
+        }
+      }
+    },
+    "public_replica_transfers": [
+      {
+        "artifact_id": "2110f6f0070f96b25e86b48b824222dce4953dd4588ff98b06a3705e1a07173d",
+        "bytes": 3538,
+        "encoded_data_bytes": 2136,
+        "route": {
+          "encrypted": true,
+          "public_internet": true,
+          "transport": "relay"
+        },
+        "seconds": 0.29868032000376843
+      },
+      {
+        "artifact_id": "cf59e348eeb1e2d2ac95d48266bbe53b45089a88b5845e98b47b18c6673528ce",
+        "bytes": 7337088,
+        "encoded_data_bytes": 8546512,
+        "route": {
+          "encrypted": true,
+          "public_internet": true,
+          "transport": "relay"
+        },
+        "seconds": 14.707564829004696
+      },
+      {
+        "artifact_id": "d91781743f9345344f18b63863ca57a694438eb2a50cad4de2de580fbddd4ba5",
+        "bytes": 12595275,
+        "encoded_data_bytes": 14062196,
+        "route": {
+          "encrypted": true,
+          "public_internet": true,
+          "transport": "relay"
+        },
+        "seconds": 24.351396544021554
+      },
+      {
+        "artifact_id": "66df07b34f580292126bb9e686b83371191620d871e0fd5b70af05cd34e161ab",
+        "bytes": 6244100,
+        "encoded_data_bytes": 7166352,
+        "route": {
+          "encrypted": true,
+          "public_internet": true,
+          "transport": "relay"
+        },
+        "seconds": 12.342821153986733
+      },
+      {
+        "artifact_id": "99f859068895d76124538c3f58da95dbdc235ed25c29abad31f8f5c062952d4a",
+        "bytes": 6244100,
+        "encoded_data_bytes": 7166836,
+        "route": {
+          "encrypted": true,
+          "public_internet": true,
+          "transport": "relay"
+        },
+        "seconds": 12.320348175009713
+      }
+    ],
+    "distinct_workers_per_window": [
+      2,
+      1,
+      1,
+      2,
+      2
+    ],
+    "remote_audit_evidence": "Public replay reports collected over administrative SSH; remote adoption receipts verified live but not retained by v2",
+    "larger_physical_network_tested": false,
+    "linear_speedup_proved": false,
+    "clean_app_own_bootstrap_proved": false,
+    "leader_election_or_open_consensus_proved": false
+  },
+  "physical_before": {
+    "coordinator": {
+      "diagnostics": {
+        "language": {
+          "active": 0,
+          "base": "qwen3-1.7b",
+          "completed": 289,
+          "installed": true,
+          "model_id": "506317cc9f40da9dea40e6d14a94910ac6625ae478b5f2d0248cb1bbbb93a6c3",
+          "ready": true
+        },
+        "node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+        "own_learning": {
+          "accepted": 7,
+          "cursor": 2816,
+          "enabled": true,
+          "error": null,
+          "follow_enabled": true,
+          "pending": false,
+          "program_error": null,
+          "rejections": 3,
+          "retry_at": 0,
+          "round": 10,
+          "state_id": "a9118d28b2b00f7bbdf045d40ef44f251c97c5c9826766601706c44a70e40dd4",
+          "status": "complete",
+          "training_policy_id": "57052db9cad9b02f9b5bad64ce37f6e71c7ad7f597ee341320af266af091cb8c"
+        },
+        "own_network": {
+          "accepted": 0,
+          "cursor": 2816,
+          "enabled": false,
+          "follow_enabled": true,
+          "known_workers": 0,
+          "pending": false,
+          "program_error": null,
+          "rejections": 0,
+          "round": 0,
+          "status": "idle",
+          "training_policy_id": "b6992d4c29d6bdaa0a1dde550ef0dafd6d9e863c0f986d064a4c66d6e0da75e0",
+          "window_limit": 8
+        },
+        "own_swarm": {
+          "active": 0,
+          "completed": 22,
+          "cpu_threads": 8,
+          "device": "cpu",
+          "family": "lixyswarm-own-causal-byte-v1",
+          "membership_version": 2,
+          "model_id": "93530f29ae27286e592a4fb171cd31dba7e08951aeb4196c4e43135d114a5a23",
+          "optimizer_step": 1032,
+          "ready": true,
+          "requesters": [
+            "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+            "ea914d97caafef310e50385034abae9a50ba86496b0e9cbf4679e6070e4c25b0"
+          ],
+          "state_id": "a9118d28b2b00f7bbdf045d40ef44f251c97c5c9826766601706c44a70e40dd4",
+          "training_policy_id": "b6992d4c29d6bdaa0a1dde550ef0dafd6d9e863c0f986d064a4c66d6e0da75e0"
+        },
+        "pid": 3613152,
+        "runtime_version": "0.4.0a23"
+      },
+      "fingerprints": {
+        "controls.json": "c7a01da14148e422cff7c9b2647b55e484f3fc24f8399c3112e708592998edd7",
+        "language-engine.json": "a8e0356e9c1b67566aae3a6ffd6efcfe9ef5be731a929a6b4125ebe181063825",
+        "language-follow-controls.json": "385d1cc12efda350c34b016896eee3b7ad9cc79b27d25cb9d7e9db4ed2bb8b1f",
+        "language-learning-controls.json": "c39f5f73a6288eb93b3a35093bfb8838c8f4f43431c1b79cd80b38f9976d80a1",
+        "language-learning/ledger.json": "e65d7fae79657a4c9f625bb89faac68dfd066c5557a215034d1da142da043226",
+        "language-training.json": "3ec828618660cd97e9a44614d95647b2021aadd5eeea0a19f327795c5d6b9d1c",
+        "public-knowledge.json": "ec052a7742a177a41c0e5c40876cc07293f5a60996a512a3afa335efcc9a443e"
+      },
+      "managed_and_research_bytes": 7862883976,
+      "v1_progress_sha256": "91fcf544f5a1e98aa4e323ed1b4912fbae191f49051713171dbee60c37781ae7"
+    },
+    "worker": {
+      "diagnostics": {
+        "language": {
+          "active": 0,
+          "base": "qwen3-1.7b",
+          "completed": 14,
+          "installed": true,
+          "model_id": "506317cc9f40da9dea40e6d14a94910ac6625ae478b5f2d0248cb1bbbb93a6c3",
+          "ready": true
+        },
+        "node_id": "ea914d97caafef310e50385034abae9a50ba86496b0e9cbf4679e6070e4c25b0",
+        "own_learning": {
+          "accepted": 0,
+          "cursor": 256,
+          "enabled": false,
+          "follow_enabled": true,
+          "pending": false,
+          "program_error": null,
+          "rejections": 0,
+          "round": 0,
+          "status": "idle",
+          "training_policy_id": "57052db9cad9b02f9b5bad64ce37f6e71c7ad7f597ee341320af266af091cb8c"
+        },
+        "own_network": {
+          "accepted": 0,
+          "cursor": 2816,
+          "enabled": false,
+          "follow_enabled": true,
+          "known_workers": 0,
+          "pending": false,
+          "program_error": null,
+          "rejections": 0,
+          "round": 0,
+          "status": "idle",
+          "training_policy_id": "b6992d4c29d6bdaa0a1dde550ef0dafd6d9e863c0f986d064a4c66d6e0da75e0",
+          "window_limit": 8
+        },
+        "own_swarm": {
+          "active": 0,
+          "completed": 11,
+          "cpu_threads": 8,
+          "device": "cpu",
+          "family": "lixyswarm-own-causal-byte-v1",
+          "membership_version": 2,
+          "model_id": "93530f29ae27286e592a4fb171cd31dba7e08951aeb4196c4e43135d114a5a23",
+          "optimizer_step": 1032,
+          "ready": true,
+          "requesters": [
+            "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+            "ea914d97caafef310e50385034abae9a50ba86496b0e9cbf4679e6070e4c25b0"
+          ],
+          "state_id": "a9118d28b2b00f7bbdf045d40ef44f251c97c5c9826766601706c44a70e40dd4",
+          "training_policy_id": "b6992d4c29d6bdaa0a1dde550ef0dafd6d9e863c0f986d064a4c66d6e0da75e0"
+        },
+        "pid": 943984,
+        "runtime_version": "0.4.0a23"
+      },
+      "fingerprints": {
+        "controls.json": "308ff5342dd5bcdef857079f6b7b8abf34b5c0ea57b791154f5e4aee465220ba",
+        "language-engine.json": "131aff526d03b04a6d0750d6def3db11b3d597177407a34bdfe804bd474b4af7",
+        "language-follow-controls.json": "d31e3b3e68f1e3b41e895d104f2f85d311a7d0125fd9cf57c6bd7e138119d491",
+        "language-training.json": "fc381db3ca9b25b3451ba5344d8047464bf1880f7ded8f61f7cdee0b7dab38c6",
+        "public-knowledge.json": "9e089c92541383d0ce493250f8a1d6df74ed44b4290e7aeb5fa7bc9871be2673"
+      },
+      "managed_and_research_bytes": 8229334042,
+      "v1_progress_sha256": null
+    }
+  },
+  "physical_after": {
+    "coordinator": {
+      "diagnostics": {
+        "language": {
+          "active": 0,
+          "base": "qwen3-1.7b",
+          "completed": 289,
+          "installed": true,
+          "model_id": "506317cc9f40da9dea40e6d14a94910ac6625ae478b5f2d0248cb1bbbb93a6c3",
+          "ready": true
+        },
+        "node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+        "own_learning": {
+          "accepted": 7,
+          "cursor": 2816,
+          "enabled": true,
+          "error": null,
+          "follow_enabled": true,
+          "pending": false,
+          "program_error": null,
+          "rejections": 3,
+          "retry_at": 0,
+          "round": 10,
+          "state_id": "a9118d28b2b00f7bbdf045d40ef44f251c97c5c9826766601706c44a70e40dd4",
+          "status": "complete",
+          "training_policy_id": "57052db9cad9b02f9b5bad64ce37f6e71c7ad7f597ee341320af266af091cb8c"
+        },
+        "own_network": {
+          "accepted": 1,
+          "cursor": 3584,
+          "enabled": true,
+          "error": null,
+          "follow_enabled": true,
+          "known_workers": 2,
+          "pending": false,
+          "program_error": null,
+          "ready_workers": 2,
+          "rejections": 3,
+          "replicas": 2,
+          "retry_at": 0,
+          "round": 5,
+          "state_id": "4e61bb665ec9ecaeb2266ac976c95278e225d350dffd5e67d96d1024c9c78d0f",
+          "status": "no_improvement",
+          "training_policy_id": "b6992d4c29d6bdaa0a1dde550ef0dafd6d9e863c0f986d064a4c66d6e0da75e0",
+          "window_limit": 8
+        },
+        "own_swarm": {
+          "active": 0,
+          "completed": 33,
+          "cpu_threads": 8,
+          "device": "cpu",
+          "family": "lixyswarm-own-causal-byte-v1",
+          "membership_version": 2,
+          "model_id": "cf59e348eeb1e2d2ac95d48266bbe53b45089a88b5845e98b47b18c6673528ce",
+          "optimizer_step": 1033,
+          "ready": true,
+          "requesters": [
+            "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+            "ea914d97caafef310e50385034abae9a50ba86496b0e9cbf4679e6070e4c25b0"
+          ],
+          "state_id": "4e61bb665ec9ecaeb2266ac976c95278e225d350dffd5e67d96d1024c9c78d0f",
+          "training_policy_id": "b6992d4c29d6bdaa0a1dde550ef0dafd6d9e863c0f986d064a4c66d6e0da75e0"
+        },
+        "pid": 3613152,
+        "runtime_version": "0.4.0a23"
+      },
+      "fingerprints": {
+        "controls.json": "c7a01da14148e422cff7c9b2647b55e484f3fc24f8399c3112e708592998edd7",
+        "language-engine.json": "a8e0356e9c1b67566aae3a6ffd6efcfe9ef5be731a929a6b4125ebe181063825",
+        "language-follow-controls.json": "385d1cc12efda350c34b016896eee3b7ad9cc79b27d25cb9d7e9db4ed2bb8b1f",
+        "language-learning-controls.json": "c39f5f73a6288eb93b3a35093bfb8838c8f4f43431c1b79cd80b38f9976d80a1",
+        "language-learning/ledger.json": "e65d7fae79657a4c9f625bb89faac68dfd066c5557a215034d1da142da043226",
+        "language-training.json": "3ec828618660cd97e9a44614d95647b2021aadd5eeea0a19f327795c5d6b9d1c",
+        "public-knowledge.json": "ec052a7742a177a41c0e5c40876cc07293f5a60996a512a3afa335efcc9a443e"
+      },
+      "managed_and_research_bytes": 7939050759,
+      "v1_progress_sha256": "91fcf544f5a1e98aa4e323ed1b4912fbae191f49051713171dbee60c37781ae7"
+    },
+    "worker": {
+      "diagnostics": {
+        "language": {
+          "active": 0,
+          "base": "qwen3-1.7b",
+          "completed": 14,
+          "installed": true,
+          "model_id": "506317cc9f40da9dea40e6d14a94910ac6625ae478b5f2d0248cb1bbbb93a6c3",
+          "ready": true
+        },
+        "node_id": "ea914d97caafef310e50385034abae9a50ba86496b0e9cbf4679e6070e4c25b0",
+        "own_learning": {
+          "accepted": 0,
+          "cursor": 256,
+          "enabled": false,
+          "follow_enabled": true,
+          "pending": false,
+          "program_error": null,
+          "rejections": 0,
+          "round": 0,
+          "status": "idle",
+          "training_policy_id": "57052db9cad9b02f9b5bad64ce37f6e71c7ad7f597ee341320af266af091cb8c"
+        },
+        "own_network": {
+          "accepted": 0,
+          "cursor": 2816,
+          "enabled": false,
+          "follow_enabled": true,
+          "known_workers": 0,
+          "pending": false,
+          "program_error": null,
+          "rejections": 0,
+          "round": 0,
+          "status": "idle",
+          "training_policy_id": "b6992d4c29d6bdaa0a1dde550ef0dafd6d9e863c0f986d064a4c66d6e0da75e0",
+          "window_limit": 8
+        },
+        "own_swarm": {
+          "active": 0,
+          "completed": 14,
+          "cpu_threads": 8,
+          "device": "cpu",
+          "family": "lixyswarm-own-causal-byte-v1",
+          "membership_version": 2,
+          "model_id": "cf59e348eeb1e2d2ac95d48266bbe53b45089a88b5845e98b47b18c6673528ce",
+          "optimizer_step": 1033,
+          "ready": true,
+          "requesters": [
+            "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+            "ea914d97caafef310e50385034abae9a50ba86496b0e9cbf4679e6070e4c25b0"
+          ],
+          "state_id": "4e61bb665ec9ecaeb2266ac976c95278e225d350dffd5e67d96d1024c9c78d0f",
+          "training_policy_id": "b6992d4c29d6bdaa0a1dde550ef0dafd6d9e863c0f986d064a4c66d6e0da75e0"
+        },
+        "pid": 944843,
+        "runtime_version": "0.4.0a23"
+      },
+      "fingerprints": {
+        "controls.json": "308ff5342dd5bcdef857079f6b7b8abf34b5c0ea57b791154f5e4aee465220ba",
+        "language-engine.json": "131aff526d03b04a6d0750d6def3db11b3d597177407a34bdfe804bd474b4af7",
+        "language-follow-controls.json": "d31e3b3e68f1e3b41e895d104f2f85d311a7d0125fd9cf57c6bd7e138119d491",
+        "language-training.json": "fc381db3ca9b25b3451ba5344d8047464bf1880f7ded8f61f7cdee0b7dab38c6",
+        "public-knowledge.json": "9e089c92541383d0ce493250f8a1d6df74ed44b4290e7aeb5fa7bc9871be2673"
+      },
+      "managed_and_research_bytes": 8280500328,
+      "v1_progress_sha256": null
+    }
+  },
+  "fault_events": [
+    {
+      "at": 1792158829.1436272,
+      "command_output": "inactive",
+      "round": 1,
+      "type": "physical_worker_departure"
+    },
+    {
+      "at": 1792158847.2886913,
+      "round": 2,
+      "type": "physical_worker_return_requested"
+    }
+  ],
+  "departure_before": {
+    "laptop": {
+      "diagnostics": {
+        "language": {
+          "active": 0,
+          "base": "qwen3-1.7b",
+          "completed": 14,
+          "installed": true,
+          "model_id": "506317cc9f40da9dea40e6d14a94910ac6625ae478b5f2d0248cb1bbbb93a6c3",
+          "ready": true
+        },
+        "node_id": "ea914d97caafef310e50385034abae9a50ba86496b0e9cbf4679e6070e4c25b0",
+        "own_learning": {
+          "accepted": 0,
+          "cursor": 256,
+          "enabled": false,
+          "follow_enabled": true,
+          "pending": false,
+          "program_error": null,
+          "rejections": 0,
+          "round": 0,
+          "status": "idle",
+          "training_policy_id": "57052db9cad9b02f9b5bad64ce37f6e71c7ad7f597ee341320af266af091cb8c"
+        },
+        "own_network": {
+          "accepted": 0,
+          "cursor": 2816,
+          "enabled": false,
+          "follow_enabled": true,
+          "known_workers": 0,
+          "pending": false,
+          "program_error": null,
+          "rejections": 0,
+          "round": 0,
+          "status": "idle",
+          "training_policy_id": "b6992d4c29d6bdaa0a1dde550ef0dafd6d9e863c0f986d064a4c66d6e0da75e0",
+          "window_limit": 8
+        },
+        "own_swarm": {
+          "active": 0,
+          "completed": 12,
+          "cpu_threads": 8,
+          "device": "cpu",
+          "family": "lixyswarm-own-causal-byte-v1",
+          "membership_version": 2,
+          "model_id": "93530f29ae27286e592a4fb171cd31dba7e08951aeb4196c4e43135d114a5a23",
+          "optimizer_step": 1032,
+          "ready": true,
+          "requesters": [
+            "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+            "ea914d97caafef310e50385034abae9a50ba86496b0e9cbf4679e6070e4c25b0"
+          ],
+          "state_id": "a9118d28b2b00f7bbdf045d40ef44f251c97c5c9826766601706c44a70e40dd4",
+          "training_policy_id": "b6992d4c29d6bdaa0a1dde550ef0dafd6d9e863c0f986d064a4c66d6e0da75e0"
+        },
+        "pid": 943984,
+        "runtime_version": "0.4.0a23"
+      },
+      "fingerprints": {
+        "controls.json": "308ff5342dd5bcdef857079f6b7b8abf34b5c0ea57b791154f5e4aee465220ba",
+        "language-engine.json": "131aff526d03b04a6d0750d6def3db11b3d597177407a34bdfe804bd474b4af7",
+        "language-follow-controls.json": "d31e3b3e68f1e3b41e895d104f2f85d311a7d0125fd9cf57c6bd7e138119d491",
+        "language-training.json": "fc381db3ca9b25b3451ba5344d8047464bf1880f7ded8f61f7cdee0b7dab38c6",
+        "public-knowledge.json": "9e089c92541383d0ce493250f8a1d6df74ed44b4290e7aeb5fa7bc9871be2673"
+      },
+      "managed_and_research_bytes": 8235578329,
+      "v1_progress_sha256": null
+    },
+    "ledger": {
+      "accepted": 0,
+      "contract_id": "a9603ead4f844dd32ca0cfbec48853471535d5a02df7397e957c5ad1e99cc271",
+      "cursor": 2944,
+      "error": null,
+      "initial_state_id": "a9118d28b2b00f7bbdf045d40ef44f251c97c5c9826766601706c44a70e40dd4",
+      "parent_program_id": "2de8bcf9bf8775b272b1a6fc50637a864dc7ea732282cd31b5012075c3e2fcec",
+      "pending": {
+        "adoptions": {},
+        "assignments": [
+          {
+            "count": 64,
+            "shard_id": "2944",
+            "start": 2944,
+            "worker_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255"
+          },
+          {
+            "count": 64,
+            "shard_id": "3008",
+            "start": 3008,
+            "worker_id": "ea914d97caafef310e50385034abae9a50ba86496b0e9cbf4679e6070e4c25b0"
+          }
+        ],
+        "attempts": 1,
+        "candidate": null,
+        "contributions": {},
+        "cursor": 2944,
+        "model_id": "93530f29ae27286e592a4fb171cd31dba7e08951aeb4196c4e43135d114a5a23",
+        "reassignments": [],
+        "round": 1,
+        "started_at": 1792158826.3790202,
+        "state_id": "a9118d28b2b00f7bbdf045d40ef44f251c97c5c9826766601706c44a70e40dd4",
+        "work": {}
+      },
+      "ready_workers": 2,
+      "rejections": 1,
+      "replicas": 1,
+      "retry_at": 0,
+      "round": 1,
+      "state_id": "a9118d28b2b00f7bbdf045d40ef44f251c97c5c9826766601706c44a70e40dd4",
+      "status": "gradients",
+      "training_policy_id": "b6992d4c29d6bdaa0a1dde550ef0dafd6d9e863c0f986d064a4c66d6e0da75e0",
+      "version": 2,
+      "workers": {
+        "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255": {
+          "documents_per_second": 40.413328812822265,
+          "last_round": 0,
+          "samples": 1
+        },
+        "ea914d97caafef310e50385034abae9a50ba86496b0e9cbf4679e6070e4c25b0": {
+          "documents_per_second": 3.9821572753478502,
+          "last_probe": 1792158826.3785174,
+          "last_round": 0,
+          "samples": 1
+        }
+      }
+    },
+    "root": {
+      "diagnostics": {
+        "language": {
+          "active": 0,
+          "base": "qwen3-1.7b",
+          "completed": 289,
+          "installed": true,
+          "model_id": "506317cc9f40da9dea40e6d14a94910ac6625ae478b5f2d0248cb1bbbb93a6c3",
+          "ready": true
+        },
+        "node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+        "own_learning": {
+          "accepted": 7,
+          "cursor": 2816,
+          "enabled": true,
+          "error": null,
+          "follow_enabled": true,
+          "pending": false,
+          "program_error": null,
+          "rejections": 3,
+          "retry_at": 0,
+          "round": 10,
+          "state_id": "a9118d28b2b00f7bbdf045d40ef44f251c97c5c9826766601706c44a70e40dd4",
+          "status": "complete",
+          "training_policy_id": "57052db9cad9b02f9b5bad64ce37f6e71c7ad7f597ee341320af266af091cb8c"
+        },
+        "own_network": {
+          "accepted": 0,
+          "cursor": 2944,
+          "enabled": true,
+          "error": null,
+          "follow_enabled": true,
+          "known_workers": 2,
+          "pending": false,
+          "program_error": null,
+          "ready_workers": 2,
+          "rejections": 1,
+          "replicas": 1,
+          "retry_at": 0,
+          "round": 1,
+          "state_id": "a9118d28b2b00f7bbdf045d40ef44f251c97c5c9826766601706c44a70e40dd4",
+          "status": "ready",
+          "training_policy_id": "b6992d4c29d6bdaa0a1dde550ef0dafd6d9e863c0f986d064a4c66d6e0da75e0",
+          "window_limit": 8
+        },
+        "own_swarm": {
+          "active": 0,
+          "completed": 24,
+          "cpu_threads": 8,
+          "device": "cpu",
+          "family": "lixyswarm-own-causal-byte-v1",
+          "membership_version": 2,
+          "model_id": "93530f29ae27286e592a4fb171cd31dba7e08951aeb4196c4e43135d114a5a23",
+          "optimizer_step": 1032,
+          "ready": true,
+          "requesters": [
+            "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+            "ea914d97caafef310e50385034abae9a50ba86496b0e9cbf4679e6070e4c25b0"
+          ],
+          "state_id": "a9118d28b2b00f7bbdf045d40ef44f251c97c5c9826766601706c44a70e40dd4",
+          "training_policy_id": "b6992d4c29d6bdaa0a1dde550ef0dafd6d9e863c0f986d064a4c66d6e0da75e0"
+        },
+        "pid": 3613152,
+        "runtime_version": "0.4.0a23"
+      },
+      "fingerprints": {
+        "controls.json": "c7a01da14148e422cff7c9b2647b55e484f3fc24f8399c3112e708592998edd7",
+        "language-engine.json": "a8e0356e9c1b67566aae3a6ffd6efcfe9ef5be731a929a6b4125ebe181063825",
+        "language-follow-controls.json": "385d1cc12efda350c34b016896eee3b7ad9cc79b27d25cb9d7e9db4ed2bb8b1f",
+        "language-learning-controls.json": "c39f5f73a6288eb93b3a35093bfb8838c8f4f43431c1b79cd80b38f9976d80a1",
+        "language-learning/ledger.json": "e65d7fae79657a4c9f625bb89faac68dfd066c5557a215034d1da142da043226",
+        "language-training.json": "3ec828618660cd97e9a44614d95647b2021aadd5eeea0a19f327795c5d6b9d1c",
+        "public-knowledge.json": "ec052a7742a177a41c0e5c40876cc07293f5a60996a512a3afa335efcc9a443e"
+      },
+      "managed_and_research_bytes": 7875381081,
+      "v1_progress_sha256": "91fcf544f5a1e98aa4e323ed1b4912fbae191f49051713171dbee60c37781ae7"
+    }
+  },
+  "program_before_enable": {
+    "documents_per_worker": 64,
+    "enabled": false,
+    "follow_enabled": true,
+    "initial_cursor": 2816,
+    "initial_state_id": "a9118d28b2b00f7bbdf045d40ef44f251c97c5c9826766601706c44a70e40dd4",
+    "maximum_rounds": 0,
+    "owner_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+    "parent_program_id": "2de8bcf9bf8775b272b1a6fc50637a864dc7ea732282cd31b5012075c3e2fcec",
+    "stop_after_rejections": 3,
+    "version": 2,
+    "workers_per_window": 8
+  },
+  "window_metrics": [
+    {
+      "round": 0,
+      "accepted": false,
+      "workers": 2,
+      "assignments": [
+        {
+          "count": 64,
+          "shard_id": "2816",
+          "start": 2816,
+          "worker_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255"
+        },
+        {
+          "count": 64,
+          "shard_id": "2880",
+          "start": 2880,
+          "worker_id": "ea914d97caafef310e50385034abae9a50ba86496b0e9cbf4679e6070e4c25b0"
+        }
+      ],
+      "before": {
+        "byte_accuracy": 0.4636136057279905,
+        "documents": 128,
+        "nll": 1.8452374377158096,
+        "predicted_bytes": 57123
+      },
+      "after": {
+        "byte_accuracy": 0.46347355706107873,
+        "documents": 128,
+        "nll": 1.8433912017045209,
+        "predicted_bytes": 57123
+      }
+    },
+    {
+      "round": 1,
+      "accepted": true,
+      "workers": 1,
+      "assignments": [
+        {
+          "count": 64,
+          "shard_id": "2944",
+          "start": 2944,
+          "worker_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255"
+        },
+        {
+          "count": 64,
+          "shard_id": "3008",
+          "start": 3008,
+          "worker_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255"
+        }
+      ],
+      "before": {
+        "byte_accuracy": 0.4636136057279905,
+        "documents": 128,
+        "nll": 1.8452374377158096,
+        "predicted_bytes": 57123
+      },
+      "after": {
+        "byte_accuracy": 0.46371864222817427,
+        "documents": 128,
+        "nll": 1.8433024185456734,
+        "predicted_bytes": 57123
+      }
+    },
+    {
+      "round": 2,
+      "accepted": false,
+      "workers": 1,
+      "assignments": [
+        {
+          "count": 64,
+          "shard_id": "3072",
+          "start": 3072,
+          "worker_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255"
+        }
+      ],
+      "before": {
+        "byte_accuracy": 0.46371864222817427,
+        "documents": 128,
+        "nll": 1.8433024185456734,
+        "predicted_bytes": 57123
+      },
+      "after": {
+        "byte_accuracy": 0.4628083258932479,
+        "documents": 128,
+        "nll": 1.8423634013268506,
+        "predicted_bytes": 57123
+      }
+    },
+    {
+      "round": 3,
+      "accepted": false,
+      "workers": 2,
+      "assignments": [
+        {
+          "count": 64,
+          "shard_id": "3136",
+          "start": 3136,
+          "worker_id": "ea914d97caafef310e50385034abae9a50ba86496b0e9cbf4679e6070e4c25b0"
+        },
+        {
+          "count": 64,
+          "shard_id": "3200",
+          "start": 3200,
+          "worker_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255"
+        }
+      ],
+      "before": {
+        "byte_accuracy": 0.46371864222817427,
+        "documents": 128,
+        "nll": 1.8433024185456734,
+        "predicted_bytes": 57123
+      },
+      "after": {
+        "byte_accuracy": 0.463316002310803,
+        "documents": 128,
+        "nll": 1.8422338840555472,
+        "predicted_bytes": 57123
+      }
+    },
+    {
+      "round": 4,
+      "accepted": false,
+      "workers": 2,
+      "assignments": [
+        {
+          "count": 256,
+          "shard_id": "3264",
+          "start": 3264,
+          "worker_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255"
+        },
+        {
+          "count": 64,
+          "shard_id": "3520",
+          "start": 3520,
+          "worker_id": "ea914d97caafef310e50385034abae9a50ba86496b0e9cbf4679e6070e4c25b0"
+        }
+      ],
+      "before": {
+        "byte_accuracy": 0.46371864222817427,
+        "documents": 128,
+        "nll": 1.8433024185456734,
+        "predicted_bytes": 57123
+      },
+      "after": {
+        "byte_accuracy": 0.46307091714370746,
+        "documents": 128,
+        "nll": 1.8422365238350038,
+        "predicted_bytes": 57123
+      }
+    }
+  ],
+  "returned_replica_selected_object_hashes": {
+    "cf59e348eeb1e2d2ac95d48266bbe53b45089a88b5845e98b47b18c6673528ce": {
+      "bytes": 7337088,
+      "sha256": "cf59e348eeb1e2d2ac95d48266bbe53b45089a88b5845e98b47b18c6673528ce"
+    },
+    "d91781743f9345344f18b63863ca57a694438eb2a50cad4de2de580fbddd4ba5": {
+      "bytes": 12595275,
+      "sha256": "d91781743f9345344f18b63863ca57a694438eb2a50cad4de2de580fbddd4ba5"
+    }
+  },
+  "packages": {
+    "app_archive_sha256": "0910dda30a957f8f89b9386e8f55dffdf9f29e6a637d20a905139171f7b8a39a",
+    "cpu_archive_sha256": "9ac94d6207c7f3ac4ab5366bfdd8fbeff684b9c676b3a454face05349ca0fb07",
+    "cpu_manifest_sha256": "eb70e5adbe2c5ac6494986df01852d12744df92576898863253c44ee6e942fa2",
+    "app_bytes": 68603781,
+    "cpu_code_bytes": 261212620
+  },
+  "installed_cpu": {
+    "additional_regular_bytes": 64909701,
+    "command": "/home/toxxy/.local/state/lixyswarm/engines/eb70e5adbe2c5ac6494986df01852d12744df92576898863253c44ee6e942fa2/LixySwarmEngineCPU",
+    "identical_code_bytes_shared": 744239875,
+    "identical_code_files_shared": 2457,
+    "learned_state_modified": false,
+    "managed_and_research_bytes_after": 7862876181,
+    "managed_and_research_bytes_before": 7797497442,
+    "manifest_sha256": "eb70e5adbe2c5ac6494986df01852d12744df92576898863253c44ee6e942fa2",
+    "old_engine_preserved": true,
+    "profile": "own-cpu-network",
+    "quota_unchanged": true,
+    "regular_bytes": 809149576,
+    "reserved_for_bounded_program_bytes": 485614153,
+    "success": true
+  },
+  "coordinator_deployment": {
+    "controls_identity_and_progress_preserved": true,
+    "engine_and_membership_version_changed": true,
+    "engine_manifest_sha256": "eb70e5adbe2c5ac6494986df01852d12744df92576898863253c44ee6e942fa2",
+    "existing_chat_model_preserved": true,
+    "native_app_source_revision": "401daea7999f3f7f35b394e6b0391fb9c921ae41",
+    "new_pid": 3613152,
+    "node_restarted": true,
+    "old_pid": 3382584,
+    "old_unit_backed_up": true,
+    "own_learning": {
+      "accepted": 7,
+      "cursor": 2816,
+      "enabled": true,
+      "error": null,
+      "follow_enabled": true,
+      "pending": false,
+      "program_error": null,
+      "rejections": 3,
+      "retry_at": 0,
+      "round": 10,
+      "state_id": "a9118d28b2b00f7bbdf045d40ef44f251c97c5c9826766601706c44a70e40dd4",
+      "status": "complete",
+      "training_policy_id": "57052db9cad9b02f9b5bad64ce37f6e71c7ad7f597ee341320af266af091cb8c"
+    },
+    "own_network": {
+      "accepted": 0,
+      "cursor": 2816,
+      "enabled": false,
+      "follow_enabled": true,
+      "known_workers": 0,
+      "pending": false,
+      "program_error": null,
+      "rejections": 0,
+      "round": 0,
+      "status": "idle",
+      "training_policy_id": "b6992d4c29d6bdaa0a1dde550ef0dafd6d9e863c0f986d064a4c66d6e0da75e0",
+      "window_limit": 8
+    },
+    "own_swarm": {
+      "active": 0,
+      "completed": 22,
+      "cpu_threads": 8,
+      "device": "cpu",
+      "family": "lixyswarm-own-causal-byte-v1",
+      "membership_version": 2,
+      "model_id": "93530f29ae27286e592a4fb171cd31dba7e08951aeb4196c4e43135d114a5a23",
+      "optimizer_step": 1032,
+      "ready": true,
+      "requesters": [
+        "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+        "ea914d97caafef310e50385034abae9a50ba86496b0e9cbf4679e6070e4c25b0"
+      ],
+      "state_id": "a9118d28b2b00f7bbdf045d40ef44f251c97c5c9826766601706c44a70e40dd4",
+      "training_policy_id": "b6992d4c29d6bdaa0a1dde550ef0dafd6d9e863c0f986d064a4c66d6e0da75e0"
+    },
+    "physical_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+    "runtime_version": "0.4.0a23",
+    "success": true
+  },
+  "local_frozen_app_selftest": {
+    "success": true,
+    "internet": false,
+    "language_preparation_permission_gate": true,
+    "engine_downloaded_and_verified": true,
+    "engine_frozen": true,
+    "engine_candidate_evaluated": true,
+    "engine_devices": [
+      "cpu"
+    ],
+    "engine_preparation_s": 54.81,
+    "connection_s": 0.26,
+    "controls_confirmed": true,
+    "pause_keeps_connection": true,
+    "reconnect_keeps_identity": true,
+    "calculation_engines_loaded": false
+  },
+  "local_frozen_cpu_selftest": {
+    "success": true,
+    "frozen": true,
+    "torch_version": "2.12.0+cpu",
+    "cuda_runtime": false,
+    "inference_logits": 256,
+    "gradient_tokens": 64,
+    "candidate_evaluated": true,
+    "candidate_signed_or_promoted": false,
+    "candidate_loss_before": 5.560859923513588,
+    "candidate_loss_after": 5.537755013824001,
+    "test_fixture_signers": 3,
+    "personal_state_loaded": false,
+    "job_process_signing_keys_loaded": false,
+    "own_swarm_backward_verified": true,
+    "own_swarm_parameters": 1730380
+  },
+  "ci_checks": [
+    {
+      "run_id": 38910376562,
+      "workflow": "Desktop packages",
+      "source_revision": "401daea7999f3f7f35b394e6b0391fb9c921ae41",
+      "conclusion": "success"
+    },
+    {
+      "run_id": 38910376434,
+      "workflow": "CPU engine packages",
+      "source_revision": "401daea7999f3f7f35b394e6b0391fb9c921ae41",
+      "conclusion": "success"
+    },
+    {
+      "run_id": 38910492707,
+      "workflow": "CPU engine packages",
+      "source_revision": "3ba22bd4c2dac2fe916a80219e1fc2c2369f2334",
+      "conclusion": "success"
+    }
+  ],
+  "clarifications": [
+    "Native packages were built locally from the stated source, qualified as frozen executables and installed on both PCs; these are not claimed to be the byte-identical CI archives",
+    "The accepted v2 update was calculated on the coordinator after reassignment during the worker departure; v2 windows with both contributors ran and were rejected by the fixed gate",
+    "Timing-based allocation includes network, materialization and compute; it is not a crossed CPU-only benchmark or proof of acceleration",
+    "The 768 consumed training documents are new ranges for this native continuation, from the same public snapshot used by foundation pretraining; they are not entirely new knowledge",
+    "Model, optimizer, gradients and evaluation traveled only through encrypted public LSP; administrative SSH carried code and compact public reports",
+    "The old v1 program remains at ten cycles, seven accepted, three consecutive rejections, cursor 2816; its ledger and controls remain byte-identical",
+    "The v2 program remains stopped at five cycles and three consecutive rejections; maintenance still serves/catches up admitted replicas, with no automatic counter or data reset",
+    "Only two physical training PCs were used. The VPS remains relay/web only. Larger membership tests use synthetic software identities",
+    "Clean own-model app preparation, new food/program queues, coordinator takeover, larger agents, GPU own training and open consensus remain pending"
+  ],
+  "worker_package_qualification": {
+    "app_selftest": {
+      "success": true,
+      "internet": false,
+      "language_preparation_permission_gate": true,
+      "engine_downloaded_and_verified": true,
+      "engine_frozen": true,
+      "engine_candidate_evaluated": true,
+      "engine_devices": [
+        "cpu"
+      ],
+      "engine_preparation_s": 61.3,
+      "connection_s": 0.81,
+      "controls_confirmed": true,
+      "pause_keeps_connection": true,
+      "reconnect_keeps_identity": true,
+      "calculation_engines_loaded": false
+    },
+    "cpu_selftest": {
+      "success": true,
+      "frozen": true,
+      "torch_version": "2.12.0+cpu",
+      "cuda_runtime": false,
+      "inference_logits": 256,
+      "gradient_tokens": 64,
+      "candidate_evaluated": true,
+      "candidate_signed_or_promoted": false,
+      "candidate_loss_before": 5.560859923513588,
+      "candidate_loss_after": 5.537755013824001,
+      "test_fixture_signers": 3,
+      "personal_state_loaded": false,
+      "job_process_signing_keys_loaded": false,
+      "own_swarm_backward_verified": true,
+      "own_swarm_parameters": 1730380
+    },
+    "deployment": {
+      "controls_identity_and_progress_preserved": true,
+      "engine_and_membership_version_changed": true,
+      "engine_manifest_sha256": "eb70e5adbe2c5ac6494986df01852d12744df92576898863253c44ee6e942fa2",
+      "existing_chat_model_preserved": true,
+      "native_app_source_revision": "401daea7999f3f7f35b394e6b0391fb9c921ae41",
+      "new_pid": 943984,
+      "node_restarted": true,
+      "old_pid": 836235,
+      "old_unit_backed_up": true,
+      "own_learning": {
+        "accepted": 0,
+        "cursor": 256,
+        "enabled": false,
+        "follow_enabled": true,
+        "pending": false,
+        "program_error": null,
+        "rejections": 0,
+        "round": 0,
+        "status": "idle",
+        "training_policy_id": "57052db9cad9b02f9b5bad64ce37f6e71c7ad7f597ee341320af266af091cb8c"
+      },
+      "own_network": {
+        "accepted": 0,
+        "cursor": 2816,
+        "enabled": false,
+        "follow_enabled": true,
+        "known_workers": 0,
+        "pending": false,
+        "program_error": null,
+        "rejections": 0,
+        "round": 0,
+        "status": "idle",
+        "training_policy_id": "b6992d4c29d6bdaa0a1dde550ef0dafd6d9e863c0f986d064a4c66d6e0da75e0",
+        "window_limit": 8
+      },
+      "own_swarm": {
+        "active": 0,
+        "completed": 11,
+        "cpu_threads": 8,
+        "device": "cpu",
+        "family": "lixyswarm-own-causal-byte-v1",
+        "membership_version": 2,
+        "model_id": "93530f29ae27286e592a4fb171cd31dba7e08951aeb4196c4e43135d114a5a23",
+        "optimizer_step": 1032,
+        "ready": true,
+        "requesters": [
+          "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+          "ea914d97caafef310e50385034abae9a50ba86496b0e9cbf4679e6070e4c25b0"
+        ],
+        "state_id": "a9118d28b2b00f7bbdf045d40ef44f251c97c5c9826766601706c44a70e40dd4",
+        "training_policy_id": "b6992d4c29d6bdaa0a1dde550ef0dafd6d9e863c0f986d064a4c66d6e0da75e0"
+      },
+      "physical_node_id": "ea914d97caafef310e50385034abae9a50ba86496b0e9cbf4679e6070e4c25b0",
+      "runtime_version": "0.4.0a23",
+      "success": true
+    },
+    "installed_cpu": {
+      "additional_regular_bytes": 64909701,
+      "command": "/home/toxxy/.local/state/lixyswarm/engines/eb70e5adbe2c5ac6494986df01852d12744df92576898863253c44ee6e942fa2/LixySwarmEngineCPU",
+      "identical_code_bytes_shared": 744239875,
+      "identical_code_files_shared": 2457,
+      "learned_state_modified": false,
+      "managed_and_research_bytes_after": 8229334041,
+      "managed_and_research_bytes_before": 8163955302,
+      "manifest_sha256": "eb70e5adbe2c5ac6494986df01852d12744df92576898863253c44ee6e942fa2",
+      "old_engine_preserved": true,
+      "profile": "own-cpu-network",
+      "quota_unchanged": true,
+      "regular_bytes": 809149576,
+      "reserved_for_bounded_program_bytes": 485614153,
+      "success": true
+    },
+    "guard_status": "Result=success\nId=lixyswarm-own-a23-rollback-20261016.timer\nActiveState=inactive\n\nResult=success\nId=lixyswarm-own-network-return-20261016.timer\nActiveState=inactive\n"
+  },
+  "local_regression": {
+    "passed": 156,
+    "skipped": 8,
+    "real_tensor_contribution_counts": [
+      1,
+      2,
+      3,
+      8
+    ],
+    "software_membership_rotation": 64,
+    "synthetic_identities_are_not_pcs": true
+  },
+  "public_https_checks": {
+    "chat": "https://31.97.9.54:8443/chat.html",
+    "explorer": "https://31.97.9.54:8443/swarm-explorer.html",
+    "status_codes": [
+      200,
+      200
+    ],
+    "tls_verified": true
+  }
+}
