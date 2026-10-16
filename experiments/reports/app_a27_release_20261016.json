@@ -1,0 +1,302 @@
+{
+  "version": 1,
+  "observed_at": 1792174143.7239387,
+  "scope": "Public A27 package, unchanged quotas and live finite-curriculum continuation; runtime snapshots are not additional acceptance audits",
+  "native_source_revision": "ee1b07e76422195a5ed6ed07f70bbc508cd33da5",
+  "engine_source_revision": "bf15cb01344ce9c09b6bf095f861fca94af4a924",
+  "release": {
+    "assets": [
+      {
+        "name": "LixySwarm-0.4.0a27-linux-x86_64.tar.gz",
+        "size": 82518094,
+        "url": "https://github.com/toxxy/LixySwarm/releases/download/v0.4.0a27/LixySwarm-0.4.0a27-linux-x86_64.tar.gz"
+      },
+      {
+        "name": "LixySwarm-0.4.0a27-linux-x86_64.tar.gz.json",
+        "size": 205,
+        "url": "https://github.com/toxxy/LixySwarm/releases/download/v0.4.0a27/LixySwarm-0.4.0a27-linux-x86_64.tar.gz.json"
+      },
+      {
+        "name": "SHA256SUMS.txt",
+        "size": 105,
+        "url": "https://github.com/toxxy/LixySwarm/releases/download/v0.4.0a27/SHA256SUMS.txt"
+      }
+    ],
+    "isPrerelease": true,
+    "tagName": "v0.4.0a27",
+    "url": "https://github.com/toxxy/LixySwarm/releases/tag/v0.4.0a27"
+  },
+  "anonymous_public_app_download": {
+    "success": true,
+    "bytes": 82518094,
+    "sha256": "b59af3c849c179661bcd42eb88f246392694b8e27ae429012c06f81df14cbbe1"
+  },
+  "ci": {
+    "url": "https://github.com/toxxy/LixySwarm/actions/runs/38941054428",
+    "conclusion": "success",
+    "passed": 761,
+    "skipped": 6
+  },
+  "physical_training_pcs": 2,
+  "activation": {
+    "at": 1792173694.800856,
+    "new_hardware_or_quota_permissions": false,
+    "next": {
+      "enabled": true,
+      "maximum_programs": 23,
+      "recipe_id": "1bd7c247bf916ffb42ddccc7862c9232d247da5c7f0dab8f8fed3dd3c875e7fd",
+      "version": 1
+    },
+    "previous": {
+      "enabled": true,
+      "maximum_programs": 2,
+      "recipe_id": "1bd7c247bf916ffb42ddccc7862c9232d247da5c7f0dab8f8fed3dd3c875e7fd",
+      "version": 1
+    },
+    "previous_progress_retained": true
+  },
+  "queue_controls": {
+    "enabled": true,
+    "maximum_programs": 23,
+    "recipe_id": "1bd7c247bf916ffb42ddccc7862c9232d247da5c7f0dab8f8fed3dd3c875e7fd",
+    "version": 1
+  },
+  "curriculum_snapshot": {
+    "programs": [
+      {
+        "accepted": 2,
+        "cursor": 593,
+        "index": 2,
+        "initial_state_id": "4e61bb665ec9ecaeb2266ac976c95278e225d350dffd5e67d96d1024c9c78d0f",
+        "ledger_sha256": "c721d612aadbb9aaf99b240cf169e5fc280ef08d40ab18cbd5b525bc40f90dc4",
+        "parent_contract_id": "d98935a1c6bb1c0ca15e80e23e456280da2f184039ef8bf01d050c8bd67b7392",
+        "program_id": "19d8a979163ee5905aa95bebc444a3280c4383d5aca20ab965e98aa83fb49344",
+        "rounds": 2,
+        "state_id": "844cdd0acc3d0d92fb48521d5532c4ce0867c4180a0511eaa5bb2e9d7f879aff",
+        "status": "terminated",
+        "termination": "awaiting_new_curriculum",
+        "unconsumed_units": 0
+      },
+      {
+        "accepted": 2,
+        "cursor": 572,
+        "index": 3,
+        "initial_state_id": "844cdd0acc3d0d92fb48521d5532c4ce0867c4180a0511eaa5bb2e9d7f879aff",
+        "ledger_sha256": "751181c424a2e606c4feaf91c8fef3cd4da820faa07ec9f2b66b3dadb7273f91",
+        "parent_contract_id": "95ed9ab423c5655e9921c69b861255fda833200a0697fe6d335ce0f834f2192f",
+        "program_id": "d3f00ca99db132f0f6a09d4853f028988f520801a9c761d118f4fe999bf796e2",
+        "rounds": 2,
+        "state_id": "f551c150b4ea74f6b492d4c9df44a5c79f24e10f7c13b0da06b64ff6ab4bc7cc",
+        "status": "terminated",
+        "termination": "awaiting_new_curriculum",
+        "unconsumed_units": 0
+      },
+      {
+        "accepted": 2,
+        "cursor": 561,
+        "index": 4,
+        "initial_state_id": "f551c150b4ea74f6b492d4c9df44a5c79f24e10f7c13b0da06b64ff6ab4bc7cc",
+        "ledger_sha256": "3ab185ce9f4617786b526a9de4bc659b46a6a4ef10f4041a029a6b9dc895233c",
+        "parent_contract_id": "fa404fab08d3f9307cd6411ea06333a2b5c509eb41cd59a7d33032abfe1ed1ef",
+        "program_id": "4d6c3e2e8332bda6a8d42d478a7290fbd3c860817ce6a85a36bba2f65c90e32d",
+        "rounds": 2,
+        "state_id": "8199a20fd785c6ac4e3e28dac10b309f42135d1b116628a6a8860d56157fac58",
+        "status": "terminated",
+        "termination": "awaiting_new_curriculum",
+        "unconsumed_units": 0
+      },
+      {
+        "accepted": 2,
+        "cursor": 555,
+        "index": 5,
+        "initial_state_id": "8199a20fd785c6ac4e3e28dac10b309f42135d1b116628a6a8860d56157fac58",
+        "ledger_sha256": "545d75226b986afcfd92a7a4daf077176d1a81aa7738f3c023efcca5cacc57e9",
+        "parent_contract_id": "058438e63381c26737f409e1ce19f2601b706eae615ebb51bd68cb650662541e",
+        "program_id": "baf472bf2c6e2af0f7175c9e40cc300c7488a8406b192b18e49d1274f895ba3c",
+        "rounds": 2,
+        "state_id": "6ad25bced9c7bb72c9132ec0e3c289825041264f10f1407532c2d08e577b0ac9",
+        "status": "terminated",
+        "termination": "awaiting_new_curriculum",
+        "unconsumed_units": 0
+      },
+      {
+        "index": 6,
+        "initial_state_id": "6ad25bced9c7bb72c9132ec0e3c289825041264f10f1407532c2d08e577b0ac9",
+        "parent_contract_id": "780e97ead2f1c6e8bdaabaf4ff03a4e7344fe8a7d980e6aff0d20de4faffad35",
+        "program_id": "e1460968aa7220e44260e9bb3f7ce75c598af643fbd664be816522a9a5e4a8c9",
+        "status": "selected"
+      }
+    ],
+    "recipe_id": "1bd7c247bf916ffb42ddccc7862c9232d247da5c7f0dab8f8fed3dd3c875e7fd",
+    "status": "learning",
+    "version": 1
+  },
+  "root": {
+    "node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+    "pid": 3690838,
+    "runtime_version": "0.4.0a27",
+    "timestamp_ms": 1792174138623,
+    "own_swarm": {
+      "active": 0,
+      "completed": 58,
+      "cpu_threads": 8,
+      "device": "cpu",
+      "family": "lixyswarm-own-causal-byte-v1",
+      "membership_version": 3,
+      "model_id": "f7a8e32be799919dc34f3d9d444254ca5b8d2a5c7b49d0d3d1986472e397738c",
+      "optimizer_step": 1041,
+      "program_id": "e1460968aa7220e44260e9bb3f7ce75c598af643fbd664be816522a9a5e4a8c9",
+      "ready": true,
+      "requesters": [
+        "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+        "ea914d97caafef310e50385034abae9a50ba86496b0e9cbf4679e6070e4c25b0"
+      ],
+      "state_id": "6ad25bced9c7bb72c9132ec0e3c289825041264f10f1407532c2d08e577b0ac9",
+      "training_policy_id": "986b6b6eb8cb4d3a5861ef66eb223a1f99a867a518d2b159bd660399a90ec676"
+    },
+    "own_network": {
+      "accepted": 0,
+      "cursor": 0,
+      "enabled": true,
+      "error": null,
+      "follow_enabled": true,
+      "known_workers": 4,
+      "pending": true,
+      "program_error": null,
+      "program_id": "e1460968aa7220e44260e9bb3f7ce75c598af643fbd664be816522a9a5e4a8c9",
+      "ready_workers": 2,
+      "rejections": 0,
+      "replicas": 1,
+      "retry_at": 0,
+      "round": 0,
+      "state_id": "6ad25bced9c7bb72c9132ec0e3c289825041264f10f1407532c2d08e577b0ac9",
+      "status": "gradients",
+      "training_policy_id": "986b6b6eb8cb4d3a5861ef66eb223a1f99a867a518d2b159bd660399a90ec676",
+      "window_limit": 8
+    },
+    "settings": {
+      "connected": true,
+      "paused": false,
+      "policy": {
+        "consented_at": 1792009540.378356,
+        "cpu_percent": 100,
+        "gpu_percent": 100,
+        "max_bandwidth_mbps": 5,
+        "max_cpu_jobs": 31,
+        "max_disk_gb": 8,
+        "max_gpu_jobs": 2,
+        "max_ram_gb": 31,
+        "mode": "maximum",
+        "only_when_idle": false,
+        "pause_above_cpu_percent": 98,
+        "pause_above_gpu_temp_c": 82,
+        "pause_on_battery": true,
+        "version": 1
+      },
+      "version": 1
+    }
+  },
+  "laptop": {
+    "diagnostics": {
+      "node_id": "ea914d97caafef310e50385034abae9a50ba86496b0e9cbf4679e6070e4c25b0",
+      "pid": 1052341,
+      "runtime_version": "0.4.0a27",
+      "timestamp_ms": 1792174137297,
+      "own_swarm": {
+        "active": 0,
+        "completed": 22,
+        "cpu_threads": 8,
+        "device": "cpu",
+        "family": "lixyswarm-own-causal-byte-v1",
+        "membership_version": 3,
+        "model_id": "f7a8e32be799919dc34f3d9d444254ca5b8d2a5c7b49d0d3d1986472e397738c",
+        "optimizer_step": 1041,
+        "program_id": "e1460968aa7220e44260e9bb3f7ce75c598af643fbd664be816522a9a5e4a8c9",
+        "ready": true,
+        "requesters": [
+          "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+          "ea914d97caafef310e50385034abae9a50ba86496b0e9cbf4679e6070e4c25b0"
+        ],
+        "state_id": "6ad25bced9c7bb72c9132ec0e3c289825041264f10f1407532c2d08e577b0ac9",
+        "training_policy_id": "986b6b6eb8cb4d3a5861ef66eb223a1f99a867a518d2b159bd660399a90ec676"
+      },
+      "own_network": {
+        "accepted": 0,
+        "cursor": 0,
+        "enabled": false,
+        "follow_enabled": true,
+        "known_workers": 0,
+        "pending": false,
+        "program_error": null,
+        "program_id": "e1460968aa7220e44260e9bb3f7ce75c598af643fbd664be816522a9a5e4a8c9",
+        "rejections": 0,
+        "round": 0,
+        "status": "idle",
+        "training_policy_id": "986b6b6eb8cb4d3a5861ef66eb223a1f99a867a518d2b159bd660399a90ec676",
+        "window_limit": 8
+      },
+      "settings": {
+        "connected": true,
+        "paused": false,
+        "policy": {
+          "consented_at": 1792102658.256639,
+          "cpu_percent": 100,
+          "gpu_percent": 100,
+          "max_bandwidth_mbps": 10.0,
+          "max_cpu_jobs": 19,
+          "max_disk_gb": 10.0,
+          "max_gpu_jobs": 1,
+          "max_ram_gb": 30.0,
+          "mode": "maximum",
+          "only_when_idle": false,
+          "pause_above_cpu_percent": 98,
+          "pause_above_gpu_temp_c": 82,
+          "pause_on_battery": true,
+          "version": 1
+        },
+        "version": 1
+      }
+    },
+    "selected_object_checks": {
+      "f7a8e32be799919dc34f3d9d444254ca5b8d2a5c7b49d0d3d1986472e397738c": {
+        "sha256": "f7a8e32be799919dc34f3d9d444254ca5b8d2a5c7b49d0d3d1986472e397738c",
+        "bytes": 7337088
+      },
+      "1b2a1719821492dffb3f13770b251ec66250d6d54f9cca8d6a9d79d193e92b5f": {
+        "sha256": "1b2a1719821492dffb3f13770b251ec66250d6d54f9cca8d6a9d79d193e92b5f",
+        "bytes": 12595275
+      }
+    },
+    "code_storage_sharing": {
+      "donor_manifest": "a23ebdceb73c18980a352fea05d63c066fe209178d44d8ebc73afa52be431ec8",
+      "identical_code_bytes_shared": 840069851,
+      "identical_code_files_shared": 2589,
+      "model_optimizer_dataset_or_gradient_modified": false,
+      "package_contents_unchanged": true,
+      "source_manifest": "a23ebdceb73c18980a352fea05d63c066fe209178d44d8ebc73afa52be431ec8",
+      "storage_after": 8856915192,
+      "storage_before": 9695707091,
+      "success": true
+    }
+  },
+  "root_accounted_public_bytes": 8437306955,
+  "prior_strict_food_files_unchanged": {
+    "own-network/curriculum.json": "ae196a8aba9bc6ab90e3d6cff4aba141fac48ad0c03cf2f8000f2021a1cdc21d",
+    "own-network/programs/2481f2b47df16279124d4d188314e82bb6040ec94024111ba4cfeedeada6f5b1/ledger.json": "1ade5c41261cbc45cae3b8043e230c615be0075e66041dc63551fc90b592aeec",
+    "own-network/programs/2481f2b47df16279124d4d188314e82bb6040ec94024111ba4cfeedeada6f5b1/rounds/00000000.json": "b39df60be363a0e410659e2eb3e28ebdb2362701da75fab0a8d54cc4fde5e062",
+    "own-network/programs/2481f2b47df16279124d4d188314e82bb6040ec94024111ba4cfeedeada6f5b1/rounds/00000001.json": "aa53fd10bdffb04d4a5dedfba6547a9bc89371bc425632a3627fb05d5c3ece76",
+    "own-network/programs/d98935a1c6bb1c0ca15e80e23e456280da2f184039ef8bf01d050c8bd67b7392/ledger.json": "4b8cae2fd8e2e37c2167cce2251475dca00f1e515ba5e6277d92f8e20909f3fd",
+    "own-network/programs/d98935a1c6bb1c0ca15e80e23e456280da2f184039ef8bf01d050c8bd67b7392/rounds/00000000.json": "6a93fe9cc0186c90afc698b562efe1a711219058ee6f7f0b80d9a5ba0149a2f5",
+    "own-network/programs/d98935a1c6bb1c0ca15e80e23e456280da2f184039ef8bf01d050c8bd67b7392/rounds/00000001.json": "30bb262e765d241ebba56c7b7cc73f9325672bba73e0f1cb4082b55fc2d3cc46"
+  },
+  "prior_v2_ledger_unchanged_sha256": "49495411ca160ab1c65447cd4bf979a5781c24251cd26cfddb643a81b2deeecc",
+  "accepted_update_audit": "own_food_score_native_20261016.json",
+  "resume_audit": "own_app_resume_current_20261016.json",
+  "limitations": [
+    "Two physical PCs; known_workers includes retained software profiles and is not a machine count.",
+    "Live snapshots may differ while replication is in progress; use per-transition audit reports for acceptance evidence.",
+    "Only one locally selected coordinator and one public relay; coordinator handoff and longer availability gates remain pending.",
+    "23 finite programs; resources can pause continuation without raising quotas or deleting learned state.",
+    "No linear scaling, agent growth, permanent feeding or own conversational quality claimed; current chat remains Qwen."
+  ]
+}
