@@ -159,12 +159,14 @@ El flujo de desarrollo usa el repositorio público: las PCs publican cambios por
 
 ## Páginas actuales del VPS
 
-- [Explorer](http://31.97.9.54:8080/swarm-explorer.html) y [entrada principal](http://31.97.9.54:8080/).
-- [Interfaz de chat](http://31.97.9.54:8080/chat.html).
-- [Documentación de la API](http://31.97.9.54:8080/api/docs).
-- [Estado publicado](http://31.97.9.54:8080/api/swarm/status) y [salud de la API](http://31.97.9.54:8080/api/health).
+Actualizadas tras la verificación pública del 2026-10-15:
 
-El Explorer responde, pero la API marca los datos como desactualizados al inicio de este plan. La interfaz de chat existe; el acceso al modelo por la red forma parte de la integración pendiente. El frontend y el transporte público tienen funciones separadas.
+- [Explorer](https://31.97.9.54:8443/swarm-explorer.html) y [entrada principal](https://31.97.9.54:8443/).
+- [Chat con expertos de la red](https://31.97.9.54:8443/chat.html).
+- [Documentación de la API](https://31.97.9.54:8443/api/docs).
+- [Estado publicado](https://31.97.9.54:8443/api/swarm/status) y [salud de la API](https://31.97.9.54:8443/api/health).
+
+El Explorer utiliza el estado firmado y con caducidad de los nodos. El chat HTTPS consulta expertos mediante LSP público y verifica sus recibos; el VPS no aloja modelos ni entrena. La ruta de chat HTTP anterior dirige la página a HTTPS y rechaza consultas por HTTP. La telemetría HTTP anterior sigue disponible para compatibilidad. La evidencia y las condiciones que aún faltan del plan completo se conservan en [VISION_PROGRESS.md](VISION_PROGRESS.md).
 
 ## Referencias del proyecto
 

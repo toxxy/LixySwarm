@@ -31,6 +31,8 @@ on:
       - 'test_language_outcome_selector_tensors.py'
       - 'test_language_prefix_router_tensors.py'
       - 'test_language_repair_comparison.py'
+      - 'test_language_repair_calibration.py'
+      - 'src/learning/language_repair_calibration*.py'
       - 'experiments/audit_prefix_router.py'
       - 'test_public_math.py'
       - 'test_engine_qualification.py'
