@@ -1,0 +1,246 @@
+{
+  "version": 1,
+  "scope": "Cold Linux native own-lineage onboarding, public Internet acquisition, manual contribution and process restart on the same two physical PCs",
+  "native_app_source_revision": "018a2dbafea16359ee1ad1f8889943914730bdbd",
+  "cpu_source_revision": "898e0362ea8b0026a1d5e445fb0690f49f2f8d70",
+  "cpu_release": "https://github.com/toxxy/LixySwarm/releases/tag/own-engine-0.4.0a24",
+  "physical_training_pcs": 2,
+  "cold_app": {
+    "anchor_id": "e667ab83aabeef975d3c7467b3d5b858d2ab648000187b2a86117ea31c68e106",
+    "calculation_engines_loaded": false,
+    "connection_seconds": 0.919958742975723,
+    "cpu_engine_manifest_sha256": "33f4dff6fac884184fc49280d2d3cf46f35a67289c0f6a73b6fe0ee7437d693c",
+    "extra_physical_pc": false,
+    "final_own_swarm": {
+      "active": 0,
+      "completed": 1,
+      "cpu_threads": 8,
+      "device": "cpu",
+      "family": "lixyswarm-own-causal-byte-v1",
+      "membership_version": 2,
+      "model_id": "cf59e348eeb1e2d2ac95d48266bbe53b45089a88b5845e98b47b18c6673528ce",
+      "optimizer_step": 1033,
+      "ready": true,
+      "requesters": [
+        "6339aadbb5f4b2c6508b93b188e207f054d4b46ca82ee8827fa0415bc0536195",
+        "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255"
+      ],
+      "state_id": "4e61bb665ec9ecaeb2266ac976c95278e225d350dffd5e67d96d1024c9c78d0f",
+      "training_policy_id": "b6992d4c29d6bdaa0a1dde550ef0dafd6d9e863c0f986d064a4c66d6e0da75e0"
+    },
+    "fresh_profile": true,
+    "internet": true,
+    "model_state_copied_by_admin": false,
+    "native_gradient_work": {
+      "encoded_data_bytes": 7171856,
+      "result": {
+        "error": "",
+        "finished_at": 1792168265.4335651,
+        "job_id": "63c7facca5aa133a3104744222cc19f0fe5c223b763b165b4d8cfcafdffd5250",
+        "output": {
+          "count": 64,
+          "dataset_id": "a1a36bc0cea6f5a8dbf81a5828a01da3ca0674c534431ef51583f3f46a915be6",
+          "gradient_bytes": 6244100,
+          "gradient_id": "6fac4163bdbce68ae4a43e1cb23c9805c1818ea8d1068a079c013881b6fdc7f9",
+          "loss": 2.4082934856414795,
+          "model_id": "cf59e348eeb1e2d2ac95d48266bbe53b45089a88b5845e98b47b18c6673528ce",
+          "start": 3584,
+          "state_id": "4e61bb665ec9ecaeb2266ac976c95278e225d350dffd5e67d96d1024c9c78d0f",
+          "tokens": 8192,
+          "training_policy_id": "b6992d4c29d6bdaa0a1dde550ef0dafd6d9e863c0f986d064a4c66d6e0da75e0"
+        },
+        "receipt": {
+          "finished_at": 1792168265.4335651,
+          "job_id": "63c7facca5aa133a3104744222cc19f0fe5c223b763b165b4d8cfcafdffd5250",
+          "requester_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+          "result_digest": "948f4e2a02572107f0e973e8e5450aa176dfbb248470b5d4dc9dc918c07ed01f",
+          "signature": "Ovc1WFogW6WE6eBP0mHpG1gP5O/vQwMbeXozMzgV8uP3BxnW9yn/0YPO0NvI7tlmusli5ik/BaeLO7gUmgfgCQ==",
+          "version": 1,
+          "worker_node_id": "6339aadbb5f4b2c6508b93b188e207f054d4b46ca82ee8827fa0415bc0536195"
+        },
+        "status": "ok"
+      },
+      "route": {
+        "encrypted": true,
+        "public_internet": true,
+        "transport": "relay"
+      },
+      "seconds": 15.251985096023418
+    },
+    "no_selection_before_validation": true,
+    "optimizer_step": 1033,
+    "pause_preserved_partial_bytes": 393216,
+    "physical_profile_node_id": "6339aadbb5f4b2c6508b93b188e207f054d4b46ca82ee8827fa0415bc0536195",
+    "preparation": {
+      "anchor_id": "e667ab83aabeef975d3c7467b3d5b858d2ab648000187b2a86117ea31c68e106",
+      "audit": {
+        "causality": {
+          "max_prefix_logits_difference": 0.0,
+          "passed": true
+        },
+        "cuda_initialized": false,
+        "evaluation": {
+          "byte_accuracy": 0.46371864222817427,
+          "documents": 128,
+          "nll": 1.8433024185456734,
+          "predicted_bytes": 57123
+        },
+        "initialization_protocol_id": "7125f270fdcbc6be68141f556579805bbf8fda92bc228315207038ac2a9adf9a",
+        "model_id": "cf59e348eeb1e2d2ac95d48266bbe53b45089a88b5845e98b47b18c6673528ce",
+        "new_gradient_computed": false,
+        "optimizer_id": "d91781743f9345344f18b63863ca57a694438eb2a50cad4de2de580fbddd4ba5",
+        "optimizer_states": 175,
+        "optimizer_step": 1033,
+        "saved_state_unchanged": true,
+        "state_id": "4e61bb665ec9ecaeb2266ac976c95278e225d350dffd5e67d96d1024c9c78d0f",
+        "success": true
+      },
+      "engine_manifest_sha256": "33f4dff6fac884184fc49280d2d3cf46f35a67289c0f6a73b6fe0ee7437d693c",
+      "state_id": "4e61bb665ec9ecaeb2266ac976c95278e225d350dffd5e67d96d1024c9c78d0f",
+      "success": true,
+      "transfers": [
+        {
+          "artifact_id": "cf59e348eeb1e2d2ac95d48266bbe53b45089a88b5845e98b47b18c6673528ce",
+          "bytes": 7337088,
+          "encoded_data_bytes": 8546512,
+          "provider": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+          "route": {
+            "encrypted": true,
+            "public_internet": true,
+            "transport": "relay"
+          },
+          "seconds": 14.63446670898702
+        },
+        {
+          "artifact_id": "d91781743f9345344f18b63863ca57a694438eb2a50cad4de2de580fbddd4ba5",
+          "bytes": 12595275,
+          "encoded_data_bytes": 14062196,
+          "provider": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+          "route": {
+            "encrypted": true,
+            "public_internet": true,
+            "transport": "relay"
+          },
+          "seconds": 24.03145118698012
+        },
+        {
+          "artifact_id": "a1a36bc0cea6f5a8dbf81a5828a01da3ca0674c534431ef51583f3f46a915be6",
+          "bytes": 2485927,
+          "encoded_data_bytes": 2096540,
+          "provider": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+          "route": {
+            "encrypted": true,
+            "public_internet": true,
+            "transport": "relay"
+          },
+          "seconds": 4.890321697021136
+        },
+        {
+          "artifact_id": "188812577d2a7834eff5fc0ac0fad5f09f121b3587b34b7ba5d88ba37537be50",
+          "bytes": 83241,
+          "encoded_data_bytes": 70800,
+          "provider": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+          "route": {
+            "encrypted": true,
+            "public_internet": true,
+            "transport": "relay"
+          },
+          "seconds": 0.33716359798563644
+        }
+      ]
+    },
+    "preparation_seconds": 772.3667022599839,
+    "resumed_same_identity_and_state": true,
+    "state_id": "4e61bb665ec9ecaeb2266ac976c95278e225d350dffd5e67d96d1024c9c78d0f",
+    "success": true
+  },
+  "restart": {
+    "native_gradient_work": {
+      "artifact_initially_local": false,
+      "encoded_data_bytes": 7164332,
+      "finished_at": 1792168453.0188634,
+      "operation": "swarm.gradient.v2",
+      "result": {
+        "error": "",
+        "finished_at": 1792168440.325309,
+        "job_id": "29ed99c3919f3678ca910b891b31af9ba0a068b5a00f2061c7aaf6481a83d30c",
+        "output": {
+          "count": 64,
+          "dataset_id": "a1a36bc0cea6f5a8dbf81a5828a01da3ca0674c534431ef51583f3f46a915be6",
+          "gradient_bytes": 6244100,
+          "gradient_id": "562837c7bbb246ff775d2242c8f36301dee8ccd65b390392c17eb48ed1509e57",
+          "loss": 2.362600326538086,
+          "model_id": "cf59e348eeb1e2d2ac95d48266bbe53b45089a88b5845e98b47b18c6673528ce",
+          "start": 3648,
+          "state_id": "4e61bb665ec9ecaeb2266ac976c95278e225d350dffd5e67d96d1024c9c78d0f",
+          "tokens": 8192,
+          "training_policy_id": "b6992d4c29d6bdaa0a1dde550ef0dafd6d9e863c0f986d064a4c66d6e0da75e0"
+        },
+        "receipt": {
+          "finished_at": 1792168440.325309,
+          "job_id": "29ed99c3919f3678ca910b891b31af9ba0a068b5a00f2061c7aaf6481a83d30c",
+          "requester_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+          "result_digest": "f08c967383b1452b500a8e139cdfc2cb7cba381d1b242d1f40e781132392cf4e",
+          "signature": "Rih5P5DX/SRWlWoRUZA4VOMxtNC4nrVd99PCnMpvtKR9pNMCERMXvuwC9q+ULbUtVHVVnuZFMQpw/TivJSmfCg==",
+          "version": 1,
+          "worker_node_id": "6339aadbb5f4b2c6508b93b188e207f054d4b46ca82ee8827fa0415bc0536195"
+        },
+        "status": "ok"
+      },
+      "route": {
+        "encrypted": true,
+        "public_internet": true,
+        "transport": "relay"
+      },
+      "seconds": 20.207064410904422,
+      "selected_state_id": "4e61bb665ec9ecaeb2266ac976c95278e225d350dffd5e67d96d1024c9c78d0f",
+      "started_at": 1792168432.8115551,
+      "state": "complete"
+    },
+    "new_pid": 996445,
+    "old_pid": 978156,
+    "optimizer_step": 1033,
+    "physical_pcs": 2,
+    "restarted_profile_is_not_an_extra_pc": true,
+    "same_identity_and_learned_state": true,
+    "success": true
+  },
+  "controls_and_root_selected_state_preserved": true,
+  "summary": {
+    "connection_seconds": 0.919958742975723,
+    "preparation_seconds": 772.3667022599839,
+    "initial_trial_seconds": 807.0752346515656,
+    "cold_profile_is_replacement_on_laptop": true,
+    "usual_laptop_service_restored": true,
+    "own_optimizer_step": 1033,
+    "new_accepted_updates": 0
+  },
+  "preserved_failures": [
+    {
+      "phase": "First cold native app attempt",
+      "app_source_revision": "38963e57b290890a1d2e7247152edb4f71afa3e0",
+      "result": "Pause cancelled download, then automatic retry overwrote stopped status while still paused. No own state was activated. Fixed and regression-tested in 018a2db; original failure report and partial download retained."
+    },
+    {
+      "phase": "Administrative restart observer, before execution",
+      "result": "Initial script had a syntax error. It did not start or stop a node. Original script and failed systemd invocation preserved; corrected script was syntax-checked and the process restart passed."
+    }
+  ],
+  "limits": [
+    "This proves onboarding at revision 018a2db with CPU engine 898e036, not a cold run of a later A25 bundle.",
+    "No new physical PC was added; the laptop usual participant was stopped while its fresh profile ran.",
+    "Manual gradient results were not promoted or counted as autonomous accepted updates.",
+    "One app-chosen lineage coordinator remains; no coordinator election or open-network consensus is claimed.",
+    "Only Linux x86_64 was physically exercised; Windows/macOS remain for the final stage."
+  ],
+  "audited": {
+    "success": true,
+    "physical_pcs": 2,
+    "cold_native_work_results": 2,
+    "own_optimizer_step": 1033,
+    "cold_profile_id": "6339aadbb5f4b2c6508b93b188e207f054d4b46ca82ee8827fa0415bc0536195",
+    "full_process_restart_verified": true,
+    "new_accepted_updates_claimed": 0,
+    "scope": "Own native onboarding and persistence; manual gradients are not promoted updates"
+  }
+}
