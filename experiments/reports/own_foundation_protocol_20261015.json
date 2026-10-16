@@ -1,0 +1,57 @@
+{
+  "definition": {
+    "action": "own-causal-foundation-v1",
+    "batch_size": 16,
+    "block_size": 128,
+    "causality_atol": 1e-06,
+    "causality_rtol": 1e-05,
+    "disk_reservation_gb": 0.08,
+    "distributed_training_performed": false,
+    "document_format": "Question: {question}\nAnswer: {answer}\n\n",
+    "encoding": "utf8-bytes-256-v1",
+    "evaluation_artifact": [
+      "188812577d2a7834eff5fc0ac0fad5f09f121b3587b34b7ba5d88ba37537be50",
+      83241
+    ],
+    "evaluation_maximum_bytes_per_document": 512,
+    "evaluation_schedule": "initial-and-final-only-no-selection",
+    "gradient_clip_norm": 1.0,
+    "initialization_seed": 20261015,
+    "learning_rate": 0.0006,
+    "maximum_seconds": 1200,
+    "minimum_relative_heldout_nll_gain": 0.01,
+    "model_config": {
+      "block_size": 128,
+      "causal_signals": true,
+      "echo_dim": 32,
+      "family": "lixyswarm-own-causal-byte-v1",
+      "feromon_dim": 32,
+      "identity_dim": 16,
+      "n_agents": 3,
+      "n_embd": 128,
+      "n_head": 4,
+      "n_layer": 2,
+      "sleep_dim": 32,
+      "swarm_rounds": 2,
+      "vocab_size": 256
+    },
+    "model_promotion_authorized": false,
+    "native_cycles_added": 0,
+    "optimizer": "AdamW",
+    "pretrained_weights": false,
+    "ram_gb": 4.0,
+    "sample_seed": 20261016,
+    "scope": "Own causal byte-language pretraining baseline, not math reasoning or chat certification",
+    "steps": 1024,
+    "teacher_used_in_this_run": false,
+    "teachers_permitted_in_future": true,
+    "training_artifact": [
+      "a1a36bc0cea6f5a8dbf81a5828a01da3ca0674c534431ef51583f3f46a915be6",
+      2485927
+    ],
+    "version": 1,
+    "warmup_steps": 32,
+    "weight_decay": 0.01
+  },
+  "protocol_id": "7125f270fdcbc6be68141f556579805bbf8fda92bc228315207038ac2a9adf9a"
+}

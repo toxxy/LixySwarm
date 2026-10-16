@@ -118,6 +118,7 @@ class DolphinPool(nn.Module):
         self,
         idx: torch.Tensor,
         update_runtime_state: bool = True,
+        causal: bool = False,
     ) -> tuple:
         """
         Todos los delfines procesan en paralelo.
@@ -127,6 +128,16 @@ class DolphinPool(nn.Module):
             feromon: (B, feromon_dim) — mapa acústico combinado
             info: dict con detalles de cada delfín
         """
+        if causal:
+            if update_runtime_state:
+                raise ValueError('Causal pings must not update runtime state')
+            outputs = [bridge.dolphin(idx, update_sleep=False, use_sleep_state=False,
+                                      causal=True) for bridge in self.dolphins]
+            confidences = torch.stack([row[1] for row in outputs], dim=0)
+            weights = torch.softmax(confidences, dim=0)
+            signals = torch.stack([row[0] for row in outputs], dim=0)
+            return (signals * weights).sum(dim=0), {'causal_prefixes': True,
+                                                   'n_dolphins': len(outputs)}
         if len(self.dolphins) == 1:
             # Fast path: un solo delfín, sin overhead
             return self.dolphins[0](

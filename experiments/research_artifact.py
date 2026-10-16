@@ -30,7 +30,8 @@ RESEARCH_NAMES = ('lixyswarm-language-selector-20261015', 'lixyswarm-math-specia
                   'lixyswarm-specialist-answers-20261015', 'lixyswarm-research-replica-20261015',
                   'lixyswarm-outcomes-20261015', 'lixyswarm-outcome-selector-20261015',
                   'lixyswarm-prefix-router-20261015', 'lixyswarm-format-recovery-20261015',
-                  'lixyswarm-repair-calibration-20261015','lixyswarm-response-router-20261015')
+                  'lixyswarm-repair-calibration-20261015','lixyswarm-response-router-20261015',
+                  'lixyswarm-own-foundation-20261015')
 MAX_BYTES = 16*1024**2
 
 

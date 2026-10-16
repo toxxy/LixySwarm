@@ -2,7 +2,7 @@
 
 **Fecha:** 2026-10-13
 
-**Rectificación del usuario, 2026-10-15:** el organismo debe aprender desde pesos propios, inicializados desde cero. Una base preentrenada de terceros, sus adaptadores o la destilación de sus respuestas no cumplen este requisito. La línea principal retomará la arquitectura propia del enjambre; Qwen y los experimentos que dependen de él quedan como antecedentes de investigación y pruebas de infraestructura. Esta rectificación conserva las ocho etapas y sus exigencias de funcionamiento por Internet, evaluación, persistencia y escalado. El chat desplegado todavía usa Qwen: la sustitución por el organismo propio está pendiente y no se acredita cambiando su presentación.
+**Rectificación y aclaración del usuario, 2026-10-15:** el organismo debe tener sus propios pesos y desarrollar su arquitectura de enjambre desde una inicialización propia. Puede aprender de otros modelos mediante destilación: «comer de ellos conocimiento». Los profesores externos son fuentes de enseñanza con procedencia y evaluación; el organismo conserva parámetros y estado de aprendizaje propios. Adaptar Qwen y servirlo como chat no cumple por sí solo esta visión. Esta rectificación conserva las ocho etapas, la mejora constante y las exigencias de funcionamiento descentralizado por Internet, evaluación, persistencia y escalado. El chat desplegado todavía usa Qwen: la sustitución por el organismo propio está pendiente y no se acredita cambiando su presentación.
 
 **Prioridad actualizada el 2026-10-14:** por indicación del usuario, el desarrollo y las pruebas de Windows y macOS quedan para el tramo final. Primero se completa el recorrido funcional en Linux: conexión por Internet, aprendizaje evaluado, distribución y conservación de las mejoras. Las compilaciones automáticas habituales se concentran en Linux; la matriz completa se conserva como ejecución manual para la validación final. Esta prioridad cambia el orden de trabajo, no las condiciones de aceptación de las demás etapas.
 
@@ -12,7 +12,7 @@ El primer hito de producto será completar este recorrido por Internet: una PC r
 
 ## Principios de la visión
 
-- El conocimiento del organismo se desarrolla mediante entrenamiento de sus propios parámetros desde una inicialización reproducible, con datos autorizados y procedencia verificable. Sus componentes aprendidos tampoco pueden depender de representaciones o profesores preentrenados externos. La transferencia entre tamaños podrá usar expertos del propio linaje, una vez que exista evidencia de aprendizaje.
+- El conocimiento del organismo se desarrolla mediante entrenamiento de sus propios parámetros desde una inicialización reproducible, con datos autorizados y procedencia verificable. Puede destilar conocimiento de profesores externos o de expertos del propio linaje. Cada enseñanza queda vinculada a su fuente y sólo se incorpora mediante entrenamiento y evaluación del organismo; el modelo propio debe poder operar sin depender del profesor. La mejora constante requiere ciclos evaluados y conservación del estado que permite seguir aprendiendo.
 - Cualquier participante puede conectarse sin registro, VPN ni configuración manual de puertos y acceder al conocimiento disponible.
 - La contribución es voluntaria y gratuita. CPU, GPU, memoria, almacenamiento y conectividad tienen funciones útiles; la ausencia de GPU permite contribuir en otros roles.
 - Las hormigas son los nodos físicos. Los agentes son modelos o expertos alojados en ellos; las sectas agrupan especializaciones. La asignación depende de capacidad medida, disponibilidad y utilidad.
@@ -52,7 +52,7 @@ flowchart LR
     D --> S
 ```
 
-Los trabajos se identifican por familia de experto, versión del modelo, datos y operación. Agentes compatibles comparten actualizaciones de parámetros. Entre arquitecturas o tamaños diferentes del propio organismo se propone transferencia mediante destilación interna, ejemplos sintéticos evaluados y memoria global; sus gradientes tienen formas distintas y requieren rutas de aprendizaje diferentes. Los modelos preentrenados externos no serán profesores ni componentes de la línea principal.
+Los trabajos se identifican por familia de experto, versión del modelo, datos y operación. Agentes compatibles comparten actualizaciones de parámetros. Entre arquitecturas o tamaños diferentes se propone transferencia mediante destilación, ejemplos sintéticos evaluados y memoria global; sus gradientes tienen formas distintas y requieren rutas de aprendizaje diferentes. Los profesores pueden ser modelos externos o expertos del propio organismo. Se conservan su procedencia, versión, ejemplos y evaluación, sin convertir al profesor en una dependencia de inferencia del modelo propio.
 
 Un participante capaz puede coordinar temporalmente un ciclo de una familia de expertos. El trabajo y su estado deben poder retomarse desde otro nodo. La aceptación de versiones combina evaluación, procedencia y firmas según la política de la colonia; el transporte del VPS no otorga autoridad para aceptar modelos.
 

@@ -286,6 +286,7 @@ class SwarmConfig:
     auxiliary_loss_weight: float = 0.25
     diversity_loss_weight: float = 0.01
     diversity_similarity_margin: float = 0.7
+    causal_signals: bool = False  # New own foundation lineage; legacy checkpoints keep their semantics.
 
     def __post_init__(self):
         for weight in (self.auxiliary_loss_weight, self.diversity_loss_weight):
@@ -418,6 +419,9 @@ class LixySwarm(nn.Module):
                  load_runtime_state: bool = True):
         super().__init__()
         self.config = config
+
+        if config.causal_signals and (load_matriarca or load_runtime_state or agent_checkpoint is not None):
+            raise ValueError('Causal foundation requires explicit clean initialization without personal runtime state')
 
         vocab_size = config.agent_configs[0].vocab_size
         n_embd = config.agent_configs[0].n_embd
@@ -674,6 +678,7 @@ class LixySwarm(nn.Module):
         self,
         logits_list: List[torch.Tensor],
         infrasound: Optional[torch.Tensor] = None,
+        *, tokenwise: bool = False,
     ) -> Tuple[torch.Tensor, torch.Tensor]:
         """Shared learned selector for training and RuntimeSession generation.
 
@@ -686,19 +691,22 @@ class LixySwarm(nn.Module):
         n_embd = self.config.agent_configs[0].n_embd
         scores = []
         for logits, head in zip(logits_list, self.confidence_heads):
-            rep = logits.mean(dim=1)
-            rep = rep[:, :n_embd] if rep.shape[-1] >= n_embd else F.pad(
+            rep = logits if tokenwise else logits.mean(dim=1)
+            rep = rep[..., :n_embd] if rep.shape[-1] >= n_embd else F.pad(
                 rep, (0, n_embd - rep.shape[-1])
             )
             scores.append(head(rep))
         scores = torch.stack(scores, dim=1)
         if infrasound is not None:
+            if tokenwise:
+                raise ValueError('Causal memory votes require a separately versioned prefix memory protocol')
             if infrasound.shape != (scores.shape[0], self.config.matriarca_config.infrasound_dim):
                 raise ValueError("One infrasound vector is required per request")
             memory_vote = self.matriarca_conf_proj(infrasound).unsqueeze(-1)
             scores = 0.8 * scores + 0.2 * memory_vote
         weights = F.softmax(scores, dim=1)
-        aggregated = (torch.stack(logits_list, dim=1) * weights.unsqueeze(-1)).sum(dim=1)
+        expanded_weights = weights if tokenwise else weights.unsqueeze(-1)
+        aggregated = (torch.stack(logits_list, dim=1) * expanded_weights).sum(dim=1)
         return aggregated, weights
 
     @torch.no_grad()
@@ -779,6 +787,10 @@ class LixySwarm(nn.Module):
         update_memory_importance: bool = True,
         use_memory: bool = True,
     ):
+        if self.config.causal_signals:
+            if store_memory or use_memory or update_runtime_state:
+                raise ValueError('Causal foundation forward requires memory and runtime state disabled')
+            return self._forward_causal(idx, targets)
         B, T = idx.shape
 
         # ─── 1. Delfín 🐬 — Ecolocalización + Sueño unihemisférico ───
@@ -898,6 +910,43 @@ class LixySwarm(nn.Module):
         self._last_feromon = feromon.detach()
 
         return aggregated, total_loss if targets is not None else None, feromon
+
+    def _forward_causal(self, idx, targets):
+        """Own autoregressive path: every shared signal belongs to one prefix.
+
+        The historical path pools whole sequences. That is useful for completed
+        query classification, but leaks future input into next-token training.
+        Memory and lifecycle state require their own causal integration before
+        they can be enabled for this new model lineage.
+        """
+        feromon, _ = self.dolphin(idx, update_runtime_state=False, causal=True)
+        feromon = F.normalize(feromon, dim=-1)
+        individual_losses = []
+        for _ in range(self.config.swarm_rounds):
+            logits, signals = [], []
+            for agent in self.agents:
+                prediction, loss, signal = agent(idx, targets=targets,
+                    feromon_in=feromon, tokenwise_signals=True)
+                logits.append(prediction)
+                signals.append(signal)
+                if loss is not None:
+                    individual_losses.append(loss)
+            feromon = F.normalize(self.feromon_pool(signals), dim=-1)
+        aggregated, weights = self.aggregate_agent_logits(logits, tokenwise=True)
+        total_loss = None
+        if targets is not None:
+            collective = F.cross_entropy(aggregated.flatten(0, 1), targets.flatten(), ignore_index=-1)
+            individual = torch.stack(individual_losses).mean()
+            diversity = self.pheromone_diversity_loss(
+                [signal.flatten(0, 1) for signal in signals], self.config.diversity_similarity_margin)
+            total_loss = collective
+            if self.training:
+                total_loss = (collective + self.config.auxiliary_loss_weight * individual
+                              + self.config.diversity_loss_weight * diversity)
+            self._last_loss_terms = {'collective': float(collective.detach()),
+                'individual': float(individual.detach()), 'diversity': float(diversity.detach())}
+        self._last_causal_weights = weights.detach()
+        return aggregated, total_loss, feromon
 
     @staticmethod
     def pheromone_diversity_loss(feromones, similarity_margin):

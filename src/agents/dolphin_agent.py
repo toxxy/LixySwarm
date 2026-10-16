@@ -100,10 +100,17 @@ class PingEncoder(nn.Module):
         self.encoder = nn.Sequential(*layers)
         self.norm = nn.LayerNorm(echo_dim)
 
-    def forward(self, idx: torch.Tensor, attention_mask: Optional[torch.Tensor] = None) -> torch.Tensor:
+    def forward(self, idx: torch.Tensor, attention_mask: Optional[torch.Tensor] = None,
+                *, causal: bool = False) -> torch.Tensor:
         """idx: (B, T) → echo: (B, echo_dim)"""
         embeddings = self.embed(idx)
-        if attention_mask is None:
+        if causal:
+            if attention_mask is not None:
+                raise ValueError('Causal pings require unpadded token prefixes')
+            counts = torch.arange(1, idx.shape[1] + 1, device=idx.device,
+                                  dtype=embeddings.dtype).view(1, -1, 1)
+            x = embeddings.cumsum(dim=1) / counts
+        elif attention_mask is None:
             x = embeddings.mean(dim=1)
         else:
             if attention_mask.shape != idx.shape or not torch.all((attention_mask == 0) | (attention_mask == 1)):
@@ -184,7 +191,8 @@ class Echolocation(nn.Module):
         self.load_state_dict(own_state)
         print(f"  Echolocation: {loaded} pesos cargados, {skipped} omitidos (nuevos pings random)")
 
-    def forward(self, idx: torch.Tensor, attention_mask: Optional[torch.Tensor] = None) -> Tuple[torch.Tensor, torch.Tensor, dict]:
+    def forward(self, idx: torch.Tensor, attention_mask: Optional[torch.Tensor] = None,
+                *, causal: bool = False) -> Tuple[torch.Tensor, torch.Tensor, dict]:
         """
         idx: (B, T) tokens de input
         returns:
@@ -193,11 +201,24 @@ class Echolocation(nn.Module):
           echoes:     dict con los 5 pings + acoustic_map para inspección
         """
         # ─── 5 pings simultáneos ───
-        echo_topic   = self.ping_topic(idx, attention_mask)    # (B, echo_dim)
-        echo_intent  = self.ping_intent(idx, attention_mask)   # (B, echo_dim)
-        echo_need    = self.ping_need(idx, attention_mask)     # (B, echo_dim)
-        echo_context = self.ping_context(idx, attention_mask)  # (B, echo_dim)
-        echo_emotion = self.ping_emotion(idx, attention_mask)  # (B, echo_dim)
+        echo_topic   = self.ping_topic(idx, attention_mask, causal=causal)
+        echo_intent  = self.ping_intent(idx, attention_mask, causal=causal)
+        echo_need    = self.ping_need(idx, attention_mask, causal=causal)
+        echo_context = self.ping_context(idx, attention_mask, causal=causal)
+        echo_emotion = self.ping_emotion(idx, attention_mask, causal=causal)
+
+        if causal:
+            # Each prefix has its own five echoes. Attention never joins time
+            # positions or different requests in a batch.
+            echoes = [echo_topic, echo_intent, echo_need, echo_context, echo_emotion]
+            all_echoes = torch.stack(echoes, dim=2).flatten(0, 1)
+            query = echo_topic.flatten(0, 1).unsqueeze(1)
+            acoustic, _ = self.triangulation_attn(query, all_echoes, all_echoes)
+            acoustic = acoustic.squeeze(1).reshape(*idx.shape, self.cfg.echo_dim)
+            feromon = torch.tanh(self.fusion(acoustic))
+            return feromon, self.confidence(feromon), {
+                'acoustic_map': acoustic.detach(), 'causal_prefixes': True,
+            }
 
         # ─── Phase A: Triangulación por atención ───
         # Stack de los 5 ecos: (B, 5, echo_dim)
@@ -530,6 +551,7 @@ class DolphinAgent(nn.Module):
         idx: torch.Tensor,                        # (B, T) tokens de input
         update_sleep: bool = True,                # actualizar estado de sueño
         use_sleep_state: bool = True,              # leer contexto persistente
+        causal: bool = False,
     ) -> Tuple[torch.Tensor, torch.Tensor, dict]:
         """
         Phase A forward: 5 pings + triangulación por atención.
@@ -541,7 +563,9 @@ class DolphinAgent(nn.Module):
           info:       dict con ecos, acoustic_map e info de diagnóstico
         """
         # ─── 1. Ecolocalización (Phase A: 5 pings + atención) ───
-        feromon_echo, confidence, echoes = self.echolocation(idx)
+        if causal and (update_sleep or use_sleep_state):
+            raise ValueError('Causal sequence training cannot read or update cross-request sleep state')
+        feromon_echo, confidence, echoes = self.echolocation(idx, causal=causal)
 
         # ─── 2. Integrar con sueño unihemisférico ───
         sleep_ctx = (
@@ -554,6 +578,8 @@ class DolphinAgent(nn.Module):
             )
         ).to(idx.device, dtype=feromon_echo.dtype)
         sleep_ctx = sleep_ctx.unsqueeze(0).expand(idx.shape[0], -1)  # (B, sleep_dim)
+        if causal:
+            sleep_ctx = sleep_ctx.unsqueeze(1).expand(-1, idx.shape[1], -1)
 
         integrated = self.sleep_integrator(
             torch.cat([feromon_echo, sleep_ctx], dim=-1)  # (B, feromon_dim + sleep_dim)

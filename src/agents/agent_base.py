@@ -114,7 +114,15 @@ class FeromonGate(nn.Module):
         if feromon is None:
             return x
         # feromona: [B, feromon_dim] → [B, 1, n_embd] → broadcast
-        f = self.feromon_proj(feromon).unsqueeze(1)  # [B, 1, n_embd]
+        if feromon.ndim == 2:
+            if feromon.shape[0] != x.shape[0]:
+                raise ValueError('Pheromone batch differs from the token batch')
+            f = self.feromon_proj(feromon).unsqueeze(1)
+        elif feromon.ndim == 3 and feromon.shape[:2] == x.shape[:2]:
+            # Causal training supplies a separate signal for each prefix.
+            f = self.feromon_proj(feromon)
+        else:
+            raise ValueError('Pheromone must match the batch or every token prefix')
         f = f.expand_as(x)  # [B, T, n_embd]
         # Gate: cuánto dejar pasar de la señal de feromona
         gate_input = torch.cat([x, f], dim=-1)  # [B, T, n_embd*2]
@@ -199,7 +207,8 @@ class AgentBase(nn.Module):
         self,
         idx: torch.Tensor,                      # [B, T] token ids
         targets: Optional[torch.Tensor] = None,  # [B, T] para calcular loss
-        feromon_in: Optional[torch.Tensor] = None  # [B, feromon_dim] señal del enjambre
+        feromon_in: Optional[torch.Tensor] = None,  # [B, F] or causal [B, T, F]
+        tokenwise_signals: bool = False,
     ):
         B, T = idx.size()
         assert T <= self.config.block_size, f"Secuencia de largo {T} excede block_size {self.config.block_size}"
@@ -231,12 +240,13 @@ class AgentBase(nn.Module):
         # ─── Salida ───
         # Feromona de salida: qué señal emite este agente
         # Usamos el promedio del último estado oculto como "resumen"
-        feromon_out = self.feromon_out(x.mean(dim=1))  # [B, feromon_dim]
+        feromon_out = self.feromon_out(x if tokenwise_signals else x.mean(dim=1))
         feromon_out = torch.tanh(feromon_out)  # normalizar en [-1, 1]
 
-        if targets is not None:
+        if targets is not None or tokenwise_signals:
             logits = self.lm_head(x)
-            loss = F.cross_entropy(logits.reshape(-1, logits.size(-1)), targets.reshape(-1), ignore_index=-1)
+            loss = (F.cross_entropy(logits.reshape(-1, logits.size(-1)), targets.reshape(-1), ignore_index=-1)
+                    if targets is not None else None)
         else:
             # Solo calcular logits del último token (inferencia)
             logits = self.lm_head(x[:, [-1], :])
