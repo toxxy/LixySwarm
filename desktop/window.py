@@ -218,6 +218,7 @@ class SwarmWindow(QMainWindow):
         activity = self._page("Actividad")
         self.learning_label=QLabel("Aprendizaje distribuido: preparando coordinación")
         self.learning_label.setWordWrap(True); activity.addWidget(self.learning_label)
+        self.own_label=QLabel('');self.own_label.setWordWrap(True);self.own_label.hide();activity.addWidget(self.own_label)
         self.follow_label=QLabel('');self.follow_label.setWordWrap(True);self.follow_label.hide();activity.addWidget(self.follow_label)
         learning_actions=QHBoxLayout()
         self.learning_button=QPushButton("Aprender una ronda")
@@ -541,6 +542,20 @@ class SwarmWindow(QMainWindow):
         self.learning_button.setEnabled(bool(learning_ready) and len(prepared.workers)==2 and bool(prepared.signing_key_file)
             and not (prepared.enabled and learning.get("status") in {"collecting","evaluating","promoting"}))
         self.learning_stop.setEnabled(prepared.enabled)
+        own=diagnostic.get('own_swarm',{}) if snapshot['fresh'] else {}
+        network=diagnostic.get('own_network',{}) if snapshot['fresh'] else {}
+        own_network=own.get('membership_version')==2
+        self.own_label.setVisible(own_network)
+        own_states={'gradients':'Calculando aportes', 'evaluating':'Evaluando el aprendizaje',
+            'replicating':'Distribuyendo el aprendizaje', 'ready':'Preparando el siguiente trabajo',
+            'waiting':'Esperando recursos o participantes', 'paused':'Aprendizaje en pausa',
+            'no_improvement':'Esperando otro programa: últimas candidatas sin mejora',
+            'awaiting_new_curriculum':'Esperando nuevos datos autorizados', 'complete':'Programa terminado'}
+        message=own_states.get(network.get('status'),'Disponible para aportar') if network.get('enabled') else 'Disponible para aportar' if own.get('ready') else 'Esperando recursos autorizados'
+        self.own_label.setText('Organismo propio: '+message
+            +f" · paso {own.get('optimizer_step',0)} · {own.get('active',0)} tareas activas"
+            +(f" · {network.get('round',0)} rondas · {network.get('ready_workers',0)} participantes disponibles · {network.get('accepted',0)} mejoras" if network.get('enabled') else ''))
+        for widget in [self.learning_label,self.learning_button,self.learning_stop]:widget.setVisible(not own_network)
         following=diagnostic.get('language_follow',{}) if snapshot['fresh'] else {}
         follow_states={'checking':'Comprobando el conocimiento compartido','acquiring':'Adquiriendo conocimiento de la red',
             'current':'Conocimiento compartido actualizado','waiting':'Esperando un proveedor de conocimiento','paused':'Seguimiento de conocimiento en pausa'}

@@ -6,7 +6,7 @@ import shutil
 import time
 import uuid
 
-from src.learning.swarm_distributed import WORKERS,policy_id,state_id,definition
+from src.learning.swarm_policy import WORKERS,policy_id,state_id,definition
 from src.learning.swarm_state_audit import replay_request
 from .artifact_store import digest_file
 from .own_learning_settings import OwnLearningSettings
@@ -34,7 +34,10 @@ class OwnStateReplication:
 
     def allowed(self,origin):
         try:
-            settings=OwnLearningSettings.load(self.service.directory)
+            if self.service.engine.version==2:
+                from .own_network_settings import OwnNetworkSettings
+                settings=OwnNetworkSettings.load(self.service.directory)
+            else:settings=OwnLearningSettings.load(self.service.directory)
             return (self.service.ready and self.knowledge.allowed and settings.follow_enabled
                 and origin==settings.owner_id and origin in self.service.engine.requesters)
         except (OSError,ValueError,TypeError):return False
@@ -43,7 +46,7 @@ class OwnStateReplication:
         try:
             return (self.allowed(execution.origin_node_id) and result['success'] is True
                 and result['state_id']==self.service.snapshot()['state_id']
-                and result['training_policy_id']==policy_id())
+                and result['training_policy_id'] in {policy_id(),self.service.engine.policy_id()})
         except (ValueError,TypeError,KeyError):return False
 
     def adopt(self,payload,execution):
@@ -62,7 +65,8 @@ class OwnStateReplication:
         output=work.output
         following=state_id(output['candidate_model_id'],output['candidate_optimizer_id'],output['candidate_optimizer_step'])
         current=service.snapshot()['state_id']
-        if output['training_policy_id']!=policy_id() or output['accepted'] is not True:
+        identifier=output['training_policy_id'];definition(identifier)
+        if identifier not in {policy_id(),service.engine.policy_id()} or output['accepted'] is not True:
             raise ValueError('Own state did not pass the fixed training policy')
         if current not in {output['state_id'],following}:raise ValueError('Own state does not extend the local lineage')
         if current==following:
@@ -70,7 +74,7 @@ class OwnStateReplication:
             if not history.is_file() or json.loads(history.read_text())['candidate_result']!=candidate:
                 raise ValueError('Own state retry has different transition provenance')
             return {'success':True,'already_selected':True,'state_id':following,
-                'optimizer_step':service.engine.step,'training_policy_id':policy_id()}
+                'optimizer_step':service.engine.step,'training_policy_id':identifier}
         selected=asdict(service.engine);permission=asdict(service.settings.policy)
         def allowed():
             return (self.allowed(origin) and asdict(service.engine)==selected
@@ -125,7 +129,7 @@ class OwnStateReplication:
             atomic_json(service.root/'audits'/(following+'.json'),audit)
             adopted=activate(service.directory,candidate,audit)
             service.update(service.settings)
-            result={**adopted,'training_policy_id':policy_id(),'audit':audit,'transfers':transfers}
+            result={**adopted,'training_policy_id':identifier,'audit':audit,'transfers':transfers}
             atomic_json(service.root/'adoptions'/(following+'.json'),result)
             return result
         finally:

@@ -54,6 +54,7 @@ class OwnLearningCoordinator:
     def _allowed(self,contract):
         return (not self.closed and self.settings.enabled and self.settings.contract()==contract
             and self.service.ready and self.knowledge.allowed
+            and getattr(getattr(self.service,'engine',None),'version',1)==1
             and self.knowledge.node.identity.node_id_hex==self.settings.owner_id)
 
     def _check(self,contract):

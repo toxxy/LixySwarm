@@ -1,0 +1,74 @@
+{
+  "version": 1,
+  "training_policy_id": "b6992d4c29d6bdaa0a1dde550ef0dafd6d9e863c0f986d064a4c66d6e0da75e0",
+  "definition": {
+    "version": 2,
+    "family": "lixyswarm-own-causal-byte-v1",
+    "initialization_protocol_id": "7125f270fdcbc6be68141f556579805bbf8fda92bc228315207038ac2a9adf9a",
+    "training_dataset_id": "a1a36bc0cea6f5a8dbf81a5828a01da3ca0674c534431ef51583f3f46a915be6",
+    "evaluation_dataset_id": "188812577d2a7834eff5fc0ac0fad5f09f121b3587b34b7ba5d88ba37537be50",
+    "gradient_operation": "swarm.gradient.v2",
+    "candidate_operation": "swarm.candidate.v2",
+    "maximum_documents_per_shard": 256,
+    "batch_size": 16,
+    "maximum_document_bytes": 129,
+    "gradient_dtype": "float32",
+    "aggregation": "prediction-byte-weighted-mean-before-clipping",
+    "learning_rate": 0.0002,
+    "weight_decay": 0.01,
+    "clip_norm": 1.0,
+    "minimum_relative_nll_gain": 0.0001,
+    "minimum_absolute_nll_gain": 1e-06,
+    "maximum_aggregate_byte_accuracy_drop": 0.0,
+    "minimum_physical_workers": 1,
+    "ram_gb": 4.0,
+    "gradient_disk_gb": 0.02,
+    "candidate_disk_gb": 0.06,
+    "maximum_seconds": 180,
+    "maximum_artifact_bytes": 16777216,
+    "evaluation_role": "Repeated development validation; not a fresh blinded test",
+    "scope": "Own causal byte-language learning with dynamic membership; not open consensus or general chat",
+    "maximum_contributions_per_update": 8,
+    "membership": "Locally admitted coordinator; dynamic compatible workers, no baked-in identities",
+    "scheduling": "Bounded rotating windows; disjoint shards can be reassigned before acceptance"
+  },
+  "initial_state_id": "a9118d28b2b00f7bbdf045d40ef44f251c97c5c9826766601706c44a70e40dd4",
+  "initial_optimizer_step": 1032,
+  "initial_cursor": 2816,
+  "parent_program_id": "2de8bcf9bf8775b272b1a6fc50637a864dc7ea732282cd31b5012075c3e2fcec",
+  "physical_validation": {
+    "available_training_pcs": 2,
+    "vps_role": "Public relay and web only",
+    "transport": "Encrypted public LSP; VPN for administration only",
+    "checks": [
+      "arbitrary discovered participants, no source identity edits",
+      "new disjoint ranges from remaining public curriculum",
+      "disconnect and reassign an unfinished shard",
+      "same identity rejoins and catches up",
+      "prior v1 program history preserved"
+    ]
+  },
+  "software_validation": {
+    "synthetic_identities_are_not_physical_nodes": true,
+    "signed_update_sizes": [
+      1,
+      2,
+      3,
+      8
+    ],
+    "rotating_membership_size": 64,
+    "real_tensor_update_sizes": [
+      1,
+      2,
+      3,
+      8
+    ]
+  },
+  "limits": [
+    "No unbounded parallelism: at most eight contributions per update, larger memberships rotate",
+    "One locally selected coordinator per lineage, no leader election or open consensus",
+    "Same fixed 4096-document training snapshot and repeated development evaluation; no fresh-data or general-chat claim",
+    "New clean-app preparation, multiple expert sizes, independent operators and progress takeover remain pending",
+    "Quality rejections and corpus exhaustion remain durable stops; no counter reset or automatic data recycling"
+  ]
+}

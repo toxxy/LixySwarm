@@ -1,5 +1,7 @@
 """Locally selected executable profiles; downloaded metadata cannot select one."""
 PROFILES={
+    'own-cpu-network':{'name':'LixySwarmEngineCPU','operations':['reference.inference.v1','training.gradient.v1','reference.candidate.v1','swarm.gradient.v1','swarm.candidate.v1','swarm.audit.v1','swarm.gradient.v2','swarm.candidate.v2'],
+        'max_package_bytes':2*1024**3,'max_download_bytes':512*1024**2,'archive_links':False},
     'own-cpu':{'name':'LixySwarmEngineCPU','operations':['reference.inference.v1','training.gradient.v1','reference.candidate.v1','swarm.gradient.v1','swarm.candidate.v1'],
         'max_package_bytes':2*1024**3,'max_download_bytes':512*1024**2,'archive_links':False},
     'own-cpu-continuous':{'name':'LixySwarmEngineCPU','operations':['reference.inference.v1','training.gradient.v1','reference.candidate.v1','swarm.gradient.v1','swarm.candidate.v1','swarm.audit.v1'],

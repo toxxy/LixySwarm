@@ -1,5 +1,8 @@
 # Plan para completar la visión de LixySwarm
 
+**Dirección explícita, 2026-10-16:** la implementación se diseña para N participantes; las dos PCs disponibles sirven para las pruebas físicas. La política v2 sustituye la pareja fija por descubrimiento firmado, ventanas rotatorias de hasta ocho aportes por actualización, reparto por capacidad observada y reasignación de fragmentos. Los protocolos e historiales v1 se conservan. Los escenarios de 3, 8 y 64 identidades son pruebas de software; el despliegue y la prueba física v2 se registrarán por separado. La preparación propia desde una app vacía y la recuperación del coordinador siguen pendientes. Véase el [protocolo v2](experiments/reports/own_network_protocol_20261016.json).
+
+
 **Fecha:** 2026-10-13
 
 **Prioridad funcional aclarada por el usuario, 2026-10-16:** primero debe funcionar el organismo: aprender por Internet de forma persistente, incorporar equipos, adaptarse a su capacidad y disponibilidad, conservar conocimiento y hacer crecer sus agentes y especializaciones. La calidad avanzada del lenguaje puede madurar después; no es una condición previa para construir ese funcionamiento. Los criterios de aprendizaje deben comprobar cambios reales y evitar perder mejoras aceptadas, sin convertir la perfección del chat en el objetivo de cada iteración. Esta prioridad mantiene las ocho etapas y deja Windows/macOS para el final.

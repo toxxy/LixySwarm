@@ -6,7 +6,8 @@ import shutil
 import threading
 import uuid
 
-from src.learning.swarm_distributed import (GRADIENT_OPERATION,CANDIDATE_OPERATION,WORKERS,
+from src.learning.swarm_policy import (GRADIENT_OPERATION,CANDIDATE_OPERATION,WORKERS,
+    NETWORK_GRADIENT_OPERATION,NETWORK_CANDIDATE_OPERATION,network_policy_id,
     IDENTIFIER,definition,policy_id,state_id,validate_payload,verify_contributions,verdict)
 from src.learning.public_math import ARTIFACTS
 from .artifact_store import ArtifactStore,ArtifactService,digest_file
@@ -26,16 +27,21 @@ class OwnSwarmSettings:
     requesters:list=field(default_factory=list)
 
     def validate(self):
-        if (type(self.version) is not int or self.version!=1 or type(self.enabled) is not bool
+        if (type(self.version) is not int or self.version not in {1,2} or type(self.enabled) is not bool
                 or not isinstance(self.command,list) or len(self.command)>4
                 or any(not isinstance(v,str) or not v or len(v)>4096 for v in self.command)
-                or not isinstance(self.requesters,list) or len(self.requesters)>2
-                or len(set(self.requesters))!=len(self.requesters) or any(v not in WORKERS for v in self.requesters)):
-            raise ValueError('Own-swarm settings require explicit known physical requesters and a local engine')
+                or not isinstance(self.requesters,list) or len(self.requesters)>8
+                or any(not isinstance(v,str) or not IDENTIFIER.fullmatch(v) for v in self.requesters)
+                or len(set(self.requesters))!=len(self.requesters)
+                or self.version==1 and (len(self.requesters)>2 or any(v not in WORKERS for v in self.requesters))):
+            raise ValueError('Own-swarm settings require locally admitted coordinators and a local engine')
         if self.enabled:
             state_id(self.model_id,self.optimizer_id,self.step)
             if not self.command or not all(Path(v).is_absolute() for v in self.command) or not self.requesters:
                 raise ValueError('Own-swarm computation requires a locally installed engine and selected state')
+
+    def policy_id(self):
+        return network_policy_id() if self.version==2 else policy_id()
 
     def save(self,directory):
         self.validate();atomic_json(Path(directory)/'own-swarm.json',asdict(self))
@@ -72,6 +78,9 @@ class OwnSwarmService:
                 permit_cached=self._artifact_cached)
         knowledge.work.register_handler(GRADIENT_OPERATION,'training',self.gradient,permit_cached=self.permit_cached)
         knowledge.work.register_handler(CANDIDATE_OPERATION,'training',self.candidate,
+            permit_cached=lambda execution,result:self.permit_cached(execution,result,candidate=True))
+        knowledge.work.register_handler(NETWORK_GRADIENT_OPERATION,'training',self.gradient,permit_cached=self.permit_cached)
+        knowledge.work.register_handler(NETWORK_CANDIDATE_OPERATION,'training',self.candidate,
             permit_cached=lambda execution,result:self.permit_cached(execution,result,candidate=True))
 
     def _artifact_cached(self,execution,result):
@@ -115,8 +124,10 @@ class OwnSwarmService:
         return {'ready':self.ready,'active':self.active,'completed':self.completed,
             'model_id':self.engine.model_id if self.engine.enabled else '',
             'state_id':state_id(self.engine.model_id,self.engine.optimizer_id,self.engine.step) if self.engine.enabled else '',
-            'optimizer_step':self.engine.step if self.engine.enabled else 0,'training_policy_id':policy_id(),
-            'family':definition()['family'],'device':'cpu'}
+            'optimizer_step':self.engine.step if self.engine.enabled else 0,'training_policy_id':self.engine.policy_id(),
+            'family':definition()['family'],'device':'cpu','membership_version':self.engine.version,
+            'cpu_threads':max(1,min(8,int(self.resources['cpu_cores']*self.settings.policy.cpu_percent/100))) if self.settings else 1,
+            'requesters':list(self.engine.requesters)}
 
     def permit_cached(self,execution,result,*,candidate=False):
         try:
@@ -124,7 +135,7 @@ class OwnSwarmService:
             return (self.ready and self.knowledge.allowed and execution.origin_node_id in self.engine.requesters
                 and execution.payload['state_id']==self.snapshot()['state_id']
                 and execution.payload['model_id']==self.engine.model_id
-                and result['training_policy_id']==policy_id()
+                and result['training_policy_id']==self.engine.policy_id()
                 and (not candidate or execution.origin_node_id==own))
         except (ValueError,TypeError,KeyError):return False
 
@@ -133,8 +144,9 @@ class OwnSwarmService:
 
     def _run(self,payload,execution,*,candidate):
         validate_payload(payload,candidate=candidate)
-        execution.raise_if_cancelled();p=definition();own=self.knowledge.node.identity.node_id_hex
+        execution.raise_if_cancelled();p=definition(payload['training_policy_id']);own=self.knowledge.node.identity.node_id_hex
         if (not self.ready or not self.knowledge.allowed or execution.origin_node_id not in self.engine.requesters
+                or payload['training_policy_id']!=self.engine.policy_id()
                 or candidate and execution.origin_node_id!=own
                 or payload['model_id']!=self.engine.model_id or payload['state_id']!=self.snapshot()['state_id']
                 or execution.resource_requirements().gpu_required
@@ -145,7 +157,7 @@ class OwnSwarmService:
         if managed_public_bytes(self.directory)+reservation*1024**3>self.settings.policy.max_disk_gb*1024**3:
             raise ValueError('Own-swarm computation exceeds current public storage permission')
         outputs=(verify_contributions(payload['contributions'],model_id=self.engine.model_id,
-            training_state_id=payload['state_id'],requester_id=own) if candidate else [])
+            training_state_id=payload['state_id'],requester_id=own,training_policy_id=payload['training_policy_id']) if candidate else [])
         selected=asdict(self.engine);permission=asdict(self.settings.policy)
         job=self.root/'jobs'/uuid.uuid4().hex;job.mkdir(parents=True,mode=0o700)
         request={**payload,'action':'own-candidate' if candidate else 'own-gradient',

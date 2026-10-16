@@ -10,7 +10,7 @@ import time
 from src.network.artifact_store import ArtifactStore,digest_file
 from src.network.own_state import verify_transition
 from src.network.telemetry import atomic_json
-from .swarm_distributed import policy_id,definition
+from .swarm_policy import policy_id,definition
 from .swarm_foundation_protocol import protocol_id as initialization_protocol_id
 
 
@@ -20,15 +20,16 @@ def replay_request(directory,candidate,output_directory,*,deadline,cpu_threads=2
     store=ArtifactStore(directory/'public/own/artifacts',
         max_artifact_bytes=16*1024**2,max_total_bytes=1024**3)
     result=candidate['output'];evaluation_path=store.object_path(result['evaluation_id'])
+    identifier=result['training_policy_id'];p=definition(identifier)
     transition=verify_transition(candidate,evaluation_path.read_bytes())
     evaluation=json.loads(evaluation_path.read_text())
     return {'action':'own-audit','candidate_result':candidate,
         'candidate_model_file':str(store.object_path(transition['model_id'])),
         'candidate_optimizer_file':str(store.object_path(transition['optimizer_id'])),
         'evaluation_report_file':str(evaluation_path),
-        'training_policy_id':policy_id(),'state_id':result['state_id'],
+        'training_policy_id':identifier,'state_id':result['state_id'],
         'model_id':result['model_id'],'optimizer_id':result['optimizer_id'],
-        'step':result['previous_optimizer_step'],'dataset_id':definition()['training_dataset_id'],
+        'step':result['previous_optimizer_step'],'dataset_id':p['training_dataset_id'],
         'model_file':str(store.object_path(result['model_id'])),
         'optimizer_file':str(store.object_path(result['optimizer_id'])),
         'training_file':str(directory/'public/language/artifacts/objects'/definition()['training_dataset_id'][:2]/definition()['training_dataset_id'][2:]),
@@ -87,7 +88,7 @@ def run_audit(request):
         if digest_file(Path(request[key+'_file']))!=(result[key+'_id'],result[key+'_bytes']):
             raise ValueError('Own state input was modified by independent verification')
     report={'success':True,'state_id':transition['state_id'],'model_id':transition['model_id'],
-        'optimizer_id':transition['optimizer_id'],'training_policy_id':policy_id(),
+        'optimizer_id':transition['optimizer_id'],'training_policy_id':request['training_policy_id'],
         'gradient_replay_verified':True,'model_tensors_bitwise_equal':bool(exact),'maximum_model_tensor_error':maximum,
         'optimizer_states':len(states),'optimizer_step':saved['step'],'after':replay['after'],
         'saved_state_unchanged':True,'new_gradient_computed':False,'cuda_initialized':torch.cuda.is_initialized(),

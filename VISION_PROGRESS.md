@@ -1,5 +1,8 @@
 # Avance del goal de LixySwarm
 
+**Dirección explícita, 2026-10-16:** la implementación se diseña para N participantes; las dos PCs disponibles sirven para las pruebas físicas. La política v2 sustituye la pareja fija por descubrimiento firmado, ventanas rotatorias de hasta ocho aportes por actualización, reparto por capacidad observada y reasignación de fragmentos. Los protocolos e historiales v1 se conservan. Los escenarios de 3, 8 y 64 identidades son pruebas de software; el despliegue y la prueba física v2 se registrarán por separado. La preparación propia desde una app vacía y la recuperación del coordinador siguen pendientes. Véase el [protocolo v2](experiments/reports/own_network_protocol_20261016.json).
+
+
 El usuario activó [PLAN_VISION.md](PLAN_VISION.md) como goal el 2026-10-13.
 Las etapas se completan por sus pruebas de aceptación; una implementación parcial conserva la etapa pendiente.
 

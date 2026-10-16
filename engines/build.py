@@ -18,6 +18,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument('--own',action='store_true',help='Include the own-swarm typed operations in the local profile')
+    parser.add_argument('--network',action='store_true',help='Include versioned dynamic-membership own work')
     options = parser.parse_args()
     import torch
     if torch.version.cuda is not None:
@@ -66,7 +67,8 @@ def main():
     manifest = {"version": 1, "name": "LixySwarmEngineCPU", "platform": sys.platform,
                 "machine": platform.machine(), "torch": torch.__version__,
                 "operations": (["reference.inference.v1", "training.gradient.v1", "reference.candidate.v1"]
-                    +(["swarm.gradient.v1","swarm.candidate.v1","swarm.audit.v1"] if options.own else [])),
+                    +(["swarm.gradient.v1","swarm.candidate.v1","swarm.audit.v1"] if options.own or options.network else [])
+                    +(["swarm.gradient.v2","swarm.candidate.v2"] if options.network else [])),
                 "entrypoint": "LixySwarmEngineCPU.exe" if sys.platform == "win32" else "LixySwarmEngineCPU",
                 "files": files}
     (package / "engine-package.json").write_text(json.dumps(manifest, indent=2) + "\n")

@@ -233,7 +233,8 @@ class LocalChatAPI:
                     return self.reply(400,{"error":"Solicitud inválida"})
                 try:
                     length=int(self.headers.get("Content-Length","0"))
-                    if not 0<length<=16*1024:raise ValueError()
+                    bound=64*1024 if self.path=='/own-work/start' else 16*1024
+                    if not 0<length<=bound:raise ValueError()
                     raw=self.rfile.read(length)
                     if len(raw)!=length:raise ValueError()
                     value=json.loads(raw)

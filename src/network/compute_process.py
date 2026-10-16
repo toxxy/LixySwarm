@@ -32,7 +32,8 @@ def terminate_owned_process(process):
 class ComputeSupervisor:
     def run(self, command, request, execution, *, allowed, ram_gb, sandbox=None):
         encoded = json.dumps(request,allow_nan=False).encode()
-        if len(encoded)>16*1024 or ram_gb<=0:
+        bound=64*1024 if request.get('action') in {'own-candidate','own-audit'} else 16*1024
+        if len(encoded)>bound or ram_gb<=0:
             raise ComputeProcessError("Invalid local compute bounds")
         environment = dict(os.environ); environment.pop("PYTHONPATH",None)
         if request.get("device")=="cpu":

@@ -39,6 +39,7 @@ from src.network.own_swarm import OwnSwarmService
 from src.network.local_own_work import LocalOwnWork
 from src.network.own_replication import OwnStateReplication
 from src.network.own_learning import OwnLearningCoordinator
+from src.network.own_network import OwnNetworkCoordinator
 from src.network.language_follow import LanguageVersionFollower
 from src.version import VERSION
 
@@ -147,6 +148,7 @@ def run(directory: Path, *, host="0.0.0.0", port=7338, interval=15, allow_privat
         own_work=LocalOwnWork(own_swarm)
         own_replication=OwnStateReplication(own_swarm)
         own_learning=OwnLearningCoordinator(own_swarm,own_work)
+        own_network=OwnNetworkCoordinator(own_swarm,own_work)
         preparation=LanguagePreparation(node,knowledge,families,directory,resources)
         cache_repair=LanguageCacheRepair(node,knowledge,families,directory)
         public_memory=PublicMemoryService(knowledge,directory)
@@ -195,6 +197,7 @@ def run(directory: Path, *, host="0.0.0.0", port=7338, interval=15, allow_privat
                 "language_training":training,
                 "own_swarm":own,
                 "own_learning":own_learning.snapshot(),
+                "own_network":own_network.snapshot(),
                 "language_preparation":preparing,
                 "language_cache_repair":cache_repair.snapshot(),
                 "chat":chat.snapshot(),
@@ -253,6 +256,7 @@ def run(directory: Path, *, host="0.0.0.0", port=7338, interval=15, allow_privat
                 language_training.update(settings)
                 own_swarm.update(settings)
                 own_learning.update()
+                own_network.update()
                 cache_repair.update()
                 preparation.update()
                 chat.update(settings)
@@ -283,7 +287,8 @@ def run(directory: Path, *, host="0.0.0.0", port=7338, interval=15, allow_privat
                 node.capabilities['public_memory_head']=memory_state['release_id'] if memory_state['sharing'] else ''
                 node.resource_profile["language_families_v1"]=families.snapshot()["available"]
                 node.capabilities["training"]=compute.ready and bool(compute.engine.training_requesters) or language_training.ready or own_swarm.ready
-                node.capabilities['own_swarm_v1']=own_swarm.ready
+                node.capabilities['own_swarm_v1']=own_swarm.ready and own_swarm.engine.version==1
+                node.capabilities['own_swarm_v2']=own_swarm.ready and own_swarm.engine.version==2
                 node.capabilities['own_swarm_state_id']=own_swarm.snapshot()['state_id'] if own_swarm.ready else ''
                 node.capabilities["language_training_v1"]=language_training.ready and language_training.engine.base_name=='qwen3-0.6b'
                 node.capabilities["language_training_v2"]=language_training.ready
@@ -315,6 +320,8 @@ def run(directory: Path, *, host="0.0.0.0", port=7338, interval=15, allow_privat
                     own_swarm.changed.clear();refresh.set()
                 if own_learning.changed.is_set():
                     own_learning.changed.clear();refresh.set()
+                if own_network.changed.is_set():
+                    own_network.changed.clear();refresh.set()
                 if learning.changed.is_set():
                     learning.changed.clear(); refresh.set()
                 if language_learning.changed.is_set():
@@ -329,6 +336,7 @@ def run(directory: Path, *, host="0.0.0.0", port=7338, interval=15, allow_privat
                 stop.wait(0.5)
             publish("disconnected", settings)
         finally:
+            own_network.close()
             own_learning.close()
             cache_repair.close()
             preparation.close()

@@ -132,10 +132,12 @@ def main():
             options.report.write_text(json.dumps(report, indent=2) + "\n")
         print(json.dumps(report), flush=True)
         return
-    raw = sys.stdin.buffer.read(16 * 1024 + 1)
-    if len(raw) > 16 * 1024:
+    raw = sys.stdin.buffer.read(64 * 1024 + 1)
+    if len(raw) > 64 * 1024:
         raise ValueError("Engine request exceeds its bound")
     request = json.loads(raw)
+    if len(raw)>16*1024 and request.get('action') not in {'own-candidate','own-audit'}:
+        raise ValueError('Engine request exceeds its operation bound')
     if request.get("device") != "cpu":
         raise ValueError("This locally installed package supports CPU work only")
     if request.get('action') == 'own-audit':

@@ -6,7 +6,7 @@ from pathlib import Path
 import sys
 import time
 
-from .swarm_distributed import (definition,policy_id,state_id,validate_payload,
+from .swarm_policy import (definition,policy_id,state_id,validate_payload,
                                verify_contributions,verdict)
 from .swarm_foundation_protocol import protocol_id as initialization_protocol_id
 from .swarm_foundation_job import documents,evaluate
@@ -52,13 +52,12 @@ def load_model(request):
 
 
 def run(request):
-    p=definition();candidate=request.get('action')=='own-candidate'
+    p=definition(request.get('training_policy_id',''));candidate=request.get('action')=='own-candidate'
     common={'action','training_policy_id','state_id','model_id','optimizer_id','step','dataset_id',
             'model_file','training_file','output_directory','device','cpu_threads','deadline'}
     fields=common|({'optimizer_file','evaluation_file','requester_id','contributions','gradient_files'}
                     if candidate else {'start','count'})
     if (set(request)!=fields or request['action'] not in {'own-gradient','own-candidate'}
-            or request['training_policy_id']!=policy_id()
             or state_id(request['model_id'],request['optimizer_id'],request['step'])!=request['state_id']
             or request['device']!='cpu' or type(request['cpu_threads']) is not int or not 1<=request['cpu_threads']<=16
             or type(request['deadline']) not in (float,int) or not math.isfinite(request['deadline'])
@@ -68,8 +67,8 @@ def run(request):
         *(['contributions'] if candidate else ['start','count'])]},candidate=candidate)
     paths=[request[k] for k in ['model_file','training_file','output_directory']]
     if candidate:
-        if not isinstance(request['gradient_files'],dict) or len(request['gradient_files'])!=2:
-            raise ValueError('Own candidate needs two locally acquired gradient files')
+        if not isinstance(request['gradient_files'],dict) or len(request['gradient_files'])!=len(request['contributions']):
+            raise ValueError('Own candidate needs every locally acquired gradient file')
         paths += [request['optimizer_file'],request['evaluation_file'],*request['gradient_files'].values()]
     output=Path(request['output_directory'])
     if (any(not isinstance(v,str) or not Path(v).is_absolute() or Path(v).is_symlink() for v in paths)
@@ -124,9 +123,9 @@ def _candidate(request,output,model,snapshot,check):
     from safetensors.torch import load_file,save_file
     from src.network.artifact_store import digest_file
     from .language_repair_comparison_job import durable_json
-    p=definition();check()
+    p=definition(request['training_policy_id']);check()
     contributions=verify_contributions(request['contributions'],model_id=request['model_id'],
-        training_state_id=request['state_id'],requester_id=request['requester_id'])
+        training_state_id=request['state_id'],requester_id=request['requester_id'],training_policy_id=request['training_policy_id'])
     if set(request['gradient_files'])!={v['gradient_id'] for v in contributions}:
         raise ValueError('Own acquired gradient set differs from signed contributions')
     if digest_file(request['optimizer_file'])[0]!=request['optimizer_id']:
@@ -169,7 +168,7 @@ def _candidate(request,output,model,snapshot,check):
     step=request['step']+1
     if {int(v['step']) for v in optimizer.state_dict()['state'].values()}!={step}:
         raise ValueError('Own optimizer did not continue its previous step')
-    report={'accepted':accepted,'training_policy_id':policy_id(),'state_id':request['state_id'],
+    report={'accepted':accepted,'training_policy_id':request['training_policy_id'],'state_id':request['state_id'],
         'model_id':request['model_id'],'optimizer_id':request['optimizer_id'],'before':before,'after':after,
         'previous_optimizer_step':request['step'],'candidate_optimizer_step':step,
         'gradient_norm_before_clipping':norm,'prediction_bytes':total,'contributions':request['contributions'],
@@ -181,7 +180,7 @@ def _candidate(request,output,model,snapshot,check):
         save_file({k:v.detach().cpu().clone().contiguous() for k,v in model.state_dict().items()},str(weights),
             metadata={'format':'lixyswarm-own-causal-byte-v1','protocol_id':initialization_protocol_id()})
         torch.save({**saved,'step':step,'optimizer':optimizer.state_dict(),
-            'own_curriculum':{'policy_id':policy_id(),'previous_state_id':request['state_id'],
+            'own_curriculum':{'policy_id':request['training_policy_id'],'previous_state_id':request['state_id'],
                 'shards':[[v['start'],v['count']] for v in contributions]}},opt)
         for name,path in [('candidate_model',weights),('candidate_optimizer',opt)]:
             identifier,size=digest_file(path)
