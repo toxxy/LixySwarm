@@ -71,12 +71,13 @@ def test_program_selection_recovers_interrupted_two_file_commit_without_losing_s
 def test_new_program_ledger_does_not_reset_or_overwrite_terminal_old_ledger(tmp_path,monkeypatch):
     service,selected,controls=prepared(tmp_path,monkeypatch)
     old={'version':2,'contract_id':controls.contract(),'training_policy_id':network_policy_id(),
-        'round':5,'cursor':3584,'workers':{},'rejections':3,'accepted':1,'pending':None,'status':'no_improvement'}
+        'round':5,'cursor':3584,'workers':{'2'*64:{'samples':2,'documents_per_second':3.,'last_round':4}},'rejections':3,'accepted':1,'pending':None,'status':'no_improvement'}
     path=tmp_path/'own-network/ledger.json';atomic_json(path,old);before=path.read_bytes()
     programs.select_program(service,PROGRAMS[0]['program_id'],controls.owner_id,coordinator=True,check=lambda:None)
     c=OwnNetworkCoordinator(service,None)
     assert c.ledger is None and c.path!=path and c.settings.initial_cursor==0
     assert path.read_bytes()==before
+    assert c._previous_profiles()==old['workers']
     # A restarted new coordinator loads its own progress rather than the old stop.
     atomic_json(c.path,{**old,'version':3,'contract_id':c.settings.contract(),
         'training_policy_id':c.settings.policy_id(),'round':1,'cursor':64,'rejections':0})

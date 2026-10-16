@@ -58,6 +58,20 @@ class OwnNetworkCoordinator(OwnLearningCoordinator):
             and self.service.ready and self.knowledge.allowed and self.service.engine.version >= 2
             and self.knowledge.node.identity.node_id_hex == self.settings.owner_id)
 
+    def _previous_profiles(self):
+        if self.settings.version!=3:return {}
+        from .own_programs import read_small
+        path=self.service.directory/'own-network/admissions'/self.settings.program_id/'previous-controls.json'
+        previous=OwnNetworkSettings(**read_small(path));previous.validate()
+        if previous.contract()!=self.settings.parent_program_id:raise ValueError('Own capacity history has another parent program')
+        root=self.service.directory/'own-network'
+        if previous.version==3:root=root/'programs'/previous.contract()
+        if not (root/'ledger.json').exists():return {}
+        ledger=read_small(root/'ledger.json',4*1024**2)
+        if ledger['contract_id']!=previous.contract() or len(ledger['workers'])>4096:
+            raise ValueError('Own capacity history differs from the previous durable program')
+        return deepcopy(ledger['workers'])
+
     def update(self):
         try:
             selected=OwnNetworkSettings.load(self.service.directory)
@@ -89,11 +103,13 @@ class OwnNetworkCoordinator(OwnLearningCoordinator):
         if self.ledger is None:
             if self.service.snapshot()['state_id'] != self.settings.initial_state_id:
                 self.error = 'Own-network initial state is not the selected verified state'; return
+            profiles=self._previous_profiles()
             self.ledger = {'version': self.settings.version, 'contract_id': contract, 'training_policy_id': self.settings.policy_id(),
                 'parent_program_id': self.settings.parent_program_id,
                 'initial_state_id': self.settings.initial_state_id, 'state_id': self.settings.initial_state_id,
                 'round': 0, 'cursor': self.settings.initial_cursor, 'accepted': 0, 'rejections': 0,
-                'workers': {}, 'ready_workers': 0, 'pending': None, 'status': 'ready',
+                'workers': profiles, 'scheduling_round_base':max((v.get('last_round',-1) for v in profiles.values()),default=-1)+1,
+                'ready_workers': 0, 'pending': None, 'status': 'ready',
                 'error': None, 'retry_at': 0, 'replicas': 1}
             self._save()
         if self.ledger['pending'] is None:
@@ -332,7 +348,7 @@ class OwnNetworkCoordinator(OwnLearningCoordinator):
                     previous = profile.get('documents_per_second', measured)
                     profile.update(documents_per_second=.5 * previous + .5 * measured,
                         samples=min(1000000, profile.get('samples', 0) + 1))
-                profile['last_round'] = pending['round']
+                profile['last_round'] = self.ledger.get('scheduling_round_base',0)+pending['round']
             self._save(round=self.ledger['round'] + 1, cursor=pending['cursor'] + sum(r['count'] for r in pending['assignments']),
                 accepted=self.ledger['accepted'] + int(output['accepted']), rejections=0 if output['accepted'] else self.ledger['rejections'] + 1,
                 state_id=selected, pending=None, workers=history, replicas=replicas, status='ready', error=None, retry_at=0)
