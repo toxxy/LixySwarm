@@ -1,0 +1,209 @@
+{
+  "version": 1,
+  "source_revision": "ee1b07e76422195a5ed6ed07f70bbc508cd33da5",
+  "engine_source_revision": "bf15cb01344ce9c09b6bf095f861fca94af4a924",
+  "scope": "Resume the originally empty laptop profile after an interrupted A26 preparation, then independently recover four accepted successor states and contribute from current own state",
+  "interrupted_attempt": {
+    "at": 1792171802.2089021,
+    "reason": "Preserve partial public state and repair repeated full-storage scans during installed-engine verification; public LSP transfer progressed slowly. No model state selected.",
+    "snapshot": {
+      "own_selection_exists": false,
+      "partials": {
+        "d91781743f9345344f18b63863ca57a694438eb2a50cad4de2de580fbddd4ba5.part": {
+          "bytes": 2162688,
+          "prefix_sha256": "71957b2693cc428b2aad05b700fdbcb1408e98721e75393d39a4621f4ee41a9a"
+        }
+      },
+      "preparation": {
+        "anchor_id": "e667ab83aabeef975d3c7467b3d5b858d2ab648000187b2a86117ea31c68e106",
+        "done": 7337088,
+        "message": "Conservando el estado de aprendizaje propio",
+        "state": "receiving",
+        "total": 22501531,
+        "updated_at": 1792171691.820184
+      }
+    },
+    "source_revision": "b091ecd9e329ae56406ba1aa4e0b27d6938ed487"
+  },
+  "preserved_profile_node_id": "924fd052375b510b270d7dbf06a5aac5f88084fd95da5b9c22f4f3861c3ba443",
+  "resumed_app": {
+    "anchor_id": "e667ab83aabeef975d3c7467b3d5b858d2ab648000187b2a86117ea31c68e106",
+    "calculation_engines_loaded": false,
+    "connection_seconds": 0.42315444999258034,
+    "cpu_engine_manifest_sha256": "a23ebdceb73c18980a352fea05d63c066fe209178d44d8ebc73afa52be431ec8",
+    "extra_physical_pc": false,
+    "final_own_swarm": {
+      "active": 0,
+      "completed": 1,
+      "cpu_threads": 8,
+      "device": "cpu",
+      "family": "lixyswarm-own-causal-byte-v1",
+      "membership_version": 3,
+      "model_id": "8e19d32d7c8918403a8eff8461fe44fe19cbe9f8dc390aee0cfea761b750275a",
+      "optimizer_step": 1037,
+      "program_id": "d3f00ca99db132f0f6a09d4853f028988f520801a9c761d118f4fe999bf796e2",
+      "ready": true,
+      "requesters": [
+        "924fd052375b510b270d7dbf06a5aac5f88084fd95da5b9c22f4f3861c3ba443",
+        "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255"
+      ],
+      "state_id": "f551c150b4ea74f6b492d4c9df44a5c79f24e10f7c13b0da06b64ff6ab4bc7cc",
+      "training_policy_id": "b6d2596af24ffd646aec9e2b0a3775284a7c0a95309d1c6f38646bb8bfa72ba1"
+    },
+    "followed_states": [
+      "f551c150b4ea74f6b492d4c9df44a5c79f24e10f7c13b0da06b64ff6ab4bc7cc",
+      "1e36a46521fb2f833d1ffe606608810779ba169d038fddc0ef661de0d6c6037c",
+      "844cdd0acc3d0d92fb48521d5532c4ce0867c4180a0511eaa5bb2e9d7f879aff",
+      "22cb50bb0854fb483d87453ad9dc0007a92c91cf6a57a837a13b80e72767ef22"
+    ],
+    "fresh_profile": false,
+    "internet": true,
+    "model_state_copied_by_admin": false,
+    "native_gradient_work": {
+      "encoded_data_bytes": 7160052,
+      "result": {
+        "error": "",
+        "finished_at": 1792173444.0070724,
+        "job_id": "3f878e24a83dfedc40326c20cae586683caf0ace431bacf314a5aa4cffc61535",
+        "output": {
+          "count": 16,
+          "dataset_id": "1dca719e01df42f470faaab419b1282ca2b3c867978fd6f4d2cc555f3e37dcd1",
+          "gradient_bytes": 6244100,
+          "gradient_id": "281ec7fd561b758701b8ef2ee04e0a02b0fac520448b5716dcb5522b84dade43",
+          "loss": 2.2275185585021973,
+          "model_id": "8e19d32d7c8918403a8eff8461fe44fe19cbe9f8dc390aee0cfea761b750275a",
+          "start": 0,
+          "state_id": "f551c150b4ea74f6b492d4c9df44a5c79f24e10f7c13b0da06b64ff6ab4bc7cc",
+          "tokens": 1889,
+          "training_policy_id": "b6d2596af24ffd646aec9e2b0a3775284a7c0a95309d1c6f38646bb8bfa72ba1"
+        },
+        "receipt": {
+          "finished_at": 1792173444.0070724,
+          "job_id": "3f878e24a83dfedc40326c20cae586683caf0ace431bacf314a5aa4cffc61535",
+          "requester_node_id": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+          "result_digest": "29f79bdaa96abcf3390dd9cc5f0b1cf0e2a724f049dda7a4423341e62c252fba",
+          "signature": "IpSRLnfTr9qvmcp3fKzjKA4G3BHgDjtQtcNElVIhU64FoTCozb/0NIIVojIfv3dnkWCjWwB6gw8XnGeVMW7yCA==",
+          "version": 1,
+          "worker_node_id": "924fd052375b510b270d7dbf06a5aac5f88084fd95da5b9c22f4f3861c3ba443"
+        },
+        "status": "ok"
+      },
+      "route": {
+        "encrypted": true,
+        "public_internet": true,
+        "transport": "relay"
+      },
+      "seconds": 14.689953443943523
+    },
+    "no_selection_before_validation": true,
+    "optimizer_step": 1033,
+    "pause_preserved_partial_bytes": 2162688,
+    "physical_profile_node_id": "924fd052375b510b270d7dbf06a5aac5f88084fd95da5b9c22f4f3861c3ba443",
+    "preparation": {
+      "anchor_id": "e667ab83aabeef975d3c7467b3d5b858d2ab648000187b2a86117ea31c68e106",
+      "audit": {
+        "causality": {
+          "max_prefix_logits_difference": 0.0,
+          "passed": true
+        },
+        "cuda_initialized": false,
+        "evaluation": {
+          "byte_accuracy": 0.46371864222817427,
+          "documents": 128,
+          "nll": 1.8433024185456734,
+          "predicted_bytes": 57123
+        },
+        "initialization_protocol_id": "7125f270fdcbc6be68141f556579805bbf8fda92bc228315207038ac2a9adf9a",
+        "model_id": "cf59e348eeb1e2d2ac95d48266bbe53b45089a88b5845e98b47b18c6673528ce",
+        "new_gradient_computed": false,
+        "optimizer_id": "d91781743f9345344f18b63863ca57a694438eb2a50cad4de2de580fbddd4ba5",
+        "optimizer_states": 175,
+        "optimizer_step": 1033,
+        "saved_state_unchanged": true,
+        "state_id": "4e61bb665ec9ecaeb2266ac976c95278e225d350dffd5e67d96d1024c9c78d0f",
+        "success": true
+      },
+      "engine_manifest_sha256": "a23ebdceb73c18980a352fea05d63c066fe209178d44d8ebc73afa52be431ec8",
+      "state_id": "4e61bb665ec9ecaeb2266ac976c95278e225d350dffd5e67d96d1024c9c78d0f",
+      "success": true,
+      "transfers": [
+        {
+          "artifact_id": "d91781743f9345344f18b63863ca57a694438eb2a50cad4de2de580fbddd4ba5",
+          "bytes": 12595275,
+          "encoded_data_bytes": 11853704,
+          "provider": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+          "route": {
+            "encrypted": true,
+            "public_internet": true,
+            "transport": "relay"
+          },
+          "seconds": 20.204409758996917
+        },
+        {
+          "artifact_id": "a1a36bc0cea6f5a8dbf81a5828a01da3ca0674c534431ef51583f3f46a915be6",
+          "bytes": 2485927,
+          "encoded_data_bytes": 2096540,
+          "provider": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+          "route": {
+            "encrypted": true,
+            "public_internet": true,
+            "transport": "relay"
+          },
+          "seconds": 4.860147789993789
+        },
+        {
+          "artifact_id": "188812577d2a7834eff5fc0ac0fad5f09f121b3587b34b7ba5d88ba37537be50",
+          "bytes": 83241,
+          "encoded_data_bytes": 70800,
+          "provider": "c45094e5fd8c64e8f6f5be3aca703edb6527711a504fcdc747a0fba15c668255",
+          "route": {
+            "encrypted": true,
+            "public_internet": true,
+            "transport": "relay"
+          },
+          "seconds": 0.3341735699796118
+        }
+      ]
+    },
+    "preparation_seconds": 65.72761050899862,
+    "resumed_same_identity_and_state": true,
+    "resumed_unselected_profile": true,
+    "state_id": "4e61bb665ec9ecaeb2266ac976c95278e225d350dffd5e67d96d1024c9c78d0f",
+    "success": true
+  },
+  "summary": {
+    "success": true,
+    "seconds": 430.0036606788635,
+    "physical_pcs": 2,
+    "old_laptop_participant_stopped_during_fresh_profile": true,
+    "fresh_profile_identity_is_not_an_extra_pc": true,
+    "root_controls_and_selected_state_preserved": true
+  },
+  "verification_benchmark": {
+    "success": true,
+    "seconds": 1.7997362579917535,
+    "full_storage_scans": 4,
+    "manifest_sha256": "a23ebdceb73c18980a352fea05d63c066fe209178d44d8ebc73afa52be431ec8",
+    "source_revision": "ee1b07e76422195a5ed6ed07f70bbc508cd33da5",
+    "learned_state_modified": false,
+    "scope": "Read-only full installed package verification with the repaired consent/storage guard on the laptop. Prior native retry spent approximately 318 seconds verifying the same retained engine; not an isolated network throughput comparison."
+  },
+  "limits": [
+    "This is a resumed originally empty profile: A26 B091 downloaded the engine and part of the pinned state; A27 preserved these bytes and completed recovery. It is not a second completely empty-cache A27 download.",
+    "The physical laptop usual service was stopped while its separate profile ran; no third physical PC or linear speedup is claimed.",
+    "Four independently replayed successors had already been accepted by the two normal participants; the onboarding gradient adds zero accepted updates.",
+    "The paused and resumed public state transfer kept the exact own lineage; network variability in the interrupted attempt was not isolated to a transport cause."
+  ],
+  "audit": {
+    "success": true,
+    "physical_training_pcs": 2,
+    "preserved_identity": true,
+    "bootstrap_optimizer_step": 1033,
+    "followed_accepted_states": 4,
+    "current_optimizer_step": 1037,
+    "current_state_id": "f551c150b4ea74f6b492d4c9df44a5c79f24e10f7c13b0da06b64ff6ab4bc7cc",
+    "native_gradient_results": 1,
+    "new_accepted_updates_claimed": 0,
+    "scope": "Resumed originally empty profile, independent successor recovery and current-state native work; not a third physical PC"
+  }
+}
