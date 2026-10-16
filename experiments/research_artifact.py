@@ -76,6 +76,8 @@ def run(args):
             or not re.fullmatch('[0-9a-f]{64}', args.artifact_id or '')
             or type(args.size) is not int or not 0 < args.size <= MAX_BYTES):
         raise ValueError('An explicit peer, exact artifact hash and bounded size are required')
+    namespace=getattr(args,'namespace','language.artifact')
+    if namespace not in {'language.artifact','swarm.artifact'}:raise ValueError('Unknown locally selected public artifact family')
     identity = LSPIdentity.load(str(directory/'helper.key'))
     if identity.node_id_hex != json.loads((directory/'identity.json').read_text())['helper_id']:
         raise ValueError('Transport identity changed')
@@ -110,9 +112,9 @@ def run(args):
         address_book_path=directory/'peers.json', allow_private=False)
     work = WorkCoordinator(node, governor, max_workers=2, max_offers_per_minute=600)
     budget = BandwidthBudget(lambda: mbps if allowed() else 0)
-    service = ArtifactService(work, store, namespace='language.artifact', register_handlers=False, receive_budget=budget)
+    service = ArtifactService(work, store, namespace=namespace, register_handlers=False, receive_budget=budget)
     report = {'success': False, 'action': args.action, 'helper_id': identity.node_id_hex,
-        'peer_id': args.peer, 'physical_node_id': diagnostic['node_id'], 'physical_pid': pid,
+        'peer_id': args.peer, 'namespace':namespace,'physical_node_id': diagnostic['node_id'], 'physical_pid': pid,
         'artifact_id': args.artifact_id, 'artifact_bytes': args.size, 'started_at': time.time(),
         'extra_physical_worker': False, 'model_release_published': False, 'native_learning_cycles_added': 0,
         'scope': 'Research preservation only; no release registration, public inference or model promotion'}
@@ -135,7 +137,7 @@ def run(args):
                     return allowed()
                 for operation, method in [('describe.v1',service._describe),('read-chunk.v1',service._read_chunk),
                                           ('read-chunk.v2',service._read_encoded_chunk)]:
-                    work.register_handler('language.artifact.'+operation, 'artifact',
+                    work.register_handler(namespace+'.'+operation, 'artifact',
                         lambda payload, execution, method=method: handler(payload, execution, method), permit_cached=cached)
             node.start(); guard.start(); atomic_json(directory/'ready.json', report)
             if args.action == 'serve':
@@ -174,6 +176,7 @@ def main():
     parser.add_argument('--directory',type=Path,required=True)
     parser.add_argument('--peer'); parser.add_argument('--artifact-id'); parser.add_argument('--size',type=int)
     parser.add_argument('--source',type=Path)
+    parser.add_argument('--namespace',choices=['language.artifact','swarm.artifact'],default='language.artifact')
     print(json.dumps(run(parser.parse_args()), allow_nan=False),flush=True)
 
 
