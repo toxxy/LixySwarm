@@ -56,8 +56,8 @@ def verify_transition(value,evaluation_raw,*,workers=None):
 def activate(directory,candidate_result,audit):
     """Owner-selected transition after local independent tensor verification.
 
-    This pilot trusts the two known operators. It does not introduce a general
-    open-network consensus rule or grant permission to unknown publishers.
+    v1 retains its historical known-worker policy. v2 additionally checks the
+    evaluator against this operator's local admission, not a source-code list.
     """
     directory=Path(directory).resolve()
     if (directory.is_relative_to(Path.home()/'Dropbox')
@@ -80,6 +80,8 @@ def activate(directory,candidate_result,audit):
         settings=OwnSwarmSettings.load(directory);controls=ClientSettings.load(directory)
         if transition['training_policy_id'] not in {policy_id(),settings.policy_id()}:
             raise ValueError('Own transition policy has no local admission')
+        if definition(transition['training_policy_id'])['version']==2 and transition['evaluator_id'] not in settings.requesters:
+            raise ValueError('Own evaluator has no local admission')
         previous=(directory/'own-swarm.json').read_bytes()
         if not settings.enabled or not controls.connected or controls.paused:
             raise ValueError('Own state selection is not currently enabled by the operator')
@@ -100,4 +102,5 @@ def activate(directory,candidate_result,audit):
         return {'success':True,'already_selected':False,'parent_state_id':current,
             'state_id':transition['state_id'],'model_id':settings.model_id,'optimizer_id':settings.optimizer_id,
             'optimizer_step':settings.step,'transition_artifact_id':proof.artifact_id,
-            'scope':'Known-operator own-state adoption; not open consensus or autonomous scheduling'}
+            'scope':('Locally admitted own-state adoption; not open consensus' if settings.version==2
+                else 'Known-operator own-state adoption; not open consensus or autonomous scheduling')}

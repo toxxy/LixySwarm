@@ -59,6 +59,18 @@ class OwnNetworkCoordinator(OwnLearningCoordinator):
         except (OSError, ValueError, TypeError) as error:
             self.error = str(error); self.cancel.set(); return
         contract = self.settings.contract()
+        if (self.settings.follow_enabled and self.service.engine.version == 2 and self.service.ready
+                and self.knowledge.allowed and self.settings.owner_id != self.knowledge.node.identity.node_id_hex):
+            # Every admitted worker maintains a route to its selected lineage,
+            # even when the ordinary four outbound peer slots are already full.
+            self.cancel.set()
+            if self.thread is not None and self.thread.is_alive(): return
+            if time.time() >= self.maintenance_at:
+                self.maintenance_at = time.time() + 30
+                self.thread = threading.Thread(target=self._connect_owner, args=(self.settings.owner_id,),
+                    name='lixy-own-network-follow', daemon=True)
+                self.thread.start()
+            return
         if not self._allowed(contract): self.cancel.set(); return
         if self.thread is not None and self.thread.is_alive(): return
         if self.ledger is None:
@@ -89,6 +101,13 @@ class OwnNetworkCoordinator(OwnLearningCoordinator):
         self.cancel = threading.Event()
         self.thread = threading.Thread(target=self._run, args=(contract,), name='lixy-own-network', daemon=True)
         self.thread.start()
+
+    def _connect_owner(self, owner):
+        try:
+            if owner not in self.knowledge.node.connected_node_ids:
+                self.knowledge.node.connect_node(owner, timeout=12)
+        except (OSError, ValueError, RuntimeError):
+            pass
 
     def _discover(self, contract):
         """Signed heads decide readiness; announcements only nominate candidates."""

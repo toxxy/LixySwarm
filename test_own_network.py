@@ -149,6 +149,21 @@ def test_late_members_catch_up_after_curriculum_stop_without_new_training(tmp_pa
     assert len(work.started) == started and c.ledger['cursor'] == 64
 
 
+def test_admitted_follower_connects_to_owner_without_requiring_a_free_peer_slot(tmp_path):
+    owner = LSPIdentity.generate().node_id_hex; follower = LSPIdentity.generate().node_id_hex; calls = []
+    OwnNetworkSettings(follow_enabled=True, owner_id=owner).save(tmp_path)
+    node = SimpleNamespace(identity=SimpleNamespace(node_id_hex=follower), connected_node_ids={'f' * 64},
+        connect_node=lambda worker, **kw: calls.append(worker))
+    service = SimpleNamespace(directory=tmp_path, ready=True, engine=SimpleNamespace(version=2),
+        knowledge=SimpleNamespace(node=node, allowed=True))
+    c = OwnNetworkCoordinator(service, None)
+    try:
+        c.update(); c.thread.join(timeout=2)
+        assert calls == [owner] and c.ledger is None
+        c.update(); assert calls == [owner]  # Bounded reconnect frequency.
+    finally: c.close()
+
+
 def test_large_membership_rotates_bounded_windows_and_uses_observed_capacity():
     workers = [hashlib.sha256(str(i).encode()).hexdigest() for i in range(64)]; history = {}; seen = set()
     for round_number in range(8):
