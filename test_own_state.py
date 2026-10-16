@@ -35,7 +35,7 @@ def transition_fixture(tmp_path):
     result=WorkResult(job_id='f'*64,status='ok',output=output)
     result=replace(result,receipt=ResultReceipt.create(result,evaluator,evaluator.node_id_hex).to_dict())
     audit={'success':True,'state_id':next_state,'model_id':model.artifact_id,'optimizer_id':optimizer.artifact_id,
-           'training_policy_id':policy_id(),'saved_state_unchanged':True,'gradient_replay_verified':True}
+           'training_policy_id':policy_id(),'saved_state_unchanged':True,'gradient_replay_verified':True,'optimizer_step':1025}
     command=tmp_path/'installed-engine';command.write_text('local fixture')
     OwnSwarmSettings(enabled=True,command=[str(command)],model_id=mid,optimizer_id='b'*64,
         step=1024,requesters=list(WORKERS)).save(tmp_path)

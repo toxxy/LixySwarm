@@ -57,7 +57,11 @@ def activate(directory,candidate_result,audit):
     This pilot trusts the two known operators. It does not introduce a general
     open-network consensus rule or grant permission to unknown publishers.
     """
-    directory=Path(directory);store=ArtifactStore(directory/'public/own/artifacts',
+    directory=Path(directory).resolve()
+    if (directory.is_relative_to(Path.home()/'Dropbox')
+            or directory.is_relative_to(Path(__file__).resolve().parents[2])):
+        raise ValueError('Own learned state must remain outside the code checkout and Dropbox')
+    store=ArtifactStore(directory/'public/own/artifacts',
         max_artifact_bytes=16*1024**2,max_total_bytes=256*1024**2)
     output=candidate_result['output']
     evaluation=store.object_path(output['evaluation_id']).read_bytes()
@@ -65,7 +69,7 @@ def activate(directory,candidate_result,audit):
     if (audit.get('success') is not True or audit.get('state_id')!=transition['state_id']
             or audit.get('model_id')!=transition['model_id'] or audit.get('optimizer_id')!=transition['optimizer_id']
             or audit.get('training_policy_id')!=policy_id() or audit.get('saved_state_unchanged') is not True
-            or audit.get('gradient_replay_verified') is not True):
+            or audit.get('gradient_replay_verified') is not True or audit.get('optimizer_step')!=transition['step']):
         raise ValueError('Own state must have an independent local recovery and gradient replay audit')
     for key,id_key in [('candidate_model','model_id'),('candidate_optimizer','optimizer_id')]:
         if digest_file(store.object_path(transition[id_key]))!=(transition[id_key],output[key+'_bytes']):
