@@ -141,3 +141,28 @@ def test_preparation_ipc_rejects_foreign_origins_and_peer_selected_programs(tmp_
         assert e.value.code == 400 and not calls
         assert call(api, '/own-preparation/start', {})['state'] == 'starting' and calls == [True]
     finally: api.close()
+
+
+def test_repeated_file_checks_share_disk_scan_but_never_cache_revoked_permission(tmp_path,monkeypatch):
+    now=[0.];consent=[True];size=[100];calls=[]
+    monkeypatch.setattr(module,'managed_public_bytes',lambda _p:calls.append(True) or size[0])
+    allowed=module.storage_guard(tmp_path,200,lambda:consent[0],clock=lambda:now[0])
+    for _ in range(10000):assert allowed()
+    assert len(calls)==1
+    consent[0]=False;assert not allowed() and len(calls)==1
+    consent[0]=True;size[0]=201;now[0]=.51
+    assert not allowed() and len(calls)==2
+
+
+def test_failed_attempt_retains_provider_error_and_backoff_after_long_verification(tmp_path,monkeypatch):
+    p,*_=fixture(tmp_path,monkeypatch)
+    def fail(*_a,**_kw):raise RuntimeError('peer_disconnected')
+    p.service.transfer.fetch=fail
+    try:
+        p.start();assert finish(p)['state']=='waiting'
+        records=list((tmp_path/'public/own/preparation-attempts').glob('*.json'))
+        assert len(records)==1
+        saved=json.loads(records[0].read_text());assert saved['provider_failures'][0]['error']=='peer_disconnected'
+        assert p.next_attempt>time.monotonic()+25
+        p.update();assert not p.thread.is_alive() and p.snapshot()['state']=='waiting'
+    finally:p.close()

@@ -20,6 +20,7 @@ def main():
     parser.add_argument("--knowledge", action="store_true")
     parser.add_argument("--prepare-engine", action="store_true")
     parser.add_argument('--own-bootstrap',action='store_true')
+    parser.add_argument('--resume-own-profile',action='store_true')
     parser.add_argument("--chat",action="store_true")
     parser.add_argument('--memory',action='store_true')
     parser.add_argument('--expected-chat-model')
@@ -30,6 +31,7 @@ def main():
     parser.add_argument("--work-directory", type=Path)
     parser.add_argument('--upgrade-from', type=Path)
     args = parser.parse_args()
+    if args.resume_own_profile and not args.own_bootstrap:parser.error('Own resume needs --own-bootstrap')
     if args.own_bootstrap:
         if not args.internet or not args.work_directory or args.prepare_engine or args.chat or args.knowledge:
             parser.error('Own cold validation needs --internet --work-directory and its separate preparation path')

@@ -5,6 +5,25 @@ import sys
 import time
 
 
+def followed_history(directory,anchor,current):
+    from src.network.own_state import verify_transition
+    from src.network.own_catalog import COORDINATOR
+    directory=Path(directory);states=[]
+    while current!=anchor:
+        if len(states)>=4096 or current in states:raise ValueError('Own bootstrap recovery history is cyclic or too long')
+        saved=json.loads((directory/'public/own/history'/(current+'.json')).read_text())
+        candidate=saved['candidate_result'];identifier=candidate['output']['evaluation_id']
+        transition=verify_transition(candidate,(directory/'public/own/artifacts/objects'/identifier[:2]/identifier[2:]).read_bytes())
+        checked=json.loads((directory/'public/own/audits'/(current+'.json')).read_text())
+        if (transition['state_id']!=current or transition['evaluator_id']!=COORDINATOR
+                or not checked['success'] or not checked['gradient_replay_verified']
+                or checked['state_id']!=current or checked['optimizer_step']!=transition['step']
+                or checked['new_gradient_computed'] or not checked['saved_state_unchanged']):
+            raise ValueError('Own bootstrap lacks local independent recovery of its learned successor')
+        states.append(current);current=transition['parent_state_id']
+    return states
+
+
 def run(args):
     from PySide6.QtWidgets import QApplication
     from PySide6.QtCore import QCoreApplication, QEvent
@@ -16,13 +35,16 @@ def run(args):
     from src.network.telemetry import atomic_json
     from src.network.work_protocol import WorkResult, ResultReceipt
     root = args.work_directory.resolve(); root.mkdir(parents=True, exist_ok=True)
-    if any(root.iterdir()): raise ValueError('Cold own validation needs a fresh external directory')
+    resume=getattr(args,'resume_own_profile',False)
+    if any(root.iterdir()) and not resume: raise ValueError('Cold own validation needs a fresh external directory')
+    if resume and (not (root/'clean-node/identity.key').is_file() or (root/'clean-node/own-swarm.json').exists()):
+        raise ValueError('Resume requires an existing unselected own preparation profile')
     if root.is_relative_to(Path.home()/'Dropbox') or root.is_relative_to(Path(__file__).resolve().parents[1]):
         raise ValueError('Cold own state must remain outside the code checkout')
     app = QApplication.instance() or QApplication([])
     controller = NodeController(root/'clean-node', port=0, allow_private=False)
     window = SwarmWindow(controller, initialize_personal=False, auto_prepare=True)
-    report = {'success': False, 'internet': True, 'fresh_profile': True,
+    report = {'success': False, 'internet': True, 'fresh_profile': not resume,'resumed_unselected_profile':resume,
         'extra_physical_pc': False, 'model_state_copied_by_admin': False, 'anchor_id': catalog.anchor_id()}
     def status(): return controller.snapshot()['diagnostics']
     def wait(predicate, timeout=60):
@@ -42,21 +64,25 @@ def run(args):
         began = time.monotonic(); window.connect_button.click()
         wait(lambda: controller.snapshot()['fresh'] and controller.snapshot()['status'].get('state') in {'connected','preparing','working'})
         report['connection_seconds'] = time.monotonic()-began
-        wait(lambda: status().get('own_preparation', {}).get('state') == 'engine-downloading'
-            and status()['own_preparation'].get('done',0)>256*1024, timeout=180)
+        if resume:
+            wait(lambda: status().get('own_preparation',{}).get('state') in {'engine-verifying','receiving'},timeout=180)
+        else:
+            wait(lambda: status().get('own_preparation', {}).get('state') == 'engine-downloading'
+                and status()['own_preparation'].get('done',0)>256*1024, timeout=180)
         identity = status()['node_id']; window.pause_button.click()
         wait(lambda: controller.snapshot()['status'].get('state') == 'paused'
             and status().get('own_preparation', {}).get('state') == 'stopped', timeout=40)
         partials = list((controller.directory/'engine-downloads').glob('*.part'))
+        if resume:partials+=list((controller.directory/'public/own/artifacts/incoming').glob('*.part'))
         assert partials and not (controller.directory/'own-swarm.json').exists()
         report['pause_preserved_partial_bytes'] = sum(p.stat().st_size for p in partials)
         report['no_selection_before_validation'] = True
         window.pause_button.click()
         wait(lambda: status().get('own_swarm', {}).get('ready') is True, timeout=1800)
         snapshot = status(); own = snapshot['own_swarm']
-        assert own['state_id'] == catalog.ANCHOR['state_id'] and own['optimizer_step'] == catalog.ANCHOR['step']
         result = json.loads((controller.directory/'own-preparation-result.json').read_text())
         assert result['success'] and result['audit']['optimizer_states'] == 175
+        assert result['state_id']==catalog.ANCHOR['state_id'] and result['audit']['optimizer_step']==catalog.ANCHOR['step']
         assert result['audit']['saved_state_unchanged'] and not result['audit']['new_gradient_computed']
         assert all(t['route']['encrypted'] and t['route']['public_internet'] for t in result['transfers'])
         selected = json.loads((controller.directory/'own-swarm.json').read_text())
@@ -64,18 +90,20 @@ def run(args):
         verify_package(engine, entry.manifest_sha256, profile=entry.profile)
         for identifier,size in catalog.dependencies():
             assert digest_file(controller.directory/'public/own/artifacts/objects'/identifier[:2]/identifier[2:]) == (identifier,size)
-        atomic_json(root/'own-ready.json', {'node_id': identity, 'state_id': own['state_id'],
-            'model_id': own['model_id'], 'optimizer_step': own['optimizer_step'], 'pid': snapshot['pid']})
+        atomic_json(root/'own-ready.json', {'node_id': identity, 'state_id': catalog.ANCHOR['state_id'],
+            'model_id': catalog.ANCHOR['model_id'], 'optimizer_step': catalog.ANCHOR['step'], 'pid': snapshot['pid']})
         report.update(preparation_seconds=time.monotonic()-began, preparation=result,
             physical_profile_node_id=identity, cpu_engine_manifest_sha256=entry.manifest_sha256,
-            optimizer_step=own['optimizer_step'], state_id=own['state_id'])
+            optimizer_step=catalog.ANCHOR['step'], state_id=catalog.ANCHOR['state_id'])
         # A controller on the existing coordinator requests native work. Its
         # acknowledgement contains public metadata only, after gradient fetch.
-        wait(lambda: (root/'work-ack.json').is_file(), timeout=300)
+        wait(lambda: (root/'work-ack.json').is_file(), timeout=1800)
         ack = json.loads((root/'work-ack.json').read_text()); work = WorkResult.from_dict(ack['result'])
         assert work.status == 'ok' and ResultReceipt.from_dict(work.receipt).verify(work,
             expected_worker_id=identity, expected_requester_id=catalog.COORDINATOR)
-        assert work.output['state_id'] == own['state_id'] and work.output['model_id'] == own['model_id']
+        work_own=status()['own_swarm']
+        assert work.output['state_id'] == work_own['state_id'] and work.output['model_id'] == work_own['model_id']
+        report['followed_states']=followed_history(controller.directory,catalog.ANCHOR['state_id'],work_own['state_id'])
         assert ack['route']['encrypted'] and ack['route']['public_internet']
         report['native_gradient_work'] = ack
         window.tabs.setCurrentIndex(3)
@@ -85,7 +113,7 @@ def run(args):
         wait(lambda: controller.snapshot()['status'].get('state') == 'disconnected')
         window.connect_button.click()
         wait(lambda: status().get('own_swarm', {}).get('ready') is True)
-        assert status()['node_id'] == identity and status()['own_swarm']['state_id'] == own['state_id']
+        assert status()['node_id'] == identity and status()['own_swarm']['state_id'] == work_own['state_id']
         assert 'torch' not in sys.modules
         report.update(success=True, resumed_same_identity_and_state=True, calculation_engines_loaded=False,
             final_own_swarm=status()['own_swarm'])

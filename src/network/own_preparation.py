@@ -6,6 +6,7 @@ from pathlib import Path
 import shutil
 import threading
 import time
+import uuid
 
 from src.contribution import ResourceRequirements
 from . import own_catalog as catalog
@@ -22,6 +23,21 @@ from .telemetry import atomic_json
 from .work_protocol import WorkExecution, WorkUnit
 
 RESERVE_BYTES = 160 * 1024**2
+
+
+def storage_guard(directory, maximum, authorized, *, clock=time.monotonic):
+    """Check consent every time; amortize scans under the full peak reservation."""
+    next_scan=0.;used=None
+    def allowed():
+        nonlocal next_scan,used
+        try:
+            if not authorized():return False
+            now=clock()
+            if used is None or now>=next_scan:
+                used=managed_public_bytes(directory);next_scan=now+.5
+            return used<=maximum
+        except (OSError,ValueError,TypeError):return False
+    return allowed
 
 
 def eligible(settings, sharing, entry):
@@ -120,7 +136,9 @@ class OwnPreparation:
             except (OSError, ValueError, RuntimeError) as error: self._status('waiting', message=str(error))
 
     def _run(self, settings, entry):
-        permission = asdict(settings.policy); transfers = []
+        permission = asdict(settings.policy); transfers = []; failures=[]
+        attempt=self.directory/'public/own/preparation-attempts'/(uuid.uuid4().hex+'.json')
+        started=time.time()
         def authorized():
             current = ClientSettings.load(self.directory)
             return (not self.closed and not self.cancel.is_set() and self.knowledge.allowed
@@ -129,9 +147,7 @@ class OwnPreparation:
                 and json.loads(self.intent.read_text()) == {'version': 1, 'requested': True}
                 and (not (self.directory / 'own-network-controls.json').exists()
                     or asdict(OwnNetworkSettings.load(self.directory)) == asdict(self._network_controls())))
-        def allowed():
-            try: return authorized() and managed_public_bytes(self.directory) <= settings.policy.max_disk_gb * 1024**3
-            except (OSError, ValueError, TypeError): return False
+        allowed=storage_guard(self.directory,settings.policy.max_disk_gb*1024**3,authorized)
         def check():
             if not allowed(): raise PreparationCancelled('Preparación detenida; el progreso se conserva')
         try:
@@ -139,6 +155,7 @@ class OwnPreparation:
                 check(); self._preflight(settings, entry)
                 installed = self.directory / 'engines' / entry.manifest_sha256
                 if installed.is_dir():
+                    self._status('engine-verifying',message='Verificando el motor conservado; la descarga anterior se reutiliza')
                     manifest = verify_package(installed, entry.manifest_sha256, profile=entry.profile, check=check)
                     command = str(installed / manifest['entrypoint'])
                 else:
@@ -157,10 +174,15 @@ class OwnPreparation:
                     if not self.service.store.has(identifier):
                         for peer in providers:
                             try:
-                                self._fetch(identifier, size, peer, check, transfers)
+                                self._fetch(identifier, size, peer, check, transfers,
+                                    progress=lambda offset,_size:self._status('receiving',done+offset,
+                                        sum(n for _,n in catalog.dependencies()),'Recibiendo y verificando el estado propio'))
                                 break
                             except PreparationCancelled: raise
-                            except (OSError, ValueError, RuntimeError, StopIteration): continue
+                            except (OSError, ValueError, RuntimeError, StopIteration) as error:
+                                failures.append({'provider':peer,'artifact_id':identifier,'type':type(error).__name__,
+                                    'error':str(error)[:180],'at':time.time()})
+                                continue
                         else: raise RuntimeError('No hay un proveedor público disponible del estado propio fijado')
                     from .artifact_store import digest_file
                     if digest_file(self.service.store.object_path(identifier)) != (identifier, size):
@@ -182,12 +204,20 @@ class OwnPreparation:
                     'engine_manifest_sha256': entry.manifest_sha256, 'transfers': transfers, 'audit': audit})
                 atomic_json(self.intent, {'version': 1, 'requested': False})
                 self._status('complete', message='Organismo preparado; disponible para colaborar con la red')
-        except PreparationCancelled as error: self._status('stopped', message=str(error))
+                atomic_json(attempt,{'started_at':started,'finished_at':time.time(),'success':True,
+                    'anchor_id':catalog.anchor_id(),'provider_failures':failures})
+        except PreparationCancelled as error:
+            self._status('stopped', message=str(error))
+            atomic_json(attempt,{'started_at':started,'finished_at':time.time(),'success':False,
+                'cancelled':True,'error':str(error)[:180],'provider_failures':failures})
         except Exception as error:
+            self.next_attempt=time.monotonic()+30
             self._status('stopped' if self.cancel.is_set() else 'waiting',
                 message='Preparación detenida; el progreso se conserva' if self.cancel.is_set() else type(error).__name__ + ': ' + str(error)[:180])
+            atomic_json(attempt,{'started_at':started,'finished_at':time.time(),'success':False,
+                'type':type(error).__name__,'error':str(error)[:180],'provider_failures':failures})
 
-    def _fetch(self, identifier, size, peer, check, transfers):
+    def _fetch(self, identifier, size, peer, check, transfers, *, progress=lambda *_:None):
         node = self.knowledge.node; check()
         if peer not in node.connected_node_ids and not node.connect_node(peer, timeout=12):
             raise RuntimeError('Proveedor propio sin ruta disponible')
@@ -200,7 +230,7 @@ class OwnPreparation:
             raise ValueError('La adquisición excede el almacenamiento autorizado')
         began = time.monotonic(); chunks = []
         self.service.transfer.fetch(identifier, peer_id=peer, expected_size=size, timeout_s=600,
-            cancel_event=self.cancel, observer=chunks.append)
+            cancel_event=self.cancel, observer=chunks.append,progress=progress)
         check(); transfers.append({'artifact_id': identifier, 'bytes': size, 'provider': peer, 'route': route,
             'seconds': time.monotonic() - began, 'encoded_data_bytes': sum(v['encoded_data_bytes'] for v in chunks)})
 
