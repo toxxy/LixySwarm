@@ -2,6 +2,8 @@
 
 **Fecha:** 2026-10-13
 
+**Rectificación del usuario, 2026-10-15:** el organismo debe aprender desde pesos propios, inicializados desde cero. Una base preentrenada de terceros, sus adaptadores o la destilación de sus respuestas no cumplen este requisito. La línea principal retomará la arquitectura propia del enjambre; Qwen y los experimentos que dependen de él quedan como antecedentes de investigación y pruebas de infraestructura. Esta rectificación conserva las ocho etapas y sus exigencias de funcionamiento por Internet, evaluación, persistencia y escalado. El chat desplegado todavía usa Qwen: la sustitución por el organismo propio está pendiente y no se acredita cambiando su presentación.
+
 **Prioridad actualizada el 2026-10-14:** por indicación del usuario, el desarrollo y las pruebas de Windows y macOS quedan para el tramo final. Primero se completa el recorrido funcional en Linux: conexión por Internet, aprendizaje evaluado, distribución y conservación de las mejoras. Las compilaciones automáticas habituales se concentran en Linux; la matriz completa se conserva como ejecución manual para la validación final. Esta prioridad cambia el orden de trabajo, no las condiciones de aceptación de las demás etapas.
 
 LixySwarm debe ser una red que aprende, conserva lo aprendido y permite utilizarlo desde cualquier PC compatible. Cada máquina aporta dentro de los recursos que su usuario autoriza. La capacidad de entrenamiento debe aumentar al incorporar contribuciones útiles; las máquinas potentes pueden realizar más trabajo y alojar agentes mayores.
@@ -10,6 +12,7 @@ El primer hito de producto será completar este recorrido por Internet: una PC r
 
 ## Principios de la visión
 
+- El conocimiento del organismo se desarrolla mediante entrenamiento de sus propios parámetros desde una inicialización reproducible, con datos autorizados y procedencia verificable. Sus componentes aprendidos tampoco pueden depender de representaciones o profesores preentrenados externos. La transferencia entre tamaños podrá usar expertos del propio linaje, una vez que exista evidencia de aprendizaje.
 - Cualquier participante puede conectarse sin registro, VPN ni configuración manual de puertos y acceder al conocimiento disponible.
 - La contribución es voluntaria y gratuita. CPU, GPU, memoria, almacenamiento y conectividad tienen funciones útiles; la ausencia de GPU permite contribuir en otros roles.
 - Las hormigas son los nodos físicos. Los agentes son modelos o expertos alojados en ellos; las sectas agrupan especializaciones. La asignación depende de capacidad medida, disponibilidad y utilidad.
@@ -49,7 +52,7 @@ flowchart LR
     D --> S
 ```
 
-Los trabajos se identifican por familia de experto, versión del modelo, datos y operación. Agentes compatibles comparten actualizaciones de parámetros. Entre arquitecturas o tamaños diferentes se propone transferencia mediante destilación, ejemplos sintéticos evaluados y memoria global; sus gradientes tienen formas distintas y requieren rutas de aprendizaje diferentes.
+Los trabajos se identifican por familia de experto, versión del modelo, datos y operación. Agentes compatibles comparten actualizaciones de parámetros. Entre arquitecturas o tamaños diferentes del propio organismo se propone transferencia mediante destilación interna, ejemplos sintéticos evaluados y memoria global; sus gradientes tienen formas distintas y requieren rutas de aprendizaje diferentes. Los modelos preentrenados externos no serán profesores ni componentes de la línea principal.
 
 Un participante capaz puede coordinar temporalmente un ciclo de una familia de expertos. El trabajo y su estado deben poder retomarse desde otro nodo. La aceptación de versiones combina evaluación, procedencia y firmas según la política de la colonia; el transporte del VPS no otorga autoridad para aceptar modelos.
 
@@ -81,7 +84,9 @@ La app configura el almacenamiento local fuera del árbol de desarrollo y crea l
 
 ### 3 Primer ciclo real de entrenamiento distribuido
 
-Publicar un modelo de referencia reproducible que pueda trabajar en la PC de menor VRAM, con datos públicos o sintéticos autorizados, manifiestos, tokenizer, configuración y evaluación fija. Corregir la pérdida de agregación y la diversidad antes de invertir en entrenamientos largos.
+Publicar un modelo de referencia reproducible de la arquitectura propia, con todos sus pesos inicializados desde cero, que pueda trabajar en la PC de menor VRAM. Conservar semilla, configuración, codificación/tokenizer, manifiestos, datos públicos o sintéticos autorizados y una evaluación fija separada del entrenamiento. El prototipo de bytes existente permite empezar sin importar un tokenizer ni pesos de otro modelo; todavía requiere demostrar utilidad fuera de su corpus reducido. Corregir la pérdida de agregación y la diversidad antes de invertir en entrenamientos largos.
+
+La primera comprobación del nuevo linaje comparará el estado inicial con el entrenado sobre ejemplos no utilizados para actualizar parámetros. Guardará pesos y estado del optimizador, repetirá la carga en la otra PC y verificará continuidad tras reinicio. Después se comparará una PC frente a dos con la misma inicialización, datos y criterio de calidad. Bajar la pérdida de entrenamiento o responder desde el Qwen actual no acredita este aprendizaje. Los protocolos y resultados históricos se conservan; las nuevas condiciones se fijan antes de ejecutar cada ensayo.
 
 Separar dos operaciones: entrenamiento con fragmentos distintos y verificación mediante repetición de muestras seleccionadas. El quórum existente sobre el mismo fragmento es una herramienta de comprobación; repartir más datos requiere un esquema de contribuciones y agregación que reconozca cada fragmento, versión y cantidad de tokens.
 
