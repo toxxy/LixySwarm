@@ -26,6 +26,22 @@ from .prepare_public_math import fingerprints,outside_checkout
 from .research_artifact import retained_bytes
 
 
+def freeze_source(source,directory,revision,reservation_gb):
+    archive=directory/'source.tar';frozen=directory/'source'
+    # The GPU child imports only src. Historical reports are not compute inputs.
+    subprocess.run(['git','archive','--format=tar','--output',str(archive),revision,'src'],cwd=source,check=True)
+    with tarfile.open(archive) as content:
+        if (archive.stat().st_size+sum(v.size for v in content.getmembers() if v.isfile())+2*1024**2
+                >reservation_gb*1024**3):
+            raise ValueError('Frozen source and evidence exceed their declared scratch reservation')
+        frozen.mkdir(mode=0o700)
+        content.extractall(frozen,filter='data')
+    archive_id,archive_bytes=digest_file(archive)
+    atomic_json(directory/'source.json',{'revision':revision,'archive_sha256':archive_id,
+        'archive_bytes':archive_bytes,'archived_paths':['src']})
+    return frozen,archive_id,archive_bytes
+
+
 def run(args,cancel):
     p=definition();node=args.node_directory.resolve();directory=args.directory.resolve()
     source=Path(__file__).resolve().parents[1]
@@ -65,16 +81,7 @@ def run(args,cancel):
     if lease is None:raise ValueError('Repair calibration resource reservation denied: '+reason)
     directory.mkdir(mode=0o700,parents=True)
     atomic_json(directory/'invariants-before.json',before)
-    archive=directory/'source.tar'
-    subprocess.run(['git','archive','--format=tar','--output',str(archive),revision],cwd=source,check=True)
-    frozen=directory/'source';frozen.mkdir(mode=0o700)
-    with tarfile.open(archive) as content:
-        if (archive.stat().st_size+sum(v.size for v in content.getmembers() if v.isfile())+2*1024**2
-                >p['disk_reservation_gb']*1024**3):
-            raise ValueError('Frozen source and evidence exceed their declared scratch reservation')
-        content.extractall(frozen,filter='data')
-    archive_id,archive_bytes=digest_file(archive)
-    atomic_json(directory/'source.json',{'revision':revision,'archive_sha256':archive_id,'archive_bytes':archive_bytes})
+    frozen,archive_id,archive_bytes=freeze_source(source,directory,revision,p['disk_reservation_gb'])
     deadline=time.time()+p['maximum_seconds']
     request={'action':p['action'],'protocol_id':protocol_id(),'compute_dtype':'float32','streamed_base':True,
         'base_directory':engine['base_directory'],'adapter_file':engine['adapter_file'],'model_id':PARENT_MODEL,
@@ -124,7 +131,14 @@ def main():
     parser.add_argument('--shard',type=int,choices=[0,1],required=True)
     cancel=threading.Event()
     for sig in [signal.SIGTERM,signal.SIGINT]:signal.signal(sig,lambda *_:cancel.set())
-    print(json.dumps(run(parser.parse_args(),cancel),allow_nan=False),flush=True)
+    args=parser.parse_args();new_directory=not args.directory.exists()
+    try:result=run(args,cancel)
+    except BaseException as error:
+        if new_directory and args.directory.is_dir():
+            atomic_json(args.directory/'status.json',{'phase':'failed','success':False,
+                'error_type':type(error).__name__,'error':str(error)[:1024]})
+        raise
+    print(json.dumps(result,allow_nan=False),flush=True)
 
 
 if __name__=='__main__':main()

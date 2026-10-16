@@ -4,6 +4,7 @@ import hashlib
 import json
 from pathlib import Path
 import time
+import subprocess
 
 import pytest
 
@@ -119,3 +120,25 @@ def test_input_overlap_or_reused_evidence_is_rejected(tmp_path):
     with pytest.raises(ValueError):validate_request(r)
     r['output_directory']=str(tmp_path/'base'/'overlap')
     with pytest.raises(ValueError):validate_request(r)
+
+
+@pytest.mark.parametrize('oversized_code',[False,True])
+def test_frozen_source_excludes_reports_and_checks_peak_scratch_before_extraction(tmp_path,oversized_code):
+    from experiments.collect_repair_calibration import freeze_source
+    source=tmp_path/'checkout';source.mkdir();(source/'src').mkdir();(source/'reports').mkdir()
+    (source/'src/compute.py').write_bytes(b'x'*(3*1024**2 if oversized_code else 1024))
+    (source/'reports/old-report.json').write_bytes(b'x'*(2*1024**2))
+    subprocess.run(['git','init','-q',str(source)],check=True)
+    subprocess.run(['git','add','.'],cwd=source,check=True)
+    subprocess.run(['git','-c','user.name=fixture','-c','user.email=fixture@example.invalid',
+                    'commit','-qm','fixture'],cwd=source,check=True)
+    directory=tmp_path/'evidence';directory.mkdir()
+    if oversized_code:
+        with pytest.raises(ValueError):freeze_source(source,directory,'HEAD',.004)
+        assert not (directory/'source').exists()
+    else:
+        frozen,identifier,size=freeze_source(source,directory,'HEAD',.004)
+        assert (frozen/'src/compute.py').read_bytes()==(source/'src/compute.py').read_bytes()
+        assert not (frozen/'reports').exists() and size<32*1024
+        assert identifier==hashlib.sha256((directory/'source.tar').read_bytes()).hexdigest()
+    assert (source/'reports/old-report.json').stat().st_size==2*1024**2
