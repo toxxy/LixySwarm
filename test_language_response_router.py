@@ -62,3 +62,16 @@ def test_context_cannot_be_silently_truncated():
         def apply_chat_template(self,*_a,**_k):return 'prefix'
         def encode(self,*_a,**_k):return [1]*1025
     with pytest.raises(ValueError):encode_response(Tokenizer(),{'question':'public','draft':'draft','draft_output_tokens':10})
+
+
+def test_child_failure_keeps_a_local_diagnostic_after_validation(tmp_path,monkeypatch):
+    from src.learning import language_response_router_job as job
+    r=request(tmp_path)
+    def failed(_request):
+        (tmp_path/'output').mkdir()
+        raise ValueError('serialization failure canary')
+    monkeypatch.setattr(job,'_run',failed)
+    with pytest.raises(ValueError):job.run(r)
+    import json
+    saved=json.loads((tmp_path/'output/failure.json').read_text())
+    assert saved['error_type']=='ValueError' and saved['error']=='serialization failure canary'

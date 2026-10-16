@@ -54,8 +54,8 @@ def encode_response(tokenizer,row):
     return prefix,[len(question)/1024,tokens/384]
 
 
-def run(request):
-    validate_request(request);p=definition();began=time.monotonic()
+def _run(request):
+    p=definition();began=time.monotonic()
     from .public_math import load_snapshot
     from .public_bases import BASES,base_hash
     from .weights_io import digest_file
@@ -130,6 +130,20 @@ def run(request):
     durable_json(output/'diagnostic.json',report);raw=(output/'diagnostic.json').read_bytes()
     if len(raw)>256*1024:raise ValueError('Response fit evidence exceeded its bounded report size')
     return {'success':True,'protocol_id':protocol_id(),'report_id':hashlib.sha256(raw).hexdigest(),'bytes':len(raw)}
+
+
+def run(request):
+    validate_request(request)
+    try:return _run(request)
+    except Exception as error:
+        # Only the output path checked absent and external above may receive
+        # this local diagnostic. Never publish it as training or model data.
+        output=Path(request['output_directory'])
+        if output.is_dir():
+            import traceback
+            durable_json(output/'failure.json',{'error_type':type(error).__name__,'error':str(error)[:4096],
+                'traceback':traceback.format_exc(limit=12)[-16*1024:]})
+        raise
 
 
 def main():

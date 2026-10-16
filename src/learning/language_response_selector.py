@@ -25,7 +25,7 @@ def fit_projection(hidden,lengths):
     x=hidden.cpu().double();mean=x.mean(0);_,_,basis=torch.linalg.svd(x-mean,full_matrices=False)
     basis=basis[:components]
     signs=basis.gather(1,basis.abs().argmax(1,keepdim=True)).sign()
-    basis=(basis*torch.where(signs==0,torch.ones_like(signs),signs)).float();mean=mean.float()
+    basis=(basis*torch.where(signs==0,torch.ones_like(signs),signs)).float().contiguous();mean=mean.float()
     raw=torch.cat([(hidden.cpu()-mean)@basis.T,lengths.cpu()],-1)
     return {'mean':mean,'basis':basis,'center':raw.mean(0),'scale':raw.std(0,unbiased=False).clamp_min(1e-4)}
 
