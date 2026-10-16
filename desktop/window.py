@@ -150,7 +150,7 @@ class SwarmWindow(QMainWindow):
         self.state_tab.addWidget(self.update_button)
         self.update_result = QLabel(); self.update_result.setWordWrap(True); self.state_tab.addWidget(self.update_result)
         explorer = QPushButton("Ver la red en el Explorer")
-        explorer.clicked.connect(lambda: QDesktopServices.openUrl(QUrl("http://31.97.9.54:8080/swarm-explorer.html")))
+        explorer.clicked.connect(lambda: QDesktopServices.openUrl(QUrl("https://31.97.9.54:8443/swarm-explorer.html")))
         self.state_tab.addWidget(explorer); self.state_tab.addStretch()
         self.installation = None
         self.install_button = QPushButton("Instalar en este equipo")

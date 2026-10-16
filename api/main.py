@@ -8,12 +8,11 @@ import hmac
 import os
 from datetime import datetime, timezone
 from typing import Any
-from collections import deque
 
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 import api.swarm_state as state
 import api.chat_handler as chat_handler
@@ -29,8 +28,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# In-memory chat history (last 20)
-_chat_history: deque = deque(maxlen=20)
 PUBLISH_TOKEN_ENV = "LIXYSWARM_PUBLISH_TOKEN"
 
 
@@ -153,37 +150,37 @@ async def swarm_publish(request: Request):
 # ── Chat endpoints ────────────────────────────────────────────────────────────
 
 class ChatRequest(BaseModel):
-    message: str
+    message: str = Field(min_length=1,max_length=4096)
 
 
 @app.post("/chat")
 def chat(req: ChatRequest):
     try:
         result = chat_handler.chat(req.message)
-        if result["status"] == "loading":
-            return JSONResponse(
-                status_code=202,
-                content=_ok({"status": "loading", "message": "Model is loading, please retry in a moment."}),
-            )
-        entry = {
-            "role_user": req.message,
-            "role_assistant": result.get("response"),
-            "agent_used": result.get("agent_used"),
-            "status": result.get("status"),
-        }
-        _chat_history.append(entry)
+        if result.get('status')=='invalid':return _err('La pregunta excede su límite o está vacía',400)
+        if result.get('status')=='busy':return _err('Hay una consulta en curso; vuelve a intentar en un momento',429)
+        if result.get('status')!='ok' or not isinstance(result.get('response'),str) or not result['response'].strip():
+            return _err('No hay un experto de lenguaje disponible en este momento',503)
         return _ok({
             "response": result.get("response"),
             "agent_used": result.get("agent_used"),
             "status": result.get("status"),
+            "model_id":result.get('model_id'),
+            "receipt":result.get('receipt'),
         })
     except Exception as e:
-        return _err(str(e))
+        return _err('La consulta no pudo completarse',503)
 
 
 @app.get("/chat/history")
 def chat_history():
-    return _ok(list(_chat_history))
+    # Never disclose one visitor's conversation to another visitor.
+    return _ok([])
+
+
+@app.get('/chat/status')
+def chat_status():
+    return _ok(chat_handler.status())
 
 
 # ── Entry point ───────────────────────────────────────────────────────────────

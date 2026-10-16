@@ -1,100 +1,37 @@
-"""
-chat_handler.py — Handler de chat con lazy loading del LixyOrchestrator.
-El modelo solo se carga cuando hay actividad; se descarga tras 5 min de inactividad.
-"""
-
-import sys
-import time
-import threading
+"""Stateless web chat through the authenticated machine-local LSP requester."""
+import os
 from pathlib import Path
-from typing import Optional
+import threading
+import uuid
+from desktop.backend import NodeController
 
-BASE = Path(__file__).parent.parent
-sys.path.insert(0, str(BASE))
-
-_orchestrator = None
-_last_used: float = 0.0
-_lock = threading.Lock()
-_loading = False
-IDLE_TIMEOUT = 300  # 5 minutes
+_slot=threading.BoundedSemaphore(1)
 
 
-def _unload_loop():
-    """Background thread: unload model after IDLE_TIMEOUT seconds of inactivity."""
-    global _orchestrator, _last_used
-    while True:
-        time.sleep(30)
-        with _lock:
-            if _orchestrator is not None and (time.time() - _last_used) > IDLE_TIMEOUT:
-                print("[chat_handler] Unloading model due to inactivity.")
-                try:
-                    del _orchestrator
-                except Exception:
-                    pass
-                _orchestrator = None
-
-
-_unload_thread = threading.Thread(target=_unload_loop, daemon=True)
-_unload_thread.start()
-
-
-def _get_or_load_orchestrator():
-    global _orchestrator, _last_used, _loading
-    with _lock:
-        if _orchestrator is not None:
-            _last_used = time.time()
-            return _orchestrator, None
-        if _loading:
-            return None, "loading"
-        _loading = True
-
-    # Load outside lock to avoid blocking health checks
+def chat(message):
+    if not isinstance(message,str) or not message.strip() or len(message.encode())>4096:
+        return {'response':None,'status':'invalid'}
+    if not _slot.acquire(blocking=False):return {'response':None,'status':'busy'}
     try:
-        from lixy_orchestrator import LixyOrchestrator
-        orc = LixyOrchestrator()
-        with _lock:
-            _orchestrator = orc
-            _last_used = time.time()
-            _loading = False
-        return orc, None
-    except Exception as e:
-        with _lock:
-            _loading = False
-        return None, f"error: {e}"
+        directory=Path(os.environ.get('LIXYSWARM_WEB_CHAT_STATE','/var/lib/lixyswarm-webchat'))
+        result=NodeController(directory).ask_chat([{'role':'user','content':message.strip()}],False,uuid.uuid4().hex)
+        if not isinstance(result.get('answer'),str) or not result['answer'].strip():
+            return {'response':None,'status':'unavailable'}
+        return {'response':result['answer'],'agent_used':result['provider_id'],
+            'model_id':result['model_id'],'receipt':result['receipt'],'status':'ok'}
+    except (OSError,ValueError,RuntimeError,KeyError):
+        return {'response':None,'status':'unavailable'}
+    finally:_slot.release()
 
 
-def chat(message: str) -> dict:
-    """Send a message to the swarm. Returns response dict."""
-    orc, status = _get_or_load_orchestrator()
-    if orc is None:
-        return {
-            "response": None,
-            "agent_used": None,
-            "status": status or "unavailable",
-        }
+def is_model_loaded():
+    return False
 
+
+def status():
     try:
-        result = orc.chat(message)
-        # Result may be a string or dict depending on orchestrator version
-        if isinstance(result, dict):
-            response_text = result.get("response", result.get("text", str(result)))
-            agent_used = result.get("agent_used") or result.get("agent") or result.get("active_agent")
-        else:
-            response_text = str(result)
-            agent_used = None
-
-        return {
-            "response": response_text,
-            "agent_used": agent_used,
-            "status": "ok",
-        }
-    except Exception as e:
-        return {
-            "response": None,
-            "agent_used": None,
-            "status": f"error: {e}",
-        }
-
-
-def is_model_loaded() -> bool:
-    return _orchestrator is not None
+        directory=Path(os.environ.get('LIXYSWARM_WEB_CHAT_STATE','/var/lib/lixyswarm-webchat'))
+        value=NodeController(directory)._chat_call('/status')
+        return {'available':bool(value.get('available')),'model_id':value.get('model_id',''),
+            'remote_providers':value.get('remote_providers',0)}
+    except (OSError,ValueError,RuntimeError):return {'available':False,'model_id':'','remote_providers':0}

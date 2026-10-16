@@ -155,10 +155,12 @@
     const chat  = document.getElementById("chat");
     const input = document.getElementById("msg-input");
     const btn   = document.querySelector(".input-area button");
+    let sending = false;
 
     async function sendMsg() {
       const text = input.value.trim();
-      if (!text) return;
+      if (!text || sending || btn.disabled) return;
+      sending = true;
 
       const empty = chat.querySelector(".empty-state");
       if (empty) empty.remove();
@@ -184,19 +186,21 @@
 
         if (data.ok) {
           const d = data.data;
-          addMessage(d.response, "swarm", d.agent_used || "enjambre");
-        } else if (data.status === "loading") {
+          if (typeof d.response !== "string" || !d.response.trim()) throw new Error("empty response");
+          addMessage(d.response, "swarm", "experto de la red");
+        } else if (data.data && data.data.status === "loading") {
           addMessage("El modelo está cargando, intenta de nuevo en unos segundos... 🐜", "swarm", "sistema");
         } else {
-          addMessage("Error del enjambre: " + (data.detail || "desconocido"), "swarm", "error");
+          addMessage(data.error || data.detail || "La consulta no pudo completarse", "swarm", "error");
         }
       } catch(e) {
-        chat.removeChild(typing);
+        if (typing.parentNode === chat) chat.removeChild(typing);
         addMessage("No se pudo conectar al enjambre 🔌", "swarm", "error");
       }
 
       input.disabled  = false;
-      btn.disabled    = false;
+      sending = false;
+      refreshStatus();
       btn.textContent = "Enviar";
       input.focus();
     }
@@ -204,25 +208,33 @@
     function addMessage(text, type, agent) {
       const div = document.createElement("div");
       div.className = "message " + type;
-      let html = "";
-      if (agent) html += "<div class=\"swarm-tag\">🐜 " + agent + "</div>";
-      html += text + "<div class=\"meta\">" + new Date().toLocaleTimeString("es", {hour:"2-digit",minute:"2-digit"}) + "</div>";
-      div.innerHTML = html;
+      if (agent) {
+        const tag = document.createElement("div"); tag.className = "swarm-tag";
+        tag.textContent = "🐜 " + agent; div.appendChild(tag);
+      }
+      const body = document.createElement("div"); body.textContent = text; div.appendChild(body);
+      const meta = document.createElement("div"); meta.className = "meta";
+      meta.textContent = new Date().toLocaleTimeString("es", {hour:"2-digit",minute:"2-digit"});
+      div.appendChild(meta);
       chat.appendChild(div);
       chat.scrollTop = chat.scrollHeight;
       return div;
     }
 
-    // Verificar estado de la API al cargar
-    fetch(API + "/health").then(r => r.json()).then(d => {
-      if (d.status === "ok") {
-        const dot = document.querySelector(".status");
-        if (dot) dot.innerHTML = "<div class=\"dot\"></div>Conectado";
+    async function refreshStatus() {
+      try {
+        const response = await fetch(API + "/chat/status", {cache:"no-store"});
+        const value = await response.json();
+        const available = response.ok && value.ok && value.data.available;
+        document.querySelector(".status").textContent = available ? "Experto disponible" : "Esperando experto de la red";
+        if (!sending) btn.disabled = !available;
+      } catch (_) {
+        document.querySelector(".status").textContent = "Sin conexión";
+        if (!sending) btn.disabled = true;
       }
-    }).catch(() => {
-      const dot = document.querySelector(".status");
-      if (dot) { dot.innerHTML = "⚠️ Sin conexión"; dot.style.color = "#f44336"; }
-    });
+    }
+    btn.disabled = true;
+    refreshStatus(); setInterval(refreshStatus, 5000);
 
     input.focus();
   </script>

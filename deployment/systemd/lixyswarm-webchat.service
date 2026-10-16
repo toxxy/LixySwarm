@@ -1,0 +1,23 @@
+[Unit]
+Description=Transport-only LixySwarm web chat requester
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/lixyswarm
+ExecStart=/opt/lixyswarm/venv/bin/python -m api.chat_requester --node --state-dir /var/lib/lixyswarm-webchat
+StateDirectory=lixyswarm-webchat
+StateDirectoryMode=0700
+Restart=on-failure
+RestartSec=5
+UMask=0077
+NoNewPrivileges=true
+ProtectHome=true
+ProtectSystem=full
+PrivateTmp=true
+MemoryMax=256M
+TimeoutStopSec=20
+
+[Install]
+WantedBy=multi-user.target
