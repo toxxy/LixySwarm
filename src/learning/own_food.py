@@ -10,8 +10,8 @@ from .public_math import (ARTIFACTS, COUNTS, SOURCE_REPOSITORY, SOURCE_REVISION,
 FORMAT = 'lixyswarm-own-public-food-v1'
 
 
-def recipe():
-    return {'version': 1, 'format': FORMAT, 'source_repository': SOURCE_REPOSITORY,
+def recipe(*, proper_score=False):
+    value={'version': 1, 'format': FORMAT, 'source_repository': SOURCE_REPOSITORY,
         'source_revision': SOURCE_REVISION, 'source_sha256': SOURCES['train.jsonl'][0],
         'license_sha256': SOURCES['LICENSE'][0], 'license_spdx': 'MIT',
         'excluded_foundation_training_id': ARTIFACTS['train'][0],
@@ -19,17 +19,24 @@ def recipe():
         'training_documents_per_program': 128, 'segment_prediction_bytes': 128,
         'selection': 'existing-canonical-case-order-after-foundation-prefix;new-evaluation-first;then-disjoint-training-programs',
         'teachers_used': False, 'private_inputs': False}
+    if proper_score:
+        value.update(version=2,excluded_prior_recipe_id=digest(recipe()),
+            excluded_prior_training_documents=256,excluded_prior_development_documents=128,
+            training_program_index_offset=2,
+            selection='existing-canonical-order-after-foundation-and-first-food-development-and-two-consumed-programs;fresh-development-first;then-disjoint-training',
+            quality_objective='proper-log-score-on-fresh-development-with-historical-log-score-retention;accuracy-diagnostic')
+    return value
 
 
-def build(source_directory):
+def build(source_directory, *, proper_score=False):
     """Pure text preparation: no weights, metrics, identity or private sources."""
     license_text = _source_file(source_directory, 'LICENSE').decode()
     rows, train_questions = _source_rows(_source_file(source_directory, 'train.jsonl'), 'train')
     _, test_questions = _source_rows(_source_file(source_directory, 'test.jsonl'), 'test')
     if train_questions & test_questions: raise ValueError('Public training and historical evaluation overlap')
-    new = rows[COUNTS['train']:]
+    new = rows[COUNTS['train']+(384 if proper_score else 0):]
     if len(new) <= 128: raise ValueError('No novel public training food remains')
-    evaluation = new[:128]; training = new[128:]; source_id = digest(recipe())
+    evaluation = new[:128]; training = new[128:]; source_id = digest(recipe(proper_score=proper_score))
     common = {'version': FORMAT, 'recipe_id': source_id, 'private_inputs': False,
         'license': {'spdx': 'MIT', 'text': license_text, 'sha256': SOURCES['LICENSE'][0]}}
     eval_value = {**common, 'split': 'evaluation', 'rows': evaluation}
@@ -37,6 +44,7 @@ def build(source_directory):
     objects = {eval_id: raw_eval}; programs = []
     predicted = sum(min(len(('Question: '+r['question']+'\nAnswer: '+r['answer']+'\n\n').encode()),512)-1 for r in evaluation)
     for index, start in enumerate(range(0, len(training), 128)):
+        if proper_score:index+=2
         documents = training[start:start+128]; segments = []
         for row in documents:
             doc = ('Question: '+row['question']+'\nAnswer: '+row['answer']+'\n\n').encode()
@@ -53,7 +61,7 @@ def build(source_directory):
             'evaluation_dataset_id': eval_id, 'evaluation_bytes': len(raw_eval),
             'evaluation_documents': 128, 'evaluation_prediction_bytes': predicted}
         descriptor['program_id'] = digest(descriptor); programs.append(descriptor)
-    return {'recipe': recipe(), 'programs': programs, 'objects': objects,
+    return {'recipe': recipe(proper_score=proper_score), 'programs': programs, 'objects': objects,
         'excluded_foundation_documents': COUNTS['train'], 'novel_training_documents': len(training),
         'novel_evaluation_documents': len(evaluation)}
 

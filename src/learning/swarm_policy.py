@@ -122,7 +122,8 @@ def verdict(before, after, identifier=legacy.policy_id()):
             raise ValueError('Own food evaluation changed its held-out coverage')
         legacy.verdict({**primary,'predicted_bytes':57123}, {**primary,'predicted_bytes':57123})
         legacy.verdict(value['retention'],value['retention'])
+    accuracy_ok=(p.get('quality_selection')=='proper-log-score-v1' or
+        after['byte_accuracy']>=before['byte_accuracy'] and
+        after['retention']['byte_accuracy']>=before['retention']['byte_accuracy'])
     return (before['nll']-after['nll']>=max(p['minimum_absolute_nll_gain'],before['nll']*p['minimum_relative_nll_gain'])
-        and after['byte_accuracy']>=before['byte_accuracy']
-        and after['retention']['nll']<=before['retention']['nll']
-        and after['retention']['byte_accuracy']>=before['retention']['byte_accuracy'])
+        and accuracy_ok and after['retention']['nll']<=before['retention']['nll'])

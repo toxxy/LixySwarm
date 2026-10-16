@@ -9,7 +9,7 @@ from src.learning.public_math import ARTIFACTS
 from src.network.work_protocol import WorkResult,ResultReceipt
 
 
-@pytest.mark.parametrize('n',[None,1,3,8,'food'])
+@pytest.mark.parametrize('n',[None,1,3,8,'food','proper'])
 def test_tensor_own_shards_aggregate_with_resumed_adamw_and_verify_file_bindings(tmp_path,monkeypatch,n):
     import time
     import torch
@@ -21,7 +21,8 @@ def test_tensor_own_shards_aggregate_with_resumed_adamw_and_verify_file_bindings
     from src.network.artifact_store import digest_file
     records,workers,requester,_,_=fixture_records()
     selected_policy=policy_id()
-    food=n=='food'
+    proper=n=='proper'
+    food=n in ['food','proper']
     if food:n=3
     if n is not None:
         from src.network.lsp import LSPIdentity
@@ -29,9 +30,9 @@ def test_tensor_own_shards_aggregate_with_resumed_adamw_and_verify_file_bindings
         workers=[LSPIdentity.generate() for _ in range(n)];requester=workers[0]
         selected_policy=network_policy_id()
     if food:
-        from src.learning.own_food_catalog import PROGRAMS,policy_identifier
+        from src.learning.own_food_catalog import PROGRAMS,PROPER_SCORE_PROGRAMS,policy_identifier
         from src.learning.swarm_policy import definition
-        selected_policy=policy_identifier(PROGRAMS[0]['program_id'])
+        selected_policy=policy_identifier((PROPER_SCORE_PROGRAMS if proper else PROGRAMS)[0]['program_id'])
     # Same own architecture and genuine optimizer state; only data and the
     # quality scorer are scoped fixtures. This does not assert physical quality.
     model=make_foundation_model().train();optimizer=torch.optim.AdamW(model.parameters(),lr=.0006,weight_decay=.01)

@@ -105,6 +105,9 @@ def test_retained_public_evidence_counts_toward_work_quota(tmp_path,monkeypatch)
     saved=root/'lixyswarm-public-proof';saved.mkdir();(saved/'previous').write_bytes(b'prior public state')
     atomic_json(node/'own-storage-reservations.json',{'version':1,'directories':[str(saved)]})
     assert usage(node)==len(b'ownprior public state')
+    import os
+    os.link(public/'selected',saved/'same-immutable-public-file')
+    assert usage(node)==len(b'ownprior public state')
     atomic_json(node/'own-storage-reservations.json',{'version':1,'directories':[str(tmp_path/'private')]})
     with pytest.raises(ValueError,match='separate local public state'):usage(node)
 
@@ -117,3 +120,20 @@ def test_native_refresh_survives_selection_lock_held_by_queue(tmp_path,monkeypat
     service.knowledge=SimpleNamespace(allowed=True)
     service.update(SimpleNamespace())
     assert not service.ready and not service.engine.enabled
+
+
+def test_proper_score_has_new_policy_and_fresh_data_without_reinterpreting_strict_rejections():
+    from src.learning.own_food_catalog import PROPER_SCORE_PROGRAMS,programs_for_recipe
+    first=PROGRAMS[0];fresh=PROPER_SCORE_PROGRAMS[0]
+    assert policy_identifier(first['program_id'])=='7f1e05aa09e15d7536294d0908716be22b5afc5d79cf8ca047db6e8f91a683a4'
+    assert first['evaluation_dataset_id']!=fresh['evaluation_dataset_id']
+    p=definition(policy_identifier(fresh['program_id']))
+    old={'nll':2.,'byte_accuracy':.4,'predicted_bytes':57123,'documents':128}
+    before={**old,'predicted_bytes':p['evaluation_prediction_bytes'],'retention':old}
+    after={**before,'nll':1.99,'byte_accuracy':.399,'retention':{**old,'nll':1.999,'byte_accuracy':.399}}
+    assert verdict(before,after,policy_identifier(fresh['program_id']))
+    assert not verdict(before,{**after,'retention':{**old,'nll':2.000001}},policy_identifier(fresh['program_id']))
+    assert not verdict(before,{**after,'nll':2.},policy_identifier(fresh['program_id']))
+    strict_bytes=first['evaluation_prediction_bytes']
+    assert not verdict({**before,'predicted_bytes':strict_bytes},{**after,'predicted_bytes':strict_bytes},policy_identifier(first['program_id']))
+    assert len(programs_for_recipe(fresh['recipe_id']))==23

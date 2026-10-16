@@ -9,8 +9,8 @@ from src.learning import own_food
 from src.learning.public_math import _source_rows
 
 
-def source_fixture(monkeypatch):
-    rows = [{'question': f'Public problem {i}?', 'answer': 'A public explanation. '*30+'\n#### 1'} for i in range(4300)]
+def source_fixture(monkeypatch,count=4300):
+    rows = [{'question': f'Public problem {i}?', 'answer': 'A public explanation. '*30+'\n#### 1'} for i in range(count)]
     train = ('\n'.join(json.dumps(r) for r in rows)+'\n').encode()
     test = (json.dumps({'question': 'Separate historical test?', 'answer': 'One.\n#### 1'})+'\n').encode()
     sources = {'LICENSE': b'MIT public fixture', 'train.jsonl': train, 'test.jsonl': test}
@@ -48,3 +48,19 @@ def test_tampered_public_food_and_split_overlap_are_rejected(tmp_path, monkeypat
     with pytest.raises(ValueError, match='content'): own_food.load(path, descriptor, 'train')
     sources['test.jsonl'] = (json.dumps({'question': 'Public problem 0?', 'answer': 'One.\n#### 1'})+'\n').encode()
     with pytest.raises(ValueError, match='overlap'): own_food.build(tmp_path)
+
+
+def test_proper_score_food_excludes_every_previous_consumed_or_evaluation_case(tmp_path,monkeypatch):
+    source_fixture(monkeypatch,count=5000)
+    old=own_food.build(tmp_path);new=own_food.build(tmp_path,proper_score=True)
+    used={r['case'] for r in json.loads(old['objects'][old['programs'][0]['evaluation_dataset_id']])['rows']}
+    for descriptor in old['programs'][:2]:
+        used.update(r['source_case'] for r in json.loads(old['objects'][descriptor['training_dataset_id']])['rows'])
+    evaluation={r['case'] for r in json.loads(new['objects'][new['programs'][0]['evaluation_dataset_id']])['rows']}
+    training=set()
+    for descriptor in new['programs']:
+        training.update(r['source_case'] for r in json.loads(new['objects'][descriptor['training_dataset_id']])['rows'])
+    assert not used & (evaluation|training) and not evaluation & training
+    assert len(evaluation)==128 and len(training)==5000-4096-384-128
+    assert new['programs'][0]['index']==2 and new['recipe']['excluded_prior_training_documents']==256
+    assert own_food.build(tmp_path)['programs']==old['programs']

@@ -14,6 +14,12 @@ def usage(directory):
             or not isinstance(value['directories'],list) or len(value['directories'])>32):
         raise ValueError('Invalid own public storage registry')
     root=Path.home()/'.local/state';paths=[];seen=set()
+    # Immutable engine files can be shared with retained test profiles. Count
+    # their physical inode once across the native and registered public roots.
+    for name in ['public','engines','language-models','engine-downloads','language-candidates']:
+        for item in (directory/name).rglob('*'):
+            if item.is_file() and not item.is_symlink():
+                stat=item.stat();seen.add((stat.st_dev,stat.st_ino))
     for raw in value['directories']:
         if not isinstance(raw,str):raise ValueError('Own storage path must be locally registered')
         path=Path(raw)

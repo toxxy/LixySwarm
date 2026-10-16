@@ -9,7 +9,7 @@ import time
 import urllib.request
 
 from src.learning.own_food import build, recipe
-from src.learning.own_food_catalog import PROGRAMS, descriptor, policy_identifier
+from src.learning.own_food_catalog import PROGRAMS, descriptor, policy_identifier,programs_for_recipe,PROPER_SCORE_PROGRAMS
 from src.learning.public_math import canonical, digest, SOURCES, SOURCE_REVISION
 from src.learning.swarm_policy import definition, state_id
 from .artifact_store import digest_file
@@ -34,10 +34,12 @@ def queue_controls(directory):
     path=Path(directory)/'own-curriculum-controls.json'
     if not path.exists():return {'version':1,'enabled':False,'maximum_programs':len(PROGRAMS)}
     value=read_small(path,4096)
-    if (set(value)!={'version','enabled','maximum_programs'} or value['version']!=1
+    if (set(value) not in [{'version','enabled','maximum_programs'},{'version','enabled','maximum_programs','recipe_id'}] or value['version']!=1
             or type(value['enabled']) is not bool or type(value['maximum_programs']) is not int
             or not 1<=value['maximum_programs']<=len(PROGRAMS)):
         raise ValueError('Invalid own curriculum controls')
+    value.setdefault('recipe_id',PROGRAMS[0]['recipe_id'])
+    if value['maximum_programs']>len(programs_for_recipe(value['recipe_id'])):raise ValueError('Own curriculum exceeds its recipe')
     return value
 
 
@@ -137,8 +139,9 @@ def acquire_source(service,check,cancel):
 def publish_food(service,program_id,check,cancel):
     row=descriptor(program_id);p=definition(policy_identifier(program_id))
     if all(service.store.has(p[key+'_dataset_id']) for key in ['training','evaluation','retention']):return
-    source=acquire_source(service,check,cancel);check();compiled=build(source)
-    if compiled['programs']!=PROGRAMS or digest(compiled['recipe'])!=row['recipe_id']:
+    source=acquire_source(service,check,cancel);check()
+    compiled=build(source,proper_score=row['recipe_id']==PROPER_SCORE_PROGRAMS[0]['recipe_id'])
+    if compiled['programs']!=programs_for_recipe(row['recipe_id']) or digest(compiled['recipe'])!=row['recipe_id']:
         raise ValueError('Public food compilation differs from app-pinned recipes')
     for key in ['training','evaluation']:
         check();identifier=p[key+'_dataset_id'];raw=compiled['objects'][identifier]
@@ -153,16 +156,19 @@ def publish_food(service,program_id,check,cancel):
 
 def advance(coordinator,contract):
     """Prospective fixed order; each terminated ledger remains in its own path."""
-    c=coordinator;service=c.service;path=service.directory/'own-network/curriculum.json'
+    c=coordinator;service=c.service
     try:
         c._check(contract);controls=queue_controls(service.directory)
+        recipe_id=controls.get('recipe_id',PROGRAMS[0]['recipe_id']);group=programs_for_recipe(recipe_id)
+        path=service.directory/'own-network/curriculum.json' if recipe_id==PROGRAMS[0]['recipe_id'] else service.directory/'own-network/curricula'/recipe_id/'curriculum.json'
         if not controls['enabled'] or c.ledger.get('pending') is not None or c.ledger['status'] not in TERMINAL:return
         if not supports_programs(service):raise ValueError('Public-food queue needs a compatible installed engine')
-        queue=read_small(path) if path.exists() else {'version':1,'recipe_id':digest(recipe()),'programs':[],'status':'ready'}
-        if queue['version']!=1 or queue['recipe_id']!=digest(recipe()) or len(queue['programs'])>len(PROGRAMS):
+        queue=read_small(path) if path.exists() else {'version':1,'recipe_id':recipe_id,'programs':[],'status':'ready'}
+        if queue['version']!=1 or queue['recipe_id']!=recipe_id or len(queue['programs'])>len(group):
             raise ValueError('Own public-food queue changed recipe or bound')
-        index=descriptor(c.settings.program_id)['index']+1 if c.settings.version==3 else 0
-        if c.settings.version==3:
+        ids=[r['program_id'] for r in group]
+        index=ids.index(c.settings.program_id)+1 if c.settings.program_id in ids else 0
+        if c.settings.program_id in ids:
             current=next((v for v in queue['programs'] if v['program_id']==c.settings.program_id),None)
             if current is None:raise ValueError('Own active program is absent from its durable queue')
             current.update(status='terminated',termination=c.ledger['status'],cursor=c.ledger['cursor'],
@@ -170,13 +176,13 @@ def advance(coordinator,contract):
                 accepted=c.ledger['accepted'],rounds=c.ledger['round'],state_id=c.ledger['state_id'],
                 ledger_sha256=hashlib.sha256(c.path.read_bytes()).hexdigest())
         if index>=controls['maximum_programs']:
-            queue['status']='awaiting_new_public_food' if index>=len(PROGRAMS) else 'program_limit'
+            queue['status']='awaiting_new_public_food' if index>=len(group) else 'program_limit'
             atomic_json(path,queue);c._maintain(contract);c.maintenance_at=time.time()+30;return
-        row=PROGRAMS[index];queue['status']='preparing';atomic_json(path,queue)
+        row=group[index];queue['status']='preparing';atomic_json(path,queue)
         publish_food(service,row['program_id'],lambda:c._check(contract),c.cancel)
         c._check(contract)
         if not any(v['program_id']==row['program_id'] for v in queue['programs']):
-            queue['programs'].append({'program_id':row['program_id'],'index':index,'status':'selected',
+            queue['programs'].append({'program_id':row['program_id'],'index':row['index'],'status':'selected',
                 'parent_contract_id':contract,'initial_state_id':service.snapshot()['state_id']})
         atomic_json(path,queue)
         select_program(service,row['program_id'],c.settings.owner_id,coordinator=True,check=lambda:c._check(contract))
