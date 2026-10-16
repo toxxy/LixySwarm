@@ -1,4 +1,12 @@
-# Aprendizaje público de expertos conversacionales
+# Aprendizaje del organismo propio y expertos de investigación
+
+La línea propia comienza en `swarm_foundation.py`: tres agentes de la arquitectura del enjambre, cinco pings Dolphin y feromonas por prefijo, inicializados con pesos aleatorios reproducibles. `swarm_foundation_job.py` ejecuta el primer preentrenamiento causal acotado y conserva pesos, optimizador AdamW y estado del muestreador. `swarm_foundation_audit.py` reproduce la evaluación en CPU y comprueba que el aprendizaje puede continuar desde el estado recibido. El protocolo, los límites y la evidencia están en [own_foundation_protocol_20261015.json](../../experiments/reports/own_foundation_protocol_20261015.json) y [own_foundation_internet_recovery_20261015.json](../../experiments/reports/own_foundation_internet_recovery_20261015.json).
+
+Los profesores externos están permitidos como fuentes de destilación con procedencia y evaluación. Este primer ensayo usa solamente textos humanos públicos. No se presenta como aprendizaje distribuido, autonomía continua o chat general: esas integraciones siguen pendientes. La memoria persistente y los cambios de topología requieren un protocolo causal antes de habilitarse en este linaje; su recorrido actual los rechaza explícitamente.
+
+## Expertos conversacionales con bases externas
+
+El chat desplegado y los módulos siguientes pertenecen a los experimentos históricos con bases externas. Su funcionamiento no acredita por sí solo la visión del organismo con pesos propios.
 
 La red de referencia de bytes conserva su catálogo y sus versiones. Este módulo prepara expertos de lenguaje con bases públicas fijadas por revisión y SHA-256, sin importar checkpoints personales. Las operaciones de tensores corren en procesos separados; el nodo y la app importan solo configuración y transporte.
 
