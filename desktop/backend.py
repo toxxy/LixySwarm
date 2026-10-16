@@ -53,6 +53,9 @@ class NodeController:
         snapshot=self.snapshot();settings=self.settings();policy=settings.policy
         if not snapshot['fresh'] or not settings.connected or settings.paused:return None
         resources=snapshot['status'].get('resources',{})
+        from src.network.own_catalog import own_engine
+        if (own_engine() is not None and policy.mode in {'balanced','maximum'} and policy.cpu_percent>0
+                and policy.max_cpu_jobs>0 and policy.max_ram_gb>=4):return 'own'
         from src.network.language_preparation import eligible
         try:
             eligible(settings,resources,True,language_engine('cuda'))
@@ -317,6 +320,13 @@ class NodeController:
         if self.runtime_update_available():
             raise RuntimeError('Actualiza el servicio desde Estado antes de preparar el experto')
         return self._chat_call('/preparation/start',{},timeout=10)
+
+    def prepare_own(self):
+        if self.runtime_update_available():raise RuntimeError('Actualiza el servicio antes de preparar el organismo')
+        return self._chat_call('/own-preparation/start',{},timeout=10)
+
+    def stop_own_preparation(self):
+        return self._chat_call('/own-preparation/stop',{})
 
     def stop_language_preparation(self):
         return self._chat_call('/preparation/stop',{})

@@ -40,8 +40,10 @@ def test_learning_button_uses_the_configured_language_progress(tmp_path,monkeypa
 @pytest.mark.parametrize('vram,jobs,fresh,expected',[(8,1,True,'language'),
     (32,2,True,'language'),(0,1,True,'cpu'),(8,2,True,'language'),
     (7.99,2,True,'cpu'),(8,1,False,None)])
-def test_preparation_selects_gpu_first_with_actual_hardware_and_per_job_budget(tmp_path,monkeypatch,vram,jobs,fresh,expected):
+def test_legacy_preparation_selects_gpu_first_with_actual_hardware_and_per_job_budget(tmp_path,monkeypatch,vram,jobs,fresh,expected):
     import desktop.backend as backend
+    from src.network import own_catalog
+    monkeypatch.setattr(own_catalog,'own_engine',lambda:None)
     policy=ContributionPolicy.for_mode('maximum');policy.max_ram_gb=8;policy.gpu_percent=100;policy.max_gpu_jobs=jobs
     ClientSettings(policy=policy).save(tmp_path)
     controller=backend.NodeController(tmp_path)
@@ -53,6 +55,8 @@ def test_preparation_selects_gpu_first_with_actual_hardware_and_per_job_budget(t
 
 
 def test_gpu_choice_preserves_hidden_operator_limits_and_waits_for_the_node(tmp_path,monkeypatch):
+    from src.network import own_catalog
+    monkeypatch.setattr(own_catalog,'own_engine',lambda:None)
     pytest.importorskip('PySide6')
     os.environ.setdefault('QT_QPA_PLATFORM','offscreen')
     from PySide6.QtWidgets import QApplication
@@ -87,6 +91,18 @@ def test_gpu_choice_preserves_hidden_operator_limits_and_waits_for_the_node(tmp_
         assert calls==['gpu'] and not window.preparation_requested
     finally:
         window.close();window.deleteLater();QCoreApplication.sendPostedEvents(None,QEvent.DeferredDelete);app.processEvents()
+
+
+def test_own_preparation_is_selected_with_cpu_and_no_gpu_when_locally_published(tmp_path,monkeypatch):
+    from desktop.backend import NodeController
+    from src.network import own_catalog
+    policy=ContributionPolicy.for_mode('balanced');policy.max_ram_gb=4
+    ClientSettings(policy=policy).save(tmp_path);controller=NodeController(tmp_path)
+    monkeypatch.setattr(own_catalog,'own_engine',lambda:object())
+    monkeypatch.setattr(controller,'snapshot',lambda:{'fresh':True,'status':{'resources':{'has_gpu':False}}})
+    assert controller.automatic_preparation_target()=='own'
+    settings=controller.settings();settings.paused=True;settings.save(tmp_path)
+    assert controller.automatic_preparation_target() is None
 
 
 @pytest.mark.parametrize('vram,percent,jobs', [(7.99,90,1),(8,100,1),(11.99,100,1),(12,100,2),(32,90,2)])

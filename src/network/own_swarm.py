@@ -16,6 +16,12 @@ from .telemetry import atomic_json
 from .public_knowledge import managed_public_bytes
 
 
+def public_data_path(directory, identifier):
+    directory=Path(directory)
+    own=directory/'public/own/artifacts/objects'/identifier[:2]/identifier[2:]
+    return own if own.is_file() else directory/'public/language/artifacts/objects'/identifier[:2]/identifier[2:]
+
+
 @dataclass
 class OwnSwarmSettings:
     version:int=1
@@ -105,6 +111,17 @@ class OwnSwarmService:
         self.settings=settings
         try:self.engine=OwnSwarmSettings.load(self.directory)
         except (OSError,ValueError,TypeError):self.engine=OwnSwarmSettings()
+        if self.engine.enabled and self.knowledge.allowed and settings.connected and not settings.paused:
+            # Older installations hold the pinned public data in the language
+            # CAS. Publish verified copies through the own namespace as well,
+            # so a new own-only participant has no dependency on that expert.
+            for identifier,size in ARTIFACTS.values():
+                source=self.directory/'public/language/artifacts/objects'/identifier[:2]/identifier[2:]
+                if (not self.store.has(identifier) and source.is_file()
+                        and managed_public_bytes(self.directory)+2*size<=settings.policy.max_disk_gb*1024**3):
+                    try:
+                        if digest_file(source)==(identifier,size):self.store.import_file(source,kind='dataset')
+                    except (OSError,ValueError,RuntimeError):pass
         self.ready=bool(self.engine.enabled and self.knowledge.allowed and settings.connected
             and not settings.paused and settings.policy.mode in {'balanced','maximum'}
             and settings.policy.max_ram_gb>=definition()['ram_gb'] and settings.policy.cpu_percent>0
@@ -114,11 +131,11 @@ class OwnSwarmService:
 
     def training_path(self):
         identifier=ARTIFACTS['train'][0]
-        return self.directory/'public/language/artifacts/objects'/identifier[:2]/identifier[2:]
+        return public_data_path(self.directory,identifier)
 
     def evaluation_path(self):
         identifier=ARTIFACTS['evaluation'][0]
-        return self.directory/'public/language/artifacts/objects'/identifier[:2]/identifier[2:]
+        return public_data_path(self.directory,identifier)
 
     def snapshot(self):
         return {'ready':self.ready,'active':self.active,'completed':self.completed,

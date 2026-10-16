@@ -23,6 +23,7 @@ def replay_request(directory,candidate,output_directory,*,deadline,cpu_threads=2
     identifier=result['training_policy_id'];p=definition(identifier)
     transition=verify_transition(candidate,evaluation_path.read_bytes())
     evaluation=json.loads(evaluation_path.read_text())
+    from src.network.own_swarm import public_data_path
     return {'action':'own-audit','candidate_result':candidate,
         'candidate_model_file':str(store.object_path(transition['model_id'])),
         'candidate_optimizer_file':str(store.object_path(transition['optimizer_id'])),
@@ -32,8 +33,8 @@ def replay_request(directory,candidate,output_directory,*,deadline,cpu_threads=2
         'step':result['previous_optimizer_step'],'dataset_id':p['training_dataset_id'],
         'model_file':str(store.object_path(result['model_id'])),
         'optimizer_file':str(store.object_path(result['optimizer_id'])),
-        'training_file':str(directory/'public/language/artifacts/objects'/definition()['training_dataset_id'][:2]/definition()['training_dataset_id'][2:]),
-        'evaluation_file':str(directory/'public/language/artifacts/objects'/definition()['evaluation_dataset_id'][:2]/definition()['evaluation_dataset_id'][2:]),
+        'training_file':str(public_data_path(directory,p['training_dataset_id'])),
+        'evaluation_file':str(public_data_path(directory,p['evaluation_dataset_id'])),
         'output_directory':str(output_directory),'device':'cpu','cpu_threads':cpu_threads,
         'deadline':deadline,'requester_id':transition['evaluator_id'],
         'contributions':evaluation['contributions'],

@@ -41,7 +41,8 @@ def test_install_verifies_package_and_preserves_training_authority(tmp_path):
 
 
 @pytest.mark.parametrize('profile,extra',[('own-cpu',[]),('own-cpu-continuous',['swarm.audit.v1']),
-    ('own-cpu-network',['swarm.audit.v1','swarm.gradient.v2','swarm.candidate.v2'])])
+    ('own-cpu-network',['swarm.audit.v1','swarm.gradient.v2','swarm.candidate.v2']),
+    ('own-cpu-bootstrap',['swarm.audit.v1','swarm.gradient.v2','swarm.candidate.v2','swarm.validate.v1'])])
 def test_own_cpu_profile_requires_its_explicit_trust_without_enabling_reference_or_own_work(tmp_path,profile,extra):
     root,value,_=package(tmp_path)
     value['operations']+=['swarm.gradient.v1','swarm.candidate.v1']+extra

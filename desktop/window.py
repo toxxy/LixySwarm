@@ -205,6 +205,15 @@ class SwarmWindow(QMainWindow):
         resources.addWidget(self.engine_progress)
         self.engine_button=QPushButton("Preparar motor CPU")
         self.engine_button.clicked.connect(self.prepare_engine); resources.addWidget(self.engine_button)
+        self.own_preparation_label=QLabel('El organismo propio se prepara con CPU y 4 GB de RAM autorizados.')
+        self.own_preparation_label.setWordWrap(True);resources.addWidget(self.own_preparation_label)
+        self.own_preparation_progress=QProgressBar();self.own_preparation_progress.hide();resources.addWidget(self.own_preparation_progress)
+        own_actions=QHBoxLayout()
+        self.own_preparation_button=QPushButton('Preparar organismo propio')
+        self.own_preparation_button.clicked.connect(lambda:self._action(self.controller.prepare_own));own_actions.addWidget(self.own_preparation_button)
+        self.own_preparation_stop=QPushButton('Detener preparación propia')
+        self.own_preparation_stop.clicked.connect(lambda:self._action(self.controller.stop_own_preparation));own_actions.addWidget(self.own_preparation_stop)
+        resources.addLayout(own_actions)
         self.language_label=QLabel('Puedes usar el chat de la red sin cargar un modelo en este equipo.')
         self.language_label.setWordWrap(True);resources.addWidget(self.language_label)
         self.language_progress=QProgressBar();self.language_progress.setVisible(False);resources.addWidget(self.language_progress)
@@ -341,6 +350,16 @@ class SwarmWindow(QMainWindow):
         if target is None:return
         if not (self.controller.directory/"public-knowledge.json").exists():
             self.controller.share_knowledge(True)
+        if target=='own':
+            if not self.controller.knowledge_settings().enabled:return
+            diagnostic=self.controller.snapshot()['diagnostics']
+            if diagnostic.get('knowledge',{}).get('sharing') is not True:
+                self.preparation_requested=True;return
+            if (self.controller.directory/'own-swarm.json').exists():return
+            if diagnostic.get('own_preparation',{}).get('state') not in {None,'idle'}:return
+            try:self.controller.prepare_own()
+            except (OSError,ValueError,RuntimeError) as error:self.own_preparation_label.setText(str(error))
+            return
         if target=='language':
             if not self.controller.knowledge_settings().enabled:return
             if self.controller.snapshot()['diagnostics'].get('knowledge',{}).get('sharing') is not True:
@@ -474,6 +493,19 @@ class SwarmWindow(QMainWindow):
         self.engine_button.setText("Motor CPU preparado" if prepared else "Reanudar preparación" if self.engine_phase=="stopped" else "Preparar motor CPU")
         snapshot = self.controller.snapshot(); status = snapshot["status"]
         diagnostic = snapshot["diagnostics"]
+        from src.network.own_catalog import own_engine
+        own_preparation=diagnostic.get('own_preparation',{}) if snapshot['fresh'] else {}
+        own_phase=own_preparation.get('state','idle')
+        own_busy=own_phase not in {'idle','waiting','stopped','complete'}
+        own_selected=(self.controller.directory/'own-swarm.json').exists()
+        self.own_preparation_label.setText(own_preparation.get('message') or
+            ('Organismo propio disponible en este equipo' if diagnostic.get('own_swarm',{}).get('ready')
+             else 'El organismo propio se prepara con CPU y 4 GB de RAM autorizados.'))
+        self.own_preparation_progress.setVisible(own_busy and own_preparation.get('total',0)>0)
+        self.own_preparation_progress.setValue(int(100*own_preparation.get('done',0)/max(1,own_preparation.get('total',0))))
+        self.own_preparation_button.setEnabled(snapshot['fresh'] and own_engine() is not None and not own_busy
+            and not own_selected and policy.mode in {'balanced','maximum'} and policy.cpu_percent>0 and policy.max_ram_gb>=4)
+        self.own_preparation_stop.setEnabled(own_busy or own_phase=='waiting')
         needs_update = self.controller.runtime_update_available(snapshot)
         updating = self.runtime_update is not None and self.runtime_update.isRunning()
         self.update_button.setVisible(needs_update or updating)

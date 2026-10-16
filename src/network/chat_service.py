@@ -193,12 +193,13 @@ class ChatBroker:
 
 
 class LocalChatAPI:
-    def __init__(self,broker,directory,preparation=None,language_work=None,cache_repair=None,own_work=None):
+    def __init__(self,broker,directory,preparation=None,language_work=None,cache_repair=None,own_work=None,own_preparation=None):
         self.broker=broker;self.path=Path(directory)/"local-api.json";self.token=secrets.token_hex(32)
         self.preparation=preparation
         self.language_work=language_work
         self.cache_repair=cache_repair
         self.own_work=own_work
+        self.own_preparation=own_preparation
         owner=self
         class Handler(BaseHTTPRequestHandler):
             protocol_version="HTTP/1.0"
@@ -218,6 +219,7 @@ class LocalChatAPI:
             def do_GET(self):
                 if not self.authenticated():return self.reply(403,{"error":"Acceso local no autorizado"})
                 if self.path=='/preparation/status' and owner.preparation is not None:return self.reply(200,owner.preparation.snapshot())
+                if self.path=='/own-preparation/status' and owner.own_preparation is not None:return self.reply(200,owner.own_preparation.snapshot())
                 if self.path=='/cache-repair/status' and owner.cache_repair is not None:return self.reply(200,owner.cache_repair.snapshot())
                 if self.path.startswith('/language-work/') and owner.language_work is not None:
                     try:return self.reply(200,owner.language_work.status(self.path[len('/language-work/'):]))
@@ -238,6 +240,10 @@ class LocalChatAPI:
                     raw=self.rfile.read(length)
                     if len(raw)!=length:raise ValueError()
                     value=json.loads(raw)
+                    if self.path in {'/own-preparation/start','/own-preparation/stop'} and owner.own_preparation is not None:
+                        if value!={}:raise ValueError('Own preparation uses only app-selected public inputs')
+                        try:return self.reply(200,owner.own_preparation.start() if self.path.endswith('/start') else owner.own_preparation.stop())
+                        except (ValueError,RuntimeError) as error:return self.reply(409,{'error':str(error)})
                     if self.path=='/cache-repair/start' and owner.cache_repair is not None:
                         if not isinstance(value,dict) or set(value)!={'base_name'}:raise ValueError('Repair only accepts a known public family')
                         try:return self.reply(200,owner.cache_repair.start(value['base_name']))

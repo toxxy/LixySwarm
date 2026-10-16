@@ -40,6 +40,7 @@ from src.network.local_own_work import LocalOwnWork
 from src.network.own_replication import OwnStateReplication
 from src.network.own_learning import OwnLearningCoordinator
 from src.network.own_network import OwnNetworkCoordinator
+from src.network.own_preparation import OwnPreparation
 from src.network.language_follow import LanguageVersionFollower
 from src.version import VERSION
 
@@ -149,6 +150,7 @@ def run(directory: Path, *, host="0.0.0.0", port=7338, interval=15, allow_privat
         own_replication=OwnStateReplication(own_swarm)
         own_learning=OwnLearningCoordinator(own_swarm,own_work)
         own_network=OwnNetworkCoordinator(own_swarm,own_work)
+        own_preparation=OwnPreparation(own_swarm)
         preparation=LanguagePreparation(node,knowledge,families,directory,resources)
         cache_repair=LanguageCacheRepair(node,knowledge,families,directory)
         public_memory=PublicMemoryService(knowledge,directory)
@@ -156,7 +158,7 @@ def run(directory: Path, *, host="0.0.0.0", port=7338, interval=15, allow_privat
         learning = LearningCoordinator(knowledge,compute,directory)
         language_learning=LanguageLearningCoordinator(knowledge,language_training,directory)
         owner_work=LocalLanguageWork(knowledge,language_training,language_learning)
-        chat_api=LocalChatAPI(chat,directory,preparation,owner_work,cache_repair,own_work);chat_api.start()
+        chat_api=LocalChatAPI(chat,directory,preparation,owner_work,cache_repair,own_work,own_preparation);chat_api.start()
         language_follow=LanguageVersionFollower(knowledge,families,directory)
         stop = threading.Event()
         for signum in (signal.SIGINT, signal.SIGTERM):
@@ -198,6 +200,7 @@ def run(directory: Path, *, host="0.0.0.0", port=7338, interval=15, allow_privat
                 "own_swarm":own,
                 "own_learning":own_learning.snapshot(),
                 "own_network":own_network.snapshot(),
+                "own_preparation":own_preparation.snapshot(),
                 "language_preparation":preparing,
                 "language_cache_repair":cache_repair.snapshot(),
                 "chat":chat.snapshot(),
@@ -257,6 +260,7 @@ def run(directory: Path, *, host="0.0.0.0", port=7338, interval=15, allow_privat
                 own_swarm.update(settings)
                 own_learning.update()
                 own_network.update()
+                own_preparation.update()
                 cache_repair.update()
                 preparation.update()
                 chat.update(settings)
@@ -322,6 +326,8 @@ def run(directory: Path, *, host="0.0.0.0", port=7338, interval=15, allow_privat
                     own_learning.changed.clear();refresh.set()
                 if own_network.changed.is_set():
                     own_network.changed.clear();refresh.set()
+                if own_preparation.changed.is_set():
+                    own_preparation.changed.clear();refresh.set()
                 if learning.changed.is_set():
                     learning.changed.clear(); refresh.set()
                 if language_learning.changed.is_set():
@@ -336,6 +342,7 @@ def run(directory: Path, *, host="0.0.0.0", port=7338, interval=15, allow_privat
                 stop.wait(0.5)
             publish("disconnected", settings)
         finally:
+            own_preparation.close()
             own_network.close()
             own_learning.close()
             cache_repair.close()
